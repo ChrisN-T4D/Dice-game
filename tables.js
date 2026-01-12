@@ -1,0 +1,140 @@
+// Phase/location/action tables – edit here
+
+const tables = {
+  1: {
+    name: 'Phase 1 – Warm‑up',
+    description: 'Non‑genital, low‑pressure exploration, clothing/lingerie optional.',
+    locations: {
+      1: 'Lips',
+      2: 'Ears (Lobes or Outer Shell)',
+      3: 'Nape of the Neck',
+      4: 'Collarbone',
+      5: 'Shoulders',
+      6: 'Nipples / Areolas',
+      7: 'Chest / Breasts',
+      8: 'Inner Arms / Elbow Crease',
+      9: 'Inner Wrists',
+      10: 'Palms / Fingertips',
+      11: 'Belly Button / Navel',
+      12: 'Lower Back / Sacrum',
+      13: 'Hips / Waist',
+      14: 'Buttocks',
+      15: 'Perineum',
+      16: 'Inner Thighs',
+      17: 'Behind the Knees',
+      18: 'Feet / Arches',
+      19: 'Primary Genitals',
+      20: 'Critical Hit: Roller’s choice of location.'
+    },
+    actions: {
+      1: 'Slow hand strokes: Use the full palm and fingers to make slow, steady strokes over the area.',
+      2: 'Feather-light fingertips: Use only the very tips of your fingers to barely graze the surface of the skin.',
+      3: 'Gentle kneading: Use the heels of your hands to gently squeeze and knead the muscles in a slow rhythm.',
+      4: 'Still hand and breath: Rest a warm hand on the area and breathe slowly together, noticing warmth and contact.',
+      5: 'Tracing with one finger: Use a single fingertip to trace lines, shapes, or simple patterns on the skin.',
+      6: 'Alternating fingers: Alternate between one finger and all fingers to change the feel of the touch.',
+      7: 'Soft tapping: Use the pads of your fingertips to make soft, rhythmic taps over the area.',
+      8: 'Cupping with the hand: Gently cup the area with your palm and hold, adding tiny movements if it feels good.',
+      9: 'Back of the hand: Use the backs of your fingers or hand to stroke the area for a different texture.',
+      10: 'Finger circles: Use one or two fingers to draw slow circles of different sizes over the area.',
+      11: 'Warm breath: Blow soft, warm air over the area, occasionally pausing to notice how the skin feels.',
+      12: 'Kissing: Place slow, simple kisses on the area, without licking or nibbling.',
+      13: 'Soft tongue: Use the tongue to slowly trace short lines or small shapes on the area.',
+      14: 'Soft lip pressure: Press your closed lips gently against the area, then slowly release.',
+      15: 'Light mouth suction: Use lips to create very gentle suction, then release in a slow rhythm.',
+      16: 'Butterfly kisses: Gently flutter your eyelashes against the skin around the area.',
+      17: 'Foot strokes (if comfortable): Use the underside of your toes or the ball of your foot to make slow, gentle strokes.',
+      18: 'Foot tracing: Use the edge of your foot or toes to trace simple lines or shapes over the area.',
+      19: 'Toe taps: Use your toes to make soft, rhythmic taps, similar to fingertip tapping.',
+      20: 'Critical success: Spend about twice as long on this location, then roll again on the action table to decide how to touch it.'
+    }
+  },
+
+  2: {
+    name: 'Phase 2 – Erogenous',
+    description: 'Breasts/chest and genitals allowed; still low pressure and exploration‑focused.',
+    locations: {
+      1: 'Inner lips and tongue (inside of mouth, lower lip for gentle sucking/biting).',
+      2: 'Ears (earlobes, inner rim, and the bowl close to the ear canal).',
+      3: 'Nape of neck and upper spine (hairline and back of neck for small kisses or gentle suction).',
+      4: 'Front and sides of neck and collarbones (under jaw, along neck tendons, and across the clavicles).',
+      5: 'Nipple–areola complex (nipples and areolas, any gender).',
+      6: 'Full breast or pectoral mound, including the under-breast fold and outer curves.',
+      7: 'Axilla and side ribs (armpit and the ribcage beside it, for those who enjoy this area).',
+      8: 'Inner forearms and wrists (palmar side, especially at the pulse points).',
+      9: 'Palms, finger pads, and spaces between fingers (for licking, sucking, or gentle biting).',
+      10: 'Belly button and lower-belly “V” leading down toward the pubic hairline.',
+      11: 'Pubic mound or mons and upper groin (the soft, fleshy area just above the genitals).',
+      12: 'Inner thighs high up and the groin creases very close to the genitals (any gender).',
+      13: 'Full butt cheeks and the gluteal folds where the butt meets the thighs.',
+      14: 'Perineum (the strip of skin between genitals and anus, any configuration).',
+      15: 'Outer genital areas (labia majora, lower penile shaft, and scrotum).',
+      16: 'Hips and hip bones (along the hip points at the front and the curve of the iliac crest).',
+      17: 'Side of the hips and outer thighs (the outer curve from hip down toward mid-thigh).',
+      18: 'Inner knees and just above the knees (front and inner sides close to the joint, any gender).',
+      19: 'Lower back and top of buttocks (the sacrum area and the curve where lower back meets the hips).',
+      20: 'Roller’s choice of any Phase 1 or Phase 2 location that both partners are comfortable revisiting.'
+    },
+    actions: {
+      1: 'Slow, exploratory touching focused on noticing what feels interesting, not on orgasm.',
+      2: 'Use hand‑riding: receiver’s hand rests on top of the toucher’s to guide pressure and pace.',
+      3: 'Apply gentle, teasing strokes that approach and move away from the most sensitive spot.',
+      4: 'Alternate 10 seconds of touch with 10 seconds of stillness for 3–5 cycles.',
+      5: 'Use circular motions with varying pressure while the receiver gives simple feedback.',
+      6: 'Use firmer, more rhythmic strokes without speeding up toward orgasm.',
+      7: 'Incorporate kissing or licking on or near the chosen area, if both agree.',
+      8: 'Explore the edges of the erogenous zone rather than the center (e.g., around genitals, not directly).',
+      9: 'Switch roles halfway through this action.',
+      10: 'Focus on breath coordination: toucher matches the receiver’s breathing rhythm.',
+      11: 'Play with temperature: warm hands vs. cooler air or a fabric near the area.',
+      12: 'Spend 2 minutes gradually increasing pressure, then 2 minutes gradually decreasing pressure.',
+      13: 'Use both hands to create broader contact and containment around the area.',
+      14: 'Do short “bursts” of faster stimulation, then deliberately slow back down.',
+      15: 'Receiver verbally describes what type of touch they want more of (“slower circles,” “lighter strokes,” etc.).',
+      16: 'Touch with the explicit rule that either person can say “pause” at any time, then resume when ready.',
+      17: 'Alternate between two different erogenous zones chosen together.',
+      18: 'Repeat the last action but change to a new erogenous location.',
+      19: 'Receiver chooses any Phase‑2 action to repeat or modify.',
+      20: 'Roller chooses any Phase‑2 action or invents a new erotic (but still exploratory) one.'
+    }
+  },
+
+  3: {
+    name: 'Phase 3 – Sexual goals',
+    description: 'Explicitly sexual acts, orgasm‑oriented play, and possible penetration if desired.',
+    locations: {
+      // 8 core explicit zones; d20 is mapped to these in main.js
+      1: 'Inner genital lips or underside of shaft (labia minora or underside of penile shaft/base of glans).',
+      2: 'Primary arousal focus point (clitoral glans or hood, frenulum or corona of the glans).',
+      3: 'Entrance region (vaginal opening/vestibule or urethral meatus rim, as negotiated).',
+      4: 'Full external vulva or entire penile shaft and head.',
+      5: 'Scrotal–perineal or vulva–perineum junction (where scrotum or lower shaft, or vulva, meets the perineum).',
+      6: 'Perianal rim and surrounding external skin (outer anal ring and nearby skin, no penetration required).',
+      7: 'Perineum (strip of skin between genitals and anus).',
+      8: 'Outer genital areas (labia majora, lower penile shaft, and scrotum).'
+    },
+   actions: {
+  1: 'Use a hand to give 20 straight strokes at a steady pace.',
+  2: 'Use a hand to give 10 short rapid strokes followed by 10 slow long strokes, then repeat this sequence once.',
+  3: 'Use hands to give 15 light brushing strokes, followed immediately by 15 steady rubbing strokes.',
+  4: 'Use the mouth and tongue to give 10 slow licks in straight lines, then 10 small circular licks.',
+  5: 'Use a hand with lubricant to give 20 loose gliding strokes with a continuous motion.',
+  6: 'Use fingers or a toy to move slowly back and forth 15 times, with a brief pause after every fifth motion.',
+  7: 'Use genitals to make 20 slow thrusting motions, with a one-second stillness after every fourth thrust.',
+  8: 'Use hands, mouth, feet, or genitals to keep a steady rhythm for 30 seconds, then a faster rhythm for 30 seconds, then return to the original steady rhythm for 30 seconds.',
+  9: 'Use two body parts at once so that one performs 10 slow strokes while the other performs 10 quick strokes, then swap which is slow and which is quick.',
+  10: 'Use hands or genitals to give exactly 10 slow strokes, 10 medium-speed strokes, and 10 fast strokes, in that order.',
+  11: 'Use hands, mouth, feet, or genitals to perform a repeating three-step pattern: one slow movement, one medium movement, one fast movement; repeat this pattern 10 times.',
+  12: 'While using hands, mouth, feet, or genitals, give 10 strokes and pair each stroke with an exhale or vocal sound.',
+  13: 'Use hands, mouth, feet, or genitals to perform the pattern “three light touches followed by one firm touch,” repeated eight times.',
+  14: 'Use hands, mouth, feet, or genitals in a “stop-start” pattern: five continuous movements, then one full second of stillness; repeat this cycle 10 times.',
+  15: 'For 60 seconds, use hands, mouth, feet, or genitals only in small circular motions at a constant speed.',
+  16: 'While using hands, mouth, feet, or genitals, after every 10 movements, pause briefly, give a “red/yellow/green” signal, then resume at the same pace for the next 10 movements.',
+  17: 'Repeat the previous action, but increase the size of each movement slightly for each set of 10 movements.',
+  18: 'Use hands, mouth, feet, or genitals to repeat a simple pattern of five identical movements, followed immediately by five quicker, shorter movements; complete this full pattern four times.',
+  19: 'Use hands, mouth, feet, or genitals to perform 30 tracing movements, each lasting about one second, without pausing.',
+  20: 'Use hands, mouth, feet, or genitals to perform a four-step sequence—slow stroke, medium stroke, fast stroke, brief stillness—and repeat this four-step sequence eight times in a row.'
+}
+
+  }
+};

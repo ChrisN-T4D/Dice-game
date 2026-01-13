@@ -123,30 +123,7 @@
       color: #d1d5db;
     }
 
-    /* Center the label row */
-    .label-row {
-      justify-content: center;
-      gap: 1.25rem;
-      width: 100%;
-    }
-
-    /* Bigger + more playful look */
-    .label-row label {
-      font-size: 1.05rem;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-
-    /* Optional: make them look like little chips */
-    .label-row label {
-      padding: 0.25rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid #334155;
-      background: rgba(2, 6, 23, 0.65);
-    }
-
-
+    
     input[type="number"] {
       width: 4rem;
       padding: 0.25rem 0.4rem;
@@ -194,7 +171,13 @@
       font-weight: 700;
     }
     .pepper:hover {
-      filter: brightness(1.05);
+      filter: brightness(1.15);
+    }
+
+    .sub {
+      font-size: 0.78em;
+      font-weight: 600;
+      opacity: 0.9;
     }
 
 
@@ -252,7 +235,15 @@
     }
 
     .roll-col label {
-      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: rgba(2, 6, 23, 0.65);
     }
 
     .roll-col input[type="number"] {
@@ -399,17 +390,17 @@
 </div>
 
 <div class="roll-grid" style="margin-bottom: 0.75rem;">
-  <div class="roll-col">
+  <div class="roll-col label">
     <label id="locationLabel" for="locationRoll">Location roll d20</label>
     <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
   </div>
 
-  <div class="roll-col">
+  <div class="roll-col label">
     <label id="actionLabel" for="actionRoll">Action roll d20</label>
     <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
   </div>
 
-  <div class="roll-col">
+  <div class="roll-col label">
     <label for="clothingRoll">Clothing roll d6</label>
     <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
   </div>
@@ -423,9 +414,10 @@
 </div>
 
 <!-- Clothing control row (smaller) -->
-<div class="row" style="margin-bottom: 0.75rem;">
+<div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
   <button class="secondary pepper small" id="noClothingPrompts">
-    🌶️ All clothing removed (disable clothing prompts)
+    🌶️ All clothing removed <br>
+    <span class="sub">(disable clothing prompts)</span>
   </button>
 </div>
 

@@ -4,7 +4,9 @@ let phase = Number(localStorage.getItem('sensatePhase')) || 1;
 let rollCount = Number(localStorage.getItem('sensateRollCount')) || 0;
 const maxPhase = 3;
 
-let lastActionId = null; // for repeat detection
+let lastActionId = null;           // for repeat detection
+let awaitingPartnerTurn = false;   // two turns = one round
+let clothingPromptsEnabled = true; // can be turned off
 
 // Phase 3: map d20 roll → location index (1–8)
 const phase3LocationMap = {
@@ -20,10 +22,19 @@ const phase3LocationMap = {
   19: 3, 20: 4
 };
 
+// Clothing d6 table (applies in any phase while clothingPromptsEnabled)
+const clothingTable = {
+  1: 'Roller makes no changes to the receiver’s clothing; all touch stays over whatever the receiver is currently wearing for this round.',
+  2: 'Roller removes or loosens one small item of the receiver’s clothing (for example, a sock, jewelry, watch, scarf, or hair tie), keeping everything else the same.',
+  3: 'Roller uncovers one specific body area of the receiver by adjusting clothing (such as sliding up a sleeve to reveal a forearm or moving a pant leg to reveal part of a calf), leaving all other clothing as it is.',
+  4: 'Roller removes one article of clothing from the receiver (any agreed item), while keeping all remaining clothing as it is for this round.',
+  5: 'Roller removes one additional article of clothing from the receiver later in this same round, so that a total of two items may come off or be loosened, with all remaining clothing unchanged.',
+  6: 'Critical change: roller may remove or loosen up to two articles of the receiver’s clothing and also re‑position any remaining clothing to reveal new non‑genital areas, stopping or scaling back immediately if the receiver signals they have reached their limit.'
+};
+
 function getPhase3Location(roll) {
   const idx = phase3LocationMap[roll]; // 1–8
   if (!idx) return null;
-  // Phase 3 table keyed 1–8 for locations
   return tables[3].locations[idx];
 }
 
@@ -37,11 +48,13 @@ function saveState() {
 const phaseDisplay = document.getElementById('phaseDisplay');
 const rollCountDisplay = document.getElementById('rollCountDisplay');
 const exerciseOutput = document.getElementById('exerciseOutput');
+const clothingOutput = document.getElementById('clothingOutput');
 const messageBox = document.getElementById('message');
 const errorBox = document.getElementById('error');
 
 const locationRollInput = document.getElementById('locationRoll');
 const actionRollInput = document.getElementById('actionRoll');
+const clothingRollInput = document.getElementById('clothingRoll');
 const submitRollBtn = document.getElementById('submitRoll');
 const newSessionBtn = document.getElementById('newSession');
 
@@ -53,12 +66,23 @@ const timer5Btn = document.getElementById('timer5');
 const timerDisplay = document.getElementById('timerDisplay');
 
 const testSoundBtn = document.getElementById('testSound');
+const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
 
 if (testSoundBtn) {
   testSoundBtn.addEventListener('click', () => {
     if (timerSound) {
       timerSound.currentTime = 0;
       timerSound.play();
+    }
+  });
+}
+
+if (noClothingPromptsBtn) {
+  noClothingPromptsBtn.addEventListener('click', () => {
+    clothingPromptsEnabled = false;
+    if (clothingOutput) {
+      clothingOutput.textContent =
+        'Clothing prompts are off. Continue with touch as you are.';
     }
   });
 }
@@ -70,7 +94,6 @@ function clearMessages() {
 
 function flashMessage(className = 'flash') {
   messageBox.classList.remove('flash', 'repeat-flash');
-  // force reflow so animation can retrigger
   void messageBox.offsetWidth;
   messageBox.classList.add(className);
   setTimeout(() => {
@@ -152,12 +175,9 @@ function startTimer(seconds) {
       updateTimerDisplay();
       clearTimer();
 
-      // Play audio cue when timer finishes
       if (timerSound) {
         timerSound.currentTime = 0;
-        timerSound.play().catch(() => {
-          // autoplay blocked → fail silently
-        });
+        timerSound.play().catch(() => {});
       }
 
       messageBox.textContent =
@@ -171,7 +191,7 @@ function startTimer(seconds) {
 // ----- Prompt lookup for two rolls -----
 
 function getPrompt(currentPhase, locationRoll, actionRoll) {
-  const phaseTable = tables[currentPhase]; // tables keyed 1,2,3
+  const phaseTable = tables[currentPhase];
   if (!phaseTable) {
     return 'Unknown phase.';
   }
@@ -179,10 +199,8 @@ function getPrompt(currentPhase, locationRoll, actionRoll) {
   let location;
 
   if (currentPhase === 3) {
-    // Phase 3: use mapping to double up locations on the d20
     location = getPhase3Location(locationRoll);
   } else {
-    // Phases 1 and 2: direct 1–20 indexing
     location = phaseTable.locations[locationRoll];
   }
 
@@ -229,11 +247,15 @@ function resetSession() {
   phase = 1;
   rollCount = 0;
   lastActionId = null;
+  awaitingPartnerTurn = false;
+  clothingPromptsEnabled = true;
   saveState();
   clearMessages();
   notifyPhaseChange(phase);
   updatePhaseUI(phase, rollCount);
-  exerciseOutput.textContent = 'New session started. Roll two d20s to begin Phase 1.';
+  exerciseOutput.textContent =
+    'New session started. Roll two d20s (and optional d6) to begin Phase 1.';
+  if (clothingOutput) clothingOutput.textContent = '';
 }
 
 function handleUserRoll() {
@@ -243,21 +265,30 @@ function handleUserRoll() {
   const actRaw = actionRollInput.value;
 
   const loc = Number(locRaw);
-  let act = Number(actRaw); // let so we can reroll on 20
+  let act = Number(actRaw);
 
   const validLoc = Number.isInteger(loc) && loc >= 1 && loc <= 20;
   const validAct = Number.isInteger(act) && act >= 1 && act <= 20;
 
   if (!validLoc || !validAct) {
-    errorBox.textContent = 'Please enter whole numbers between 1 and 20 for both rolls.';
+    errorBox.textContent =
+      'Please enter whole numbers between 1 and 20 for both d20 rolls.';
     return;
+  }
+
+  // optional clothing roll
+  let clothingRoll = null;
+  if (clothingRollInput && clothingRollInput.value.trim() !== '') {
+    const raw = Number(clothingRollInput.value);
+    if (Number.isInteger(raw) && raw >= 1 && raw <= 6) {
+      clothingRoll = raw;
+    }
   }
 
   let extendedTime = false;
   if (act === 20) {
     extendedTime = true;
-    // internal reroll for action: 1–19
-    act = Math.floor(Math.random() * 19) + 1; // 1–19
+    act = Math.floor(Math.random() * 19) + 1;
     messageBox.textContent = '⭐ Critical roll! This action gets extended time.';
     flashMessage('flash');
   }
@@ -274,28 +305,47 @@ function handleUserRoll() {
   showExercise(phase, loc, act);
 
   if (extendedTime) {
-    exerciseOutput.textContent += ' Spend about twice as long on this location.';
+    exerciseOutput.textContent +=
+      ' Spend about twice as long on this location.';
   } else if (isRepeat) {
-    messageBox.textContent = '🔁 Repeat action rolled. Explore how it feels this time.';
+    messageBox.textContent =
+      '🔁 Repeat action rolled. Explore how it feels this time.';
     flashMessage('repeat-flash');
   }
 
-  rollCount++;
+  // Clothing prompt output
+  if (clothingOutput) {
+    if (!clothingPromptsEnabled || clothingRoll === null) {
+      clothingOutput.textContent = '';
+    } else {
+      const clothingText = clothingTable[clothingRoll];
+      clothingOutput.textContent = clothingText || '';
+    }
+  }
 
-  const internalRoll = 1 + Math.floor(Math.random() * 20); // 1–20
+  // Round tracking: two uses of handleUserRoll = one round
+  if (!awaitingPartnerTurn) {
+    awaitingPartnerTurn = true;
+  } else {
+    awaitingPartnerTurn = false;
+    rollCount++;
 
-  if (internalRoll < rollCount && phase < maxPhase) {
-    phase++;
-    rollCount = 0;
-    notifyPhaseChange(phase);
-    flashMessage('flash');
+    const internalRoll = 1 + Math.floor(Math.random() * 20); // 1–20
+
+    if (internalRoll < rollCount && phase < maxPhase) {
+      phase++;
+      rollCount = 0;
+      notifyPhaseChange(phase);
+      flashMessage('flash');
+    }
   }
 
   saveState();
-  updatePhaseUI(phase, rollCount, internalRoll);
+  updatePhaseUI(phase, rollCount);
 
   locationRollInput.value = '';
   actionRollInput.value = '';
+  if (clothingRollInput) clothingRollInput.value = '';
 }
 
 // ----- Wire up events -----
@@ -308,6 +358,11 @@ locationRollInput.addEventListener('keyup', (event) => {
 actionRollInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter') handleUserRoll();
 });
+if (clothingRollInput) {
+  clothingRollInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') handleUserRoll();
+  });
+}
 
 newSessionBtn.addEventListener('click', resetSession);
 
@@ -319,15 +374,14 @@ if (phaseSelect) {
     renderPhaseSummary(selectedPhase);
   });
 
-  // initial render for whatever is selected by default
   renderPhaseSummary(Number(phaseSelect.value));
 }
 
 // Timer buttons
-timer30Btn.addEventListener('click', () => startTimer(30));   // 30 sec
-timer1Btn.addEventListener('click', () => startTimer(60));    // 1 min
-timer2Btn.addEventListener('click', () => startTimer(120));   // 2 min
-timer5Btn.addEventListener('click', () => startTimer(300));   // 5 min
+timer30Btn.addEventListener('click', () => startTimer(30));  // 30 sec
+timer1Btn.addEventListener('click', () => startTimer(60));   // 1 min
+timer2Btn.addEventListener('click', () => startTimer(120));  // 2 min
+timer5Btn.addEventListener('click', () => startTimer(300));  // 5 min
 
 // ----- Initialize UI on load -----
 
@@ -340,5 +394,5 @@ if (rollCount > 0 || phase > 1) {
     'Resuming your last session. Enter both rolls when you are ready.';
 } else {
   exerciseOutput.textContent =
-    'Enter both rolls to get your first prompt.';
+    'Enter both d20 rolls (and optional d6) to get your first prompt.';
 }

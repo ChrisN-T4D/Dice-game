@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Intimacy D20 Journey</title>
+  <title>Sensate Focus Dice Helper</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -14,48 +14,46 @@
       color: #e5e7eb;
     }
 
-/* Phase color themes – stronger */
+    /* Strong phase color themes */
 
-body.phase-1 {
-  background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
-}
+    body.phase-1 {
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+    }
 
-body.phase-2 {
-  background: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
-}
+    body.phase-2 {
+      background: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
+    }
 
-body.phase-3 {
-  background: radial-gradient(circle at top, #4a044e 0, #020617 55%, #000 100%);
-}
+    body.phase-3 {
+      background: radial-gradient(circle at top, #4a044e 0, #020617 55%, #000 100%);
+    }
 
-body.phase-1 .card {
-  border-color: #3b82f6;
-  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.45);
-}
+    body.phase-1 .card {
+      border-color: #3b82f6;
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.45);
+    }
 
-body.phase-2 .card {
-  border-color: #a855f7;
-  box-shadow: 0 18px 40px rgba(168, 85, 247, 0.45);
-}
+    body.phase-2 .card {
+      border-color: #a855f7;
+      box-shadow: 0 18px 40px rgba(168, 85, 247, 0.45);
+    }
 
-body.phase-3 .card {
-  border-color: #ec4899;
-  box-shadow: 0 18px 40px rgba(236, 72, 153, 0.5);
-}
+    body.phase-3 .card {
+      border-color: #ec4899;
+      box-shadow: 0 18px 40px rgba(236, 72, 153, 0.5);
+    }
 
-/* tweak primary button to echo phase color */
-body.phase-1 .primary {
-  background: linear-gradient(to right, #3b82f6, #22c55e);
-}
+    body.phase-1 .primary {
+      background: linear-gradient(to right, #3b82f6, #22c55e);
+    }
 
-body.phase-2 .primary {
-  background: linear-gradient(to right, #a855f7, #22c55e);
-}
+    body.phase-2 .primary {
+      background: linear-gradient(to right, #a855f7, #22c55e);
+    }
 
-body.phase-3 .primary {
-  background: linear-gradient(to right, #ec4899, #22c55e);
-}
-
+    body.phase-3 .primary {
+      background: linear-gradient(to right, #ec4899, #22c55e);
+    }
 
     .page {
       max-width: 900px;
@@ -122,7 +120,6 @@ body.phase-3 .primary {
     }
 
     .primary {
-      background: linear-gradient(to right, #06b6d4, #22c55e);
       color: #020617;
       font-weight: 600;
     }
@@ -248,22 +245,21 @@ body.phase-3 .primary {
     <!-- Main card -->
     <div class="card">
       <div class="card-header">
-        <h1>Intimacy D20 Journey</h1>
+        <h1>Sensate focus randomizer</h1>
         <p>
-          Enter your two d20 rolls to get a location and an action for the
-          current phase.
+          Enter your two d20 rolls (location + action) and an optional d6 clothing roll for the current phase.
         </p>
       </div>
 
       <div class="row" style="margin-bottom: 0.5rem;">
         <label>Phase:</label>
         <span id="phaseDisplay">1</span>
-        <span style="margin-left: 1rem;">Rolls this phase:</span>
+        <span style="margin-left: 1rem;">Rounds this phase:</span>
         <span id="rollCountDisplay">0</span>
       </div>
 
       <div class="row" style="margin-bottom: 0.75rem;">
-        <label for="locationRoll">Location roll</label>
+        <label for="locationRoll">Location roll (d20)</label>
         <input
           id="locationRoll"
           type="number"
@@ -272,7 +268,7 @@ body.phase-3 .primary {
           inputmode="numeric"
         />
 
-        <label for="actionRoll">Action roll</label>
+        <label for="actionRoll">Action roll (d20)</label>
         <input
           id="actionRoll"
           type="number"
@@ -281,9 +277,25 @@ body.phase-3 .primary {
           inputmode="numeric"
         />
 
+        <label for="clothingRoll">Clothing roll (d6)</label>
+        <input
+          id="clothingRoll"
+          type="number"
+          min="1"
+          max="6"
+          inputmode="numeric"
+        />
+
         <button class="primary" id="submitRoll">🎲 Submit rolls</button>
         <button class="secondary danger" id="newSession">
-          ♻️ New Session
+          ♻️ New couple/session
+        </button>
+      </div>
+
+      <!-- Clothing control -->
+      <div class="row" style="margin-bottom: 0.75rem;">
+        <button class="secondary" id="noClothingPrompts">
+          🚪 All clothing removed – stop clothing prompts
         </button>
       </div>
 
@@ -307,13 +319,16 @@ body.phase-3 .primary {
       </div>
 
       <div id="exerciseOutput" class="output">
-        Enter both rolls to get your first prompt.
+        Enter both d20 rolls (and an optional d6) to get your first prompt.
       </div>
+
+      <div id="clothingOutput" class="message"></div>
+
       <div id="message" class="message"></div>
       <div id="error" class="error"></div>
 
       <audio id="timerSound">
-        <source src="timer-beep.wav" type="audio/mpeg" />
+        <source src="ding.mp3" type="audio/mpeg" />
       </audio>
     </div>
 

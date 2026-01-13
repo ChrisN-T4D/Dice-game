@@ -17,12 +17,12 @@ const clothingTable = {
   4: 'Roller removes one article of clothing from the receiver (any agreed item), while keeping all remaining clothing as it is for this round.',
   5: 'Roller removes one additional article of clothing from the receiver later in this same round, so that a total of two items may come off or be loosened, with all remaining clothing unchanged.',
   6: 'Critical change: roller may remove or loosen up to two articles of the receiver’s clothing and also re‑position any remaining clothing to reveal new non‑genital areas, stopping or scaling back immediately if the receiver signals they have reached their limit.'
-};
+}; 
 
 function saveState() {
   localStorage.setItem('sensatePhase', String(phase));
   localStorage.setItem('sensateRollCount', String(rollCount));
-}
+} // closed
 
 // ----- DOM helpers -----
 

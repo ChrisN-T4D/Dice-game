@@ -288,10 +288,10 @@ function resetSession() {
   clearMessages();
   notifyPhaseChange(phase);
   updatePhaseUI(phase, rollCount);
-  if (whereOutput) whereOutput.textContent = '—';
+  if (whereOutput) whereOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
 if (whatOutput) whatOutput.textContent =
   'New session started. Enter both d20 rolls (and optional d6) when ready.';
-if (clothingOutput) clothingOutput.textContent = '—';
+if (clothingOutput) clothingOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
 }
 
 function handleUserRoll() {

@@ -123,6 +123,30 @@
       color: #d1d5db;
     }
 
+    /* Center the label row */
+    .label-row {
+      justify-content: center;
+      gap: 1.25rem;
+      width: 100%;
+    }
+
+    /* Bigger + more playful look */
+    .label-row label {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    /* Optional: make them look like little chips */
+    .label-row label {
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: rgba(2, 6, 23, 0.65);
+    }
+
+
     input[type="number"] {
       width: 4rem;
       padding: 0.25rem 0.4rem;
@@ -320,8 +344,8 @@
     @keyframes phasePulse {
       0%   { transform: scale(1); }
       40%  { transform: scale(1.35); }
-      100% { transform: scale(1); }
-}
+      100% { transform: scale(1); }  
+    }
 
 
   </style>
@@ -351,15 +375,17 @@
   <button class="secondary danger" id="newSession">New Session</button>
 </div>
 
-<!-- Inputs row -->
-<div class="row" style="margin-bottom: 0.75rem;">
-  <label for="locationRoll">Location roll d20</label>
-  <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
-
-  <label for="actionRoll">Action roll d20</label>
-  <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
-
+<!-- Input Label row -->
+<div class="row label-row" style="margin-bottom: 0.75rem;">
+  <label id="locationLabel" for="locationRoll">Location roll d20</label>
+  <label id="actionLabel" for="actionRoll">Action roll d20</label>
   <label for="clothingRoll">Clothing roll d6</label>
+</div>
+
+<!-- Input row -->
+<div class="row" style="margin-bottom: 0.75rem;">
+  <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+  <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
   <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
 </div>
 
@@ -371,8 +397,8 @@
 
 <!-- Clothing control row (smaller) -->
 <div class="row" style="margin-bottom: 0.75rem;">
-  <button class="secondary small" id="noClothingPrompts">
-    All clothing removed (disable clothing prompts)
+  <button class="secondary pepper small" id="noClothingPrompts">
+    🌶️ All clothing removed (disable clothing prompts)
   </button>
 </div>
 

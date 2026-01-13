@@ -45,6 +45,22 @@ function saveState() {
 
 // ----- DOM helpers -----
 
+window.addEventListener('DOMContentLoaded', () => {
+  const phaseDisplay = document.getElementById('phaseDisplay');
+  const rollCountDisplay = document.getElementById('rollCountDisplay');
+
+  const whereOutput = document.getElementById('whereOutput');
+  const whatOutput = document.getElementById('whatOutput');
+  const clothingOutput = document.getElementById('clothingOutput');
+
+  // DEBUG (temporary): this will immediately tell you what's null
+  console.log({ whereOutput, whatOutput, clothingOutput });
+
+  // ...everything else that uses DOM elements:
+  // event listeners, init UI, etc.
+});
+
+
 const phaseDisplay = document.getElementById('phaseDisplay');
 const rollCountDisplay = document.getElementById('rollCountDisplay');
 const whereOutput = document.getElementById('whereOutput');

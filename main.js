@@ -325,8 +325,7 @@ function handleUserRoll() {
   showExercise(phase, loc, act);
 
   if (extendedTime) {
-    exerciseOutput.textContent +=
-      ' Spend about twice as long on this location.';
+   if (whatOutput) whatOutput.textContent += ' Spend about twice as long on this location.';
   } else if (isRepeat) {
     messageBox.textContent =
       '🔁 Repeat action rolled. Explore how it feels this time.';

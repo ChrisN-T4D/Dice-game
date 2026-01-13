@@ -27,39 +27,36 @@ function saveState() {
 // ----- DOM helpers -----
 
 window.addEventListener('DOMContentLoaded', () => {
- const phaseDisplay = document.getElementById('phaseDisplay');
-const rollCountDisplay = document.getElementById('rollCountDisplay');
-const whereOutput = document.getElementById('whereOutput');
-const whatOutput = document.getElementById('whatOutput');
-const clothingOutput = document.getElementById('clothingOutput');
-const messageBox = document.getElementById('message');
-const errorBox = document.getElementById('error');
+  const phaseDisplay = document.getElementById('phaseDisplay');
+  const rollCountDisplay = document.getElementById('rollCountDisplay');
+  const whereOutput = document.getElementById('whereOutput');
+  const whatOutput = document.getElementById('whatOutput');
+  const clothingOutput = document.getElementById('clothingOutput');
+  const messageBox = document.getElementById('message');
+  const errorBox = document.getElementById('error');
 
-const locationRollInput = document.getElementById('locationRoll');
-const actionRollInput = document.getElementById('actionRoll');
-const clothingRollInput = document.getElementById('clothingRoll');
-const submitRollBtn = document.getElementById('submitRoll');
-const newSessionBtn = document.getElementById('newSession');
+  const locationRollInput = document.getElementById('locationRoll');
+  const actionRollInput = document.getElementById('actionRoll');
+  const clothingRollInput = document.getElementById('clothingRoll');
+  const submitRollBtn = document.getElementById('submitRoll');
+  const newSessionBtn = document.getElementById('newSession');
 
-const timerSound = document.getElementById('timerSound');
-const timer30Btn = document.getElementById('timer30');
-const timer1Btn = document.getElementById('timer1');
-const timer2Btn = document.getElementById('timer2');
-const timer5Btn = document.getElementById('timer5');
-const timerDisplay = document.getElementById('timerDisplay');
+  const timerSound = document.getElementById('timerSound');
+  const timer30Btn = document.getElementById('timer30');
+  const timer1Btn = document.getElementById('timer1');
+  const timer2Btn = document.getElementById('timer2');
+  const timer5Btn = document.getElementById('timer5');
+  const timerDisplay = document.getElementById('timerDisplay');
 
-const testSoundBtn = document.getElementById('testSound');
-const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
-const rerollPromptBtn = document.getElementById("rerollPrompt");
+  const testSoundBtn = document.getElementById('testSound');
+  const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
+  const rerollPromptBtn = document.getElementById("rerollPrompt");
 
   // DEBUG (temporary): this will immediately tell you what's null
   console.log({ whereOutput, whatOutput, clothingOutput });
 
   // ...everything else that uses DOM elements:
   // event listeners, init UI, etc.
-});
-
-
 
 
 if (testSoundBtn) {
@@ -468,3 +465,4 @@ if (rollCount > 0 || phase > 1) {
     'Enter both d20 rolls (and optional d6) to get your first prompt.';
 }
 
+});

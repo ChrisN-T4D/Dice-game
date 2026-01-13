@@ -61,6 +61,28 @@
       padding: 0 1rem;
     }
 
+    .phase-flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 9999;
+    }
+
+    .phase-flash.run {
+      animation: phaseFlash 700ms ease-out;
+    }
+
+    @keyframes phaseFlash {
+      0%   { opacity: 0; }
+      25%  { opacity: 0.65; }
+      100% { opacity: 0; }
+    }
+
+    body.phase-1 .phase-flash { background: rgba(59, 130, 246, 0.35); }
+    body.phase-2 .phase-flash { background: rgba(168, 85, 247, 0.35); }
+    body.phase-3 .phase-flash { background: rgba(236, 72, 153, 0.35); }
+
     .card {
       background-color: #020617;
       border-radius: 0.75rem;
@@ -249,9 +271,52 @@
         box-shadow: 0 0 0 14px rgba(56, 189, 248, 0);
       }
     }
+
+    /* Phase number pulse  */
+    #phaseDisplay.pulse {
+      display: inline-block; /* makes transform work reliably */
+      animation: phasePulse 650ms ease-out;
+    }
+
+    @keyframes phasePulse {
+      0%   { transform: scale(1); text-shadow: none; }
+      40%  { transform: scale(1.35); text-shadow: 0 0 18px rgba(34, 197, 94, 0.6); }
+      100% { transform: scale(1); text-shadow: none; }
+    }
+
+    /* Base pulse animation (keeps transform) */
+    #phaseDisplay.pulse {
+        display: inline-block;
+        animation: phasePulse 650ms ease-out;
+    }
+
+    /* Phase-specific pulse color + glow */
+    body.phase-1 #phaseDisplay.pulse {
+        color: #60a5fa; /* light blue */
+        text-shadow: 0 0 18px rgba(59, 130, 246, 0.85);
+    }
+
+    body.phase-2 #phaseDisplay.pulse {
+        color: #c084fc; /* light purple */
+        text-shadow: 0 0 18px rgba(168, 85, 247, 0.85);
+    }
+
+    body.phase-3 #phaseDisplay.pulse {
+        color: #f472b6; /* light pink */
+        text-shadow: 0 0 18px rgba(236, 72, 153, 0.85);
+    }
+
+    @keyframes phasePulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35); }
+      100% { transform: scale(1); }
+}
+
+
   </style>
 </head>
 <body>
+  <div id="phaseFlash" class="phase-flash" aria-hidden="true"></div>
   <div class="page">
     <!-- Main card -->
     <div class="card">
@@ -298,6 +363,7 @@
         />
 
         <button class="primary" id="submitRoll">🎲 Submit rolls</button>
+        <button class="secondary" id="rerollPrompt">Reroll prompt</button>
         <button class="secondary danger" id="newSession">
           ♻️ New Session
         </button>
@@ -361,15 +427,17 @@
         </div>
 
         <!-- Locations list -->
-        <div class="summary-section">
-          <h4 class="section-subtitle">Locations</h4>
-          <ul id="currentLocationsList" class="summary-list"></ul>
-        </div>
+<div class="summary-section">
+  <h4 id="locationsHeader" class="section-subtitle">Locations</h4>
+  <ul id="currentLocationsList" class="summary-list"></ul>
+</div>
 
-        <!-- Actions list -->
-        <div class="summary-section">
-          <h4 class="section-subtitle">Actions</h4>
-          <ul id="currentActionsList" class="summary-list"></ul>
+<!-- Actions list -->
+<div class="summary-section">
+  <h4 id="actionsHeader" class="section-subtitle">Actions</h4>
+  <ul id="currentActionsList" class="summary-list"></ul>
+</div>
+
         </div>
       </div>
     </div>

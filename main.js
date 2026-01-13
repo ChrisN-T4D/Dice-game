@@ -4,23 +4,10 @@ let phase = Number(localStorage.getItem('sensatePhase')) || 1;
 let rollCount = Number(localStorage.getItem('sensateRollCount')) || 0;
 const maxPhase = 3;
 
-let lastActionId = null;           // for repeat detection
+let usedWhereThisPhase = new Set(); // location/position rolls seen this phase
+let usedWhatThisPhase  = new Set(); // action/modifier rolls seen this phase
 let awaitingPartnerTurn = false;   // two turns = one round
 let clothingPromptsEnabled = true; // can be turned off
-
-// Phase 3: map d20 roll → location index (1–8)
-const phase3LocationMap = {
-  1: 1, 2: 1,
-  3: 2, 4: 2,
-  5: 3, 6: 3,
-  7: 4, 8: 4,
-  9: 5, 10: 5,
-  11: 6, 12: 6,
-  13: 7, 14: 7,
-  15: 8, 16: 8,
-  17: 1, 18: 2,
-  19: 3, 20: 4
-};
 
 // Clothing d6 table (applies in any phase while clothingPromptsEnabled)
 const clothingTable = {
@@ -31,12 +18,6 @@ const clothingTable = {
   5: 'Roller removes one additional article of clothing from the receiver later in this same round, so that a total of two items may come off or be loosened, with all remaining clothing unchanged.',
   6: 'Critical change: roller may remove or loosen up to two articles of the receiver’s clothing and also re‑position any remaining clothing to reveal new non‑genital areas, stopping or scaling back immediately if the receiver signals they have reached their limit.'
 };
-
-function getPhase3Location(roll) {
-  const idx = phase3LocationMap[roll]; // 1–8
-  if (!idx) return null;
-  return tables[3].locations[idx];
-}
 
 function saveState() {
   localStorage.setItem('sensatePhase', String(phase));
@@ -84,6 +65,8 @@ const timerDisplay = document.getElementById('timerDisplay');
 
 const testSoundBtn = document.getElementById('testSound');
 const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
+const rerollPromptBtn = document.getElementById("rerollPrompt");
+
 
 if (testSoundBtn) {
   testSoundBtn.addEventListener('click', () => {
@@ -205,6 +188,30 @@ function startTimer(seconds) {
   }, 1000);
 }
 
+function rollD20() {
+  return Math.floor(Math.random() * 20) + 1;
+}
+
+function handleRerollPrompt() {
+  clearMessages();
+
+  // Generate a new prompt without advancing turns/rounds
+  const loc = rollD20();
+  const act = rollD20();
+
+  // Update inputs so the UI stays consistent with the shown prompt
+  locationRollInput.value = String(loc);
+  actionRollInput.value = String(act);
+
+  // Optional: do NOT change clothing roll on reroll
+  // clothingRollInput.value stays as-is
+
+  showExercise(phase, loc, act);
+
+  // Optional UI message
+  messageBox.textContent = "Prompt rerolled (turn/round unchanged).";
+}
+
 // ----- Prompt lookup for two rolls -----
 
 function getPrompt(currentPhase, locationRoll, actionRoll) {
@@ -213,15 +220,15 @@ function getPrompt(currentPhase, locationRoll, actionRoll) {
     return 'Unknown phase.';
   }
 
-  let location;
+  let location, action;
 
   if (currentPhase === 3) {
-    location = getPhase3Location(locationRoll);
+    location = phaseTable.positions?.[locationRoll];
+    action = phaseTable.modifiers?.[actionRoll];
   } else {
     location = phaseTable.locations[locationRoll];
+    action = phaseTable.actions?.[actionRoll];
   }
-
-  const action = phaseTable.actions[actionRoll];
 
   if (!location && !action) {
     return `No prompt defined yet for Phase ${currentPhase}, rolls ${locationRoll} / ${actionRoll}.`;
@@ -243,14 +250,16 @@ function showExercise(currentPhase, locationRoll, actionRoll) {
     return;
   }
 
-  let where;
-  if (currentPhase === 3) {
-    where = getPhase3Location(locationRoll);
-  } else {
-    where = (phaseTable.locations || {})[locationRoll];
-  }
+  let where, what;
 
-  const what = (phaseTable.actions || {})[actionRoll];
+  if (currentPhase === 3) {
+    where = phaseTable.positions?.[locationRoll] ?? '';
+    what = phaseTable.modifiers?.[actionRoll] ?? '';
+
+  } else {
+    where = phaseTable.locations?.[locationRoll] ?? '';
+    what  = phaseTable.actions?.[actionRoll] ?? '';
+  }
 
   if (whereOutput) whereOutput.textContent = where || '—';
   if (whatOutput) whatOutput.textContent = what || '—';
@@ -262,6 +271,13 @@ function showExercise(currentPhase, locationRoll, actionRoll) {
 function notifyPhaseChange(newPhase) {
   document.body.classList.remove('phase-1', 'phase-2', 'phase-3');
   document.body.classList.add(`phase-${newPhase}`);
+  const phaseFlash = document.getElementById("phaseFlash");
+  if (phaseFlash) {
+    phaseFlash.classList.remove("run");
+    void phaseFlash.offsetWidth; // restart animation
+    phaseFlash.classList.add("run");
+  }
+
 
   if (newPhase === 1) {
     messageBox.textContent = 'Now in Phase 1: gentle, non‑genital warm‑up.';
@@ -273,6 +289,14 @@ function notifyPhaseChange(newPhase) {
       'You’ve unlocked Phase 3: explicitly sexual goals. Proceed only if both partners actively consent.';
   } else {
     messageBox.textContent = `Now in Phase ${newPhase}.`;
+
+    // pulse the phase number display
+  if (phaseDisplay) {
+    phaseDisplay.classList.remove("pulse");
+    void phaseDisplay.offsetWidth; // restart animation
+    phaseDisplay.classList.add("pulse");
+  }
+
   }
 }
 
@@ -281,7 +305,8 @@ function notifyPhaseChange(newPhase) {
 function resetSession() {
   phase = 1;
   rollCount = 0;
-  lastActionId = null;
+  usedWhereThisPhase = new Set();
+  usedWhatThisPhase  = new Set();
   awaitingPartnerTurn = false;
   clothingPromptsEnabled = true;
   saveState();
@@ -329,24 +354,34 @@ function handleUserRoll() {
     flashMessage('flash');
   }
 
-  // repeat detection (only when not a crit)
-  let isRepeat = false;
-  if (!extendedTime) {
-    if (lastActionId !== null && lastActionId === act) {
-      isRepeat = true;
-    }
-  }
-  lastActionId = act;
+  // repeat detection: any prior where/what roll in this phase (only when not a crit)
+let isWhereRepeat = false;
+let isWhatRepeat = false;
+
+if (!extendedTime) {
+  isWhereRepeat = usedWhereThisPhase.has(loc);
+  isWhatRepeat  = usedWhatThisPhase.has(act);
+
+  usedWhereThisPhase.add(loc);
+  usedWhatThisPhase.add(act);
+}
+
 
   showExercise(phase, loc, act);
 
   if (extendedTime) {
    if (whatOutput) whatOutput.textContent += ' Spend about twice as long on this location.';
-  } else if (isRepeat) {
-    messageBox.textContent =
-      '🔁 Repeat action rolled. Explore how it feels this time.';
-    flashMessage('repeat-flash');
+  } else if (isWhereRepeat || isWhatRepeat) {
+  if (isWhereRepeat && isWhatRepeat) {
+    messageBox.textContent = "Repeat where + repeat what rolled. Explore what changes when you vary pressure/tempo/intensity.";
+  } else if (isWhereRepeat) {
+    messageBox.textContent = "Repeat where rolled. Keep the same where, but try it with a different feel.";
+  } else {
+    messageBox.textContent = "Repeat what rolled. Try the same what with a different vibe.";
   }
+  flashMessage("repeat-flash");
+}
+
 
   // Clothing prompt output
   if (clothingOutput) {
@@ -372,6 +407,8 @@ function handleUserRoll() {
       phase++;
       rollCount = 0;
       notifyPhaseChange(phase);
+      usedWhereThisPhase = new Set();
+      usedWhatThisPhase  = new Set();
       flashMessage('flash');
     }
   }
@@ -387,6 +424,8 @@ function handleUserRoll() {
 // ----- Wire up events -----
 
 submitRollBtn.addEventListener('click', handleUserRoll);
+
+if (rerollPromptBtn) rerollPromptBtn.addEventListener("click", handleRerollPrompt);
 
 locationRollInput.addEventListener('keyup', (event) => {
   if (event.key === 'Enter') handleUserRoll();

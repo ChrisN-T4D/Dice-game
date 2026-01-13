@@ -35,6 +35,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const messageBox = document.getElementById('message');
   const errorBox = document.getElementById('error');
 
+  const locationLabel = document.getElementById('locationLabel');
+  const actionLabel = document.getElementById('actionLabel');
   const locationRollInput = document.getElementById('locationRoll');
   const actionRollInput = document.getElementById('actionRoll');
   const clothingRollInput = document.getElementById('clothingRoll');
@@ -51,8 +53,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const testSoundBtn = document.getElementById('testSound');
   const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
   const rerollPromptBtn = document.getElementById("rerollPrompt");
-
-  // DEBUG (temporary): this will immediately tell you what's null
+   // DEBUG (temporary): this will immediately tell you what's null
   console.log({ whereOutput, whatOutput, clothingOutput });
 
   // ...everything else that uses DOM elements:
@@ -451,6 +452,18 @@ timer5Btn.addEventListener('click', () => startTimer(300));  // 5 min
 
 // ----- Initialize UI on load -----
 
+function updateRollLabels(currentPhase) {
+  if (!locationLabel || !actionLabel) return;
+
+  if (currentPhase === 3) {
+    locationLabel.textContent = 'Position roll d20';
+    actionLabel.textContent = 'Modifier roll d20';
+  } else {
+    locationLabel.textContent = 'Location roll d20';
+    actionLabel.textContent = 'Action roll d20';
+  }
+}
+
 updatePhaseUI(phase, rollCount);
 updateTimerDisplay();
 notifyPhaseChange(phase);
@@ -464,5 +477,8 @@ if (rollCount > 0 || phase > 1) {
   if (whatOutput) whatOutput.textContent =
     'Enter both d20 rolls (and optional d6) to get your first prompt.';
 }
+
+notifyPhaseChange(phase);
+updateRollLabels(phase);
 
 });

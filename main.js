@@ -47,7 +47,8 @@ function saveState() {
 
 const phaseDisplay = document.getElementById('phaseDisplay');
 const rollCountDisplay = document.getElementById('rollCountDisplay');
-const exerciseOutput = document.getElementById('exerciseOutput');
+const whereOutput = document.getElementById('whereOutput');
+const whatOutput = document.getElementById('whatOutput');
 const clothingOutput = document.getElementById('clothingOutput');
 const messageBox = document.getElementById('message');
 const errorBox = document.getElementById('error');
@@ -219,8 +220,26 @@ function getPrompt(currentPhase, locationRoll, actionRoll) {
 }
 
 function showExercise(currentPhase, locationRoll, actionRoll) {
-  exerciseOutput.textContent = getPrompt(currentPhase, locationRoll, actionRoll);
+  const phaseTable = tables[currentPhase];
+  if (!phaseTable) {
+    if (whereOutput) whereOutput.textContent = '—';
+    if (whatOutput) whatOutput.textContent = 'Unknown phase.';
+    return;
+  }
+
+  let where;
+  if (currentPhase === 3) {
+    where = getPhase3Location(locationRoll);
+  } else {
+    where = (phaseTable.locations || {})[locationRoll];
+  }
+
+  const what = (phaseTable.actions || {})[actionRoll];
+
+  if (whereOutput) whereOutput.textContent = where || '—';
+  if (whatOutput) whatOutput.textContent = what || '—';
 }
+
 
 // ----- Phase change messaging & theming -----
 
@@ -253,9 +272,10 @@ function resetSession() {
   clearMessages();
   notifyPhaseChange(phase);
   updatePhaseUI(phase, rollCount);
-  exerciseOutput.textContent =
-    'New session started. Roll two d20s (and optional d6) to begin Phase 1.';
-  if (clothingOutput) clothingOutput.textContent = '';
+  if (whereOutput) whereOutput.textContent = '—';
+if (whatOutput) whatOutput.textContent =
+  'New session started. Enter both d20 rolls (and optional d6) when ready.';
+if (clothingOutput) clothingOutput.textContent = '—';
 }
 
 function handleUserRoll() {
@@ -391,9 +411,12 @@ updateTimerDisplay();
 notifyPhaseChange(phase);
 
 if (rollCount > 0 || phase > 1) {
-  exerciseOutput.textContent =
+  if (whereOutput) whereOutput.textContent = '—';
+  if (whatOutput) whatOutput.textContent =
     'Resuming your last session. Enter both rolls when you are ready.';
 } else {
-  exerciseOutput.textContent =
+  if (whereOutput) whereOutput.textContent = '—';
+  if (whatOutput) whatOutput.textContent =
     'Enter both d20 rolls (and optional d6) to get your first prompt.';
 }
+

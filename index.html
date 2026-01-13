@@ -237,6 +237,29 @@
       font-size: 0.9rem;
     }
 
+    .roll-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 0.9rem;
+      align-items: start;
+    }
+
+    .roll-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;   /* centers label + input */
+      gap: 0.35rem;
+    }
+
+    .roll-col label {
+      text-align: center;
+    }
+
+    .roll-col input[type="number"] {
+      text-align: center;   /* centers the digits inside the box */
+    }
+
+
     .section-subtitle {
       margin: 0.75rem 0 0.25rem;
       font-size: 0.95rem;
@@ -358,7 +381,7 @@
       <div class="card-header">
         <h1>Intimacy D20 Journey</h1>
         <p>
-          Enter your two d20 rolls (location + action) and an optional d6 clothing roll for the current phase.
+          Enter your two d20 rolls and an optional d6 clothing roll for the current phase.
         </p>
       </div>
 
@@ -375,22 +398,26 @@
   <button class="secondary danger" id="newSession">New Session</button>
 </div>
 
-<!-- Input Label row -->
-<div class="row label-row" style="margin-bottom: 0.75rem;">
-  <label id="locationLabel" for="locationRoll">Location roll d20</label>
-  <label id="actionLabel" for="actionRoll">Action roll d20</label>
-  <label for="clothingRoll">Clothing roll d6</label>
+<div class="roll-grid" style="margin-bottom: 0.75rem;">
+  <div class="roll-col">
+    <label id="locationLabel" for="locationRoll">Location roll d20</label>
+    <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+  </div>
+
+  <div class="roll-col">
+    <label id="actionLabel" for="actionRoll">Action roll d20</label>
+    <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
+  </div>
+
+  <div class="roll-col">
+    <label for="clothingRoll">Clothing roll d6</label>
+    <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+  </div>
 </div>
 
-<!-- Input row -->
-<div class="row" style="margin-bottom: 0.75rem;">
-  <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
-  <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
-  <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
-</div>
 
 <!-- Action buttons row (Submit + Reroll on its own line) -->
-<div class="row" style="margin-bottom: 0.75rem;">
+<div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
   <button class="primary big" id="submitRoll">Submit rolls</button>
   <button class="secondary" id="rerollPrompt">Reroll prompt</button>
 </div>
@@ -410,9 +437,12 @@
         <button class="secondary" id="timer1">1 min</button>
         <button class="secondary" id="timer2">2 min</button>
         <button class="secondary" id="timer5">5 min</button>
+      </div>
+      
+      <div class="row" style="margin-bottom: 0.75rem;"></div>
         <span
           id="timerDisplay"
-          style="margin-left: 0.5rem; font-size: 0.9rem;"
+          style="justify-content: center; margin-left: 0.5rem; font-size: 0.9rem;"
         >
           00:00
         </span>

@@ -141,6 +141,17 @@
       cursor: pointer;
     }
 
+    button.big {
+      padding: 0.55rem 1.1rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    button.small {
+      padding: 0.25rem 0.55rem;
+      font-size: 0.82rem;
+    }
+
     .primary {
       color: #020617;
       font-weight: 600;
@@ -327,54 +338,44 @@
         </p>
       </div>
 
-      <div class="row" style="margin-bottom: 0.5rem;">
-        <label>Phase:</label>
-        <span id="phaseDisplay">1</span>
-        <span style="margin-left: 1rem;">Rounds this phase:</span>
-        <span id="rollCountDisplay">0</span>
-      </div>
+     <!-- Status row (New Session moved up here) -->
+<div class="row" style="margin-bottom: 0.5rem; justify-content: space-between;">
+  <div class="row" style="gap: 0.6rem;">
+    <label>Phase</label>
+    <span id="phaseDisplay">1</span>
 
-      <div class="row" style="margin-bottom: 0.75rem;">
-        <label for="locationRoll">Location roll (d20)</label>
-        <input
-          id="locationRoll"
-          type="number"
-          min="1"
-          max="20"
-          inputmode="numeric"
-        />
+    <span style="margin-left: 1rem;">Rounds this phase</span>
+    <span id="rollCountDisplay">0</span>
+  </div>
 
-        <label for="actionRoll">Action roll (d20)</label>
-        <input
-          id="actionRoll"
-          type="number"
-          min="1"
-          max="20"
-          inputmode="numeric"
-        />
+  <button class="secondary danger" id="newSession">New Session</button>
+</div>
 
-        <label for="clothingRoll">Clothing roll (d6)</label>
-        <input
-          id="clothingRoll"
-          type="number"
-          min="1"
-          max="6"
-          inputmode="numeric"
-        />
+<!-- Inputs row -->
+<div class="row" style="margin-bottom: 0.75rem;">
+  <label for="locationRoll">Location roll d20</label>
+  <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
 
-        <button class="primary" id="submitRoll">🎲 Submit rolls</button>
-        <button class="secondary" id="rerollPrompt">Reroll prompt</button>
-        <button class="secondary danger" id="newSession">
-          ♻️ New Session
-        </button>
-      </div>
+  <label for="actionRoll">Action roll d20</label>
+  <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
 
-      <!-- Clothing control -->
-      <div class="row" style="margin-bottom: 0.75rem;">
-        <button class="secondary pepper" id="noClothingPrompts">
-          🌶️ All clothing removed, disable clothing prompts
-        </button>
-      </div>
+  <label for="clothingRoll">Clothing roll d6</label>
+  <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+</div>
+
+<!-- Action buttons row (Submit + Reroll on its own line) -->
+<div class="row" style="margin-bottom: 0.75rem;">
+  <button class="primary big" id="submitRoll">Submit rolls</button>
+  <button class="secondary" id="rerollPrompt">Reroll prompt</button>
+</div>
+
+<!-- Clothing control row (smaller) -->
+<div class="row" style="margin-bottom: 0.75rem;">
+  <button class="secondary small" id="noClothingPrompts">
+    All clothing removed (disable clothing prompts)
+  </button>
+</div>
+
 
       <!-- Timer controls -->
       <div class="row" style="margin-bottom: 0.75rem;">

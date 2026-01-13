@@ -2,7 +2,7 @@
 
 const tables = {
   1: {
-    name: 'Phase 1 – Warm‑up',
+    name: 'Warm‑up',
     description: 'Non‑genital, low‑pressure exploration, clothing/lingerie optional.',
     locations: {
       1: 'Lips',
@@ -51,69 +51,32 @@ const tables = {
   },
 
   2: {
-    name: 'Phase 2 – Erogenous',
+    name: 'Heating up',
     description: 'Breasts/chest and genitals allowed; still low pressure and exploration‑focused.',
     locations: {
-      1: 'Inner lips and tongue (inside of mouth, lower lip for gentle sucking/biting).',
-      2: 'Ears (earlobes, inner rim, and the bowl close to the ear canal).',
-      3: 'Nape of neck and upper spine (hairline and back of neck for small kisses or gentle suction).',
-      4: 'Front and sides of neck and collarbones (under jaw, along neck tendons, and across the clavicles).',
-      5: 'Nipple–areola complex (nipples and areolas, any gender).',
-      6: 'Full breast or pectoral mound, including the under-breast fold and outer curves.',
-      7: 'Axilla and side ribs (armpit and the ribcage beside it, for those who enjoy this area).',
-      8: 'Inner forearms and wrists (palmar side, especially at the pulse points).',
-      9: 'Palms, finger pads, and spaces between fingers (for licking, sucking, or gentle biting).',
-      10: 'Belly button and lower-belly “V” leading down toward the pubic hairline.',
-      11: 'Pubic mound or mons and upper groin (the soft, fleshy area just above the genitals).',
-      12: 'Inner thighs high up and the groin creases very close to the genitals (any gender).',
-      13: 'Full butt cheeks and the gluteal folds where the butt meets the thighs.',
-      14: 'Perineum (the strip of skin between genitals and anus, any configuration).',
-      15: 'Outer genital areas (labia majora, lower penile shaft, and scrotum).',
-      16: 'Hips and hip bones (along the hip points at the front and the curve of the iliac crest).',
-      17: 'Side of the hips and outer thighs (the outer curve from hip down toward mid-thigh).',
-      18: 'Inner knees and just above the knees (front and inner sides close to the joint, any gender).',
-      19: 'Lower back and top of buttocks (the sacrum area and the curve where lower back meets the hips).',
-      20: 'Roller’s choice of any Phase 1 or Phase 2 location that both partners are comfortable revisiting.'
-    },
-    actions: {
-      1: 'Slow, exploratory touching focused on noticing what feels interesting, not on orgasm.',
-      2: 'Use hand‑riding: receiver’s hand rests on top of the toucher’s to guide pressure and pace.',
-      3: 'Apply gentle, teasing strokes that approach and move away from the most sensitive spot.',
-      4: 'Alternate 10 seconds of touch with 10 seconds of stillness for 3–5 cycles.',
-      5: 'Use circular motions with varying pressure while the receiver gives simple feedback.',
-      6: 'Use firmer, more rhythmic strokes without speeding up toward orgasm.',
-      7: 'Incorporate kissing or licking on or near the chosen area, if both agree.',
-      8: 'Explore the edges of the erogenous zone rather than the center (e.g., around genitals, not directly).',
-      9: 'Switch roles halfway through this action.',
-      10: 'Focus on breath coordination: toucher matches the receiver’s breathing rhythm.',
-      11: 'Play with temperature: warm hands vs. cooler air or a fabric near the area.',
-      12: 'Spend 2 minutes gradually increasing pressure, then 2 minutes gradually decreasing pressure.',
-      13: 'Use both hands to create broader contact and containment around the area.',
-      14: 'Do short “bursts” of faster stimulation, then deliberately slow back down.',
-      15: 'Receiver verbally describes what type of touch they want more of (“slower circles,” “lighter strokes,” etc.).',
-      16: 'Touch with the explicit rule that either person can say “pause” at any time, then resume when ready.',
-      17: 'Alternate between two different erogenous zones chosen together.',
-      18: 'Repeat the last action but change to a new erogenous location.',
-      19: 'Receiver chooses any Phase‑2 action to repeat or modify.',
-      20: 'Roller chooses any Phase‑2 action or invents a new erotic (but still exploratory) one.'
-    }
-  },
+  1: 'Mouth: inner lips + tongue (kissing, lip-sucking, gentle biting).',
+  2: 'Ears (lobes + inner rim).',
+  3: 'Front of neck + under jawline (light kisses, gentle suction).',
+  4: 'Nape/hairline + back of neck (small kisses, gentle suction).',
+  5: 'Collarbones/clavicle + upper chest (above breast/pec line).',
+  6: 'Nipple–areola complex (any gender).',
+  7: 'Nipple–areola complex.',
+  8: 'Full breast/pectoral mound (including under-breast fold + outer curves).',
+  9: 'Lower belly “V”/waistband line leading toward the pubic hairline (external).',
+  10: 'Pubic mound/mons + upper groin (external; above genitals).',
+  11: 'Inner thighs (highest 1/3) + groin creases close to genitals (external).',
+  12: 'Inner thighs + groin creases.',
+  13: 'Full butt cheeks + gluteal folds where butt meets thighs.',
+  14: 'Lower back/sacrum + top of buttocks.',
+  15: 'Perineum (external; between genitals and anus).',
+  16: 'Outer vulva only (labia majora / outer genital area; no penetration).',
+  17: 'Penis/scrotum (lower shaft + scrotum; no penetration).',
+  18: 'Genital ‘edges’ (external): where thighs meet groin + just outside the most sensitive tissue.',
+  19: 'Hips/iliac crest + side of hips (the ‘handhold’ area).',
+  20: 'Roller’s choice of any Phase 2 location that both partners want to revisit (or reroll).',
+},
 
-  3: {
-    name: 'Phase 3 – Sexual goals',
-    description: 'Explicitly sexual acts, orgasm‑oriented play, and possible penetration if desired.',
-    locations: {
-      // 8 core explicit zones; d20 is mapped to these in main.js
-      1: 'Inner genital lips or underside of shaft (labia minora or underside of penile shaft/base of glans).',
-      2: 'Primary arousal focus point (clitoral glans or hood, frenulum or corona of the glans).',
-      3: 'Entrance region (vaginal opening/vestibule or urethral meatus rim, as negotiated).',
-      4: 'Full external vulva or entire penile shaft and head.',
-      5: 'Scrotal–perineal or vulva–perineum junction (where scrotum or lower shaft, or vulva, meets the perineum).',
-      6: 'Perianal rim and surrounding external skin (outer anal ring and nearby skin, no penetration required).',
-      7: 'Perineum (strip of skin between genitals and anus).',
-      8: 'Outer genital areas (labia majora, lower penile shaft, and scrotum).'
-    },
-   actions: {
+    actions: {
   1: 'Use a hand to give 20 straight strokes at a steady pace.',
   2: 'Use a hand to give 10 short rapid strokes followed by 10 slow long strokes, then repeat this sequence once.',
   3: 'Use hands to give 15 light brushing strokes, followed immediately by 15 steady rubbing strokes.',
@@ -134,6 +97,56 @@ const tables = {
   18: 'Use hands, mouth, feet, or genitals to repeat a simple pattern of five identical movements, followed immediately by five quicker, shorter movements; complete this full pattern four times.',
   19: 'Use hands, mouth, feet, or genitals to perform 30 tracing movements, each lasting about one second, without pausing.',
   20: 'Use hands, mouth, feet, or genitals to perform a four-step sequence—slow stroke, medium stroke, fast stroke, brief stillness—and repeat this four-step sequence eight times in a row.'
+    }
+  },
+
+  3: {
+    name: 'Its so hot in here',
+    description: 'Explicitly sexual acts, orgasm‑oriented play, and possible penetration if desired.',
+    positions: {
+  1:  "Missionary (One partner lies on their back while the other is on top, typically facing them).",
+  2:  "Doggy style / rear-entry (One partner is behind the other; the front partner is often on hands-and-knees or leaning forward).",
+  3:  "Cowgirl (The receiving partner is on top facing the other partner).",
+  4:  "Reverse cowgirl (The receiving partner is on top facing away from the other partner).",
+  5:  "Spooning (side-lying, from behind) (Both partners lie on their sides with one behind the other).",
+  6:  "Side-by-side (face-to-face) (Partners lie on their sides facing each other).",
+  7:  "Seated / lap (One partner sits while the other sits or straddles on their lap).",
+  8:  "Standing (Partners remain standing; alignment varies by comfort and height).",
+  9:  "Lotus position (A seated, face-to-face hold with close full-body contact).",
+  10: "Tabletop (One partner lies back on a raised surface while the other stands or kneels in front).",
+  11: "Coital alignment technique (CAT) (A face-to-face variant emphasizing alignment and sustained contact rather than vigorous motion).",
+  12: "69 (Partners align so each can give/receive oral at the same time, in opposite directions).",
+  13: "Mutual masturbation (no penetration) (Partners stimulate themselves and/or each other with hands).",
+  14: "Frottage (non-penetrative rubbing) (Non-penetrative sexual activity involving rubbing bodies/genitals together).",
+  15: "Intercrural sex (thigh sex) (Non-penetrative activity involving placement/movement between a partner’s thighs).",
+  16: "Tribadism / scissoring (Non-penetrative genital-to-genital rubbing in various body/leg alignments).",
+  17: "Butterfly (One partner lies back near the edge of a surface while the other is positioned in front).",
+  18: "Wheelbarrow (One partner supports their upper body with hands while the other supports their legs).",
+  19: "Bridge (One partner raises their hips/torso in a bridge-like pose while the other partner is positioned in front).",
+  20: "Face-to-face standing (Partners stand facing each other in a close embrace)."
+},
+   modifiers: {
+  1:  "Timer block: 60s steady pace, then 15s full stillness, then 45s steady again.",
+  2:  "Tempo ladder: switch every 15s (slow → medium → fast → medium).",
+  3:  "Stop-start: 10s movement + 5s pause; repeat 6 times.",
+  4:  "Pace wave: 20s medium, 20s faster, 20s medium, 20s faster, 10s medium.",
+  5:  "Edge-of-control: maintain a strong-but-manageable intensity for 90s without changing tempo.",
+  6:  "Micro-pauses: add a 1-second pause after every 8 seconds of movement for the full round.",
+  7:  "Breath sync: match inhales/exhales for 30s while continuing the same rhythm; then continue normally.",
+  8:  "Counting focus: count down from 30 together (one number per second) while keeping the same rhythm.",
+  9:  "Silence rule: no talking for 60s; then normal communication resumes (same pace throughout).",
+  10: "Sound-only: for 45s, communicate only with nonverbal sounds (no words) while keeping rhythm steady.",
+  11: "Eyes choice: 30s eyes closed + 30s eyes open + 30s either option (keep pace consistent).",
+  12: "Hands-only constraint: for 60s, only hands are used; keep tempo steady.",
+  13: "No-hands constraint: for 30s, no hands; then 60s normal (same tempo rule throughout).",
+  14: "Rhythm mirror: Partner A sets a rhythm for 20s; Partner B mirrors for 20s; repeat once.",
+  15: "Pattern rule: repeat “slow-slow-fast” for 60s, then steady medium for 30s.",
+  16: "Size shift (non-graphic): keep tempo constant but gradually increase the size of movements for 45s, then gradually decrease for 45s.",
+  // Toy-friendly (non-graphic) modifiers
+  17: "Vibrator setting ladder: 20s low → 20s medium → 20s high → 30s preferred setting (placement as negotiated).",
+  18: "Pulse vs steady: 30s steady mode, 30s pulse mode, 30s steady mode (placement as negotiated).",
+  19: "Hand + toy duet: one person maintains a steady rhythm while the other adds a toy for 45s; then swap roles for 45s (same tempo).",
+  20: "Finale structure (toy optional): 20s build (slower) → 20s peak (faster) → 20s reset (slower) → 10s stillness; continue at chosen pace."
 }
 
   }

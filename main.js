@@ -328,6 +328,7 @@ function handleUserRoll() {
     awaitingPartnerTurn = true;
   } else {
     awaitingPartnerTurn = false;
+
     rollCount++;
 
     const internalRoll = 1 + Math.floor(Math.random() * 20); // 1–20

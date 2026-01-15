@@ -19,13 +19,14 @@ const allClothingItems = [
 
 // Clothing d6 table - describes HOW to remove clothing
 // The program will determine WHAT item to remove
+// Format: verb phrase that can be followed by "their [item]"
 const clothingTable = {
-  1: 'No clothing change - all touch stays over whatever is currently being worn.',
-  2: 'Remove using only one hand',
-  3: 'Remove using only your mouth/teeth (no hands)',
-  4: 'Remove while maintaining eye contact throughout',
-  5: 'Remove while the receiver keeps their hands behind their back',
-  6: 'Critical: Remove 2 items - one with your hands, one with your mouth'
+  1: { prefix: 'No clothing change', fullText: 'all touch stays over whatever is currently being worn' },
+  2: { prefix: 'Remove', method: 'using only one hand' },
+  3: { prefix: 'Remove', method: 'using only your mouth/teeth (no hands)' },
+  4: { prefix: 'Remove', method: 'while maintaining eye contact throughout' },
+  5: { prefix: 'Have the receiver keep their hands behind their back while you remove', method: '' },
+  6: { prefix: 'Critical: Remove 2 items', method: 'one with your hands, one with your mouth' }
 };
 
 // ----- Guided Mode clothing functions -----

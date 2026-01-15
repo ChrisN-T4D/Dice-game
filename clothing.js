@@ -17,16 +17,6 @@ const allClothingItems = [
   'Bra', 'Panties', 'Underwear', 'Robe'
 ];
 
-// Clothing d6 table (applies in any phase while clothingPromptsEnabled)
-const clothingTable = {
-  1: 'Roller makes no changes to the receiver's clothing; all touch stays over whatever the receiver is currently wearing for this round.',
-  2: 'Roller removes or loosens one small item of the receiver's clothing (for example, a sock, jewelry, watch, scarf, or hair tie), keeping everything else the same.',
-  3: 'Roller uncovers one specific body area of the receiver by adjusting clothing (such as sliding up a sleeve to reveal a forearm or moving a pant leg to reveal part of a calf), leaving all other clothing as it is.',
-  4: 'Roller removes one article of clothing from the receiver (any agreed item), while keeping all remaining clothing as it is for this round.',
-  5: 'Roller removes one additional article of clothing from the receiver later in this same round, so that a total of two items may come off or be loosened, with all remaining clothing unchanged.',
-  6: 'Critical change: roller may remove or loosen up to two articles of the receiver's clothing and also re‑position any remaining clothing to reveal new non‑genital areas, stopping or scaling back immediately if the receiver signals they have reached their limit.'
-};
-
 // ----- Guided Mode clothing functions -----
 
 function populateClothingCheckboxes(itemsToCheck = []) {

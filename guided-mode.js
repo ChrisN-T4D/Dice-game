@@ -1,9 +1,10 @@
 // ----- Guided mode functions -----
 
-function startGuidedMode(totalMinutes, turnMinutes, phasePercents, clothingList, milestoneInterval, clothingEnabled) {
+function startGuidedMode(totalMinutes, turnMinutes, phasePercents, clothingList, milestoneInterval, clothingEnabled, distributionMode) {
   isGuidedMode = true;
   guidedTotalSeconds = totalMinutes * 60;
   guidedTurnSeconds = turnMinutes * 60;
+  guidedDistributionMode = distributionMode; // Store the mode name
 
   // Calculate phase time allocations based on percentages
   guidedPhaseSeconds[0] = Math.floor(guidedTotalSeconds * (phasePercents[0] / 100));
@@ -74,7 +75,25 @@ function performGuidedTurn() {
     turnsSinceLastRemoval = 0;
 
     if (removedItem && clothingOutput) {
-      clothingOutput.textContent = `Remove: ${removedItem}`;
+      // Roll d6 to determine "how" to remove
+      const howRoll = Math.floor(Math.random() * 6) + 1;
+      const howToRemove = clothingTable[howRoll];
+
+      if (howRoll === 1) {
+        // Roll 1: No change (but we already removed an item, so just show it)
+        clothingOutput.textContent = `Remove: ${removedItem}`;
+      } else if (howRoll === 6) {
+        // Roll 6: Remove 2 items
+        const secondItem = removeClothingItem();
+        if (secondItem) {
+          clothingOutput.textContent = `${howToRemove}: ${removedItem} and ${secondItem}`;
+        } else {
+          clothingOutput.textContent = `${howToRemove}: ${removedItem} (only 1 item remaining)`;
+        }
+      } else {
+        // Rolls 2-5: Remove with style
+        clothingOutput.textContent = `${howToRemove}: ${removedItem}`;
+      }
     } else if (clothingItems.length === 0 && clothingOutput) {
       clothingOutput.textContent = 'All clothing has been removed.';
     }
@@ -185,6 +204,7 @@ function updateGuidedModeUI() {
   const guidedSetup = document.getElementById('guidedSetup');
   const guidedStatus = document.getElementById('guidedStatus');
   const freePlayControls = document.getElementById('freePlayControls');
+  const actionTimerSection = document.getElementById('actionTimerSection');
   const currentPartnerSpan = document.getElementById('currentPartner');
   const phaseTimeLeftSpan = document.getElementById('phaseTimeLeft');
   const turnTimeLeftSpan = document.getElementById('turnTimeLeft');
@@ -196,17 +216,29 @@ function updateGuidedModeUI() {
     if (guidedSetup) guidedSetup.style.display = 'none';
     if (guidedStatus) guidedStatus.style.display = 'flex';
     if (freePlayControls) freePlayControls.style.display = 'none';
+    if (actionTimerSection) actionTimerSection.style.display = 'none';
 
     if (currentPartnerSpan) currentPartnerSpan.textContent = `Partner ${guidedCurrentPartner}`;
     if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining);
     if (turnTimeLeftSpan) turnTimeLeftSpan.textContent = formatTime(guidedTurnTimeRemaining);
 
-    // Show phase allocation
+    // Show phase allocation name or breakdown
     if (phaseAllocationSpan) {
-      const p1 = formatTime(guidedPhaseSeconds[0]);
-      const p2 = formatTime(guidedPhaseSeconds[1]);
-      const p3 = formatTime(guidedPhaseSeconds[2]);
-      phaseAllocationSpan.textContent = `Phase allocation: P1: ${p1}, P2: ${p2}, P3: ${p3}`;
+      if (guidedDistributionMode === 'equal') {
+        phaseAllocationSpan.textContent = 'Phase allocation: Equal';
+      } else if (guidedDistributionMode === 'phase1') {
+        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 1';
+      } else if (guidedDistributionMode === 'phase2') {
+        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 2';
+      } else if (guidedDistributionMode === 'phase3') {
+        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 3';
+      } else {
+        // Show custom breakdown
+        const p1 = formatTime(guidedPhaseSeconds[0]);
+        const p2 = formatTime(guidedPhaseSeconds[1]);
+        const p3 = formatTime(guidedPhaseSeconds[2]);
+        phaseAllocationSpan.textContent = `Phase allocation: P1: ${p1}, P2: ${p2}, P3: ${p3}`;
+      }
     }
 
     if (pauseBtn && resumeBtn) {
@@ -222,5 +254,6 @@ function updateGuidedModeUI() {
     if (guidedSetup) guidedSetup.style.display = 'flex';
     if (guidedStatus) guidedStatus.style.display = 'none';
     if (freePlayControls) freePlayControls.style.display = 'block';
+    if (actionTimerSection) actionTimerSection.style.display = 'block';
   }
 }

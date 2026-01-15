@@ -77,22 +77,24 @@ function performGuidedTurn() {
     if (removedItem && clothingOutput) {
       // Roll d6 to determine "how" to remove
       const howRoll = Math.floor(Math.random() * 6) + 1;
-      const howToRemove = clothingTable[howRoll];
+      const clothingEntry = clothingTable[howRoll];
 
       if (howRoll === 1) {
         // Roll 1: No change (but we already removed an item, so just show it)
-        clothingOutput.textContent = `Remove: ${removedItem}`;
+        clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
       } else if (howRoll === 6) {
         // Roll 6: Remove 2 items
         const secondItem = removeClothingItem();
         if (secondItem) {
-          clothingOutput.textContent = `${howToRemove}: ${removedItem} and ${secondItem}`;
+          const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
+          clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong> and <strong>${secondItem}</strong>${methodText}`;
         } else {
-          clothingOutput.textContent = `${howToRemove}: ${removedItem} (only 1 item remaining)`;
+          clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong> (only 1 item remaining)`;
         }
       } else {
         // Rolls 2-5: Remove with style
-        clothingOutput.textContent = `${howToRemove}: ${removedItem}`;
+        const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+        clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong>${methodText}`;
       }
     } else if (clothingItems.length === 0 && clothingOutput) {
       clothingOutput.textContent = 'All clothing has been removed.';

@@ -192,22 +192,23 @@ function handleUserRoll() {
       clothingOutput.textContent = '';
     } else {
       // Get the "how" description from the d6 roll
-      const howToRemove = clothingTable[clothingRoll];
+      const clothingEntry = clothingTable[clothingRoll];
 
       // If Free Play clothing system is enabled, combine with specific item
       if (freePlayClothingEnabled && phase < 3) {
         if (clothingRoll === 1) {
           // Roll 1: No change
-          clothingOutput.textContent = howToRemove;
+          clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
         } else if (clothingRoll === 6) {
           // Roll 6: Remove 2 items
           const result1 = removeFreePlayClothingItem();
           const result2 = removeFreePlayClothingItem();
 
           if (result1 && result2) {
-            clothingOutput.textContent = `Partner ${result1.partner}: ${howToRemove} - ${result1.item} and ${result2.item}`;
+            const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
+            clothingOutput.innerHTML = `Partner ${result1.partner}: ${clothingEntry.prefix} their <strong>${result1.item}</strong> and <strong>${result2.item}</strong>${methodText}`;
           } else if (result1) {
-            clothingOutput.textContent = `Partner ${result1.partner}: ${howToRemove} - ${result1.item} (only 1 item remaining)`;
+            clothingOutput.innerHTML = `Partner ${result1.partner}: ${clothingEntry.prefix} their <strong>${result1.item}</strong> (only 1 item remaining)`;
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }
@@ -219,7 +220,8 @@ function handleUserRoll() {
           const result = removeFreePlayClothingItem();
 
           if (result) {
-            clothingOutput.textContent = `Partner ${result.partner}: ${howToRemove} - ${result.item}`;
+            const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+            clothingOutput.innerHTML = `Partner ${result.partner}: ${clothingEntry.prefix} their <strong>${result.item}</strong>${methodText}`;
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }
@@ -229,7 +231,12 @@ function handleUserRoll() {
         }
       } else {
         // Generic mode - just show the "how" description
-        clothingOutput.textContent = howToRemove;
+        if (clothingEntry.fullText) {
+          clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
+        } else {
+          const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+          clothingOutput.innerHTML = `${clothingEntry.prefix}${methodText}`;
+        }
       }
     }
   }

@@ -160,6 +160,20 @@ function renderCurrentActions(actionsObj) {
 function renderPhaseSummary(phaseNumber) {
   const table = tables[phaseNumber];
   if (!table) return;
-  renderCurrentLocations(table.locations || {});
-  renderCurrentActions(table.actions || {});
+
+  // Update section headers based on phase
+  const locationsHeader = document.getElementById('locationsHeader');
+  const actionsHeader = document.getElementById('actionsHeader');
+
+  if (phaseNumber === 3) {
+    if (locationsHeader) locationsHeader.textContent = 'Positions';
+    if (actionsHeader) actionsHeader.textContent = 'Modifiers';
+    renderCurrentLocations(table.positions || {});
+    renderCurrentActions(table.modifiers || {});
+  } else {
+    if (locationsHeader) locationsHeader.textContent = 'Locations';
+    if (actionsHeader) actionsHeader.textContent = 'Actions';
+    renderCurrentLocations(table.locations || {});
+    renderCurrentActions(table.actions || {});
+  }
 }

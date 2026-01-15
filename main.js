@@ -115,6 +115,36 @@ window.addEventListener('DOMContentLoaded', () => {
     newSessionBtn.addEventListener('click', resetSession);
   }
 
+  // Summary overlay toggle
+  const toggleSummaryBtn = document.getElementById('toggleSummary');
+  const closeSummaryBtn = document.getElementById('closeSummary');
+  const summaryOverlay = document.getElementById('summaryOverlay');
+
+  if (toggleSummaryBtn && summaryOverlay) {
+    toggleSummaryBtn.addEventListener('click', () => {
+      if (summaryOverlay.style.display === 'none' || summaryOverlay.style.display === '') {
+        summaryOverlay.style.display = 'block';
+      } else {
+        summaryOverlay.style.display = 'none';
+      }
+    });
+  }
+
+  if (closeSummaryBtn && summaryOverlay) {
+    closeSummaryBtn.addEventListener('click', () => {
+      summaryOverlay.style.display = 'none';
+    });
+  }
+
+  // Close overlay when clicking outside the card
+  if (summaryOverlay) {
+    summaryOverlay.addEventListener('click', (e) => {
+      if (e.target === summaryOverlay) {
+        summaryOverlay.style.display = 'none';
+      }
+    });
+  }
+
   // Phase summary selector
   const phaseSelect = document.getElementById('phaseSelect');
   if (phaseSelect) {

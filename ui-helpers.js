@@ -57,13 +57,13 @@ function notifyPhaseChange(newPhase) {
   if (!messageBox) return;
 
   if (newPhase === 1) {
-    messageBox.textContent = 'Now in Phase 1: gentle, non‑genital warm‑up.';
+    messageBox.textContent = 'Now in Phase 1: gentle, non-genital warm-up.';
   } else if (newPhase === 2) {
     messageBox.textContent =
-      'You've unlocked Phase 2: more erogenous exploration. Check in with each other before continuing.';
+      'You\'ve unlocked Phase 2: more erogenous exploration. Check in with each other before continuing.';
   } else if (newPhase === 3) {
     messageBox.textContent =
-      'You've unlocked Phase 3: explicitly sexual goals. Proceed only if both partners actively consent.';
+      'You\'ve unlocked Phase 3: explicitly sexual goals. Proceed only if both partners actively consent.';
   } else {
     messageBox.textContent = `Now in Phase ${newPhase}.`;
   }

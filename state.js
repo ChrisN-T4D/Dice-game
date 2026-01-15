@@ -20,6 +20,7 @@ let guidedCurrentPartner = 1; // 1 or 2
 let guidedPhaseTimerId = null;
 let guidedTurnTimerId = null;
 let guidedPaused = false;
+let guidedDistributionMode = 'equal'; // 'equal', 'phase1', 'phase2', 'phase3', or 'custom'
 
 // ----- Clothing system state -----
 let clothingItems = []; // Array of clothing items currently worn (Guided Mode)

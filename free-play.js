@@ -191,20 +191,45 @@ function handleUserRoll() {
     if (!clothingPromptsEnabled || clothingRoll === null) {
       clothingOutput.textContent = '';
     } else {
-      // If Free Play clothing system is enabled, use specific item removal
+      // Get the "how" description from the d6 roll
+      const howToRemove = clothingTable[clothingRoll];
+
+      // If Free Play clothing system is enabled, combine with specific item
       if (freePlayClothingEnabled && phase < 3) {
-        const result = removeFreePlayClothingItem();
+        if (clothingRoll === 1) {
+          // Roll 1: No change
+          clothingOutput.textContent = howToRemove;
+        } else if (clothingRoll === 6) {
+          // Roll 6: Remove 2 items
+          const result1 = removeFreePlayClothingItem();
+          const result2 = removeFreePlayClothingItem();
 
-        if (result) {
-          clothingOutput.textContent = `Partner ${result.partner} - Remove: ${result.item}`;
+          if (result1 && result2) {
+            clothingOutput.textContent = `Partner ${result1.partner}: ${howToRemove} - ${result1.item} and ${result2.item}`;
+          } else if (result1) {
+            clothingOutput.textContent = `Partner ${result1.partner}: ${howToRemove} - ${result1.item} (only 1 item remaining)`;
+          } else {
+            clothingOutput.textContent = 'All clothing has been removed.';
+          }
+
+          // Update the display
+          updateFreePlayClothingDisplay();
+        } else {
+          // Rolls 2-5: Remove 1 item with the specified style
+          const result = removeFreePlayClothingItem();
+
+          if (result) {
+            clothingOutput.textContent = `Partner ${result.partner}: ${howToRemove} - ${result.item}`;
+          } else {
+            clothingOutput.textContent = 'All clothing has been removed.';
+          }
+
+          // Update the display
+          updateFreePlayClothingDisplay();
         }
-
-        // Update the display
-        updateFreePlayClothingDisplay();
       } else {
-        // Use generic clothing table
-        const clothingText = clothingTable[clothingRoll];
-        clothingOutput.textContent = clothingText || '';
+        // Generic mode - just show the "how" description
+        clothingOutput.textContent = howToRemove;
       }
     }
   }

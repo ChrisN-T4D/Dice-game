@@ -28,6 +28,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const testSoundBtn = document.getElementById('testSound');
   const noClothingPromptsBtn = document.getElementById('noClothingPrompts');
   const rerollPromptBtn = document.getElementById("rerollPrompt");
+  const goToNextPhaseBtn = document.getElementById("goToNextPhase");
 
   // ----- Basic UI event handlers -----
 
@@ -49,21 +50,60 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (goToNextPhaseBtn) {
+    goToNextPhaseBtn.addEventListener('click', () => {
+      clearMessages();
+
+      if (phase < maxPhase) {
+        phase++;
+        rollCount = 0;
+        usedWhereThisPhase = new Set();
+        usedWhatThisPhase = new Set();
+
+        notifyPhaseChange(phase);
+        updatePhaseUI(phase, rollCount);
+        updateRollLabels(phase);
+
+        // Update Free Play clothing display when entering phase 3
+        if (phase === 3) {
+          updateFreePlayClothingDisplay();
+        }
+
+        saveState();
+
+        if (messageBox) {
+          messageBox.textContent = 'Advanced to next phase.';
+          flashMessage('flash');
+        }
+      } else {
+        if (messageBox) {
+          messageBox.textContent = 'Already at the final phase.';
+        }
+      }
+    });
+  }
+
   // ----- Free Play event handlers -----
 
-  submitRollBtn.addEventListener('click', handleUserRoll);
+  if (submitRollBtn) {
+    submitRollBtn.addEventListener('click', handleUserRoll);
+  }
 
   if (rerollPromptBtn) {
     rerollPromptBtn.addEventListener("click", handleRerollPrompt);
   }
 
-  locationRollInput.addEventListener('keyup', (event) => {
-    if (event.key === 'Enter') handleUserRoll();
-  });
+  if (locationRollInput) {
+    locationRollInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') handleUserRoll();
+    });
+  }
 
-  actionRollInput.addEventListener('keyup', (event) => {
-    if (event.key === 'Enter') handleUserRoll();
-  });
+  if (actionRollInput) {
+    actionRollInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') handleUserRoll();
+    });
+  }
 
   if (clothingRollInput) {
     clothingRollInput.addEventListener('keyup', (event) => {
@@ -71,7 +111,9 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  newSessionBtn.addEventListener('click', resetSession);
+  if (newSessionBtn) {
+    newSessionBtn.addEventListener('click', resetSession);
+  }
 
   // Phase summary selector
   const phaseSelect = document.getElementById('phaseSelect');
@@ -85,10 +127,18 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Timer buttons
-  timer30Btn.addEventListener('click', () => startTimer(30));
-  timer1Btn.addEventListener('click', () => startTimer(60));
-  timer2Btn.addEventListener('click', () => startTimer(120));
-  timer5Btn.addEventListener('click', () => startTimer(300));
+  if (timer30Btn) {
+    timer30Btn.addEventListener('click', () => startTimer(30));
+  }
+  if (timer1Btn) {
+    timer1Btn.addEventListener('click', () => startTimer(60));
+  }
+  if (timer2Btn) {
+    timer2Btn.addEventListener('click', () => startTimer(120));
+  }
+  if (timer5Btn) {
+    timer5Btn.addEventListener('click', () => startTimer(300));
+  }
 
   // ----- Guided mode UI elements -----
 
@@ -98,6 +148,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const time30Btn = document.getElementById('time30');
   const time45Btn = document.getElementById('time45');
   const time60Btn = document.getElementById('time60');
+  const time90Btn = document.getElementById('time90');
+  const time120Btn = document.getElementById('time120');
   const turn1Btn = document.getElementById('turn1');
   const turn2Btn = document.getElementById('turn2');
   const turn3Btn = document.getElementById('turn3');
@@ -119,13 +171,20 @@ window.addEventListener('DOMContentLoaded', () => {
   const clothingDisabledBtn = document.getElementById('clothingDisabled');
   const clothingSetupInputs = document.getElementById('clothingSetupInputs');
   const clothingMilestoneInput = document.getElementById('clothingMilestone');
-  const clothingPresetCasualBtn = document.getElementById('clothingPresetCasual');
-  const clothingPresetDressCasualBtn = document.getElementById('clothingPresetDressCasual');
-  const clothingPresetLingerieBtn = document.getElementById('clothingPresetLingerie');
-  const clothingPresetMinimalBtn = document.getElementById('clothingPresetMinimal');
-  const clothingPresetFullOutfitBtn = document.getElementById('clothingPresetFullOutfit');
-  const clothingPresetDateNightBtn = document.getElementById('clothingPresetDateNight');
-  const clothingPresetLoungeWearBtn = document.getElementById('clothingPresetLoungeWear');
+  const guidedP1PresetCasualBtn = document.getElementById('guidedP1PresetCasual');
+  const guidedP1PresetDressCasualBtn = document.getElementById('guidedP1PresetDressCasual');
+  const guidedP1PresetLingerieBtn = document.getElementById('guidedP1PresetLingerie');
+  const guidedP1PresetMinimalBtn = document.getElementById('guidedP1PresetMinimal');
+  const guidedP1PresetFullOutfitBtn = document.getElementById('guidedP1PresetFullOutfit');
+  const guidedP1PresetDateNightBtn = document.getElementById('guidedP1PresetDateNight');
+  const guidedP1PresetLoungeWearBtn = document.getElementById('guidedP1PresetLoungeWear');
+  const guidedP2PresetCasualBtn = document.getElementById('guidedP2PresetCasual');
+  const guidedP2PresetDressCasualBtn = document.getElementById('guidedP2PresetDressCasual');
+  const guidedP2PresetLingerieBtn = document.getElementById('guidedP2PresetLingerie');
+  const guidedP2PresetMinimalBtn = document.getElementById('guidedP2PresetMinimal');
+  const guidedP2PresetFullOutfitBtn = document.getElementById('guidedP2PresetFullOutfit');
+  const guidedP2PresetDateNightBtn = document.getElementById('guidedP2PresetDateNight');
+  const guidedP2PresetLoungeWearBtn = document.getElementById('guidedP2PresetLoungeWear');
   const startGuidedBtn = document.getElementById('startGuided');
   const pauseGuidedBtn = document.getElementById('pauseGuided');
   const resumeGuidedBtn = document.getElementById('resumeGuided');
@@ -137,6 +196,19 @@ window.addEventListener('DOMContentLoaded', () => {
       if (isGuidedMode) {
         stopGuidedMode();
       }
+
+      // Hide guided setup and status
+      const guidedSetup = document.getElementById('guidedSetup');
+      const guidedStatus = document.getElementById('guidedStatus');
+      if (guidedSetup) guidedSetup.style.display = 'none';
+      if (guidedStatus) guidedStatus.style.display = 'none';
+
+      // Show free play controls and action timer
+      const freePlayControls = document.getElementById('freePlayControls');
+      const actionTimerSection = document.getElementById('actionTimerSection');
+      if (freePlayControls) freePlayControls.style.display = 'block';
+      if (actionTimerSection) actionTimerSection.style.display = 'block';
+
       freePlayModeBtn.classList.add('primary');
       freePlayModeBtn.classList.remove('secondary');
       guidedModeBtn.classList.add('secondary');
@@ -147,11 +219,20 @@ window.addEventListener('DOMContentLoaded', () => {
   if (guidedModeBtn) {
     guidedModeBtn.addEventListener('click', () => {
       if (!isGuidedMode) {
+        // Show guided setup
+        const guidedSetup = document.getElementById('guidedSetup');
+        if (guidedSetup) guidedSetup.style.display = 'block';
+
+        // Hide free play controls and action timer
+        const freePlayControls = document.getElementById('freePlayControls');
+        const actionTimerSection = document.getElementById('actionTimerSection');
+        if (freePlayControls) freePlayControls.style.display = 'none';
+        if (actionTimerSection) actionTimerSection.style.display = 'none';
+
         guidedModeBtn.classList.add('primary');
         guidedModeBtn.classList.remove('secondary');
         freePlayModeBtn.classList.add('secondary');
         freePlayModeBtn.classList.remove('primary');
-        updateGuidedModeUI();
       }
     });
   }
@@ -162,8 +243,8 @@ window.addEventListener('DOMContentLoaded', () => {
   let phaseDistributionMode = 'equal';
 
   function updateTimeButtonStyles() {
-    const buttons = [time15Btn, time30Btn, time45Btn, time60Btn];
-    const times = [15, 30, 45, 60];
+    const buttons = [time15Btn, time30Btn, time45Btn, time60Btn, time90Btn, time120Btn];
+    const times = [15, 30, 45, 60, 90, 120];
 
     buttons.forEach((btn, idx) => {
       if (btn) {
@@ -236,6 +317,20 @@ window.addEventListener('DOMContentLoaded', () => {
   if (time60Btn) {
     time60Btn.addEventListener('click', () => {
       selectedTime = 60;
+      updateTimeButtonStyles();
+    });
+  }
+
+  if (time90Btn) {
+    time90Btn.addEventListener('click', () => {
+      selectedTime = 90;
+      updateTimeButtonStyles();
+    });
+  }
+
+  if (time120Btn) {
+    time120Btn.addEventListener('click', () => {
+      selectedTime = 120;
       updateTimeButtonStyles();
     });
   }
@@ -348,52 +443,96 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Guided Mode Clothing preset buttons
-  if (clothingPresetCasualBtn) {
-    clothingPresetCasualBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.casual);
+  // Guided Mode Clothing preset buttons - Partner 1
+  if (guidedP1PresetCasualBtn) {
+    guidedP1PresetCasualBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.casual);
     });
   }
 
-  if (clothingPresetDressCasualBtn) {
-    clothingPresetDressCasualBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.dressCasual);
+  if (guidedP1PresetDressCasualBtn) {
+    guidedP1PresetDressCasualBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.dressCasual);
     });
   }
 
-  if (clothingPresetLingerieBtn) {
-    clothingPresetLingerieBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.lingerie);
+  if (guidedP1PresetLingerieBtn) {
+    guidedP1PresetLingerieBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.lingerie);
     });
   }
 
-  if (clothingPresetMinimalBtn) {
-    clothingPresetMinimalBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.minimal);
+  if (guidedP1PresetMinimalBtn) {
+    guidedP1PresetMinimalBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.minimal);
     });
   }
 
-  if (clothingPresetFullOutfitBtn) {
-    clothingPresetFullOutfitBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.fullOutfit);
+  if (guidedP1PresetFullOutfitBtn) {
+    guidedP1PresetFullOutfitBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.fullOutfit);
     });
   }
 
-  if (clothingPresetDateNightBtn) {
-    clothingPresetDateNightBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.dateNight);
+  if (guidedP1PresetDateNightBtn) {
+    guidedP1PresetDateNightBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.dateNight);
     });
   }
 
-  if (clothingPresetLoungeWearBtn) {
-    clothingPresetLoungeWearBtn.addEventListener('click', () => {
-      populateClothingCheckboxes(clothingPresets.loungeWear);
+  if (guidedP1PresetLoungeWearBtn) {
+    guidedP1PresetLoungeWearBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(1, clothingPresets.loungeWear);
+    });
+  }
+
+  // Guided Mode Clothing preset buttons - Partner 2
+  if (guidedP2PresetCasualBtn) {
+    guidedP2PresetCasualBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.casual);
+    });
+  }
+
+  if (guidedP2PresetDressCasualBtn) {
+    guidedP2PresetDressCasualBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.dressCasual);
+    });
+  }
+
+  if (guidedP2PresetLingerieBtn) {
+    guidedP2PresetLingerieBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.lingerie);
+    });
+  }
+
+  if (guidedP2PresetMinimalBtn) {
+    guidedP2PresetMinimalBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.minimal);
+    });
+  }
+
+  if (guidedP2PresetFullOutfitBtn) {
+    guidedP2PresetFullOutfitBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.fullOutfit);
+    });
+  }
+
+  if (guidedP2PresetDateNightBtn) {
+    guidedP2PresetDateNightBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.dateNight);
+    });
+  }
+
+  if (guidedP2PresetLoungeWearBtn) {
+    guidedP2PresetLoungeWearBtn.addEventListener('click', () => {
+      populateGuidedClothingCheckboxes(2, clothingPresets.loungeWear);
     });
   }
 
   // Initialize Guided Mode clothing checkboxes
   updateClothingModeButtons();
-  populateClothingCheckboxes();
+  populateGuidedClothingCheckboxes(1);
+  populateGuidedClothingCheckboxes(2);
 
   // Preset buttons for custom phase distribution
   if (preset20_20_60Btn) {
@@ -455,20 +594,22 @@ window.addEventListener('DOMContentLoaded', () => {
         if (percentError) percentError.style.display = 'none';
       }
 
-      // Get selected clothing items from checkboxes
+      // Get selected clothing items from checkboxes for both partners
       const clothingEnabled = clothingMode === 'enabled';
       let clothingList = [];
       let milestoneInterval = 3;
 
       if (clothingEnabled) {
-        clothingList = getSelectedClothingItems();
+        const p1Items = getGuidedSelectedClothingItems(1);
+        const p2Items = getGuidedSelectedClothingItems(2);
+        clothingList = [...p1Items, ...p2Items];
 
         if (clothingMilestoneInput) {
           milestoneInterval = parseInt(clothingMilestoneInput.value) || 3;
         }
       }
 
-      startGuidedMode(selectedTime, selectedTurnTime, phasePercents, clothingList, milestoneInterval, clothingEnabled);
+      startGuidedMode(selectedTime, selectedTurnTime, phasePercents, clothingList, milestoneInterval, clothingEnabled, phaseDistributionMode);
     });
   }
 
@@ -678,7 +819,15 @@ window.addEventListener('DOMContentLoaded', () => {
   populateFreePlayClothingCheckboxes(1);
   populateFreePlayClothingCheckboxes(2);
 
-  // Initialize mode buttons
+  // Initialize mode buttons - start with Free Play visible, Guided hidden
+  const guidedSetup = document.getElementById('guidedSetup');
+  const guidedStatus = document.getElementById('guidedStatus');
+  const freePlayControls = document.getElementById('freePlayControls');
+
+  if (guidedSetup) guidedSetup.style.display = 'none';
+  if (guidedStatus) guidedStatus.style.display = 'none';
+  if (freePlayControls) freePlayControls.style.display = 'block';
+
   if (freePlayModeBtn) {
     freePlayModeBtn.classList.add('primary');
     freePlayModeBtn.classList.remove('secondary');

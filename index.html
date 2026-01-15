@@ -376,6 +376,163 @@
         </p>
       </div>
 
+     <!-- Mode selection -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.65);">
+       <label style="font-weight: 600; margin-right: 0.75rem;">Play Mode:</label>
+       <div class="row" style="gap: 0.5rem;">
+         <button class="secondary" id="freePlayMode" style="font-weight: 600;">Free Play</button>
+         <button class="secondary" id="guidedMode" style="font-weight: 600;">Guided Mode</button>
+       </div>
+     </div>
+
+     <!-- Guided mode session setup (hidden by default) -->
+     <div id="guidedSetup" class="row" style="display: none; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1); flex-direction: column; gap: 0.75rem;">
+
+       <!-- Total Session Time -->
+       <div class="row" style="justify-content: center; flex-wrap: wrap;">
+         <label style="font-weight: 600; margin-right: 0.75rem; width: 100%; text-align: center; margin-bottom: 0.5rem;">Total Session Time:</label>
+         <button class="secondary" id="time15">15 min</button>
+         <button class="secondary" id="time30">30 min</button>
+         <button class="secondary" id="time45">45 min</button>
+         <button class="secondary" id="time60">60 min</button>
+       </div>
+
+       <!-- Turn Duration -->
+       <div class="row" style="justify-content: center; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid #334155;">
+         <label style="font-weight: 600; margin-right: 0.75rem; width: 100%; text-align: center; margin-bottom: 0.5rem;">Turn Duration:</label>
+         <button class="secondary" id="turn1">1 min</button>
+         <button class="secondary" id="turn2">2 min</button>
+         <button class="secondary" id="turn3">3 min</button>
+         <button class="secondary" id="turn5">5 min</button>
+       </div>
+
+       <!-- Phase Time Distribution -->
+       <div style="padding-top: 0.5rem; border-top: 1px solid #334155;">
+         <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Phase Time Distribution:</label>
+
+         <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.35rem; flex-wrap: wrap;">
+           <button class="secondary" id="phaseDistEqual" style="min-width: 100px; font-size: 0.85rem;">Equal</button>
+           <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Phase 1 Heavy</button>
+           <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">Phase 2 Heavy</button>
+           <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Phase 3 Heavy</button>
+           <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
+         </div>
+
+         <!-- Custom phase distribution (hidden by default) -->
+         <div id="customPhaseInputs" style="display: none; margin-top: 0.5rem;">
+           <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+             Enter percentages (must total 100%)
+           </div>
+           <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 1 %</label>
+               <input type="number" id="phase1Percent" min="0" max="100" value="33" style="width: 4.5rem; text-align: center;" />
+             </div>
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 2 %</label>
+               <input type="number" id="phase2Percent" min="0" max="100" value="33" style="width: 4.5rem; text-align: center;" />
+             </div>
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 3 %</label>
+               <input type="number" id="phase3Percent" min="0" max="100" value="34" style="width: 4.5rem; text-align: center;" />
+             </div>
+           </div>
+           <div style="text-align: center; margin-bottom: 0.25rem; font-size: 0.8rem; color: #9ca3af;">
+             Quick presets:
+           </div>
+           <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap;">
+             <button class="secondary small" id="preset20-20-60">20/20/60</button>
+             <button class="secondary small" id="preset25-25-50">25/25/50</button>
+             <button class="secondary small" id="preset30-30-40">30/30/40</button>
+           </div>
+           <div id="percentError" style="color: #fecaca; font-size: 0.8rem; text-align: center; margin-top: 0.25rem; display: none;">
+             Percentages must total 100%
+           </div>
+         </div>
+       </div>
+
+       <!-- Clothing Setup -->
+       <div style="padding-top: 0.5rem; border-top: 1px solid #334155;">
+         <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Clothing Setup:</label>
+
+         <div class="row" style="justify-content: center; margin-bottom: 0.5rem;">
+           <button class="secondary" id="clothingEnabled" style="min-width: 120px;">Enabled</button>
+           <button class="secondary" id="clothingDisabled" style="min-width: 120px;">Disabled</button>
+         </div>
+
+         <div id="clothingSetupInputs" style="margin-top: 0.5rem;">
+           <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+             Select clothing items you're wearing:
+           </div>
+
+           <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+             Quick presets:
+           </div>
+           <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+             <button class="secondary small" id="clothingPresetCasual">Casual</button>
+             <button class="secondary small" id="clothingPresetDressCasual">Dress Casual</button>
+             <button class="secondary small" id="clothingPresetLingerie">Lingerie</button>
+             <button class="secondary small" id="clothingPresetMinimal">Minimal</button>
+             <button class="secondary small" id="clothingPresetFullOutfit">Full Outfit</button>
+             <button class="secondary small" id="clothingPresetDateNight">Date Night</button>
+             <button class="secondary small" id="clothingPresetLoungeWear">Lounge Wear</button>
+           </div>
+
+           <!-- Checkbox grid for clothing items -->
+           <div id="clothingCheckboxContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
+             <!-- Checkboxes will be dynamically populated here -->
+           </div>
+
+           <div style="text-align: center; margin-top: 0.75rem; font-size: 0.75rem; color: #9ca3af;">
+             Tip: Click a preset to load items, then uncheck what you're not wearing
+           </div>
+
+           <div style="margin-top: 0.75rem; text-align: center;">
+             <label style="font-size: 0.85rem; margin-right: 0.5rem;">Remove item every</label>
+             <input type="number" id="clothingMilestone" min="1" max="10" value="3" style="width: 3rem; text-align: center;" />
+             <label style="font-size: 0.85rem; margin-left: 0.25rem;">turns</label>
+           </div>
+         </div>
+       </div>
+
+       <div class="row" style="justify-content: center; padding-top: 0.5rem;">
+         <button class="primary big" id="startGuided">Start Guided Session</button>
+       </div>
+     </div>
+
+     <!-- Guided mode status (hidden by default) -->
+     <div id="guidedStatus" class="row" style="display: none; margin-bottom: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1); flex-direction: column; gap: 0.5rem;">
+       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+         <div class="row" style="justify-content: center; gap: 1rem; flex-wrap: wrap;">
+           <div style="text-align: center;">
+             <label style="font-size: 0.85rem; color: #9ca3af; display: block;">Current Partner:</label>
+             <span id="currentPartner" style="font-weight: 700; font-size: 1.1rem;">Partner 1</span>
+           </div>
+           <div style="text-align: center;">
+             <label style="font-size: 0.85rem; color: #9ca3af; display: block;">Phase Time Left:</label>
+             <span id="phaseTimeLeft" style="font-weight: 700; font-size: 1.1rem;">00:00</span>
+           </div>
+           <div style="text-align: center;">
+             <label style="font-size: 0.85rem; color: #9ca3af; display: block;">Turn Time Left:</label>
+             <span id="turnTimeLeft" style="font-weight: 700; font-size: 1.1rem;">00:00</span>
+           </div>
+         </div>
+         <div style="text-align: center; font-size: 0.75rem; color: #9ca3af; padding-top: 0.25rem; border-top: 1px solid #334155;">
+           <span id="phaseAllocation">Phase allocation: P1: 10m, P2: 10m, P3: 10m</span>
+         </div>
+         <div id="clothingStatus" style="display: none; text-align: center; font-size: 0.8rem; padding-top: 0.25rem; border-top: 1px solid #334155;">
+           <div style="color: #9ca3af; margin-bottom: 0.25rem;">Clothing remaining:</div>
+           <div id="clothingItemsList" style="color: #e5e7eb; font-weight: 600;"></div>
+           <div id="clothingMilestoneProgress" style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.25rem;"></div>
+         </div>
+       </div>
+       <div class="row" style="justify-content: center; gap: 0.5rem;">
+         <button class="secondary" id="pauseGuided">Pause</button>
+         <button class="secondary" id="resumeGuided" style="display: none;">Resume</button>
+         <button class="secondary danger" id="stopGuided">Stop Guided Mode</button>
+       </div>
+     </div>
+
      <!-- Status row (New Session moved up here) -->
 <div class="row" style="margin-bottom: 0.5rem; justify-content: space-between;">
   <div class="row" style="gap: 0.6rem;">
@@ -389,36 +546,125 @@
   <button class="secondary danger" id="newSession">New Session</button>
 </div>
 
-<div class="roll-grid" style="margin-bottom: 0.75rem;">
-  <div class="roll-col label">
-    <label id="locationLabel" for="locationRoll">Location roll d20</label>
-    <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+<!-- Free play controls (shown by default) -->
+<div id="freePlayControls">
+  <!-- Free Play Clothing Setup -->
+  <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.65);">
+    <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Clothing Setup:</label>
+
+    <div class="row" style="justify-content: center; margin-bottom: 0.5rem;">
+      <button class="secondary" id="freePlayClothingEnabled" style="min-width: 120px;">Enabled</button>
+      <button class="secondary" id="freePlayClothingDisabled" style="min-width: 120px;">Disabled</button>
+    </div>
+
+    <div id="freePlayClothingSetupInputs" style="margin-top: 0.5rem;">
+      <!-- Starting Receiver Selection -->
+      <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; background: rgba(2, 6, 23, 0.3);">
+        <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; font-size: 0.85rem;">Who starts as receiver?</label>
+        <div class="row" style="justify-content: center; gap: 0.5rem;">
+          <button class="secondary" id="startReceiverP1" style="min-width: 100px;">Partner 1</button>
+          <button class="secondary" id="startReceiverP2" style="min-width: 100px;">Partner 2</button>
+        </div>
+      </div>
+
+      <!-- Partner 1 Clothing -->
+      <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
+          Partner 1 Clothing:
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+          Quick presets:
+        </div>
+        <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP1PresetCasual">Casual</button>
+          <button class="secondary small" id="freePlayP1PresetDressCasual">Dress Casual</button>
+          <button class="secondary small" id="freePlayP1PresetLingerie">Lingerie</button>
+          <button class="secondary small" id="freePlayP1PresetMinimal">Minimal</button>
+          <button class="secondary small" id="freePlayP1PresetFullOutfit">Full Outfit</button>
+          <button class="secondary small" id="freePlayP1PresetDateNight">Date Night</button>
+          <button class="secondary small" id="freePlayP1PresetLoungeWear">Lounge Wear</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP1" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+          <!-- Partner 1 checkboxes -->
+        </div>
+      </div>
+
+      <!-- Partner 2 Clothing -->
+      <div style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
+          Partner 2 Clothing:
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+          Quick presets:
+        </div>
+        <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP2PresetCasual">Casual</button>
+          <button class="secondary small" id="freePlayP2PresetDressCasual">Dress Casual</button>
+          <button class="secondary small" id="freePlayP2PresetLingerie">Lingerie</button>
+          <button class="secondary small" id="freePlayP2PresetMinimal">Minimal</button>
+          <button class="secondary small" id="freePlayP2PresetFullOutfit">Full Outfit</button>
+          <button class="secondary small" id="freePlayP2PresetDateNight">Date Night</button>
+          <button class="secondary small" id="freePlayP2PresetLoungeWear">Lounge Wear</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+          <!-- Partner 2 checkboxes -->
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af;">
+        Tip: Click a preset to load items, then uncheck what they're not wearing
+      </div>
+    </div>
+
+    <!-- Clothing Status Display (shown during gameplay) -->
+    <div id="freePlayClothingStatus" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #334155; font-size: 0.8rem;">
+      <div style="margin-bottom: 0.75rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);" id="p1ClothingStatusCard">
+        <div style="color: #60a5fa; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 1:</div>
+        <div id="freePlayClothingItemsListP1" style="color: #e5e7eb; text-align: center;"></div>
+      </div>
+
+      <div style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);" id="p2ClothingStatusCard">
+        <div style="color: #f472b6; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 2:</div>
+        <div id="freePlayClothingItemsListP2" style="color: #e5e7eb; text-align: center;"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="roll-col label">
-    <label id="actionLabel" for="actionRoll">Action roll d20</label>
-    <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
+  <div class="roll-grid" style="margin-bottom: 0.75rem;">
+    <div class="roll-col label">
+      <label id="locationLabel" for="locationRoll">Location roll d20</label>
+      <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+    </div>
+
+    <div class="roll-col label">
+      <label id="actionLabel" for="actionRoll">Action roll d20</label>
+      <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
+    </div>
+
+    <div class="roll-col label">
+      <label for="clothingRoll">Clothing roll d6</label>
+      <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+    </div>
   </div>
 
-  <div class="roll-col label">
-    <label for="clothingRoll">Clothing roll d6</label>
-    <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+
+  <!-- Action buttons row (Submit + Reroll on its own line) -->
+  <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+    <button class="primary big" id="submitRoll">Submit rolls</button>
+    <button class="secondary" id="rerollPrompt">Reroll prompt</button>
   </div>
-</div>
 
-
-<!-- Action buttons row (Submit + Reroll on its own line) -->
-<div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
-  <button class="primary big" id="submitRoll">Submit rolls</button>
-  <button class="secondary" id="rerollPrompt">Reroll prompt</button>
-</div>
-
-<!-- Clothing control row (smaller) -->
-<div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
-  <button class="secondary pepper small" id="noClothingPrompts">
-    🌶️ All clothing removed <br>
-    <span class="sub">(disable clothing prompts)</span>
-  </button>
+  <!-- Clothing control row (smaller) -->
+  <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+    <button class="secondary pepper small" id="noClothingPrompts">
+      🌶️ All clothing removed <br>
+      <span class="sub">(disable clothing prompts)</span>
+    </button>
+  </div>
 </div>
 
 
@@ -495,7 +741,13 @@
     </div>
   </div>
 
+  <!-- Load scripts in dependency order -->
   <script src="tables.js"></script>
+  <script src="state.js"></script>
+  <script src="clothing.js"></script>
+  <script src="ui-helpers.js"></script>
+  <script src="guided-mode.js"></script>
+  <script src="free-play.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

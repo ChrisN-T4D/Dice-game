@@ -21,11 +21,11 @@ const allClothingItems = [
 // The program will determine WHAT item to remove
 const clothingTable = {
   1: 'No clothing change - all touch stays over whatever is currently being worn.',
-  2: 'Slowly and teasingly remove',
-  3: 'Playfully remove',
-  4: 'Sensually remove',
-  5: 'Remove with anticipation',
-  6: 'Critical: Remove 2 items - one slowly, one quickly'
+  2: 'Remove using only one hand',
+  3: 'Remove using only your mouth/teeth (no hands)',
+  4: 'Remove while maintaining eye contact throughout',
+  5: 'Remove while the receiver keeps their hands behind their back',
+  6: 'Critical: Remove 2 items - one with your hands, one with your mouth'
 };
 
 // ----- Guided Mode clothing functions -----

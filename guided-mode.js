@@ -1,9 +1,12 @@
+'use strict';
 // ----- Guided mode functions -----
 
-function startGuidedMode(totalMinutes, turnMinutes, phasePercents, clothingList, milestoneInterval, clothingEnabled, distributionMode) {
+function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemovalSeconds, phasePercents, clothingList, milestoneInterval, clothingEnabled, distributionMode) {
   isGuidedMode = true;
   guidedTotalSeconds = totalMinutes * 60;
   guidedTurnSeconds = turnMinutes * 60;
+  guidedPauseSeconds = pauseSeconds;
+  guidedClothingRemovalSeconds = clothingRemovalSeconds;
   guidedDistributionMode = distributionMode; // Store the mode name
 
   // Calculate phase time allocations based on percentages
@@ -13,6 +16,8 @@ function startGuidedMode(totalMinutes, turnMinutes, phasePercents, clothingList,
 
   guidedPhaseTimeRemaining = guidedPhaseSeconds[0]; // Start with phase 1
   guidedTurnTimeRemaining = guidedTurnSeconds;
+  guidedPauseTimeRemaining = 0;
+  guidedInPause = false;
   guidedCurrentPartner = 1;
   guidedPaused = false;
 
@@ -58,43 +63,52 @@ function performGuidedTurn() {
     extendedTime = true;
     actRoll = Math.floor(Math.random() * 19) + 1;
     if (messageBox) {
-      messageBox.textContent = `⭐ Critical roll for Partner ${guidedCurrentPartner}! Extended time.`;
+      const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+      messageBox.textContent = `⭐ Critical roll! Extended time. P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
       flashMessage('flash');
     }
   }
 
-  showExercise(phase, loc, actRoll);
+  // Determine giver and receiver for guided mode
+  const giver = guidedCurrentPartner;
+  const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+  
+  showExercise(phase, loc, actRoll, giver, receiver);
 
   if (extendedTime && whatOutput) {
     whatOutput.textContent += ' Spend about twice as long on this location.';
   }
 
   // Milestone-based clothing removal (only in Phase 1 & 2)
+  let clothingRemoved = false;
   if (clothingSystemEnabled && phase < 3 && turnsSinceLastRemoval >= clothingMilestoneInterval) {
     const removedItem = removeClothingItem();
     turnsSinceLastRemoval = 0;
 
     if (removedItem && clothingOutput) {
+      clothingRemoved = true;
       // Roll d6 to determine "how" to remove
       const howRoll = Math.floor(Math.random() * 6) + 1;
       const clothingEntry = clothingTable[howRoll];
+      const giverLabel = `Partner ${giver} (giver)`;
+      const receiverLabel = `Partner ${receiver} (receiver)`;
 
       if (howRoll === 1) {
         // Roll 1: No change (but we already removed an item, so just show it)
-        clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
+        clothingOutput.textContent = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
       } else if (howRoll === 6) {
         // Roll 6: Remove 2 items
         const secondItem = removeClothingItem();
         if (secondItem) {
           const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
-          clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong> and <strong>${secondItem}</strong>${methodText}`;
+          clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem} and ${secondItem}${methodText}`;
         } else {
-          clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong> (only 1 item remaining)`;
+          clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem} (only 1 item remaining)`;
         }
       } else {
         // Rolls 2-5: Remove with style
         const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
-        clothingOutput.innerHTML = `${clothingEntry.prefix} their <strong>${removedItem}</strong>${methodText}`;
+        clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem}${methodText}`;
       }
     } else if (clothingItems.length === 0 && clothingOutput) {
       clothingOutput.textContent = 'All clothing has been removed.';
@@ -113,12 +127,24 @@ function performGuidedTurn() {
 
   // Display which partner's turn it is
   if (messageBox && !extendedTime) {
-    messageBox.textContent = `Partner ${guidedCurrentPartner}'s turn`;
+    const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+    messageBox.textContent = `Partner ${guidedCurrentPartner} (giver) → Partner ${receiver} (receiver)`;
   }
 
-  // Start turn timer
+  // Start turn timer (add extra time if clothing was removed)
   guidedTurnTimeRemaining = guidedTurnSeconds;
+  if (clothingRemoved && guidedClothingRemovalSeconds > 0) {
+    guidedTurnTimeRemaining += guidedClothingRemovalSeconds;
+    if (messageBox) {
+      const currentMessage = messageBox.textContent;
+      messageBox.textContent = `${currentMessage} (+${Math.floor(guidedClothingRemovalSeconds / 60)}:${String(guidedClothingRemovalSeconds % 60).padStart(2, '0')} for clothing removal)`;
+    }
+  }
   startGuidedTurnTimer();
+  saveState();
+
+  // Announce the turn instructions via text-to-speech
+  speakInstructions();
 }
 
 function startGuidedTurnTimer() {
@@ -131,28 +157,89 @@ function startGuidedTurnTimer() {
     guidedPhaseTimeRemaining -= 1;
 
     updateGuidedModeUI();
+    
+    // Save state every 5 seconds
+    if (guidedTurnTimeRemaining % 5 === 0) {
+      saveState();
+    }
 
     // Check if turn is complete
     if (guidedTurnTimeRemaining <= 0) {
+      completeTurn();
+    }
+  }, 1000);
+}
+
+function completeTurn() {
+  clearInterval(guidedTurnTimerId);
+
+  // Play sound
+  if (timerSound) {
+    timerSound.currentTime = 0;
+    timerSound.play().catch(() => {});
+  }
+
+  // Switch partner
+  guidedCurrentPartner = guidedCurrentPartner === 1 ? 2 : 1;
+
+  // Check if phase time is up
+  if (guidedPhaseTimeRemaining <= 0) {
+    advanceGuidedPhase();
+  } else {
+    // Start pause between turns (if configured)
+    if (guidedPauseSeconds > 0) {
+      startGuidedPause();
+    } else {
+      // No pause, continue immediately
+      performGuidedTurn();
+    }
+  }
+}
+
+function skipToNextTurn() {
+  if (!isGuidedMode || guidedPaused || guidedInPause) return;
+  
+  // Deduct remaining turn time from phase time before completing
+  guidedPhaseTimeRemaining -= guidedTurnTimeRemaining;
+  guidedTurnTimeRemaining = 0;
+  
+  completeTurn();
+}
+
+function startGuidedPause() {
+  guidedInPause = true;
+  guidedPauseTimeRemaining = guidedPauseSeconds;
+  
+  if (messageBox) {
+    const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+    messageBox.textContent = `Break time - Next: P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+  }
+
+  // Announce the break
+  speakText('Break time. Switch partners.');
+
+  guidedTurnTimerId = setInterval(() => {
+    if (guidedPaused) return;
+
+    guidedPauseTimeRemaining -= 1;
+    guidedPhaseTimeRemaining -= 1; // Pause counts against phase time
+
+    updateGuidedModeUI();
+    
+    // Save state every 5 seconds
+    if (guidedPauseTimeRemaining % 5 === 0) {
+      saveState();
+    }
+
+    if (guidedPauseTimeRemaining <= 0) {
       clearInterval(guidedTurnTimerId);
+      guidedInPause = false;
 
-      // Play sound
-      if (timerSound) {
-        timerSound.currentTime = 0;
-        timerSound.play().catch(() => {});
-      }
-
-      // Switch partner
-      guidedCurrentPartner = guidedCurrentPartner === 1 ? 2 : 1;
-
-      // Check if phase time is up
+      // Check if phase time ran out during pause
       if (guidedPhaseTimeRemaining <= 0) {
         advanceGuidedPhase();
       } else {
-        // Continue with next turn
-        setTimeout(() => {
-          performGuidedTurn();
-        }, 2000); // 2 second pause between turns
+        performGuidedTurn();
       }
     }
   }, 1000);
@@ -170,28 +257,32 @@ function advanceGuidedPhase() {
     updatePhaseUI(phase, rollCount);
     updateGuidedModeUI();
     updateClothingDisplay();
+    saveState();
 
-    // Continue with next turn after phase change
+    // Continue with next turn after phase change (brief pause for notification)
     setTimeout(() => {
       performGuidedTurn();
-    }, 3000); // 3 second pause for phase change
+    }, 3000);
   } else {
     // Session complete
     stopGuidedMode();
     if (messageBox) {
       messageBox.textContent = 'Guided session complete! Check in with each other.';
     }
+    speakText('Session complete. Check in with each other.');
   }
 }
 
 function pauseGuidedMode() {
   guidedPaused = true;
   updateGuidedModeUI();
+  saveState();
 }
 
 function resumeGuidedMode() {
   guidedPaused = false;
   updateGuidedModeUI();
+  saveState();
 }
 
 function stopGuidedMode() {
@@ -199,63 +290,114 @@ function stopGuidedMode() {
   guidedPaused = false;
   clearInterval(guidedTurnTimerId);
   clearInterval(guidedPhaseTimerId);
+  stopSpeaking();
   updateGuidedModeUI();
+  clearSavedState();
 }
 
 function updateGuidedModeUI() {
+  // Get ALL elements this function needs to manage
   const guidedSetup = document.getElementById('guidedSetup');
   const guidedStatus = document.getElementById('guidedStatus');
   const freePlayControls = document.getElementById('freePlayControls');
   const actionTimerSection = document.getElementById('actionTimerSection');
+  const rollGrid = document.querySelector('.roll-grid');
+  const submitRow = document.getElementById('submitRoll')?.closest('.row');
+  const phaseRow = document.getElementById('goToNextPhase')?.closest('.row');
+  const voiceToggleRow = document.getElementById('voiceToggleRow');
+  const outputBox = getOutputDisplayBox();
+  const messageDiv = document.getElementById('message');
+  const errorDiv = document.getElementById('error');
+
   const currentPartnerSpan = document.getElementById('currentPartner');
   const phaseTimeLeftSpan = document.getElementById('phaseTimeLeft');
   const turnTimeLeftSpan = document.getElementById('turnTimeLeft');
+  const turnTimeLeftLabel = document.getElementById('turnTimeLeftLabel');
   const phaseAllocationSpan = document.getElementById('phaseAllocation');
+  const nextTurnBtn = document.getElementById('nextTurnGuided');
   const pauseBtn = document.getElementById('pauseGuided');
   const resumeBtn = document.getElementById('resumeGuided');
 
   if (isGuidedMode) {
+    // === GUIDED MODE ACTIVE ===
+    // Hide setup, free play controls, and free-play-only inputs
     if (guidedSetup) guidedSetup.style.display = 'none';
-    if (guidedStatus) guidedStatus.style.display = 'flex';
     if (freePlayControls) freePlayControls.style.display = 'none';
     if (actionTimerSection) actionTimerSection.style.display = 'none';
+    if (rollGrid) rollGrid.style.display = 'none';
+    if (submitRow) submitRow.style.display = 'none';
+    if (phaseRow) phaseRow.style.display = 'none';
 
-    if (currentPartnerSpan) currentPartnerSpan.textContent = `Partner ${guidedCurrentPartner}`;
-    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining);
-    if (turnTimeLeftSpan) turnTimeLeftSpan.textContent = formatTime(guidedTurnTimeRemaining);
+    // Show guided status panel and output displays
+    if (guidedStatus) guidedStatus.style.display = 'flex';
+    if (voiceToggleRow) voiceToggleRow.style.display = '';
+    if (outputBox) outputBox.style.display = 'block';
+    if (messageDiv) messageDiv.style.display = '';
+    if (errorDiv) errorDiv.style.display = '';
 
-    // Show phase allocation name or breakdown
-    if (phaseAllocationSpan) {
-      if (guidedDistributionMode === 'equal') {
-        phaseAllocationSpan.textContent = 'Phase allocation: Equal';
-      } else if (guidedDistributionMode === 'phase1') {
-        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 1';
-      } else if (guidedDistributionMode === 'phase2') {
-        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 2';
-      } else if (guidedDistributionMode === 'phase3') {
-        phaseAllocationSpan.textContent = 'Phase allocation: Emphasize Phase 3';
+    // Update partner display
+    if (currentPartnerSpan) {
+      const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+      if (guidedInPause) {
+        currentPartnerSpan.textContent = `Break - Next: P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+        currentPartnerSpan.style.fontSize = '1.2rem';
       } else {
-        // Show custom breakdown
-        const p1 = formatTime(guidedPhaseSeconds[0]);
-        const p2 = formatTime(guidedPhaseSeconds[1]);
-        const p3 = formatTime(guidedPhaseSeconds[2]);
-        phaseAllocationSpan.textContent = `Phase allocation: P1: ${p1}, P2: ${p2}, P3: ${p3}`;
+        currentPartnerSpan.textContent = `P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+        currentPartnerSpan.style.fontSize = '1.5rem';
       }
     }
 
-    if (pauseBtn && resumeBtn) {
-      if (guidedPaused) {
-        pauseBtn.style.display = 'none';
-        resumeBtn.style.display = 'inline-block';
+    // Update timer displays
+    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining);
+    if (turnTimeLeftLabel) {
+      turnTimeLeftLabel.textContent = guidedInPause ? 'Pause Time:' : 'Turn Time Left:';
+    }
+    if (turnTimeLeftSpan) {
+      if (guidedInPause) {
+        turnTimeLeftSpan.textContent = formatTime(guidedPauseTimeRemaining);
+        turnTimeLeftSpan.style.color = '#a7f3d0';
       } else {
-        pauseBtn.style.display = 'inline-block';
-        resumeBtn.style.display = 'none';
+        turnTimeLeftSpan.textContent = formatTime(guidedTurnTimeRemaining);
+        turnTimeLeftSpan.style.color = '#e5e7eb';
       }
+    }
+
+    // Show phase allocation
+    if (phaseAllocationSpan) {
+      const distLabels = {
+        equal: 'Equal',
+        phase1: 'Emphasize Phase 1',
+        phase2: 'Emphasize Phase 2',
+        phase3: 'Emphasize Phase 3'
+      };
+      if (distLabels[guidedDistributionMode]) {
+        phaseAllocationSpan.textContent = `Phase allocation: ${distLabels[guidedDistributionMode]}`;
+      } else {
+        const times = guidedPhaseSeconds.map(s => formatTime(s));
+        phaseAllocationSpan.textContent = `Phase allocation: P1: ${times[0]}, P2: ${times[1]}, P3: ${times[2]}`;
+      }
+    }
+
+    // Control buttons visibility
+    if (nextTurnBtn) {
+      nextTurnBtn.style.display = (guidedInPause || guidedPaused) ? 'none' : 'inline-block';
+    }
+    if (pauseBtn && resumeBtn) {
+      pauseBtn.style.display = guidedPaused ? 'none' : 'inline-block';
+      resumeBtn.style.display = guidedPaused ? 'inline-block' : 'none';
     }
   } else {
-    if (guidedSetup) guidedSetup.style.display = 'flex';
+    // === GUIDED MODE STOPPED - restore free play UI ===
+    if (guidedSetup) guidedSetup.style.display = 'none';
     if (guidedStatus) guidedStatus.style.display = 'none';
     if (freePlayControls) freePlayControls.style.display = 'block';
     if (actionTimerSection) actionTimerSection.style.display = 'block';
+    if (rollGrid) rollGrid.style.display = '';
+    if (submitRow) submitRow.style.display = '';
+    if (phaseRow) phaseRow.style.display = '';
+    if (voiceToggleRow) voiceToggleRow.style.display = '';
+    if (outputBox) outputBox.style.display = '';
+    if (messageDiv) messageDiv.style.display = '';
+    if (errorDiv) errorDiv.style.display = '';
   }
 }

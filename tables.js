@@ -1,3 +1,4 @@
+'use strict';
 // Phase/location/action tables – edit here
 
 const tables = {
@@ -54,10 +55,10 @@ const tables = {
     name: 'Heating up',
     description: 'Breasts/chest and genitals allowed; still low pressure and exploration‑focused.',
     locations: {
-  1: 'Mouth: inner lips + tongue (kissing, lip-sucking, gentle biting).',
+  1: 'Mouth: inner lips + tongue.',
   2: 'Ears (lobes + inner rim).',
-  3: 'Front of neck + under jawline (light kisses, gentle suction).',
-  4: 'Nape/hairline + back of neck (small kisses, gentle suction).',
+  3: 'Front of neck + under jawline.',
+  4: 'Nape/hairline + back of neck.',
   5: 'Collarbones/clavicle + upper chest (above breast/pec line).',
   6: 'Nipple–areola complex (any gender).',
   7: 'Nipple–areola complex.',

@@ -1,7 +1,21 @@
+'use strict';
 // ----- UI helper functions -----
 
 // Global DOM references
 let messageBox, whereOutput, whatOutput, clothingOutput, timerSound;
+
+// Reliable way to find the output display box (works with both old and new HTML)
+function getOutputDisplayBox() {
+  // Try the new ID first, then fall back to finding it via the whereOutput span
+  let box = document.getElementById('outputDisplayBox');
+  if (box) return box;
+  const span = document.getElementById('whereOutput');
+  // whereOutput is inside <div class="output"> inside the container div
+  if (span && span.parentElement && span.parentElement.parentElement) {
+    return span.parentElement.parentElement;
+  }
+  return null;
+}
 
 function clearMessages() {
   if (messageBox) messageBox.textContent = '';
@@ -75,6 +89,11 @@ function notifyPhaseChange(newPhase) {
     void phaseDisplay.offsetWidth;
     phaseDisplay.classList.add("pulse");
   }
+
+  // Announce phase change via TTS
+  if (typeof speakText === 'function' && messageBox) {
+    speakText(messageBox.textContent);
+  }
 }
 
 // ----- Timer logic -----
@@ -133,28 +152,24 @@ function startTimer(seconds) {
 
 // ----- Summary card rendering -----
 
-function renderCurrentLocations(locationsObj) {
-  const ul = document.getElementById('currentLocationsList');
+function renderList(elementId, dataObj) {
+  const ul = document.getElementById(elementId);
   if (!ul) return;
-  ul.innerHTML = '';
+  while (ul.firstChild) ul.removeChild(ul.firstChild);
 
-  Object.keys(locationsObj).forEach((key) => {
+  Object.keys(dataObj).forEach((key) => {
     const li = document.createElement('li');
-    li.textContent = `${key}. ${locationsObj[key]}`;
+    li.textContent = `${key}. ${dataObj[key]}`;
     ul.appendChild(li);
   });
 }
 
-function renderCurrentActions(actionsObj) {
-  const ul = document.getElementById('currentActionsList');
-  if (!ul) return;
-  ul.innerHTML = '';
+function renderCurrentLocations(locationsObj) {
+  renderList('currentLocationsList', locationsObj);
+}
 
-  Object.keys(actionsObj).forEach((key) => {
-    const li = document.createElement('li');
-    li.textContent = `${key}. ${actionsObj[key]}`;
-    ul.appendChild(li);
-  });
+function renderCurrentActions(actionsObj) {
+  renderList('currentActionsList', actionsObj);
 }
 
 function renderPhaseSummary(phaseNumber) {
@@ -176,4 +191,20 @@ function renderPhaseSummary(phaseNumber) {
     renderCurrentLocations(table.locations || {});
     renderCurrentActions(table.actions || {});
   }
+}
+
+function showToast(message, duration = 4000) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('fadeOut');
+    setTimeout(() => {
+      if (toast.parentNode) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, duration);
 }

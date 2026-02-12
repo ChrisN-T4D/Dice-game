@@ -1,3 +1,4 @@
+'use strict';
 // ----- Clothing presets and items -----
 
 const clothingPresets = {
@@ -29,68 +30,100 @@ const clothingTable = {
   6: { prefix: 'Critical: Remove 2 items', method: 'one with your hands, one with your mouth' }
 };
 
+// ----- Shared clothing removal logic -----
+
+// Roll d6 and remove a random item from the given array, return the removed item or null
+function removeRandomClothingItem(itemsArray) {
+  if (itemsArray.length === 0) return null;
+
+  const roll = Math.floor(Math.random() * 6) + 1;
+  let index;
+  if (itemsArray.length === 1) {
+    index = 0;
+  } else if (itemsArray.length <= 6) {
+    index = (roll - 1) % itemsArray.length;
+  } else {
+    index = Math.floor((roll - 1) * (itemsArray.length / 6));
+  }
+
+  const removedItem = itemsArray[index];
+  itemsArray.splice(index, 1);
+  return removedItem;
+}
+
+// Shared function to populate clothing checkboxes for any container
+function populateClothingCheckboxes(containerId, prefix, itemsToCheck = []) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Clear existing content safely
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  allClothingItems.forEach(item => {
+    const label = document.createElement('label');
+    label.className = 'clothing-item';
+    if (itemsToCheck.includes(item)) label.classList.add('selected');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${prefix}_${item.replace(/\s+/g, '_')}`;
+    checkbox.value = item;
+    checkbox.checked = itemsToCheck.includes(item);
+
+    const checkmark = document.createElement('span');
+    checkmark.className = 'checkmark';
+    checkmark.textContent = '\u2713';
+
+    const text = document.createElement('span');
+    text.textContent = item;
+
+    label.appendChild(checkbox);
+    label.appendChild(checkmark);
+    label.appendChild(text);
+
+    label.addEventListener('click', (e) => {
+      e.preventDefault();
+      checkbox.checked = !checkbox.checked;
+      label.classList.toggle('selected', checkbox.checked);
+    });
+
+    container.appendChild(label);
+  });
+}
+
+// Shared function to get selected clothing items from any container
+function getSelectedClothingItems(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+
+// Shared function to clear all selections in a clothing container
+function clearClothingSelections(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll('.clothing-item').forEach(label => {
+    label.classList.remove('selected');
+    const checkbox = label.querySelector('input[type="checkbox"]');
+    if (checkbox) checkbox.checked = false;
+  });
+}
+
 // ----- Guided Mode clothing functions -----
 
 function populateGuidedClothingCheckboxes(partner, itemsToCheck = []) {
   const containerId = partner === 1 ? 'guidedClothingCheckboxContainerP1' : 'guidedClothingCheckboxContainerP2';
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  allClothingItems.forEach(item => {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display: flex; align-items: center; gap: 0.5rem;';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `guided_p${partner}_${item.replace(/\s+/g, '_')}`;
-    checkbox.value = item;
-    checkbox.checked = itemsToCheck.includes(item);
-    checkbox.style.cssText = 'cursor: pointer;';
-
-    const label = document.createElement('label');
-    label.htmlFor = checkbox.id;
-    label.textContent = item;
-    label.style.cssText = 'cursor: pointer; font-size: 0.85rem; user-select: none;';
-
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(label);
-    container.appendChild(wrapper);
-  });
+  populateClothingCheckboxes(containerId, `guided_p${partner}`, itemsToCheck);
 }
 
 function getGuidedSelectedClothingItems(partner) {
   const containerId = partner === 1 ? 'guidedClothingCheckboxContainerP1' : 'guidedClothingCheckboxContainerP2';
-  const container = document.getElementById(containerId);
-  if (!container) return [];
-
-  const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-  return Array.from(checkboxes).map(cb => cb.value);
+  return getSelectedClothingItems(containerId);
 }
 
 function removeClothingItem() {
-  if (clothingItems.length === 0) {
-    return null;
-  }
-
-  // Roll d6 to determine which item
-  const roll = Math.floor(Math.random() * 6) + 1;
-
-  // Map d6 roll to array index (with wraparound for small lists)
-  let index;
-  if (clothingItems.length === 1) {
-    index = 0;
-  } else if (clothingItems.length <= 6) {
-    index = (roll - 1) % clothingItems.length;
-  } else {
-    // For longer lists, distribute rolls across items
-    index = Math.floor((roll - 1) * (clothingItems.length / 6));
-  }
-
-  const removedItem = clothingItems[index];
-  clothingItems.splice(index, 1);
-
+  const removedItem = removeRandomClothingItem(clothingItems);
+  if (removedItem) saveState();
   return removedItem;
 }
 
@@ -126,40 +159,12 @@ function updateClothingDisplay() {
 
 function populateFreePlayClothingCheckboxes(partner, itemsToCheck = []) {
   const containerId = partner === 1 ? 'freePlayClothingCheckboxContainerP1' : 'freePlayClothingCheckboxContainerP2';
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  allClothingItems.forEach(item => {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display: flex; align-items: center; gap: 0.5rem;';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `freeplay_p${partner}_${item.replace(/\s+/g, '_')}`;
-    checkbox.value = item;
-    checkbox.checked = itemsToCheck.includes(item);
-    checkbox.style.cssText = 'cursor: pointer;';
-
-    const label = document.createElement('label');
-    label.htmlFor = checkbox.id;
-    label.textContent = item;
-    label.style.cssText = 'cursor: pointer; font-size: 0.85rem; user-select: none;';
-
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(label);
-    container.appendChild(wrapper);
-  });
+  populateClothingCheckboxes(containerId, `freeplay_p${partner}`, itemsToCheck);
 }
 
 function getFreePlaySelectedClothingItems(partner) {
   const containerId = partner === 1 ? 'freePlayClothingCheckboxContainerP1' : 'freePlayClothingCheckboxContainerP2';
-  const container = document.getElementById(containerId);
-  if (!container) return [];
-
-  const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-  return Array.from(checkboxes).map(cb => cb.value);
+  return getSelectedClothingItems(containerId);
 }
 
 function updateTurnIndicator() {
@@ -234,29 +239,11 @@ function updateFreePlayClothingDisplay() {
 }
 
 function removeFreePlayClothingItem() {
-  // Remove from current receiver's clothing list
-  const clothingItems = freePlayCurrentReceiver === 1 ? freePlayClothingItemsP1 : freePlayClothingItemsP2;
-
-  if (clothingItems.length === 0) {
-    return null;
+  const items = freePlayCurrentReceiver === 1 ? freePlayClothingItemsP1 : freePlayClothingItemsP2;
+  const removedItem = removeRandomClothingItem(items);
+  if (removedItem) {
+    saveState();
+    return { item: removedItem, partner: freePlayCurrentReceiver };
   }
-
-  // Roll d6 to determine which item
-  const roll = Math.floor(Math.random() * 6) + 1;
-
-  // Map d6 roll to array index (with wraparound for small lists)
-  let index;
-  if (clothingItems.length === 1) {
-    index = 0;
-  } else if (clothingItems.length <= 6) {
-    index = (roll - 1) % clothingItems.length;
-  } else {
-    // For longer lists, distribute rolls across items
-    index = Math.floor((roll - 1) * (clothingItems.length / 6));
-  }
-
-  const removedItem = clothingItems[index];
-  clothingItems.splice(index, 1);
-
-  return { item: removedItem, partner: freePlayCurrentReceiver };
+  return null;
 }

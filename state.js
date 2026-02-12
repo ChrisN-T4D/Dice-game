@@ -1,7 +1,8 @@
+'use strict';
 // ----- State & persistence -----
 
-let phase = Number(localStorage.getItem('sensatePhase')) || 1;
-let rollCount = Number(localStorage.getItem('sensateRollCount')) || 0;
+let phase = 1;
+let rollCount = 0;
 const maxPhase = 3;
 
 let usedWhereThisPhase = new Set(); // location/position rolls seen this phase
@@ -16,6 +17,10 @@ let guidedPhaseSeconds = [0, 0, 0]; // time allocated per phase (array for custo
 let guidedPhaseTimeRemaining = 0;
 let guidedTurnSeconds = 120; // default 2 min per turn
 let guidedTurnTimeRemaining = 0;
+let guidedPauseSeconds = 30; // default 30 sec pause between turns
+let guidedPauseTimeRemaining = 0;
+let guidedClothingRemovalSeconds = 30; // default 30 sec extra for clothing removal
+let guidedInPause = false; // true when in pause between turns
 let guidedCurrentPartner = 1; // 1 or 2
 let guidedPhaseTimerId = null;
 let guidedTurnTimerId = null;
@@ -36,6 +41,107 @@ let freePlayClothingItemsP2 = [];
 let freePlayCurrentReceiver = 1; // 1 or 2 - who is receiving touch
 
 function saveState() {
-  localStorage.setItem('sensatePhase', String(phase));
-  localStorage.setItem('sensateRollCount', String(rollCount));
+  const state = {
+    phase,
+    rollCount,
+    isGuidedMode,
+    guidedTotalSeconds,
+    guidedPhaseSeconds,
+    guidedPhaseTimeRemaining,
+    guidedTurnSeconds,
+    guidedTurnTimeRemaining,
+    guidedPauseSeconds,
+    guidedPauseTimeRemaining,
+    guidedClothingRemovalSeconds,
+    guidedInPause,
+    guidedCurrentPartner,
+    guidedPaused,
+    guidedDistributionMode,
+    clothingItems,
+    clothingMilestoneInterval,
+    turnsSinceLastRemoval,
+    clothingSystemEnabled,
+    totalTurnsInSession,
+    freePlayClothingEnabled,
+    freePlayClothingItemsP1,
+    freePlayClothingItemsP2,
+    freePlayCurrentReceiver,
+    clothingPromptsEnabled,
+    awaitingPartnerTurn,
+    lastSaveTime: Date.now()
+  };
+  
+  localStorage.setItem('intimacyGameState', JSON.stringify(state));
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('intimacyGameState');
+    if (!saved) return false;
+    
+    const state = JSON.parse(saved);
+    
+    // Validate basic structure
+    if (typeof state !== 'object' || state === null) return false;
+    
+    // Validate and clamp phase
+    const rawPhase = Number(state.phase);
+    phase = (Number.isInteger(rawPhase) && rawPhase >= 1 && rawPhase <= maxPhase) ? rawPhase : 1;
+    rollCount = Math.max(0, Number(state.rollCount) || 0);
+    
+    // Restore guided mode state
+    isGuidedMode = state.isGuidedMode || false;
+    guidedTotalSeconds = state.guidedTotalSeconds || 0;
+    guidedPhaseSeconds = state.guidedPhaseSeconds || [0, 0, 0];
+    guidedPhaseTimeRemaining = state.guidedPhaseTimeRemaining || 0;
+    guidedTurnSeconds = state.guidedTurnSeconds || 120;
+    guidedTurnTimeRemaining = state.guidedTurnTimeRemaining || 0;
+    guidedPauseSeconds = state.guidedPauseSeconds || 30;
+    guidedPauseTimeRemaining = state.guidedPauseTimeRemaining || 0;
+    guidedClothingRemovalSeconds = state.guidedClothingRemovalSeconds || 30;
+    guidedInPause = state.guidedInPause || false;
+    guidedCurrentPartner = state.guidedCurrentPartner || 1;
+    guidedPaused = true; // Always pause on load
+    guidedDistributionMode = state.guidedDistributionMode || 'equal';
+    
+    // Restore clothing state
+    clothingItems = state.clothingItems || [];
+    clothingMilestoneInterval = state.clothingMilestoneInterval || 3;
+    turnsSinceLastRemoval = state.turnsSinceLastRemoval || 0;
+    clothingSystemEnabled = state.clothingSystemEnabled !== undefined ? state.clothingSystemEnabled : true;
+    totalTurnsInSession = state.totalTurnsInSession || 0;
+    
+    // Restore free play state
+    freePlayClothingEnabled = state.freePlayClothingEnabled || false;
+    freePlayClothingItemsP1 = state.freePlayClothingItemsP1 || [];
+    freePlayClothingItemsP2 = state.freePlayClothingItemsP2 || [];
+    freePlayCurrentReceiver = state.freePlayCurrentReceiver || 1;
+    
+    // Restore other state
+    clothingPromptsEnabled = state.clothingPromptsEnabled !== undefined ? state.clothingPromptsEnabled : true;
+    awaitingPartnerTurn = state.awaitingPartnerTurn || false;
+    
+    // Only consider state worth restoring if there's actual progress
+    // (not just a default fresh state that got auto-saved)
+    const hasProgress = isGuidedMode
+      || rollCount > 0
+      || phase > 1
+      || freePlayClothingItemsP1.length > 0
+      || freePlayClothingItemsP2.length > 0;
+    
+    if (!hasProgress) {
+      // Reset to defaults and treat as fresh start
+      clearSavedState();
+      return false;
+    }
+    
+    return true;
+  } catch (e) {
+    console.error('Error loading state:', e);
+    return false;
+  }
+}
+
+function clearSavedState() {
+  localStorage.removeItem('intimacyGameState');
 }

@@ -1,3 +1,4 @@
+'use strict';
 // ----- Free Play mode functions -----
 
 function rollD20() {
@@ -32,7 +33,7 @@ function getPrompt(currentPhase, locationRoll, actionRoll) {
   return `${phaseTable.name}: ${action}.`;
 }
 
-function showExercise(currentPhase, locationRoll, actionRoll) {
+function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = null, receiverPartner = null) {
   const phaseTable = tables[currentPhase];
   if (!phaseTable) {
     if (whereOutput) whereOutput.textContent = '—';
@@ -48,6 +49,17 @@ function showExercise(currentPhase, locationRoll, actionRoll) {
   } else {
     where = phaseTable.locations?.[locationRoll] ?? '';
     what  = phaseTable.actions?.[actionRoll] ?? '';
+  }
+
+  // Add giver/receiver context if provided
+  if (giverPartner && receiverPartner) {
+    if (where) {
+      const whereLabel = currentPhase === 3 ? 'position' : 'location';
+      where = `Partner ${giverPartner} (giver) touches Partner ${receiverPartner}'s (receiver) ${where}`;
+    }
+    if (what) {
+      what = `Partner ${giverPartner} (giver): ${what}`;
+    }
   }
 
   if (whereOutput) whereOutput.textContent = where || '—';
@@ -67,7 +79,11 @@ function handleRerollPrompt() {
   if (locationRollInput) locationRollInput.value = String(loc);
   if (actionRollInput) actionRollInput.value = String(act);
 
-  showExercise(phase, loc, act);
+  // Determine giver and receiver
+  const giver = freePlayCurrentReceiver === 1 ? 2 : 1;
+  const receiver = freePlayCurrentReceiver;
+  
+  showExercise(phase, loc, act, giver, receiver);
 
   // Optional UI message
   if (messageBox) {
@@ -76,6 +92,7 @@ function handleRerollPrompt() {
 }
 
 function resetSession() {
+  // Reset all game state
   phase = 1;
   rollCount = 0;
   usedWhereThisPhase = new Set();
@@ -83,24 +100,51 @@ function resetSession() {
   awaitingPartnerTurn = false;
   clothingPromptsEnabled = true;
 
-  // Reset Free Play clothing
+  // Reset Free Play clothing state
   freePlayClothingItemsP1 = [];
   freePlayClothingItemsP2 = [];
+
+  // Re-show clothing setup inputs, hide status display
   const setupInputs = document.getElementById('freePlayClothingSetupInputs');
   const clothingStatus = document.getElementById('freePlayClothingStatus');
   if (setupInputs) setupInputs.style.display = freePlayClothingEnabled ? 'block' : 'none';
   if (clothingStatus) clothingStatus.style.display = 'none';
 
-  // Reset turn indicator
-  updateTurnIndicator();
+  // Repopulate clothing checkboxes to clear selections
+  populateFreePlayClothingCheckboxes(1);
+  populateFreePlayClothingCheckboxes(2);
 
-  saveState();
+  // Reset turn indicator and receiver display
+  freePlayCurrentReceiver = 1;
+  updateTurnIndicator();
+  if (typeof updateReceiverButtons === 'function') updateReceiverButtons();
+
+  // Clear roll inputs
+  const locationRollInput = document.getElementById('locationRoll');
+  const actionRollInput = document.getElementById('actionRoll');
+  const clothingRollInput = document.getElementById('clothingRoll');
+  if (locationRollInput) locationRollInput.value = '';
+  if (actionRollInput) actionRollInput.value = '';
+  if (clothingRollInput) clothingRollInput.value = '';
+
+  // Clear any running timers
+  clearTimer();
+  timerRemainingSeconds = 0;
+  updateTimerDisplay();
+
+  // Clear saved state so landing modal shows on next refresh
+  clearSavedState();
+
+  // Update all UI elements
   clearMessages();
   notifyPhaseChange(phase);
   updatePhaseUI(phase, rollCount);
-  if (whereOutput) whereOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
+  updateRollLabels(phase);
+
+  // Reset output displays
+  if (whereOutput) whereOutput.textContent = '—';
   if (whatOutput) whatOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
-  if (clothingOutput) clothingOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
+  if (clothingOutput) clothingOutput.textContent = '';
 }
 
 function handleUserRoll() {
@@ -196,9 +240,14 @@ function handleUserRoll() {
 
       // If Free Play clothing system is enabled, combine with specific item
       if (freePlayClothingEnabled && phase < 3) {
+        const currentGiver = freePlayCurrentReceiver === 1 ? 2 : 1;
+        const currentReceiver = freePlayCurrentReceiver;
+        const giverLabel = `Partner ${currentGiver} (giver)`;
+        const receiverLabel = `Partner ${currentReceiver} (receiver)`;
+        
         if (clothingRoll === 1) {
           // Roll 1: No change
-          clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
+          clothingOutput.textContent = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
         } else if (clothingRoll === 6) {
           // Roll 6: Remove 2 items
           const result1 = removeFreePlayClothingItem();
@@ -206,9 +255,9 @@ function handleUserRoll() {
 
           if (result1 && result2) {
             const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
-            clothingOutput.innerHTML = `Partner ${result1.partner}: ${clothingEntry.prefix} their <strong>${result1.item}</strong> and <strong>${result2.item}</strong>${methodText}`;
+            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result1.item} and ${result2.item}${methodText}`;
           } else if (result1) {
-            clothingOutput.innerHTML = `Partner ${result1.partner}: ${clothingEntry.prefix} their <strong>${result1.item}</strong> (only 1 item remaining)`;
+            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result1.item} (only 1 item remaining)`;
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }
@@ -221,7 +270,7 @@ function handleUserRoll() {
 
           if (result) {
             const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
-            clothingOutput.innerHTML = `Partner ${result.partner}: ${clothingEntry.prefix} their <strong>${result.item}</strong>${methodText}`;
+            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result.item}${methodText}`;
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }
@@ -232,10 +281,10 @@ function handleUserRoll() {
       } else {
         // Generic mode - just show the "how" description
         if (clothingEntry.fullText) {
-          clothingOutput.innerHTML = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
+          clothingOutput.textContent = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
         } else {
           const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
-          clothingOutput.innerHTML = `${clothingEntry.prefix}${methodText}`;
+          clothingOutput.textContent = `${clothingEntry.prefix}${methodText}`;
         }
       }
     }
@@ -250,6 +299,7 @@ function handleUserRoll() {
     // Swap receiver after each round in Free Play
     if (freePlayClothingEnabled) {
       freePlayCurrentReceiver = freePlayCurrentReceiver === 1 ? 2 : 1;
+      if (typeof updateReceiverButtons === 'function') updateReceiverButtons();
       updateTurnIndicator();
     }
 
@@ -272,8 +322,11 @@ function handleUserRoll() {
     }
   }
 
-  saveState();
   updatePhaseUI(phase, rollCount);
+  saveState();
+
+  // Announce results via text-to-speech
+  speakInstructions();
 
   locationRollInput.value = '';
   actionRollInput.value = '';

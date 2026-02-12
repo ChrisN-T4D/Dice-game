@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <title>Intimacy D20 Journey</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 
   <style>
     body {
@@ -12,6 +14,7 @@
         sans-serif;
       background-color: #020617;
       color: #e5e7eb;
+      overflow-x: hidden;
     }
 
     /* Strong phase color themes */
@@ -222,9 +225,80 @@
 
     .roll-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
       gap: 0.9rem;
       align-items: start;
+    }
+
+    @media (max-width: 480px) {
+      .roll-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Voice toggle buttons */
+    .voice-toggle-btn {
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .voice-toggle-btn.voice-on {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: #22c55e !important;
+      color: #22c55e !important;
+    }
+
+    /* Free Play controls: receiver-based coloring */
+    #freePlayControls {
+      border-width: 1px;
+      border-style: solid;
+    }
+    #freePlayControls.receiver-p1 {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    #freePlayControls.receiver-p2 {
+      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.1);
+    }
+
+    /* Clothing item visual styling - chip/badge style */
+    .clothing-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid #4b5563;
+      background: rgba(2, 6, 23, 0.5);
+      color: #9ca3af;
+      user-select: none;
+    }
+
+    .clothing-item:hover {
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .clothing-item.selected {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.2);
+      color: #a7f3d0;
+      font-weight: 600;
+    }
+
+    .clothing-item input[type="checkbox"] {
+      display: none;
+    }
+
+    .clothing-item .checkmark {
+      display: none;
+      margin-right: 0.35rem;
+      font-size: 1rem;
+    }
+
+    .clothing-item.selected .checkmark {
+      display: inline;
     }
 
     .roll-col {
@@ -362,11 +436,408 @@
     }
 
 
+    /* Landing modal overlay */
+    #landingModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #landingModal.hidden {
+      display: none;
+    }
+
+    .landing-content {
+      background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      max-width: 600px;
+      width: 100%;
+      border: 2px solid #334155;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .landing-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .landing-subtitle {
+      text-align: center;
+      font-size: 1rem;
+      color: #9ca3af;
+      margin-bottom: 3rem;
+    }
+
+    .mode-buttons {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .mode-button {
+      background: rgba(2, 6, 23, 0.5);
+      border: 2px solid #334155;
+      border-radius: 0.75rem;
+      padding: 2rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+    }
+
+    .mode-button:hover {
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .mode-button.guided:hover {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.1);
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.2);
+    }
+
+    .mode-button-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
+    .mode-button-desc {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+      .landing-content {
+        padding: 2rem 1.5rem;
+      }
+      
+      .landing-title {
+        font-size: 1.5rem;
+      }
+      
+      .mode-button {
+        padding: 1.5rem 1rem;
+      }
+      
+      .mode-button-title {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* Wizard stepper styles */
+    .wizard-step {
+      display: none;
+    }
+
+    .wizard-step.active {
+      display: block;
+    }
+
+    .step-progress {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #334155;
+    }
+
+    .step-indicator {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      padding-bottom: 2rem;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 1.5rem;
+      left: 50%;
+      right: -50%;
+      height: 2px;
+      background: #334155;
+      z-index: 0;
+    }
+
+    .step-indicator:last-child::before {
+      display: none;
+    }
+
+    .step-number {
+      display: inline-block;
+      width: 3rem;
+      height: 3rem;
+      line-height: 3rem;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid #334155;
+      color: #64748b;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-indicator.completed .step-number {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #020617;
+    }
+
+    .step-indicator.active .step-number {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+    }
+
+    .step-indicator.active .step-label {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .step-indicator.completed .step-label {
+      color: #9ca3af;
+    }
+
+    .wizard-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
+    .wizard-subtitle {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin-bottom: 2rem;
+    }
+
+    .wizard-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #334155;
+    }
+
+    .summary-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(2, 6, 23, 0.5);
+      border-radius: 0.5rem;
+      border: 1px solid #334155;
+    }
+
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: #93c5fd;
+    }
+
+    .summary-pill-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* Collapsible sections */
+    .collapsible-section {
+      margin-bottom: 0.75rem;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: rgba(2, 6, 23, 0.5);
+      overflow: hidden;
+    }
+
+    .collapsible-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      gap: 1rem;
+    }
+
+    .collapsible-header:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .collapsible-header.active {
+      background: rgba(59, 130, 246, 0.1);
+      border-bottom: 1px solid #334155;
+    }
+
+    .collapsible-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .collapsible-number {
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
+      text-align: center;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid #334155;
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header.completed .collapsible-number {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #020617;
+    }
+
+    .collapsible-header.active .collapsible-number {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .collapsible-title {
+      font-weight: 600;
+      color: #e5e7eb;
+      font-size: 1rem;
+    }
+
+    .collapsible-selection {
+      font-size: 0.85rem;
+      color: #60a5fa;
+      font-weight: 500;
+    }
+    
+    /* Toast notification for session restore */
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(59, 130, 246, 0.95);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      z-index: 10000;
+      animation: slideInRight 0.3s ease-out;
+      max-width: 350px;
+    }
+    
+    .toast-notification.fadeOut {
+      animation: fadeOut 0.3s ease-out forwards;
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(400px);
+      }
+    }
+
+    .collapsible-icon {
+      color: #64748b;
+      font-size: 1.25rem;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header.active .collapsible-icon {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-content.open {
+      max-height: 2000px;
+    }
+
+    .collapsible-body {
+      padding: 1.25rem;
+      padding-top: 1rem;
+    }
+
   </style>
 </head>
 <body>
+  <!-- Landing Modal -->
+  <div id="landingModal">
+    <div class="landing-content">
+      <h1 class="landing-title">Intimacy D20 Journey</h1>
+      <p class="landing-subtitle">Choose your play mode to begin</p>
+      
+      <div class="mode-buttons">
+        <div class="mode-button freeplay" id="landingFreePlay">
+          <div class="mode-button-title">🎲 Free Play</div>
+          <div class="mode-button-desc">
+            Roll dice manually at your own pace. Full control over timing, turns, and progression. Perfect for casual exploration.
+          </div>
+        </div>
+        
+        <div class="mode-button guided" id="landingGuided">
+          <div class="mode-button-title">⏱️ Guided Mode</div>
+          <div class="mode-button-desc">
+            Automated session with timed turns and structured progression. Set duration, turn length, and let the app guide you through phases.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="phaseFlash" class="phase-flash" aria-hidden="true"></div>
-  <div class="page">
+  <div class="page" style="display: block;">
     <!-- Main card -->
     <div class="card">
       <div class="card-header">
@@ -391,39 +862,104 @@
      </div>
 
      <!-- Guided mode session setup (hidden by default) -->
-     <div id="guidedSetup" class="row" style="display: none; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1); flex-direction: column; gap: 0.75rem;">
+     <div id="guidedSetup" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1);">
 
-       <!-- Total Session Time -->
-       <div class="row" style="justify-content: center; flex-wrap: wrap;">
-         <label style="font-weight: 600; margin-right: 0.75rem; width: 100%; text-align: center; margin-bottom: 0.5rem;">Total Session Time:</label>
-         <button class="secondary" id="time15">15 min</button>
-         <button class="secondary" id="time30">30 min</button>
-         <button class="secondary" id="time45">45 min</button>
-         <button class="secondary" id="time60">60 min</button>
-         <button class="secondary" id="time90">90 min</button>
-         <button class="secondary" id="time120">120 min</button>
-       </div>
-
-       <!-- Turn Duration -->
-       <div class="row" style="justify-content: center; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid #334155;">
-         <label style="font-weight: 600; margin-right: 0.75rem; width: 100%; text-align: center; margin-bottom: 0.5rem;">Turn Duration:</label>
-         <button class="secondary" id="turn1">1 min</button>
-         <button class="secondary" id="turn2">2 min</button>
-         <button class="secondary" id="turn3">3 min</button>
-         <button class="secondary" id="turn5">5 min</button>
-       </div>
-
-       <!-- Phase Time Distribution -->
-       <div style="padding-top: 0.5rem; border-top: 1px solid #334155;">
-         <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Phase Time Distribution:</label>
-
-         <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.35rem; flex-wrap: wrap;">
-           <button class="secondary" id="phaseDistEqual" style="min-width: 100px; font-size: 0.85rem;">Equal</button>
-           <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Sensate-Focused</button>
-           <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">A Little Spicy</button>
-           <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Intimacy-Focused</button>
-           <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
+       <!-- Section 1: Total Session Time -->
+       <div class="collapsible-section">
+         <div class="collapsible-header active" data-section="sessionTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">1</span>
+             <div>
+               <div class="collapsible-title">Total Session Time</div>
+               <div class="collapsible-selection" id="sessionTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
          </div>
+         <div class="collapsible-content open">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="time15">15 min</button>
+               <button class="secondary" id="time30">30 min</button>
+               <button class="secondary" id="time45">45 min</button>
+               <button class="secondary" id="time60">60 min</button>
+               <button class="secondary" id="time90">90 min</button>
+               <button class="secondary" id="time120">120 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 2: Turn Duration -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="turnTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">2</span>
+             <div>
+               <div class="collapsible-title">Turn Duration</div>
+               <div class="collapsible-selection" id="turnTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="turn1">1 min</button>
+               <button class="secondary" id="turn2">2 min</button>
+               <button class="secondary" id="turn3">3 min</button>
+               <button class="secondary" id="turn5">5 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 3: Pause Between Turns -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="pauseTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">3</span>
+             <div>
+               <div class="collapsible-title">Pause Between Turns</div>
+               <div class="collapsible-selection" id="pauseTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="pause0">None</button>
+               <button class="secondary" id="pause30">30 sec</button>
+               <button class="secondary" id="pause60">1 min</button>
+               <button class="secondary" id="pause90">1.5 min</button>
+               <button class="secondary" id="pause120">2 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 4: Phase Time Distribution -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="phaseDistribution">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">4</span>
+             <div>
+               <div class="collapsible-title">Phase Time Distribution</div>
+               <div class="collapsible-selection" id="phaseDistSelection">Select distribution</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.35rem; flex-wrap: wrap;">
+               <button class="secondary" id="phaseDistEqual" style="min-width: 100px; font-size: 0.85rem;">Equal</button>
+               <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Sensate-Focused</button>
+               <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">A Little Spicy</button>
+               <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Intimacy-Focused</button>
+               <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
+             </div>
 
          <!-- Custom phase distribution (hidden by default) -->
          <div id="customPhaseInputs" style="display: none; margin-top: 0.5rem;">
@@ -452,20 +988,32 @@
              <button class="secondary small" id="preset25-25-50">25/25/50</button>
              <button class="secondary small" id="preset30-30-40">30/30/40</button>
            </div>
-           <div id="percentError" style="color: #fecaca; font-size: 0.8rem; text-align: center; margin-top: 0.25rem; display: none;">
-             Percentages must total 100%
+               <div id="percentError" style="color: #fecaca; font-size: 0.8rem; text-align: center; margin-top: 0.25rem; display: none;">
+                 Percentages must total 100%
+               </div>
+             </div>
            </div>
          </div>
        </div>
 
-       <!-- Clothing Setup -->
-       <div style="padding-top: 0.5rem; border-top: 1px solid #334155;">
-         <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Clothing Setup:</label>
-
-         <div class="row" style="justify-content: center; margin-bottom: 0.5rem;">
-           <button class="secondary" id="clothingEnabled" style="min-width: 120px;">Enabled</button>
-           <button class="secondary" id="clothingDisabled" style="min-width: 120px;">Disabled</button>
+       <!-- Section 5: Clothing Setup -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="clothing">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">5</span>
+             <div>
+               <div class="collapsible-title">Clothing Setup</div>
+               <div class="collapsible-selection" id="clothingSelection">Select option</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
          </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+               <button class="secondary" id="clothingEnabled" style="min-width: 120px;">Enabled</button>
+               <button class="secondary" id="clothingDisabled" style="min-width: 120px;">Disabled</button>
+             </div>
 
          <div id="clothingSetupInputs" style="margin-top: 0.5rem;">
            <!-- Partner 1 Clothing -->
@@ -487,7 +1035,11 @@
                <button class="secondary small" id="guidedP1PresetLoungeWear">Lounge Wear</button>
              </div>
 
-             <div id="guidedClothingCheckboxContainerP1" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+             <div style="text-align: center; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+             </div>
+
+             <div id="guidedClothingCheckboxContainerP1" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
                <!-- Partner 1 checkboxes -->
              </div>
            </div>
@@ -511,26 +1063,79 @@
                <button class="secondary small" id="guidedP2PresetLoungeWear">Lounge Wear</button>
              </div>
 
-             <div id="guidedClothingCheckboxContainerP2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+             <div style="text-align: center; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+             </div>
+
+             <div id="guidedClothingCheckboxContainerP2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
                <!-- Partner 2 checkboxes -->
              </div>
            </div>
 
-           <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.75rem; color: #9ca3af;">
-             Tip: Click a preset to load items, then uncheck what they're not wearing
-           </div>
+          <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.75rem; color: #9ca3af;">
+            Tip: Click a preset to load items, then uncheck what they're not wearing
+          </div>
+          </div>
+        </div>
+      </div>
+      </div>
 
-           <div style="text-align: center;">
-             <label style="font-size: 0.85rem; margin-right: 0.5rem;">Remove item every</label>
-             <input type="number" id="clothingMilestone" min="1" max="10" value="3" style="width: 3rem; text-align: center;" />
-             <label style="font-size: 0.85rem; margin-left: 0.25rem;">turns</label>
-           </div>
-         </div>
-       </div>
+      <!-- Section 6: Remove Clothing Interval -->
+      <div class="collapsible-section">
+        <div class="collapsible-header" data-section="clothingInterval">
+          <div class="collapsible-header-left">
+            <span class="collapsible-number">6</span>
+            <div>
+              <div class="collapsible-title">Remove Clothing Interval</div>
+              <div class="collapsible-selection" id="clothingIntervalSelection">Every 3 turns</div>
+            </div>
+          </div>
+          <span class="collapsible-icon">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-body">
+            <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+              How often should clothing be removed during the session?
+            </div>
+            <div style="text-align: center;">
+              <label style="font-size: 0.85rem; margin-right: 0.5rem;">Remove item every</label>
+              <input type="number" id="clothingMilestone" min="1" max="10" value="3" style="width: 3rem; text-align: center;" />
+              <label style="font-size: 0.85rem; margin-left: 0.25rem;">turns</label>
+            </div>
+          </div>
+        </div>
+      </div>
 
-       <div class="row" style="justify-content: center; padding-top: 0.5rem;">
-         <button class="primary big" id="startGuided">Start Guided Session</button>
-       </div>
+      <!-- Section 7: Extra Time for Clothing Removal -->
+      <div class="collapsible-section">
+        <div class="collapsible-header" data-section="clothingExtraTime">
+          <div class="collapsible-header-left">
+            <span class="collapsible-number">7</span>
+            <div>
+              <div class="collapsible-title">Extra Time for Clothing Removal</div>
+              <div class="collapsible-selection" id="clothingExtraTimeSelection">30 seconds</div>
+            </div>
+          </div>
+          <span class="collapsible-icon">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-body">
+            <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.85rem; color: #9ca3af;">
+              Add extra time to a turn when clothing is removed
+            </div>
+            <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap;">
+              <button class="secondary small" id="clothingTime0">None</button>
+              <button class="secondary small" id="clothingTime30">30 sec</button>
+              <button class="secondary small" id="clothingTime60">1 min</button>
+              <button class="secondary small" id="clothingTime90">1.5 min</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button class="primary big" id="startGuided">Start Guided Session</button>
+      </div>
      </div>
 
      <!-- Guided mode status (hidden by default) -->
@@ -538,7 +1143,7 @@
        <div style="display: flex; flex-direction: column; gap: 1rem;">
          <!-- Current Partner -->
          <div style="text-align: center;">
-           <label style="font-size: 1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem;">Current Partner:</label>
+           <label style="font-size: 1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem;">Current Turn:</label>
            <span id="currentPartner" style="font-weight: 700; font-size: 1.5rem;">Partner 1</span>
          </div>
 
@@ -549,7 +1154,7 @@
              <span id="phaseTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
            </div>
            <div style="text-align: center;">
-             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Turn Time Left:</label>
+             <label id="turnTimeLeftLabel" style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Turn Time Left:</label>
              <span id="turnTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
            </div>
          </div>
@@ -563,9 +1168,11 @@
            <div id="clothingMilestoneProgress" style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.25rem;"></div>
          </div>
        </div>
-       <div class="row" style="justify-content: center; gap: 0.5rem;">
+       <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+         <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next Turn</button>
          <button class="secondary" id="pauseGuided">Pause</button>
          <button class="secondary" id="resumeGuided" style="display: none;">Resume</button>
+         <button class="secondary voice-toggle-btn" id="voiceToggleGuided">🔇 Voice Off</button>
          <button class="secondary danger" id="stopGuided">Stop Guided Mode</button>
        </div>
      </div>
@@ -583,8 +1190,8 @@
   <button class="secondary danger" id="newSession">New Session</button>
 </div>
 
-<!-- Free play controls (shown by default) -->
-<div id="freePlayControls" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
+     <!-- Free play controls (hidden by default until mode is selected) -->
+     <div id="freePlayControls" class="receiver-p1" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; display: none;">
   <!-- Starting Receiver Selection (always visible) -->
   <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; background: rgba(2, 6, 23, 0.3);">
     <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; font-size: 0.85rem;">Who starts as receiver?</label>
@@ -606,7 +1213,7 @@
     <div id="freePlayClothingSetupInputs" style="margin-top: 0.5rem;">
 
       <!-- Partner 1 Clothing -->
-      <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+      <div id="freePlayP1ClothingBox" style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
         <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
           Partner 1 Clothing:
         </div>
@@ -624,13 +1231,17 @@
           <button class="secondary small" id="freePlayP1PresetLoungeWear">Lounge Wear</button>
         </div>
 
-        <div id="freePlayClothingCheckboxContainerP1" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+        <div style="text-align: center; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP1" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
           <!-- Partner 1 checkboxes -->
         </div>
       </div>
 
       <!-- Partner 2 Clothing -->
-      <div style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
+      <div id="freePlayP2ClothingBox" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
         <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
           Partner 2 Clothing:
         </div>
@@ -648,7 +1259,11 @@
           <button class="secondary small" id="freePlayP2PresetLoungeWear">Lounge Wear</button>
         </div>
 
-        <div id="freePlayClothingCheckboxContainerP2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 200px; overflow-y: auto;">
+        <div style="text-align: center; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
           <!-- Partner 2 checkboxes -->
         </div>
       </div>
@@ -671,44 +1286,44 @@
       </div>
     </div>
   </div>
-
-  <div class="roll-grid" style="margin-bottom: 0.75rem;">
-    <div class="roll-col label">
-      <label id="locationLabel" for="locationRoll">Location roll d20</label>
-      <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
-    </div>
-
-    <div class="roll-col label">
-      <label id="actionLabel" for="actionRoll">Action roll d20</label>
-      <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
-    </div>
-
-    <div class="roll-col label">
-      <label for="clothingRoll">Clothing roll d6</label>
-      <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
-    </div>
-  </div>
-
-
-  <!-- Action buttons row (Submit + Reroll on its own line) -->
-  <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
-    <button class="primary big" id="submitRoll">Submit rolls</button>
-    <button class="secondary" id="rerollPrompt">Reroll prompt</button>
-  </div>
-
-  <!-- Phase & Clothing control row -->
-  <div class="row" style="justify-content: center; margin-bottom: 0.75rem; gap: 0.5rem;">
-    <button class="secondary" id="goToNextPhase">Go to Next Phase</button>
-    <button class="secondary pepper small" id="noClothingPrompts">
-      🌶️ All clothing removed <br>
-      <span class="sub">(disable clothing prompts)</span>
-    </button>
-  </div>
 </div>
+
+     <div class="roll-grid" style="margin-bottom: 0.75rem;">
+       <div class="roll-col label">
+         <label id="locationLabel" for="locationRoll">Location roll d20</label>
+         <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+       </div>
+
+       <div class="roll-col label">
+         <label id="actionLabel" for="actionRoll">Action roll d20</label>
+         <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
+       </div>
+
+       <div class="roll-col label">
+         <label for="clothingRoll">Clothing roll d6</label>
+         <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+       </div>
+     </div>
+
+
+     <!-- Action buttons row (Submit + Reroll on its own line) -->
+     <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+       <button class="primary big" id="submitRoll">Submit rolls</button>
+       <button class="secondary" id="rerollPrompt">Reroll prompt</button>
+     </div>
+
+     <!-- Phase & Clothing control row -->
+     <div class="row" style="justify-content: center; margin-bottom: 0.75rem; gap: 0.5rem;">
+       <button class="secondary" id="goToNextPhase">Go to Next Phase</button>
+       <button class="secondary pepper small" id="noClothingPrompts">
+         🌶️ All clothing removed <br>
+         <span class="sub">(disable clothing prompts)</span>
+       </button>
+     </div>
 
 
       <!-- Timer controls -->
-      <div id="actionTimerSection" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
+      <div id="actionTimerSection" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1); display: none;">
         <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
           <label style="font-size: 1.0rem; color: #9ca3af;">⏱️ Action timer</label>
         </div>
@@ -734,8 +1349,11 @@
         </div>
       </div>
 
-      <!-- Output displays box -->
-      <div style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
+      <!-- Voice toggle + Output displays box -->
+      <div id="voiceToggleRow" class="row" style="justify-content: flex-end; margin-bottom: 0.35rem;">
+        <button class="secondary small voice-toggle-btn" id="voiceToggleOutput" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">🔇 Voice Off</button>
+      </div>
+      <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
         <div class="output"><strong>Where:</strong> <span id="whereOutput">—</span></div>
         <div class="output"><strong>What to do:</strong> <span id="whatOutput">—</span></div>
         <div class="output"><strong>Clothing action:</strong> <span id="clothingOutput">—</span></div>
@@ -787,14 +1405,15 @@
     </div>
   </div>
 
-  <!-- Load scripts in dependency order -->
-  <script src="tables.js"></script>
-  <script src="state.js"></script>
-  <script src="clothing.js"></script>
-  <script src="ui-helpers.js"></script>
-  <script src="guided-mode.js"></script>
-  <script src="free-play.js"></script>
-  <script src="main.js"></script>
+  <!-- Load scripts in dependency order (cache-bust with version param) -->
+  <script src="tables.js?v=6"></script>
+  <script src="state.js?v=6"></script>
+  <script src="speech.js?v=6"></script>
+  <script src="clothing.js?v=6"></script>
+  <script src="ui-helpers.js?v=6"></script>
+  <script src="guided-mode.js?v=6"></script>
+  <script src="free-play.js?v=6"></script>
+  <script src="main.js?v=6"></script>
 </body>
 </html>
 

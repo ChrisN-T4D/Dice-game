@@ -26,8 +26,8 @@ function buildInstructionsTextForNextTurn(loc, actRoll, extendedTime) {
   }
   if (what) what = `${giverName} (giver): ${what}`;
   const parts = [`${giverName} (giver) to ${receiverName} (receiver)`];
-  if (where) parts.push(where);
-  if (what) parts.push(what);
+  if (where) parts.push('Where: ' + where);
+  if (what) parts.push('How: ' + what);
   if (extendedTime) parts.push('Spend about twice as long on this location.');
   return parts.join('. ') + '.';
 }

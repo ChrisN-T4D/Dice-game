@@ -15,21 +15,42 @@
       background-color: #020617;
       color: #e5e7eb;
       overflow-x: hidden;
+      background-size: cover;
+      background-position: center;
     }
 
-    /* Strong phase color themes */
+    /* Strong phase color themes (gradient only when no background image) */
 
     body.phase-1 {
-      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+      background-image: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
     }
 
     body.phase-2 {
-      background: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
+      background-image: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
     }
 
     body.phase-3 {
-      background: radial-gradient(circle at top, #4a044e 0, #020617 55%, #000 100%);
+      background-image: radial-gradient(circle at top, #4a044e 0, #020617 55%, #000 100%);
     }
+
+    /* Phase colors faded over background image (image shows through gradient) */
+    body.phase-1.bg-image-1,
+    body.phase-1.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(15, 23, 42, 0.72) 0%, rgba(2, 6, 23, 0.88) 50%, rgba(0, 0, 0, 0.94) 100%),
+        var(--bg-image-url);
+    }
+    body.phase-2.bg-image-1,
+    body.phase-2.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(30, 27, 75, 0.68) 0%, rgba(2, 6, 23, 0.86) 50%, rgba(0, 0, 0, 0.93) 100%),
+        var(--bg-image-url);
+    }
+    body.phase-3.bg-image-1,
+    body.phase-3.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(74, 4, 78, 0.65) 0%, rgba(2, 6, 23, 0.85) 50%, rgba(0, 0, 0, 0.92) 100%),
+        var(--bg-image-url);
+    }
+    body.bg-image-1 { --bg-image-url: url('Background/aristal-ai-generated-8629462.jpg'); }
+    body.bg-image-2 { --bg-image-url: url('Background/davidrockdesign-triangles-1430105.svg'); }
 
     body.phase-1 .card {
       border-color: #3b82f6;
@@ -87,11 +108,13 @@
     body.phase-3 .phase-flash { background: rgba(236, 72, 153, 0.35); }
 
     .card {
-      background-color: #020617;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: 0.75rem;
       padding: 1.25rem 1.5rem;
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
-      border: 1px solid #1f2937;
+      border: 1px solid rgba(31, 41, 55, 0.8);
     }
 
     .card + .card {
@@ -260,7 +283,7 @@
       background: rgba(236, 72, 153, 0.1);
     }
 
-    /* Clothing item visual styling - chip/badge style */
+    /* Clothing item: visual card style (emoji + label) */
     .clothing-item {
       display: inline-flex;
       align-items: center;
@@ -273,6 +296,51 @@
       background: rgba(2, 6, 23, 0.5);
       color: #9ca3af;
       user-select: none;
+    }
+
+    /* Visual card layout: emoji on top, label below */
+    .clothing-item.clothing-card {
+      flex-direction: column;
+      padding: 0.6rem 0.5rem;
+      min-width: 4rem;
+      border-radius: 0.5rem;
+      gap: 0.25rem;
+    }
+
+    .clothing-item.clothing-card .clothing-emoji {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .clothing-item.clothing-card .clothing-label {
+      font-size: 0.7rem;
+      text-align: center;
+      line-height: 1.15;
+      max-width: 4.5rem;
+      word-break: break-word;
+    }
+
+    .clothing-item.clothing-card .checkmark {
+      position: absolute;
+      top: 0.2rem;
+      right: 0.2rem;
+      font-size: 0.75rem;
+      background: rgba(34, 197, 94, 0.9);
+      color: #020617;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clothing-item.clothing-card {
+      position: relative;
+    }
+
+    .clothing-item.clothing-card.selected .checkmark {
+      display: flex;
     }
 
     .clothing-item:hover {
@@ -291,14 +359,35 @@
       display: none;
     }
 
-    .clothing-item .checkmark {
+    .clothing-item:not(.clothing-card) .checkmark {
       display: none;
       margin-right: 0.35rem;
       font-size: 1rem;
     }
 
-    .clothing-item.selected .checkmark {
+    .clothing-item:not(.clothing-card).selected .checkmark {
       display: inline;
+    }
+
+    /* Body-region rows: group clothing by where on body */
+    .clothing-body-row {
+      margin-bottom: 0.75rem;
+    }
+    .clothing-body-row:last-child {
+      margin-bottom: 0;
+    }
+    .clothing-region-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .clothing-body-row-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
     .roll-col {
@@ -793,6 +882,9 @@
     .collapsible-header.active .collapsible-icon {
       transform: rotate(180deg);
     }
+    .collapsible-icon.collapsible-icon-static {
+      transform: none !important;
+    }
 
     .collapsible-content {
       max-height: 0;
@@ -847,8 +939,23 @@
         </p>
       </div>
 
-     <!-- Mode selection -->
-     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.65); justify-content: space-between; align-items: center;">
+     <!-- Partner names (optional) -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); flex-wrap: wrap; gap: 1rem; align-items: center;">
+       <label style="font-weight: 600; font-size: 0.9rem;">Partner names:</label>
+       <div class="row" style="gap: 1rem; align-items: center; flex-wrap: wrap;">
+         <div class="row" style="align-items: center; gap: 0.35rem;">
+           <label for="partnerName1" style="font-size: 0.85rem; color: #9ca3af;">1</label>
+           <input type="text" id="partnerName1" placeholder="Partner 1" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
+         </div>
+         <div class="row" style="align-items: center; gap: 0.35rem;">
+           <label for="partnerName2" style="font-size: 0.85rem; color: #9ca3af;">2</label>
+           <input type="text" id="partnerName2" placeholder="Partner 2" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
+         </div>
+       </div>
+     </div>
+
+     <!-- Mode selection + Summary -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
        <div class="row" style="gap: 0.5rem; align-items: center;">
          <label style="font-weight: 600; margin-right: 0.75rem;">Play Mode:</label>
          <div class="row" style="gap: 0.5rem;">
@@ -861,8 +968,72 @@
        </button>
      </div>
 
+     <!-- Preferences (Background, Music, Voice) – 3-bar expander -->
+     <div class="collapsible-section" style="margin-bottom: 1rem;">
+       <div class="collapsible-header" data-section="preferences">
+         <div class="collapsible-header-left">
+           <span class="collapsible-icon collapsible-icon-static" style="font-size: 1.1rem;">☰</span>
+           <div>
+             <div class="collapsible-title">Preferences</div>
+             <div class="collapsible-selection" id="preferencesSelection" style="font-size: 0.8rem; color: #9ca3af;">Background, music, voice</div>
+           </div>
+         </div>
+         <span class="collapsible-icon">▼</span>
+       </div>
+       <div class="collapsible-content">
+         <div class="collapsible-body">
+           <!-- Background image -->
+           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+             <label style="font-weight: 600; font-size: 0.9rem;">Background:</label>
+             <select id="backgroundImageSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
+               <option value="none">None</option>
+               <option value="1">Fiery hearts</option>
+               <option value="2">Triangles</option>
+             </select>
+           </div>
+           <!-- Background music -->
+           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+             <label style="font-weight: 600; font-size: 0.9rem;">Background music:</label>
+             <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+               <select id="backgroundMusicSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
+                 <option value="none">None</option>
+                 <option value="1">Sensual night</option>
+                 <option value="2">Sexy background music</option>
+                 <option value="3">Tuesday sexy music</option>
+                 <option value="4">Smooth jazz</option>
+               </select>
+               <label for="backgroundMusicVolume" style="font-size: 0.85rem; color: #9ca3af;">Volume</label>
+               <input type="range" id="backgroundMusicVolume" min="0" max="100" value="50" style="width: 6rem; accent-color: #22c55e;" title="Music volume" />
+               <span id="backgroundMusicVolumeLabel" style="font-size: 0.85rem; color: #9ca3af; min-width: 2.5rem;">50%</span>
+             </div>
+           </div>
+           <!-- Voice for reading aloud -->
+           <div class="row" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+             <label style="font-weight: 600; font-size: 0.9rem;">Voice for reading aloud:</label>
+             <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary small voice-toggle-btn" id="voiceToggleMain" style="font-size: 0.9rem; padding: 0.35rem 0.65rem;" title="Toggle voice on/off">🔇 Voice Off</button>
+               <select id="voiceSelect" class="voice-select" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;" title="Choose voice for reading aloud">
+                 <option value="">Default (Zira if available)</option>
+               </select>
+               <span style="font-size: 0.75rem; color: #64748b;" title="Voices come from your device. Add more in system settings.">ℹ️</span>
+               <button class="secondary small" id="readAloudBtn" style="font-size: 0.85rem; padding: 0.35rem 0.6rem;" title="Read current instructions aloud">🔊 Read aloud</button>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+
      <!-- Guided mode session setup (hidden by default) -->
      <div id="guidedSetup" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1);">
+
+       <!-- Voice for reading aloud (setup option) -->
+       <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #7c3aed; background: rgba(124, 58, 237, 0.12); flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+         <label for="voiceSelectGuided" style="font-weight: 600; font-size: 0.9rem;">Voice for reading aloud:</label>
+         <select id="voiceSelectGuided" class="voice-select" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 11rem;">
+           <option value="">Default (Zira if available)</option>
+         </select>
+         <span style="font-size: 0.75rem; color: #64748b;">Voices come from your device. Add more in system settings (Windows: Settings &gt; Time &amp; language &gt; Speech. Mac: Accessibility &gt; Spoken Content).</span>
+       </div>
 
        <!-- Section 1: Total Session Time -->
        <div class="collapsible-section">
@@ -1018,7 +1189,7 @@
          <div id="clothingSetupInputs" style="margin-top: 0.5rem;">
            <!-- Partner 1 Clothing -->
            <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
-             <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
+             <div id="guidedPartner1Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
                Partner 1 Clothing:
              </div>
 
@@ -1033,6 +1204,11 @@
                <button class="secondary small" id="guidedP1PresetFullOutfit">Full Outfit</button>
                <button class="secondary small" id="guidedP1PresetDateNight">Date Night</button>
                <button class="secondary small" id="guidedP1PresetLoungeWear">Lounge Wear</button>
+               <button class="secondary small" id="guidedP1PresetLingerieLace">Lingerie Lace</button>
+               <button class="secondary small" id="guidedP1PresetLingerieClassic">Lingerie Classic</button>
+               <button class="secondary small" id="guidedP1PresetAthletic">Athletic</button>
+               <button class="secondary small" id="guidedP1PresetCozy">Cozy</button>
+               <button class="secondary small" id="guidedP1PresetLayered">Layered</button>
              </div>
 
              <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1046,7 +1222,7 @@
 
            <!-- Partner 2 Clothing -->
            <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
-             <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
+             <div id="guidedPartner2Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
                Partner 2 Clothing:
              </div>
 
@@ -1061,6 +1237,11 @@
                <button class="secondary small" id="guidedP2PresetFullOutfit">Full Outfit</button>
                <button class="secondary small" id="guidedP2PresetDateNight">Date Night</button>
                <button class="secondary small" id="guidedP2PresetLoungeWear">Lounge Wear</button>
+               <button class="secondary small" id="guidedP2PresetLingerieLace">Lingerie Lace</button>
+               <button class="secondary small" id="guidedP2PresetLingerieClassic">Lingerie Classic</button>
+               <button class="secondary small" id="guidedP2PresetAthletic">Athletic</button>
+               <button class="secondary small" id="guidedP2PresetCozy">Cozy</button>
+               <button class="secondary small" id="guidedP2PresetLayered">Layered</button>
              </div>
 
              <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1150,6 +1331,10 @@
          <!-- Time displays - larger and more prominent -->
          <div class="row" style="justify-content: center; gap: 2rem; flex-wrap: wrap;">
            <div style="text-align: center;">
+             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Total Time Left:</label>
+             <span id="totalTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
+           </div>
+           <div style="text-align: center;">
              <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Phase Time Left:</label>
              <span id="phaseTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
            </div>
@@ -1170,6 +1355,7 @@
        </div>
        <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
          <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next Turn</button>
+         <button class="secondary" id="rerollGuidedPrompt">Reroll prompt</button>
          <button class="secondary" id="pauseGuided">Pause</button>
          <button class="secondary" id="resumeGuided" style="display: none;">Resume</button>
          <button class="secondary voice-toggle-btn" id="voiceToggleGuided">🔇 Voice Off</button>
@@ -1214,7 +1400,7 @@
 
       <!-- Partner 1 Clothing -->
       <div id="freePlayP1ClothingBox" style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
-        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
+        <div id="freePlayPartner1Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
           Partner 1 Clothing:
         </div>
 
@@ -1229,6 +1415,11 @@
           <button class="secondary small" id="freePlayP1PresetFullOutfit">Full Outfit</button>
           <button class="secondary small" id="freePlayP1PresetDateNight">Date Night</button>
           <button class="secondary small" id="freePlayP1PresetLoungeWear">Lounge Wear</button>
+          <button class="secondary small" id="freePlayP1PresetLingerieLace">Lingerie Lace</button>
+          <button class="secondary small" id="freePlayP1PresetLingerieClassic">Lingerie Classic</button>
+          <button class="secondary small" id="freePlayP1PresetAthletic">Athletic</button>
+          <button class="secondary small" id="freePlayP1PresetCozy">Cozy</button>
+          <button class="secondary small" id="freePlayP1PresetLayered">Layered</button>
         </div>
 
         <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1242,7 +1433,7 @@
 
       <!-- Partner 2 Clothing -->
       <div id="freePlayP2ClothingBox" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
-        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
+        <div id="freePlayPartner2Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
           Partner 2 Clothing:
         </div>
 
@@ -1257,6 +1448,11 @@
           <button class="secondary small" id="freePlayP2PresetFullOutfit">Full Outfit</button>
           <button class="secondary small" id="freePlayP2PresetDateNight">Date Night</button>
           <button class="secondary small" id="freePlayP2PresetLoungeWear">Lounge Wear</button>
+          <button class="secondary small" id="freePlayP2PresetLingerieLace">Lingerie Lace</button>
+          <button class="secondary small" id="freePlayP2PresetLingerieClassic">Lingerie Classic</button>
+          <button class="secondary small" id="freePlayP2PresetAthletic">Athletic</button>
+          <button class="secondary small" id="freePlayP2PresetCozy">Cozy</button>
+          <button class="secondary small" id="freePlayP2PresetLayered">Layered</button>
         </div>
 
         <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1276,12 +1472,12 @@
     <!-- Clothing Status Display (shown during gameplay) -->
     <div id="freePlayClothingStatus" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #334155; font-size: 0.8rem;">
       <div style="margin-bottom: 0.75rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);" id="p1ClothingStatusCard">
-        <div style="color: #60a5fa; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 1:</div>
+        <div id="freePlayPartner1ListLabel" style="color: #60a5fa; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 1:</div>
         <div id="freePlayClothingItemsListP1" style="color: #e5e7eb; text-align: center;"></div>
       </div>
 
       <div style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);" id="p2ClothingStatusCard">
-        <div style="color: #f472b6; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 2:</div>
+        <div id="freePlayPartner2ListLabel" style="color: #f472b6; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 2:</div>
         <div id="freePlayClothingItemsListP2" style="color: #e5e7eb; text-align: center;"></div>
       </div>
     </div>
@@ -1349,14 +1545,26 @@
         </div>
       </div>
 
-      <!-- Voice toggle + Output displays box -->
-      <div id="voiceToggleRow" class="row" style="justify-content: flex-end; margin-bottom: 0.35rem;">
-        <button class="secondary small voice-toggle-btn" id="voiceToggleOutput" style="font-size: 0.8rem; padding: 0.25rem 0.6rem;">🔇 Voice Off</button>
-      </div>
+      <!-- Placeholder for layout (voice controls moved to Preferences); kept hidden -->
+      <div id="voiceToggleRow" class="row" style="display: none !important;"></div>
       <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
         <div class="output"><strong>Where:</strong> <span id="whereOutput">—</span></div>
         <div class="output"><strong>What to do:</strong> <span id="whatOutput">—</span></div>
         <div class="output"><strong>Clothing action:</strong> <span id="clothingOutput">—</span></div>
+        <div class="row" style="margin-top: 0.5rem; justify-content: flex-end;">
+          <button type="button" class="secondary small" id="needHelpBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Need help understanding?</button>
+        </div>
+      </div>
+
+      <!-- Help modal (extended descriptions for current prompt) -->
+      <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1001; padding: 2rem; overflow-y: auto; align-items: center; justify-content: center; flex-wrap: wrap;">
+        <div class="card" style="max-width: 560px; width: 100%; margin: auto; max-height: calc(100vh - 4rem); overflow-y: auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 1.25rem;">Extended description</h2>
+            <button type="button" class="secondary small" id="closeHelpModal" style="padding: 0.25rem 0.5rem;">✕</button>
+          </div>
+          <div class="card-body" id="helpModalBody" style="white-space: pre-wrap; line-height: 1.5;"></div>
+        </div>
       </div>
 
       <div id="message" class="message"></div>
@@ -1365,6 +1573,11 @@
       <audio id="timerSound">
         <source src="timer-beep.wav" type="audio/mpeg" />
       </audio>
+      <!-- Background music tracks (loop); volume ducked when voice reads -->
+      <audio id="bgMusic1" loop><source src="music/saavane-sensual-night-423856.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic2" loop><source src="music/saavane-sexy-background-music-138494.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic3" loop><source src="music/saavane-tuesday-sexy-music-background-321650.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic4" loop><source src="music/senormusica81-smooth-jazz-2025-2-458713.mp3" type="audio/mpeg" /></audio>
     </div>
 
     <!-- Summary overlay (hidden by default) -->
@@ -1407,8 +1620,9 @@
 
   <!-- Load scripts in dependency order (cache-bust with version param) -->
   <script src="tables.js?v=6"></script>
+  <script src="prompt-help.js?v=1"></script>
   <script src="state.js?v=6"></script>
-  <script src="speech.js?v=6"></script>
+  <script src="speech.js?v=7"></script>
   <script src="clothing.js?v=6"></script>
   <script src="ui-helpers.js?v=6"></script>
   <script src="guided-mode.js?v=6"></script>

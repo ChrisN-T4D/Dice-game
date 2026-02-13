@@ -90,9 +90,12 @@ function notifyPhaseChange(newPhase) {
     phaseDisplay.classList.add("pulse");
   }
 
-  // Announce phase change via TTS
+  // Announce phase change via TTS (skip if landing modal is still visible)
   if (typeof speakText === 'function' && messageBox) {
-    speakText(messageBox.textContent);
+    const landingModal = document.getElementById('landingModal');
+    if (!landingModal || landingModal.style.display !== 'flex') {
+      speakText(messageBox.textContent);
+    }
   }
 }
 

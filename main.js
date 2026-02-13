@@ -1,6 +1,34 @@
 'use strict';
 // ----- Main initialization and event wiring -----
 
+/**
+ * Update all UI labels and buttons that show partner 1 / partner 2 to use custom names.
+ */
+function updatePartnerNameDisplays() {
+  const n1 = typeof getPartnerName === 'function' ? getPartnerName(1) : 'Partner 1';
+  const n2 = typeof getPartnerName === 'function' ? getPartnerName(2) : 'Partner 2';
+
+  const startP1 = document.getElementById('startReceiverP1');
+  const startP2 = document.getElementById('startReceiverP2');
+  if (startP1) startP1.textContent = n1;
+  if (startP2) startP2.textContent = n2;
+
+  const guidedL1 = document.getElementById('guidedPartner1Label');
+  const guidedL2 = document.getElementById('guidedPartner2Label');
+  if (guidedL1) guidedL1.textContent = n1 + ' Clothing:';
+  if (guidedL2) guidedL2.textContent = n2 + ' Clothing:';
+
+  const freePlayL1 = document.getElementById('freePlayPartner1Label');
+  const freePlayL2 = document.getElementById('freePlayPartner2Label');
+  if (freePlayL1) freePlayL1.textContent = n1 + ' Clothing:';
+  if (freePlayL2) freePlayL2.textContent = n2 + ' Clothing:';
+
+  const listL1 = document.getElementById('freePlayPartner1ListLabel');
+  const listL2 = document.getElementById('freePlayPartner2ListLabel');
+  if (listL1) listL1.textContent = n1 + ':';
+  if (listL2) listL2.textContent = n2 + ':';
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   // Landing modal references
   const landingModal = document.getElementById('landingModal');
@@ -118,7 +146,14 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (newSessionBtn) {
-    newSessionBtn.addEventListener('click', resetSession);
+    newSessionBtn.addEventListener('click', () => {
+      if (isGuidedMode && typeof stopGuidedMode === 'function') stopGuidedMode();
+      else resetSession();
+      if (landingModal) {
+        landingModal.style.display = 'flex';
+        landingModal.classList.remove('hidden');
+      }
+    });
   }
 
   // Summary overlay toggle
@@ -182,8 +217,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const guidedModeBtn = document.getElementById('guidedMode');
 
   // Landing modal handlers
+  // Track which layout to show when not in active guided session (so updateGuidedModeUI doesn't overwrite)
+  window.currentUIMode = 'freeplay'; // 'freeplay' | 'guided-setup' | 'guided-active'
+
   // Shared function to show a specific mode
   function showMode(mode) {
+    window.currentUIMode = mode;
     const guidedSetup = document.getElementById('guidedSetup');
     const guidedStatus = document.getElementById('guidedStatus');
     const freePlayControls = document.getElementById('freePlayControls');
@@ -350,6 +389,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Guided preset buttons are wired dynamically below
   const startGuidedBtn = document.getElementById('startGuided');
   const nextTurnGuidedBtn = document.getElementById('nextTurnGuided');
+  const rerollGuidedPromptBtn = document.getElementById('rerollGuidedPrompt');
   const pauseGuidedBtn = document.getElementById('pauseGuided');
   const resumeGuidedBtn = document.getElementById('resumeGuided');
   const stopGuidedBtn = document.getElementById('stopGuided');
@@ -562,7 +602,7 @@ window.addEventListener('DOMContentLoaded', () => {
     clothingEnabledBtn.addEventListener('click', () => {
       clothingMode = 'enabled';
       updateClothingModeButtons();
-      updateSelectionDisplay('clothingSelection', 'Enabled - Configure below', true);
+      updateSelectionDisplay('clothingSelection', 'Enabled - Configure below', false);
       if (clothingSetupInputs) clothingSetupInputs.style.display = 'block';
       
       // Show clothing interval and extra time sections
@@ -589,8 +629,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Guided Mode Clothing preset buttons - wire both partners via data
-  const presetNames = ['Casual', 'DressCasual', 'Lingerie', 'Minimal', 'FullOutfit', 'DateNight', 'LoungeWear'];
-  const presetKeys = ['casual', 'dressCasual', 'lingerie', 'minimal', 'fullOutfit', 'dateNight', 'loungeWear'];
+  const presetNames = ['Casual', 'DressCasual', 'Lingerie', 'LingerieLace', 'LingerieClassic', 'Minimal', 'FullOutfit', 'DateNight', 'LoungeWear', 'Athletic', 'Cozy', 'Layered'];
+  const presetKeys = ['casual', 'dressCasual', 'lingerie', 'lingerieLace', 'lingerieClassic', 'minimal', 'fullOutfit', 'dateNight', 'loungeWear', 'athletic', 'cozy', 'layered'];
 
   [1, 2].forEach(partner => {
     presetNames.forEach((name, idx) => {
@@ -690,9 +730,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Guided mode control buttons
   if (nextTurnGuidedBtn) nextTurnGuidedBtn.addEventListener('click', skipToNextTurn);
+  if (rerollGuidedPromptBtn && typeof rerollGuidedPrompt === 'function') {
+    rerollGuidedPromptBtn.addEventListener('click', rerollGuidedPrompt);
+  }
   if (pauseGuidedBtn) pauseGuidedBtn.addEventListener('click', pauseGuidedMode);
   if (resumeGuidedBtn) resumeGuidedBtn.addEventListener('click', resumeGuidedMode);
-  if (stopGuidedBtn) stopGuidedBtn.addEventListener('click', stopGuidedMode);
+  if (stopGuidedBtn) stopGuidedBtn.addEventListener('click', () => {
+    stopGuidedMode();
+    // Set layout to guided-setup so when modal is dismissed (Guided or Free Play), correct view shows
+    showMode('guided-setup');
+    if (landingModal) {
+      landingModal.style.display = 'flex';
+      landingModal.classList.remove('hidden');
+    }
+  });
 
   // ----- Free Play clothing event listeners -----
 
@@ -890,6 +941,13 @@ window.addEventListener('DOMContentLoaded', () => {
       updateGuidedModeUI();
       updateClothingDisplay();
       
+      // Restore last prompt (Where/What) if we have it
+      if (currentPrompt && typeof showExercise === 'function' && whereOutput && whatOutput) {
+        const giver = guidedCurrentPartner;
+        const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+        showExercise(currentPrompt.phase, currentPrompt.locationRoll, currentPrompt.actionRoll, giver, receiver);
+      }
+      
       if (messageBox) {
         messageBox.textContent = '⏸️ Session restored and paused. Click Resume to continue.';
       }
@@ -908,7 +966,7 @@ window.addEventListener('DOMContentLoaded', () => {
       showToast('✓ Free Play session restored');
     }
   } else {
-    // No saved state (or only default state) - show landing modal
+    // No saved state (or only default state) - show launch modal
     if (landingModal) {
       landingModal.style.display = 'flex';
       landingModal.classList.remove('hidden');
@@ -924,10 +982,153 @@ window.addEventListener('DOMContentLoaded', () => {
   
   updateRollLabels(phase);
 
+  // Partner names: restore into inputs and update all labels
+  const partnerName1Input = document.getElementById('partnerName1');
+  const partnerName2Input = document.getElementById('partnerName2');
+  if (partnerName1Input) {
+    partnerName1Input.value = partnerName1 || '';
+    partnerName1Input.addEventListener('blur', () => {
+      partnerName1 = (partnerName1Input.value || '').trim();
+      saveState();
+      updatePartnerNameDisplays();
+      if (typeof updateGuidedModeUI === 'function' && isGuidedMode) updateGuidedModeUI();
+    });
+  }
+  if (partnerName2Input) {
+    partnerName2Input.value = partnerName2 || '';
+    partnerName2Input.addEventListener('blur', () => {
+      partnerName2 = (partnerName2Input.value || '').trim();
+      saveState();
+      updatePartnerNameDisplays();
+      if (typeof updateGuidedModeUI === 'function' && isGuidedMode) updateGuidedModeUI();
+    });
+  }
+  updatePartnerNameDisplays();
+
   // Wire up voice toggle buttons
   document.querySelectorAll('.voice-toggle-btn').forEach(btn => {
     btn.addEventListener('click', toggleVoice);
   });
+
+  // Voice selector: populate all voice dropdowns and save choice when any changes
+  document.querySelectorAll('.voice-select').forEach(sel => {
+    if (typeof populateVoiceSelect === 'function') populateVoiceSelect(sel);
+    sel.addEventListener('change', () => {
+      if (typeof setSelectedVoice === 'function') setSelectedVoice(sel.value || '');
+    });
+  });
+
+  // Background image: none or one of two; fades into phase colors
+  const bgImageSelect = document.getElementById('backgroundImageSelect');
+  function applyBackgroundImage(value) {
+    document.body.classList.remove('bg-image-1', 'bg-image-2');
+    if (value === '1') document.body.classList.add('bg-image-1');
+    else if (value === '2') document.body.classList.add('bg-image-2');
+  }
+  const savedBgImage = localStorage.getItem('backgroundImage') || 'none';
+  if (bgImageSelect) {
+    bgImageSelect.value = savedBgImage;
+    applyBackgroundImage(savedBgImage);
+    bgImageSelect.addEventListener('change', () => {
+      const v = bgImageSelect.value || 'none';
+      localStorage.setItem('backgroundImage', v);
+      applyBackgroundImage(v);
+    });
+  }
+
+  // Background music: track (none or 1–4) and volume; ducked when voice reads (see speech.js)
+  window.backgroundMusicElement = null;
+  window.backgroundMusicVolume = 0.5;
+  const bgMusicSelect = document.getElementById('backgroundMusicSelect');
+  const bgMusicVolumeSlider = document.getElementById('backgroundMusicVolume');
+  const bgMusicVolumeLabel = document.getElementById('backgroundMusicVolumeLabel');
+  const bgMusicTracks = [null, document.getElementById('bgMusic1'), document.getElementById('bgMusic2'), document.getElementById('bgMusic3'), document.getElementById('bgMusic4')];
+
+  function applyBackgroundMusicVolume(vol01) {
+    window.backgroundMusicVolume = vol01;
+    bgMusicTracks.forEach((el, i) => { if (i > 0 && el) el.volume = vol01; });
+  }
+
+  function applyBackgroundMusicTrack(trackId) {
+    bgMusicTracks.forEach((el, i) => { if (i > 0 && el) { el.pause(); el.currentTime = 0; } });
+    window.backgroundMusicElement = null;
+    if (trackId && trackId !== 'none') {
+      const n = parseInt(trackId, 10);
+      const el = bgMusicTracks[n];
+      if (el) {
+        el.loop = true;
+        el.volume = window.backgroundMusicVolume;
+        el.play().catch(() => {});
+        window.backgroundMusicElement = el;
+      }
+    }
+  }
+
+  const savedTrack = localStorage.getItem('backgroundMusicTrack') || 'none';
+  const savedVol = Math.min(100, Math.max(0, parseInt(localStorage.getItem('backgroundMusicVolume'), 10) || 50));
+  if (bgMusicSelect) bgMusicSelect.value = savedTrack;
+  if (bgMusicVolumeSlider) bgMusicVolumeSlider.value = String(savedVol);
+  if (bgMusicVolumeLabel) bgMusicVolumeLabel.textContent = savedVol + '%';
+  applyBackgroundMusicVolume(savedVol / 100);
+  applyBackgroundMusicTrack(savedTrack);
+
+  if (bgMusicSelect) {
+    bgMusicSelect.addEventListener('change', () => {
+      const v = bgMusicSelect.value || 'none';
+      localStorage.setItem('backgroundMusicTrack', v);
+      applyBackgroundMusicTrack(v);
+    });
+  }
+  if (bgMusicVolumeSlider) {
+    bgMusicVolumeSlider.addEventListener('input', () => {
+      const pct = parseInt(bgMusicVolumeSlider.value, 10);
+      if (bgMusicVolumeLabel) bgMusicVolumeLabel.textContent = pct + '%';
+      const vol01 = pct / 100;
+      localStorage.setItem('backgroundMusicVolume', String(pct));
+      applyBackgroundMusicVolume(vol01);
+    });
+  }
+
+  // Read aloud: speak current instructions once (works even when Voice is off)
+  const readAloudBtn = document.getElementById('readAloudBtn');
+  if (readAloudBtn && typeof speakInstructionsOnce === 'function') {
+    readAloudBtn.addEventListener('click', () => {
+      speakInstructionsOnce(isGuidedMode);
+    });
+  }
+
+  // Need help understanding?: show extended descriptions for current prompt
+  const needHelpBtn = document.getElementById('needHelpBtn');
+  const helpModal = document.getElementById('helpModal');
+  const helpModalBody = document.getElementById('helpModalBody');
+  const closeHelpModal = document.getElementById('closeHelpModal');
+  if (needHelpBtn && helpModal && helpModalBody) {
+    needHelpBtn.addEventListener('click', () => {
+      if (!currentPrompt || typeof getPromptHelp !== 'function') {
+        helpModalBody.textContent = 'No prompt is shown yet, or help is not loaded. Show a prompt first (enter rolls or start a guided turn).';
+        helpModal.style.display = 'flex';
+        return;
+      }
+      const p = currentPrompt;
+      const whereLabel = p.phase === 3 ? 'Position' : 'Where (location)';
+      const whatLabel = p.phase === 3 ? 'Modifier (how to do it)' : 'What to do (action)';
+      const whereHelp = getPromptHelp(p.phase, 'where', p.locationRoll);
+      const whatHelp = getPromptHelp(p.phase, 'what', p.actionRoll);
+      const parts = [];
+      if (whereHelp) parts.push(whereLabel + ' — extended description:\n\n' + whereHelp);
+      if (whatHelp) parts.push(whatLabel + ' — extended description:\n\n' + whatHelp);
+      helpModalBody.textContent = parts.length ? parts.join('\n\n') : 'No extended description available for this prompt.';
+      helpModal.style.display = 'flex';
+    });
+  }
+  if (closeHelpModal && helpModal) {
+    closeHelpModal.addEventListener('click', () => { helpModal.style.display = 'none'; });
+  }
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) helpModal.style.display = 'none';
+    });
+  }
 
   // Initialize voice toggle buttons from saved preference
   if (typeof updateVoiceButtons === 'function') updateVoiceButtons();

@@ -1,6 +1,71 @@
 'use strict';
 // ----- Guided mode functions -----
 
+/** Pre-rolled next turn (set at break start, used when break ends). Not persisted. */
+let guidedNextTurnRolls = null;
+
+/**
+ * Build instruction text for the next turn (used to speak 5s into break). Uses current phase and guidedCurrentPartner.
+ */
+function buildInstructionsTextForNextTurn(loc, actRoll, extendedTime) {
+  if (typeof tables === 'undefined' || !tables[phase]) return '';
+  const phaseTable = tables[phase];
+  let where = phase === 3
+    ? (phaseTable.positions?.[loc] ?? '')
+    : (phaseTable.locations?.[loc] ?? '');
+  let what = phase === 3
+    ? (phaseTable.modifiers?.[actRoll] ?? '')
+    : (phaseTable.actions?.[actRoll] ?? '');
+  const giver = guidedCurrentPartner;
+  const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+  const giverName = getPartnerName(giver);
+  const receiverName = getPartnerName(receiver);
+  if (where) {
+    const whereLabel = phase === 3 ? 'position' : 'location';
+    where = `${giverName} (giver) touches ${receiverName}'s (receiver) ${where}`;
+  }
+  if (what) what = `${giverName} (giver): ${what}`;
+  const parts = [`${giverName} (giver) to ${receiverName} (receiver)`];
+  if (where) parts.push(where);
+  if (what) parts.push(what);
+  if (extendedTime) parts.push('Spend about twice as long on this location.');
+  return parts.join('. ') + '.';
+}
+
+/**
+ * Parse the "what" prompt text for duration/repetition hints and return a suggested minimum turn length in seconds.
+ * Used so Phase 2/3 prompts like "repeat 10 times" or "60s then 30s" get enough turn time.
+ */
+function getSuggestedTurnSecondsFromPrompt(text) {
+  if (!text || typeof text !== 'string') return 0;
+  const t = text.replace(/^Partner\s+\d+\s+\(giver\):\s*/i, '').trim();
+  let suggested = 0;
+
+  // Explicit seconds: "60s", "30 seconds", "for 90 seconds", "60s steady then 15s stillness"
+  const secMatches = t.match(/\b(\d+)\s*s(?:econds?)?\b|for\s+(\d+)\s*s(?:econds?)?/gi);
+  if (secMatches) {
+    let sum = 0;
+    secMatches.forEach(m => {
+      const n = parseInt(m.replace(/\D/g, ''), 10);
+      if (!isNaN(n)) sum += n;
+    });
+    if (sum > 0) suggested = Math.max(suggested, sum);
+  }
+
+  // "X times" (e.g. "repeat 10 times", "eight times") – estimate ~10 seconds per repetition
+  const timesMatch = t.match(/(\d+)\s+times|(eight|six|four|ten)\s+times/gi);
+  if (timesMatch) {
+    const wordToNum = { eight: 8, six: 6, four: 4, ten: 10 };
+    timesMatch.forEach(m => {
+      const digit = m.match(/\d+/);
+      const n = digit ? parseInt(digit[0], 10) : (wordToNum[m.split(/\s/)[0].toLowerCase()] || 0);
+      if (n > 0) suggested = Math.max(suggested, n * 10);
+    });
+  }
+
+  return suggested;
+}
+
 function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemovalSeconds, phasePercents, clothingList, milestoneInterval, clothingEnabled, distributionMode) {
   isGuidedMode = true;
   guidedTotalSeconds = totalMinutes * 60;
@@ -51,28 +116,35 @@ function performGuidedTurn() {
   totalTurnsInSession++;
   turnsSinceLastRemoval++;
 
-  // Auto-roll for current partner
-  const loc = rollD20();
-  const act = rollD20();
-
-  // Show the exercise
-  let actRoll = act;
-  let extendedTime = false;
-
-  if (act === 20) {
-    extendedTime = true;
-    actRoll = Math.floor(Math.random() * 19) + 1;
-    if (messageBox) {
-      const receiver = guidedCurrentPartner === 1 ? 2 : 1;
-      messageBox.textContent = `⭐ Critical roll! Extended time. P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
-      flashMessage('flash');
+  // Use pre-rolled next turn (from break) or roll now
+  let loc, actRoll, extendedTime;
+  if (guidedNextTurnRolls) {
+    loc = guidedNextTurnRolls.loc;
+    actRoll = guidedNextTurnRolls.actRoll;
+    extendedTime = guidedNextTurnRolls.extendedTime;
+    guidedNextTurnRolls = null;
+  } else {
+    loc = rollD20();
+    const act = rollD20();
+    actRoll = act;
+    extendedTime = false;
+    if (act === 20) {
+      extendedTime = true;
+      actRoll = Math.floor(Math.random() * 19) + 1;
     }
   }
 
-  // Determine giver and receiver for guided mode
+  // Show the exercise
   const giver = guidedCurrentPartner;
   const receiver = guidedCurrentPartner === 1 ? 2 : 1;
-  
+
+  if (extendedTime && messageBox) {
+    const giverName = getPartnerName(giver);
+    const receiverName = getPartnerName(receiver);
+    messageBox.textContent = `⭐ Critical roll! Extended time. ${giverName} (giver) → ${receiverName} (receiver)`;
+    flashMessage('flash');
+  }
+
   showExercise(phase, loc, actRoll, giver, receiver);
 
   if (extendedTime && whatOutput) {
@@ -90,8 +162,8 @@ function performGuidedTurn() {
       // Roll d6 to determine "how" to remove
       const howRoll = Math.floor(Math.random() * 6) + 1;
       const clothingEntry = clothingTable[howRoll];
-      const giverLabel = `Partner ${giver} (giver)`;
-      const receiverLabel = `Partner ${receiver} (receiver)`;
+      const giverLabel = `${getPartnerName(giver)} (giver)`;
+      const receiverLabel = `${getPartnerName(receiver)} (receiver)`;
 
       if (howRoll === 1) {
         // Roll 1: No change (but we already removed an item, so just show it)
@@ -128,10 +200,10 @@ function performGuidedTurn() {
   // Display which partner's turn it is
   if (messageBox && !extendedTime) {
     const receiver = guidedCurrentPartner === 1 ? 2 : 1;
-    messageBox.textContent = `Partner ${guidedCurrentPartner} (giver) → Partner ${receiver} (receiver)`;
+    messageBox.textContent = `${getPartnerName(guidedCurrentPartner)} (giver) → ${getPartnerName(receiver)} (receiver)`;
   }
 
-  // Start turn timer (add extra time if clothing was removed)
+  // Set turn duration: base time, then extend if the prompt says "X times" or "Xs / X seconds"
   guidedTurnTimeRemaining = guidedTurnSeconds;
   if (clothingRemoved && guidedClothingRemovalSeconds > 0) {
     guidedTurnTimeRemaining += guidedClothingRemovalSeconds;
@@ -140,11 +212,68 @@ function performGuidedTurn() {
       messageBox.textContent = `${currentMessage} (+${Math.floor(guidedClothingRemovalSeconds / 60)}:${String(guidedClothingRemovalSeconds % 60).padStart(2, '0')} for clothing removal)`;
     }
   }
-  startGuidedTurnTimer();
-  saveState();
+  const whatText = (whatOutput && whatOutput.textContent) || '';
+  const suggestedFromPrompt = getSuggestedTurnSecondsFromPrompt(whatText);
+  if (suggestedFromPrompt > 0) {
+    const cap = 5 * 60; // max 5 min extension from prompt
+    guidedTurnTimeRemaining = Math.max(guidedTurnTimeRemaining, Math.min(suggestedFromPrompt, cap));
+  }
 
-  // Announce the turn instructions via text-to-speech
-  speakInstructions();
+  // Read instructions aloud (always, even if Voice is off), then start timer when reading is done
+  if (typeof speakInstructionsThen === 'function') {
+    speakInstructionsThen({ includeMessage: true }, () => {
+      startGuidedTurnTimer();
+      saveState();
+    });
+  } else {
+    startGuidedTurnTimer();
+    saveState();
+  }
+}
+
+/**
+ * Reroll location and action for the current guided turn (same partner, same turn time).
+ * Does not increment turn count or change clothing.
+ */
+function rerollGuidedPrompt() {
+  if (!isGuidedMode || guidedPaused || guidedInPause) return;
+
+  const loc = rollD20();
+  const act = rollD20();
+  let actRoll = act;
+  let extendedTime = false;
+
+  if (act === 20) {
+    extendedTime = true;
+    actRoll = Math.floor(Math.random() * 19) + 1;
+    if (messageBox) {
+      const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+      const giverName = getPartnerName(guidedCurrentPartner);
+      const receiverName = getPartnerName(receiver);
+      messageBox.textContent = `⭐ Critical roll! Extended time. ${giverName} (giver) → ${receiverName} (receiver)`;
+      flashMessage('flash');
+    }
+  }
+
+  const giver = guidedCurrentPartner;
+  const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+  showExercise(phase, loc, actRoll, giver, receiver);
+
+  if (extendedTime && whatOutput) {
+    whatOutput.textContent += ' Spend about twice as long on this location.';
+  }
+
+  if (messageBox && !extendedTime) {
+    messageBox.textContent = `${getPartnerName(giver)} (giver) → ${getPartnerName(receiver)} (receiver)`;
+  }
+
+  // Re-speak the new prompt (turn timer keeps running)
+  if (typeof speakInstructionsThen === 'function') {
+    speakInstructionsThen({ includeMessage: true }, () => {});
+  }
+
+  updateClothingDisplay();
+  saveState();
 }
 
 function startGuidedTurnTimer() {
@@ -212,11 +341,32 @@ function startGuidedPause() {
   
   if (messageBox) {
     const receiver = guidedCurrentPartner === 1 ? 2 : 1;
-    messageBox.textContent = `Break time - Next: P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+    messageBox.textContent = `Break time - Next: ${getPartnerName(guidedCurrentPartner)} (giver) → ${getPartnerName(receiver)} (receiver)`;
   }
 
-  // Announce the break
-  speakText('Break time. Switch partners.');
+  // Say "Time to switch" at the immediate start of the break
+  if (typeof speakText === 'function') speakText('Time to switch.', { force: true });
+
+  // Pre-roll the next turn so we can announce it 5 seconds into the break
+  const loc = rollD20();
+  const act = rollD20();
+  let actRoll = act;
+  let extendedTime = false;
+  if (act === 20) {
+    extendedTime = true;
+    actRoll = Math.floor(Math.random() * 19) + 1;
+  }
+  guidedNextTurnRolls = { loc, actRoll, extendedTime };
+
+  // 5 seconds into the break, read the next turn's instructions aloud (and clothing reminder if next turn has removal)
+  const nextTurnHasClothingRemoval = clothingSystemEnabled && phase < 3 && clothingItems.length > 0 && (turnsSinceLastRemoval + 1) >= clothingMilestoneInterval;
+  setTimeout(() => {
+    if (!isGuidedMode || !guidedInPause || guidedPaused || !guidedNextTurnRolls || typeof speakText !== 'function') return;
+    let text = buildInstructionsTextForNextTurn(guidedNextTurnRolls.loc, guidedNextTurnRolls.actRoll, guidedNextTurnRolls.extendedTime);
+    if (nextTurnHasClothingRemoval && text) text = 'Time to remove clothing if you haven\'t already. ' + text;
+    else if (nextTurnHasClothingRemoval) text = 'Time to remove clothing if you haven\'t already.';
+    if (text) speakText(text, { force: true });
+  }, 5000);
 
   guidedTurnTimerId = setInterval(() => {
     if (guidedPaused) return;
@@ -283,6 +433,27 @@ function resumeGuidedMode() {
   guidedPaused = false;
   updateGuidedModeUI();
   saveState();
+  // Restart the turn timer if we're in the middle of a turn (not in break)
+  if (!guidedInPause && guidedTurnTimeRemaining > 0 && typeof startGuidedTurnTimer === 'function') {
+    startGuidedTurnTimer();
+  }
+  // If we're in the break (pause between turns), restart the pause countdown only (don't reset pause)
+  if (guidedInPause && guidedPauseTimeRemaining > 0) {
+    clearInterval(guidedTurnTimerId);
+    guidedTurnTimerId = setInterval(() => {
+      if (guidedPaused) return;
+      guidedPauseTimeRemaining -= 1;
+      guidedPhaseTimeRemaining -= 1;
+      updateGuidedModeUI();
+      if (guidedPauseTimeRemaining % 5 === 0) saveState();
+      if (guidedPauseTimeRemaining <= 0) {
+        clearInterval(guidedTurnTimerId);
+        guidedInPause = false;
+        if (guidedPhaseTimeRemaining <= 0) advanceGuidedPhase();
+        else performGuidedTurn();
+      }
+    }, 1000);
+  }
 }
 
 function stopGuidedMode() {
@@ -310,11 +481,13 @@ function updateGuidedModeUI() {
   const errorDiv = document.getElementById('error');
 
   const currentPartnerSpan = document.getElementById('currentPartner');
+  const totalTimeLeftSpan = document.getElementById('totalTimeLeft');
   const phaseTimeLeftSpan = document.getElementById('phaseTimeLeft');
   const turnTimeLeftSpan = document.getElementById('turnTimeLeft');
   const turnTimeLeftLabel = document.getElementById('turnTimeLeftLabel');
   const phaseAllocationSpan = document.getElementById('phaseAllocation');
   const nextTurnBtn = document.getElementById('nextTurnGuided');
+  const rerollPromptBtn = document.getElementById('rerollGuidedPrompt');
   const pauseBtn = document.getElementById('pauseGuided');
   const resumeBtn = document.getElementById('resumeGuided');
 
@@ -338,16 +511,23 @@ function updateGuidedModeUI() {
     // Update partner display
     if (currentPartnerSpan) {
       const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+      const giverName = getPartnerName(guidedCurrentPartner);
+      const receiverName = getPartnerName(receiver);
       if (guidedInPause) {
-        currentPartnerSpan.textContent = `Break - Next: P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+        currentPartnerSpan.textContent = `Break - Next: ${giverName} (giver) → ${receiverName} (receiver)`;
         currentPartnerSpan.style.fontSize = '1.2rem';
       } else {
-        currentPartnerSpan.textContent = `P${guidedCurrentPartner} (giver) → P${receiver} (receiver)`;
+        currentPartnerSpan.textContent = `${giverName} (giver) → ${receiverName} (receiver)`;
         currentPartnerSpan.style.fontSize = '1.5rem';
       }
     }
 
     // Update timer displays
+    if (totalTimeLeftSpan) {
+      const remainingLaterPhases = phase === 1 ? (guidedPhaseSeconds[1] || 0) + (guidedPhaseSeconds[2] || 0)
+        : phase === 2 ? (guidedPhaseSeconds[2] || 0) : 0;
+      totalTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining + remainingLaterPhases);
+    }
     if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining);
     if (turnTimeLeftLabel) {
       turnTimeLeftLabel.textContent = guidedInPause ? 'Pause Time:' : 'Turn Time Left:';
@@ -382,22 +562,28 @@ function updateGuidedModeUI() {
     if (nextTurnBtn) {
       nextTurnBtn.style.display = (guidedInPause || guidedPaused) ? 'none' : 'inline-block';
     }
+    if (rerollPromptBtn) {
+      rerollPromptBtn.style.display = (guidedInPause || guidedPaused) ? 'none' : 'inline-block';
+    }
     if (pauseBtn && resumeBtn) {
       pauseBtn.style.display = guidedPaused ? 'none' : 'inline-block';
       resumeBtn.style.display = guidedPaused ? 'inline-block' : 'none';
     }
   } else {
-    // === GUIDED MODE STOPPED - restore free play UI ===
-    if (guidedSetup) guidedSetup.style.display = 'none';
-    if (guidedStatus) guidedStatus.style.display = 'none';
-    if (freePlayControls) freePlayControls.style.display = 'block';
-    if (actionTimerSection) actionTimerSection.style.display = 'block';
-    if (rollGrid) rollGrid.style.display = '';
-    if (submitRow) submitRow.style.display = '';
-    if (phaseRow) phaseRow.style.display = '';
-    if (voiceToggleRow) voiceToggleRow.style.display = '';
-    if (outputBox) outputBox.style.display = '';
-    if (messageDiv) messageDiv.style.display = '';
-    if (errorDiv) errorDiv.style.display = '';
+    // === GUIDED MODE STOPPED - only show free play UI if user chose free play (don't overwrite guided-setup) ===
+    const wantFreePlay = (typeof window.currentUIMode !== 'undefined' && window.currentUIMode === 'freeplay');
+    if (wantFreePlay) {
+      if (guidedSetup) guidedSetup.style.display = 'none';
+      if (guidedStatus) guidedStatus.style.display = 'none';
+      if (freePlayControls) freePlayControls.style.display = 'block';
+      if (actionTimerSection) actionTimerSection.style.display = 'block';
+      if (rollGrid) rollGrid.style.display = '';
+      if (submitRow) submitRow.style.display = '';
+      if (phaseRow) phaseRow.style.display = '';
+      if (voiceToggleRow) voiceToggleRow.style.display = '';
+      if (outputBox) outputBox.style.display = '';
+      if (messageDiv) messageDiv.style.display = '';
+      if (errorDiv) errorDiv.style.display = '';
+    }
   }
 }

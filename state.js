@@ -28,7 +28,9 @@ let guidedPaused = false;
 let guidedDistributionMode = 'equal'; // 'equal', 'phase1', 'phase2', 'phase3', or 'custom'
 
 // ----- Clothing system state -----
-let clothingItems = []; // Array of clothing items currently worn (Guided Mode)
+let clothingItems = []; // DEPRECATED – kept for backward compat; use guidedClothingItemsP1/P2
+let guidedClothingItemsP1 = []; // Partner 1's remaining clothing (Guided Mode)
+let guidedClothingItemsP2 = []; // Partner 2's remaining clothing (Guided Mode)
 let clothingMilestoneInterval = 3; // Remove clothing every N turns
 let turnsSinceLastRemoval = 0;
 let clothingSystemEnabled = true;
@@ -43,6 +45,17 @@ let freePlayCurrentReceiver = 1; // 1 or 2 - who is receiving touch
 // Partner display names (optional; fallback to "Partner 1" / "Partner 2")
 let partnerName1 = '';
 let partnerName2 = '';
+
+// Partner colors
+let partnerColor1 = '#3b82f6'; // blue
+let partnerColor2 = '#ec4899'; // pink
+
+// Partner anatomical parts ('penis' or 'vulva')
+let partnerAnatomy1 = 'penis';
+let partnerAnatomy2 = 'vulva';
+
+// Quickie double clothing removal
+let quickieDoubleClothing = false;
 
 // Current prompt (for "Need help understanding?" – set when a prompt is shown)
 let currentPrompt = null; // { phase, locationRoll, actionRoll }
@@ -88,6 +101,8 @@ function saveState() {
     guidedPaused,
     guidedDistributionMode,
     clothingItems,
+    guidedClothingItemsP1,
+    guidedClothingItemsP2,
     clothingMilestoneInterval,
     turnsSinceLastRemoval,
     clothingSystemEnabled,
@@ -98,6 +113,11 @@ function saveState() {
     freePlayCurrentReceiver,
     partnerName1,
     partnerName2,
+    partnerColor1,
+    partnerColor2,
+    partnerAnatomy1,
+    partnerAnatomy2,
+    quickieDoubleClothing,
     clothingPromptsEnabled,
     awaitingPartnerTurn,
     currentPrompt,
@@ -139,6 +159,8 @@ function loadState() {
     
     // Restore clothing state
     clothingItems = state.clothingItems || [];
+    guidedClothingItemsP1 = state.guidedClothingItemsP1 || [];
+    guidedClothingItemsP2 = state.guidedClothingItemsP2 || [];
     clothingMilestoneInterval = state.clothingMilestoneInterval || 3;
     turnsSinceLastRemoval = state.turnsSinceLastRemoval || 0;
     clothingSystemEnabled = state.clothingSystemEnabled !== undefined ? state.clothingSystemEnabled : true;
@@ -151,6 +173,11 @@ function loadState() {
     freePlayCurrentReceiver = state.freePlayCurrentReceiver || 1;
     partnerName1 = state.partnerName1 || '';
     partnerName2 = state.partnerName2 || '';
+    partnerColor1 = state.partnerColor1 || '#3b82f6';
+    partnerColor2 = state.partnerColor2 || '#ec4899';
+    partnerAnatomy1 = state.partnerAnatomy1 || 'penis';
+    partnerAnatomy2 = state.partnerAnatomy2 || 'vulva';
+    quickieDoubleClothing = state.quickieDoubleClothing || false;
 
     // Restore other state
     clothingPromptsEnabled = state.clothingPromptsEnabled !== undefined ? state.clothingPromptsEnabled : true;

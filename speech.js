@@ -38,6 +38,8 @@ function cleanTextForSpeech(text) {
     .replace(/→/g, 'to')
     .replace(/\+/g, 'plus ')
     .replace(/P(\d)/g, 'Partner $1')
+    // Expand abbreviated seconds for TTS: "30s" -> "30 seconds", "60s" -> "60 seconds"
+    .replace(/\b(\d+)s\b/gi, '$1 seconds')
     .replace(/\s+/g, ' ')
     .trim();
 }

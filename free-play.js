@@ -14,7 +14,8 @@ function getPrompt(currentPhase, locationRoll, actionRoll) {
   let location, action;
 
   if (currentPhase === 3) {
-    location = phaseTable.positions?.[locationRoll];
+    const pos = phaseTable.positions?.[locationRoll];
+    location = typeof pos === 'string' ? pos : (pos && (pos.penisVulva || pos.vulvaPenis || pos.vulvaVulva || pos.penisPenis)) || '';
     action = phaseTable.modifiers?.[actionRoll];
   } else {
     location = phaseTable.locations[locationRoll];
@@ -44,8 +45,30 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
   let where, what;
 
   if (currentPhase === 3) {
-    where = phaseTable.positions?.[locationRoll] ?? '';
+    where = (typeof getPhase3PositionText === 'function' && giverPartner != null && receiverPartner != null)
+      ? getPhase3PositionText(locationRoll, giverPartner, receiverPartner)
+      : (() => { const p = phaseTable.positions?.[locationRoll]; return typeof p === 'string' ? p : (p && (p.penisVulva || p.vulvaVulva || p.vulvaPenis || p.penisPenis)) || ''; })();
     what = phaseTable.modifiers?.[actionRoll] ?? '';
+    if (giverPartner != null && receiverPartner != null && what && typeof tailorPhase3Modifier === 'function') {
+      what = tailorPhase3Modifier(what, giverPartner, receiverPartner);
+    }
+  } else if (currentPhase === 2) {
+    where = phaseTable.locations?.[locationRoll] ?? '';
+    what  = phaseTable.actions?.[actionRoll] ?? '';
+    if (giverPartner != null && receiverPartner != null) {
+      if (where && typeof tailorPhase2Location === 'function') {
+        where = tailorPhase2Location(where, locationRoll, receiverPartner);
+      }
+      if (what && typeof tailorPhase2Action === 'function') {
+        what = tailorPhase2Action(what, giverPartner, receiverPartner);
+      }
+    }
+  } else if (currentPhase === 1) {
+    where = phaseTable.locations?.[locationRoll] ?? '';
+    what  = phaseTable.actions?.[actionRoll] ?? '';
+    if (where && receiverPartner != null && typeof tailorPhase1Location === 'function') {
+      where = tailorPhase1Location(where, locationRoll, receiverPartner);
+    }
   } else {
     where = phaseTable.locations?.[locationRoll] ?? '';
     what  = phaseTable.actions?.[actionRoll] ?? '';
@@ -56,12 +79,25 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     const giverName = typeof getPartnerName === 'function' ? getPartnerName(giverPartner) : `Partner ${giverPartner}`;
     const receiverName = typeof getPartnerName === 'function' ? getPartnerName(receiverPartner) : `Partner ${receiverPartner}`;
     if (where) {
-      where = `${giverName} (giver) touches ${receiverName}'s (receiver) ${where}`;
+      if (currentPhase === 3) {
+        // Phase 3: positions - giver leads
+        where = `${giverName} leads: ${where}`;
+      } else {
+        // Phase 1-2: locations - giver touches receiver's location
+        where = `${giverName} touches ${receiverName}'s ${where}`;
+      }
     }
     if (what) {
-      what = `${giverName} (giver): ${what}`;
+      what = `${giverName}: ${what}`;
     }
   }
+
+  // Expand abbreviated seconds for display and TTS: "30s" -> "30 seconds"
+  function expandSecondsInText(str) {
+    return (str || '').replace(/\b(\d+)s\b/gi, '$1 seconds');
+  }
+  if (where) where = expandSecondsInText(where);
+  if (what) what = expandSecondsInText(what);
 
   if (whereOutput) whereOutput.textContent = where || '—';
   if (whatOutput) whatOutput.textContent = what || '—';
@@ -75,23 +111,36 @@ function handleRerollPrompt() {
   clearMessages();
 
   // Generate a new prompt without advancing turns/rounds
-  const loc = rollD20();
-  const act = rollD20();
+  let loc = rollD20();
+  let act = rollD20();
+  let positionCritical = false;
 
-  // Update inputs so the UI stays consistent with the shown prompt
+  // Phase 3 position 20 = critical: reroll position (1–19) and double time
   const locationRollInput = document.getElementById('locationRoll');
   const actionRollInput = document.getElementById('actionRoll');
+  if (phase === 3 && loc === 20) {
+    loc = Math.floor(Math.random() * 19) + 1;
+    positionCritical = true;
+    if (messageBox) {
+      messageBox.textContent = '⭐ Critical position! Double time. Position rerolled to ' + loc + '.';
+      flashMessage('flash');
+    }
+  }
+
+  // Update inputs so the UI stays consistent with the shown prompt
   if (locationRollInput) locationRollInput.value = String(loc);
   if (actionRollInput) actionRollInput.value = String(act);
 
   // Determine giver and receiver
   const giver = freePlayCurrentReceiver === 1 ? 2 : 1;
   const receiver = freePlayCurrentReceiver;
-  
+
   showExercise(phase, loc, act, giver, receiver);
 
-  // Optional UI message
-  if (messageBox) {
+  if (positionCritical && whatOutput) {
+    whatOutput.textContent = (whatOutput.textContent || '') + ' Spend about twice as long on this position.';
+  }
+  if (messageBox && !positionCritical) {
     messageBox.textContent = "Prompt rerolled (turn/round unchanged).";
   }
 }
@@ -193,10 +242,22 @@ function handleUserRoll() {
   }
 
   let extendedTime = false;
+  let positionCritical = false;
+  // Phase 3 position 20 = critical: reroll position (1–19) and double time
+  if (phase === 3 && loc === 20) {
+    loc = Math.floor(Math.random() * 19) + 1;
+    extendedTime = true;
+    positionCritical = true;
+    if (locationRollInput) locationRollInput.value = String(loc);
+    if (messageBox) {
+      messageBox.textContent = '⭐ Critical position! Double time. Position rerolled to ' + loc + '.';
+      flashMessage('flash');
+    }
+  }
   if (act === 20) {
     extendedTime = true;
     act = Math.floor(Math.random() * 19) + 1;
-    if (messageBox) {
+    if (messageBox && !positionCritical) {
       messageBox.textContent = '⭐ Critical roll! This action gets extended time.';
       flashMessage('flash');
     }
@@ -217,7 +278,7 @@ function handleUserRoll() {
   showExercise(phase, loc, act);
 
   if (extendedTime) {
-    if (whatOutput) whatOutput.textContent += ' Spend about twice as long on this location.';
+    if (whatOutput) whatOutput.textContent += (phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.');
   } else if (isWhereRepeat || isWhatRepeat) {
     if (isWhereRepeat && isWhatRepeat) {
       if (messageBox) {
@@ -247,8 +308,8 @@ function handleUserRoll() {
       if (freePlayClothingEnabled && phase < 3) {
         const currentGiver = freePlayCurrentReceiver === 1 ? 2 : 1;
         const currentReceiver = freePlayCurrentReceiver;
-        const giverLabel = `${getPartnerName(currentGiver)} (giver)`;
-        const receiverLabel = `${getPartnerName(currentReceiver)} (receiver)`;
+        const giverLabel = getPartnerName(currentGiver);
+        const receiverLabel = getPartnerName(currentReceiver);
         
         if (clothingRoll === 1) {
           // Roll 1: No change

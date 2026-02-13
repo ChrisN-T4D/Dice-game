@@ -263,9 +263,16 @@ function getGuidedSelectedClothingItems(partner) {
   return getSelectedClothingItems(containerId);
 }
 
-function removeClothingItem() {
-  const removedItem = removeRandomClothingItem(clothingItems);
-  if (removedItem) saveState();
+function removeClothingItem(receiverPartner) {
+  // Remove from the receiver's per-partner array
+  const partnerItems = receiverPartner === 1 ? guidedClothingItemsP1 : guidedClothingItemsP2;
+  const removedItem = removeRandomClothingItem(partnerItems);
+  // Also remove from the legacy combined array
+  if (removedItem) {
+    const idx = clothingItems.indexOf(removedItem);
+    if (idx !== -1) clothingItems.splice(idx, 1);
+    saveState();
+  }
   return removedItem;
 }
 
@@ -273,6 +280,7 @@ function updateClothingDisplay() {
   const clothingStatus = document.getElementById('clothingStatus');
   const clothingItemsList = document.getElementById('clothingItemsList');
   const clothingMilestoneProgress = document.getElementById('clothingMilestoneProgress');
+  const clothingLabel = document.getElementById('clothingRemainingLabel');
 
   if (!clothingSystemEnabled || phase >= 3) {
     if (clothingStatus) clothingStatus.style.display = 'none';
@@ -282,11 +290,20 @@ function updateClothingDisplay() {
   if (clothingStatus && isGuidedMode) {
     clothingStatus.style.display = 'block';
 
+    // Show only the current receiver's clothing
+    const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+    const receiverItems = receiver === 1 ? guidedClothingItemsP1 : guidedClothingItemsP2;
+    const receiverName = typeof getPartnerName === 'function' ? getPartnerName(receiver) : `Partner ${receiver}`;
+
+    if (clothingLabel) {
+      clothingLabel.textContent = `${receiverName}'s clothing remaining:`;
+    }
+
     if (clothingItemsList) {
-      if (clothingItems.length === 0) {
+      if (receiverItems.length === 0) {
         clothingItemsList.textContent = 'None (all removed)';
       } else {
-        clothingItemsList.textContent = clothingItems.join(', ');
+        clothingItemsList.textContent = receiverItems.join(', ');
       }
     }
 

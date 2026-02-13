@@ -97,6 +97,7 @@ window.addEventListener('DOMContentLoaded', () => {
         notifyPhaseChange(phase);
         updatePhaseUI(phase, rollCount);
         updateRollLabels(phase);
+        if (typeof updateOutputLabels === 'function') updateOutputLabels(phase);
 
         // Update Free Play clothing display when entering phase 3
         if (phase === 3) {
@@ -375,6 +376,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const phaseDistPhase1Btn = document.getElementById('phaseDistPhase1');
   const phaseDistPhase2Btn = document.getElementById('phaseDistPhase2');
   const phaseDistPhase3Btn = document.getElementById('phaseDistPhase3');
+  const phaseDistQuickieBtn = document.getElementById('phaseDistQuickie');
   const phaseDistCustomBtn = document.getElementById('phaseDistCustom');
   const customPhaseInputs = document.getElementById('customPhaseInputs');
   const phase1PercentInput = document.getElementById('phase1Percent');
@@ -512,15 +514,35 @@ window.addEventListener('DOMContentLoaded', () => {
   const turnValues = [1, 2, 3, 5];
   function updateTurnButtonStyles() { updateButtonGroup(turnButtons, turnValues, selectedTurnTime); }
 
-  const phaseDistButtons = [phaseDistEqualBtn, phaseDistPhase1Btn, phaseDistPhase2Btn, phaseDistPhase3Btn, phaseDistCustomBtn];
-  const phaseDistValues = ['equal', 'phase1', 'phase2', 'phase3', 'custom'];
+  const phaseDistButtons = [phaseDistEqualBtn, phaseDistPhase1Btn, phaseDistPhase2Btn, phaseDistPhase3Btn, phaseDistQuickieBtn, phaseDistCustomBtn];
+  const phaseDistValues = ['equal', 'phase1', 'phase2', 'phase3', 'quickie', 'custom'];
   function updatePhaseDistButtons() { updateButtonGroup(phaseDistButtons, phaseDistValues, phaseDistributionMode); }
+
+  // Map total session time to turn duration (shorter total = faster turns)
+  const sessionTimeToTurnDuration = {
+    15: 1,   // 15 min → 1 min turns
+    30: 2,   // 30 min → 2 min turns
+    45: 2,   // 45 min → 2 min turns
+    60: 2,   // 60 min → 2 min turns
+    90: 3,   // 90 min → 3 min turns
+    120: 3   // 120 min → 3 min turns
+  };
 
   // Wire session time buttons
   wireButtonGroup(timeButtons, timeValues, (val) => {
     selectedTime = val;
     updateTimeButtonStyles();
     updateSelectionDisplay('sessionTimeSelection', `${val} minutes`, true);
+    
+    // Auto-adjust turn duration based on total time (unless Quickie preset is active)
+    if (phaseDistributionMode !== 'quickie' && sessionTimeToTurnDuration[val] !== undefined) {
+      const suggestedTurnTime = sessionTimeToTurnDuration[val];
+      if (selectedTurnTime !== suggestedTurnTime) {
+        selectedTurnTime = suggestedTurnTime;
+        updateTurnButtonStyles();
+        updateSelectionDisplay('turnTimeSelection', `${suggestedTurnTime} minute${suggestedTurnTime === 1 ? '' : 's'}`, true);
+      }
+    }
   });
 
   // Wire turn time buttons
@@ -556,11 +578,13 @@ window.addEventListener('DOMContentLoaded', () => {
     updateSelectionDisplay('clothingExtraTimeSelection', label, true);
   });
 
-  // Clothing milestone input
+  // Clothing milestone slider
+  const clothingMilestoneValueLabel = document.getElementById('clothingMilestoneValue');
   if (clothingMilestoneInput) {
     clothingMilestoneInput.addEventListener('input', () => {
       const value = parseInt(clothingMilestoneInput.value) || 3;
       const plural = value === 1 ? 'turn' : 'turns';
+      if (clothingMilestoneValueLabel) clothingMilestoneValueLabel.textContent = `${value} ${plural}`;
       updateSelectionDisplay('clothingIntervalSelection', `Every ${value} ${plural}`, false);
     });
   }
@@ -571,8 +595,30 @@ window.addEventListener('DOMContentLoaded', () => {
     'Sensate-Focused (50/30/20%)',
     'A Little Spicy (30/40/30%)',
     'Intimacy-Focused (20/30/50%)',
+    'Quickie (10/30/60%)',
     'Custom percentages'
   ];
+
+  // Map phase distribution presets to clothing interval (spicier = faster removal)
+  const phaseDistClothingInterval = {
+    equal: 3,    // balanced
+    phase1: 4,   // sensate-focused: slow buildup
+    phase2: 2,   // a little spicy: quicker
+    phase3: 1,   // intimacy-focused: every turn
+    quickie: 1   // quickie: every turn
+  };
+
+  function setClothingInterval(turns) {
+    if (clothingMilestoneInput) {
+      clothingMilestoneInput.value = turns;
+      const plural = turns === 1 ? 'turn' : 'turns';
+      if (clothingMilestoneValueLabel) clothingMilestoneValueLabel.textContent = `${turns} ${plural}`;
+      updateSelectionDisplay('clothingIntervalSelection', `Every ${turns} ${plural}`, false);
+    }
+  }
+
+  const quickieOptions = document.getElementById('quickieOptions');
+  const quickieDoubleCheckbox = document.getElementById('quickieDoubleClothing');
 
   wireButtonGroup(phaseDistButtons, phaseDistValues, (val) => {
     phaseDistributionMode = val;
@@ -582,10 +628,38 @@ window.addEventListener('DOMContentLoaded', () => {
     updateSelectionDisplay('phaseDistSelection', label, !isCustom);
     if (customPhaseInputs) customPhaseInputs.style.display = isCustom ? 'block' : 'none';
     if (!isCustom && percentError) percentError.style.display = 'none';
+
+    // Auto-adjust clothing interval for non-custom presets
+    if (!isCustom && phaseDistClothingInterval[val] !== undefined) {
+      setClothingInterval(phaseDistClothingInterval[val]);
+      // Quickie preset: set total time to 15 minutes, turn duration to 1 minute, and check double clothing
+      if (val === 'quickie') {
+        selectedTime = 15;
+        updateTimeButtonStyles();
+        updateSelectionDisplay('sessionTimeSelection', '15 minutes', true);
+        selectedTurnTime = 1;
+        updateTurnButtonStyles();
+        updateSelectionDisplay('turnTimeSelection', '1 minute', true);
+        if (quickieDoubleCheckbox) {
+          quickieDoubleCheckbox.checked = true;
+          quickieDoubleClothing = true;
+        }
+        saveState();
+      }
+    }
   });
 
+  if (quickieDoubleCheckbox) {
+    // Restore saved state
+    quickieDoubleCheckbox.checked = quickieDoubleClothing || false;
+    quickieDoubleCheckbox.addEventListener('change', () => {
+      quickieDoubleClothing = quickieDoubleCheckbox.checked;
+      saveState();
+    });
+  }
+
   // Guided Mode Clothing system buttons
-  let clothingMode = 'disabled';
+  let clothingMode = 'enabled';
 
   function updateClothingModeButtons() {
     if (clothingEnabledBtn && clothingDisabledBtn) {
@@ -633,16 +707,42 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Animation helpers for clothing buttons ---
+  function animateButton(btn, className) {
+    btn.classList.remove(className);
+    void btn.offsetWidth; // force reflow to restart animation
+    btn.classList.add(className);
+    btn.addEventListener('animationend', () => btn.classList.remove(className), { once: true });
+  }
+
+  function animateClothingItems(containerId, animClass) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('.clothing-item').forEach((item, i) => {
+      item.classList.remove(animClass);
+      void item.offsetWidth;
+      item.style.animationDelay = `${i * 0.03}s`;
+      item.classList.add(animClass);
+      item.addEventListener('animationend', () => {
+        item.classList.remove(animClass);
+        item.style.animationDelay = '';
+      }, { once: true });
+    });
+  }
+
   // Guided Mode Clothing preset buttons - wire both partners via data
   const presetNames = ['Casual', 'DressCasual', 'Lingerie', 'LingerieLace', 'LingerieClassic', 'Minimal', 'FullOutfit', 'DateNight', 'LoungeWear', 'Athletic', 'Cozy', 'Layered'];
   const presetKeys = ['casual', 'dressCasual', 'lingerie', 'lingerieLace', 'lingerieClassic', 'minimal', 'fullOutfit', 'dateNight', 'loungeWear', 'athletic', 'cozy', 'layered'];
 
   [1, 2].forEach(partner => {
+    const containerId = `guidedClothingCheckboxContainerP${partner}`;
     presetNames.forEach((name, idx) => {
       const btn = document.getElementById(`guidedP${partner}Preset${name}`);
       if (btn) {
         btn.addEventListener('click', () => {
+          animateButton(btn, 'anim-preset-pop');
           populateGuidedClothingCheckboxes(partner, clothingPresets[presetKeys[idx]]);
+          animateClothingItems(containerId, 'anim-pop-in');
         });
       }
     });
@@ -655,10 +755,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Clear All buttons for Guided Mode clothing (uses shared helper from clothing.js)
   [1, 2].forEach(partner => {
+    const containerId = `guidedClothingCheckboxContainerP${partner}`;
     const btn = document.getElementById(`guidedP${partner}ClearAll`);
     if (btn) {
       btn.addEventListener('click', () => {
-        clearClothingSelections(`guidedClothingCheckboxContainerP${partner}`);
+        animateButton(btn, 'anim-clear-shake');
+        animateClothingItems(containerId, 'anim-fade-out');
+        // Delay the actual clear so the fade-out animation is visible
+        setTimeout(() => {
+          clearClothingSelections(containerId);
+        }, 200);
       });
     }
   });
@@ -686,7 +792,8 @@ window.addEventListener('DOMContentLoaded', () => {
     equal: [33, 33, 34],
     phase1: [50, 25, 25],
     phase2: [25, 50, 25],
-    phase3: [20, 20, 60]
+    phase3: [20, 20, 60],
+    quickie: [10, 30, 60]
   };
 
   if (startGuidedBtn) {
@@ -721,6 +828,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const p1Items = getGuidedSelectedClothingItems(1);
         const p2Items = getGuidedSelectedClothingItems(2);
         clothingList = [...p1Items, ...p2Items];
+        // Store per-partner items for guided mode to pick up
+        window._guidedSetupP1Items = p1Items;
+        window._guidedSetupP2Items = p2Items;
 
         if (clothingMilestoneInput) {
           milestoneInterval = parseInt(clothingMilestoneInput.value) || 3;
@@ -874,11 +984,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Free Play Clothing preset buttons - wire both partners via data
   [1, 2].forEach(partner => {
+    const containerId = `freePlayClothingCheckboxContainerP${partner}`;
     presetNames.forEach((name, idx) => {
       const btn = document.getElementById(`freePlayP${partner}Preset${name}`);
       if (btn) {
         btn.addEventListener('click', () => {
+          animateButton(btn, 'anim-preset-pop');
           populateFreePlayClothingCheckboxes(partner, clothingPresets[presetKeys[idx]]);
+          animateClothingItems(containerId, 'anim-pop-in');
         });
       }
     });
@@ -887,7 +1000,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById(`freePlayP${partner}ClearAll`);
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
-        clearClothingSelections(`freePlayClothingCheckboxContainerP${partner}`);
+        animateButton(clearBtn, 'anim-clear-shake');
+        animateClothingItems(containerId, 'anim-fade-out');
+        setTimeout(() => {
+          clearClothingSelections(containerId);
+        }, 200);
       });
     }
   });
@@ -916,18 +1033,15 @@ window.addEventListener('DOMContentLoaded', () => {
   updateSelectionDisplay('turnTimeSelection', '2 minutes');
   updateSelectionDisplay('pauseTimeSelection', '30 seconds');
   updateSelectionDisplay('phaseDistSelection', 'Equal (33/33/34%)');
-  updateSelectionDisplay('clothingSelection', 'Disabled');
+  updateSelectionDisplay('clothingSelection', 'Enabled - Configure below');
   updateSelectionDisplay('clothingIntervalSelection', 'Every 3 turns');
   updateSelectionDisplay('clothingExtraTimeSelection', '30 seconds');
   
-  // Update clothing mode buttons to reflect disabled default
+  // Update clothing mode buttons to reflect enabled default
   updateClothingModeButtons();
   
-  // Hide clothing interval and extra time sections initially (until clothing is enabled)
-  const intervalSection = document.querySelector('[data-section="clothingInterval"]')?.closest('.collapsible-section');
-  const extraTimeSection = document.querySelector('[data-section="clothingExtraTime"]')?.closest('.collapsible-section');
-  if (intervalSection) intervalSection.style.display = 'none';
-  if (extraTimeSection) extraTimeSection.style.display = 'none';
+  // Show clothing interval and extra time sections by default (clothing is enabled)
+  if (clothingSetupInputs) clothingSetupInputs.style.display = 'block';
 
   // ----- Initialize UI on load -----
 
@@ -1008,7 +1122,93 @@ window.addEventListener('DOMContentLoaded', () => {
       if (typeof updateGuidedModeUI === 'function' && isGuidedMode) updateGuidedModeUI();
     });
   }
+  // Anatomy toggle buttons (two per partner: penis / vulva)
+  function updateAnatomyButtonStyles() {
+    document.querySelectorAll('.anatomy-btn').forEach((btn) => {
+      const p = parseInt(btn.getAttribute('data-partner'), 10);
+      const val = btn.getAttribute('data-value');
+      const current = p === 1 ? (partnerAnatomy1 || 'penis') : (partnerAnatomy2 || 'vulva');
+      const isActive = val === current;
+      btn.classList.toggle('primary', isActive);
+      btn.classList.toggle('secondary', !isActive);
+    });
+  }
+  document.querySelectorAll('.anatomy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.getAttribute('data-partner'), 10);
+      const val = btn.getAttribute('data-value');
+      if (p === 1) {
+        partnerAnatomy1 = val;
+      } else {
+        partnerAnatomy2 = val;
+      }
+      updateAnatomyButtonStyles();
+      saveState();
+    });
+  });
+  updateAnatomyButtonStyles();
   updatePartnerNameDisplays();
+
+  // Partner color presets
+  function applyPartnerColors() {
+    const guidedStatus = document.getElementById('guidedStatus');
+    const outputBox = document.getElementById('outputDisplayBox');
+    if (!isGuidedMode) return;
+    const giverColor = guidedCurrentPartner === 1 ? partnerColor1 : partnerColor2;
+    if (guidedStatus) {
+      guidedStatus.style.borderColor = giverColor;
+      guidedStatus.style.background = hexToRgba(giverColor, 0.1);
+    }
+    if (outputBox) {
+      outputBox.style.borderColor = giverColor;
+      outputBox.style.background = hexToRgba(giverColor, 0.1);
+    }
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // Make applyPartnerColors available globally for updateGuidedModeUI
+  window.applyPartnerColors = applyPartnerColors;
+
+  function initColorDots() {
+    // Restore saved colors on the dots
+    [1, 2].forEach(partner => {
+      const container = document.getElementById(`colorPresetsP${partner}`);
+      if (!container) return;
+      const savedColor = partner === 1 ? partnerColor1 : partnerColor2;
+      container.querySelectorAll('.color-dot').forEach(dot => {
+        dot.classList.toggle('selected', dot.dataset.color === savedColor);
+      });
+    });
+  }
+
+  document.querySelectorAll('.color-presets').forEach(container => {
+    container.addEventListener('click', (e) => {
+      const dot = e.target.closest('.color-dot');
+      if (!dot) return;
+      const color = dot.dataset.color;
+      const partner = parseInt(container.dataset.partner);
+
+      // Update selection UI
+      container.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+
+      // Save color
+      if (partner === 1) partnerColor1 = color;
+      else partnerColor2 = color;
+      saveState();
+
+      // Apply immediately if in guided mode
+      applyPartnerColors();
+    });
+  });
+
+  initColorDots();
 
   // Wire up voice toggle buttons
   document.querySelectorAll('.voice-toggle-btn').forEach(btn => {
@@ -1030,7 +1230,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (value === '1') document.body.classList.add('bg-image-1');
     else if (value === '2') document.body.classList.add('bg-image-2');
   }
-  const savedBgImage = localStorage.getItem('backgroundImage') || 'none';
+  const savedBgImage = localStorage.getItem('backgroundImage') || '1';
   if (bgImageSelect) {
     bgImageSelect.value = savedBgImage;
     applyBackgroundImage(savedBgImage);
@@ -1120,8 +1320,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const whereHelp = getPromptHelp(p.phase, 'where', p.locationRoll);
       const whatHelp = getPromptHelp(p.phase, 'what', p.actionRoll);
       const parts = [];
-      if (whereHelp) parts.push(whereLabel + ' — extended description:\n\n' + whereHelp);
-      if (whatHelp) parts.push(whatLabel + ' — extended description:\n\n' + whatHelp);
+      if (whereHelp) parts.push(whereLabel + ', extended description:\n\n' + whereHelp);
+      if (whatHelp) parts.push(whatLabel + ', extended description:\n\n' + whatHelp);
       helpModalBody.textContent = parts.length ? parts.join('\n\n') : 'No extended description available for this prompt.';
       helpModal.style.display = 'flex';
     });

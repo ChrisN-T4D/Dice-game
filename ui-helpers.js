@@ -55,6 +55,21 @@ function updateRollLabels(currentPhase) {
   }
 }
 
+function updateOutputLabels(currentPhase) {
+  const whereLabel = document.getElementById('whereLabel');
+  const whatLabel = document.getElementById('whatLabel');
+
+  if (!whereLabel || !whatLabel) return;
+
+  if (currentPhase === 3) {
+    whereLabel.textContent = 'Position:';
+    whatLabel.textContent = 'How:';
+  } else {
+    whereLabel.textContent = 'Where:';
+    whatLabel.textContent = 'What to do:';
+  }
+}
+
 // ----- Phase change messaging & theming -----
 
 function notifyPhaseChange(newPhase) {
@@ -66,6 +81,11 @@ function notifyPhaseChange(newPhase) {
     phaseFlash.classList.remove("run");
     void phaseFlash.offsetWidth;
     phaseFlash.classList.add("run");
+  }
+
+  // Update output labels for Phase 3
+  if (typeof updateOutputLabels === 'function') {
+    updateOutputLabels(newPhase);
   }
 
   if (!messageBox) return;
@@ -186,7 +206,13 @@ function renderPhaseSummary(phaseNumber) {
   if (phaseNumber === 3) {
     if (locationsHeader) locationsHeader.textContent = 'Positions';
     if (actionsHeader) actionsHeader.textContent = 'Modifiers';
-    renderCurrentLocations(table.positions || {});
+    const positions = table.positions || {};
+    const positionsDisplay = {};
+    Object.keys(positions).forEach(function (k) {
+      const v = positions[k];
+      positionsDisplay[k] = typeof v === 'string' ? v : (v && (v.penisVulva || v.vulvaVulva || v.vulvaPenis || v.penisPenis)) || '';
+    });
+    renderCurrentLocations(positionsDisplay);
     renderCurrentActions(table.modifiers || {});
   } else {
     if (locationsHeader) locationsHeader.textContent = 'Locations';

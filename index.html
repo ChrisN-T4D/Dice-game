@@ -275,6 +275,30 @@
       }
     }
 
+    /* Partner color picker dots */
+    .color-presets {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .color-dot {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .color-dot:hover {
+      transform: scale(1.2);
+    }
+    .color-dot.selected {
+      border-color: #fff;
+      box-shadow: 0 0 8px currentColor;
+      transform: scale(1.15);
+    }
+
     /* Voice toggle buttons */
     .voice-toggle-btn {
       transition: background 0.2s, border-color 0.2s;
@@ -383,6 +407,44 @@
 
     .clothing-item:not(.clothing-card).selected .checkmark {
       display: inline;
+    }
+
+    /* Clothing button animations */
+    @keyframes preset-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(0.92); }
+      70%  { transform: scale(1.08); box-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    @keyframes clear-shake {
+      0%, 100% { transform: translateX(0); }
+      15%  { transform: translateX(-4px); }
+      30%  { transform: translateX(4px); }
+      45%  { transform: translateX(-3px); }
+      60%  { transform: translateX(3px); }
+      75%  { transform: translateX(-1px); }
+      90%  { transform: translateX(1px); }
+    }
+    @keyframes item-pop-in {
+      0%   { opacity: 0; transform: scale(0.7); }
+      60%  { opacity: 1; transform: scale(1.06); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes item-fade-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.8); }
+    }
+    .anim-preset-pop {
+      animation: preset-pop 0.35s ease;
+    }
+    .anim-clear-shake {
+      animation: clear-shake 0.4s ease;
+    }
+    .clothing-item.anim-pop-in {
+      animation: item-pop-in 0.3s ease both;
+    }
+    .clothing-item.anim-fade-out {
+      animation: item-fade-out 0.2s ease both;
     }
 
     /* Body-region rows: group clothing by where on body */
@@ -955,17 +1017,47 @@
         </p>
       </div>
 
-     <!-- Partner names (optional) -->
-     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); flex-wrap: wrap; gap: 1rem; align-items: center;">
-       <label style="font-weight: 600; font-size: 0.9rem;">Partner names:</label>
-       <div class="row" style="gap: 1rem; align-items: center; flex-wrap: wrap;">
-         <div class="row" style="align-items: center; gap: 0.35rem;">
-           <label for="partnerName1" style="font-size: 0.85rem; color: #9ca3af;">1</label>
+     <!-- Partner names & colors -->
+     <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5);">
+       <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Partner names, colors & anatomy:</label>
+       <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+         <!-- Partner 1 -->
+         <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+           <label for="partnerName1" style="font-size: 0.85rem; color: #9ca3af; min-width: 1rem;">1</label>
            <input type="text" id="partnerName1" placeholder="Partner 1" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
+           <div class="color-presets" id="colorPresetsP1" data-partner="1">
+             <span class="color-dot selected" data-color="#3b82f6" style="background: #3b82f6; color: #3b82f6;" title="Blue"></span>
+             <span class="color-dot" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+             <span class="color-dot" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+             <span class="color-dot" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+             <span class="color-dot" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+             <span class="color-dot" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+             <span class="color-dot" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+             <span class="color-dot" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+           </div>
+           <div class="row anatomy-toggle-group" style="gap: 0.25rem;" role="group" aria-label="Partner 1 anatomy">
+             <button type="button" class="secondary small anatomy-btn" data-partner="1" data-value="penis" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Penis & scrotum</button>
+             <button type="button" class="secondary small anatomy-btn" data-partner="1" data-value="vulva" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Vulva</button>
+           </div>
          </div>
-         <div class="row" style="align-items: center; gap: 0.35rem;">
-           <label for="partnerName2" style="font-size: 0.85rem; color: #9ca3af;">2</label>
+         <!-- Partner 2 -->
+         <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+           <label for="partnerName2" style="font-size: 0.85rem; color: #9ca3af; min-width: 1rem;">2</label>
            <input type="text" id="partnerName2" placeholder="Partner 2" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
+           <div class="color-presets" id="colorPresetsP2" data-partner="2">
+             <span class="color-dot selected" data-color="#ec4899" style="background: #ec4899; color: #ec4899;" title="Pink"></span>
+             <span class="color-dot" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+             <span class="color-dot" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+             <span class="color-dot" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+             <span class="color-dot" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+             <span class="color-dot" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+             <span class="color-dot" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+             <span class="color-dot" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+           </div>
+           <div class="row anatomy-toggle-group" style="gap: 0.25rem;" role="group" aria-label="Partner 2 anatomy">
+             <button type="button" class="secondary small anatomy-btn" data-partner="2" data-value="penis" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Penis & scrotum</button>
+             <button type="button" class="secondary small anatomy-btn" data-partner="2" data-value="vulva" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Vulva</button>
+           </div>
          </div>
        </div>
      </div>
@@ -1051,86 +1143,11 @@
          <span style="font-size: 0.75rem; color: #64748b;">Voices come from your device. Add more in system settings (Windows: Settings &gt; Time &amp; language &gt; Speech. Mac: Accessibility &gt; Spoken Content).</span>
        </div>
 
-       <!-- Section 1: Total Session Time -->
+       <!-- Section 1: Phase Time Distribution -->
        <div class="collapsible-section">
-         <div class="collapsible-header active" data-section="sessionTime">
+         <div class="collapsible-header active" data-section="phaseDistribution">
            <div class="collapsible-header-left">
              <span class="collapsible-number">1</span>
-             <div>
-               <div class="collapsible-title">Total Session Time</div>
-               <div class="collapsible-selection" id="sessionTimeSelection">Select duration</div>
-             </div>
-           </div>
-           <span class="collapsible-icon">▼</span>
-         </div>
-         <div class="collapsible-content open">
-           <div class="collapsible-body">
-             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
-               <button class="secondary" id="time15">15 min</button>
-               <button class="secondary" id="time30">30 min</button>
-               <button class="secondary" id="time45">45 min</button>
-               <button class="secondary" id="time60">60 min</button>
-               <button class="secondary" id="time90">90 min</button>
-               <button class="secondary" id="time120">120 min</button>
-             </div>
-           </div>
-         </div>
-       </div>
-
-       <!-- Section 2: Turn Duration -->
-       <div class="collapsible-section">
-         <div class="collapsible-header" data-section="turnTime">
-           <div class="collapsible-header-left">
-             <span class="collapsible-number">2</span>
-             <div>
-               <div class="collapsible-title">Turn Duration</div>
-               <div class="collapsible-selection" id="turnTimeSelection">Select duration</div>
-             </div>
-           </div>
-           <span class="collapsible-icon">▼</span>
-         </div>
-         <div class="collapsible-content">
-           <div class="collapsible-body">
-             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
-               <button class="secondary" id="turn1">1 min</button>
-               <button class="secondary" id="turn2">2 min</button>
-               <button class="secondary" id="turn3">3 min</button>
-               <button class="secondary" id="turn5">5 min</button>
-             </div>
-           </div>
-         </div>
-       </div>
-
-       <!-- Section 3: Pause Between Turns -->
-       <div class="collapsible-section">
-         <div class="collapsible-header" data-section="pauseTime">
-           <div class="collapsible-header-left">
-             <span class="collapsible-number">3</span>
-             <div>
-               <div class="collapsible-title">Pause Between Turns</div>
-               <div class="collapsible-selection" id="pauseTimeSelection">Select duration</div>
-             </div>
-           </div>
-           <span class="collapsible-icon">▼</span>
-         </div>
-         <div class="collapsible-content">
-           <div class="collapsible-body">
-             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
-               <button class="secondary" id="pause0">None</button>
-               <button class="secondary" id="pause30">30 sec</button>
-               <button class="secondary" id="pause60">1 min</button>
-               <button class="secondary" id="pause90">1.5 min</button>
-               <button class="secondary" id="pause120">2 min</button>
-             </div>
-           </div>
-         </div>
-       </div>
-
-       <!-- Section 4: Phase Time Distribution -->
-       <div class="collapsible-section">
-         <div class="collapsible-header" data-section="phaseDistribution">
-           <div class="collapsible-header-left">
-             <span class="collapsible-number">4</span>
              <div>
                <div class="collapsible-title">Phase Time Distribution</div>
                <div class="collapsible-selection" id="phaseDistSelection">Select distribution</div>
@@ -1138,13 +1155,14 @@
            </div>
            <span class="collapsible-icon">▼</span>
          </div>
-         <div class="collapsible-content">
+         <div class="collapsible-content open">
            <div class="collapsible-body">
              <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.35rem; flex-wrap: wrap;">
                <button class="secondary" id="phaseDistEqual" style="min-width: 100px; font-size: 0.85rem;">Equal</button>
                <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Sensate-Focused</button>
                <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">A Little Spicy</button>
                <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Intimacy-Focused</button>
+               <button class="secondary" id="phaseDistQuickie" style="min-width: 100px; font-size: 0.85rem;">Quickie</button>
                <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
              </div>
 
@@ -1178,6 +1196,81 @@
                <div id="percentError" style="color: #fecaca; font-size: 0.8rem; text-align: center; margin-top: 0.25rem; display: none;">
                  Percentages must total 100%
                </div>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 2: Total Session Time -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="sessionTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">2</span>
+             <div>
+               <div class="collapsible-title">Total Session Time</div>
+               <div class="collapsible-selection" id="sessionTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="time15">15 min</button>
+               <button class="secondary" id="time30">30 min</button>
+               <button class="secondary" id="time45">45 min</button>
+               <button class="secondary" id="time60">60 min</button>
+               <button class="secondary" id="time90">90 min</button>
+               <button class="secondary" id="time120">120 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 3: Turn Duration -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="turnTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">3</span>
+             <div>
+               <div class="collapsible-title">Turn Duration</div>
+               <div class="collapsible-selection" id="turnTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="turn1">1 min</button>
+               <button class="secondary" id="turn2">2 min</button>
+               <button class="secondary" id="turn3">3 min</button>
+               <button class="secondary" id="turn5">5 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 4: Pause Between Turns -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="pauseTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">4</span>
+             <div>
+               <div class="collapsible-title">Pause Between Turns</div>
+               <div class="collapsible-selection" id="pauseTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="pause0">None</button>
+               <button class="secondary" id="pause30">30 sec</button>
+               <button class="secondary" id="pause60">1 min</button>
+               <button class="secondary" id="pause90">1.5 min</button>
+               <button class="secondary" id="pause120">2 min</button>
              </div>
            </div>
          </div>
@@ -1291,13 +1384,21 @@
         </div>
         <div class="collapsible-content">
           <div class="collapsible-body">
-            <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+            <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.85rem; color: #9ca3af;">
               How often should clothing be removed during the session?
             </div>
-            <div style="text-align: center;">
-              <label style="font-size: 0.85rem; margin-right: 0.5rem;">Remove item every</label>
-              <input type="number" id="clothingMilestone" min="1" max="10" value="3" style="width: 3rem; text-align: center;" />
-              <label style="font-size: 0.85rem; margin-left: 0.25rem;">turns</label>
+            <div style="display: flex; align-items: center; gap: 0.75rem; justify-content: center; padding: 0 0.5rem;">
+              <label style="font-size: 0.85rem; white-space: nowrap;">Every</label>
+              <input type="range" id="clothingMilestone" min="1" max="10" value="3"
+                style="flex: 1; max-width: 200px; accent-color: #22d3ee; cursor: pointer;" />
+              <span id="clothingMilestoneValue" style="font-size: 1rem; font-weight: 700; min-width: 5rem; text-align: center;">3 turns</span>
+            </div>
+            <!-- Double clothing removal option -->
+            <div id="quickieOptions" style="margin-top: 0.75rem; text-align: center;">
+              <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; padding: 0.4rem 0.75rem; border-radius: 0.375rem; border: 1px solid #475569; background: rgba(2, 6, 23, 0.5);">
+                <input type="checkbox" id="quickieDoubleClothing" style="accent-color: #f59e0b; width: 1.1rem; height: 1.1rem; cursor: pointer;" />
+                Remove 2 clothing items per turn
+              </label>
             </div>
           </div>
         </div>
@@ -1340,7 +1441,7 @@
        <div style="display: flex; flex-direction: column; gap: 1rem;">
          <!-- Current Partner -->
          <div style="text-align: center;">
-           <label style="font-size: 1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem;">Current Turn:</label>
+           <label style="font-size: 1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem;">Current turn (lead):</label>
            <span id="currentPartner" style="font-weight: 700; font-size: 1.5rem;">Partner 1</span>
          </div>
 
@@ -1364,7 +1465,7 @@
            <span id="phaseAllocation">Phase allocation: P1: 10m, P2: 10m, P3: 10m</span>
          </div>
          <div id="clothingStatus" style="display: none; text-align: center; font-size: 0.8rem; padding-top: 0.5rem; border-top: 1px solid #334155;">
-           <div style="color: #9ca3af; margin-bottom: 0.25rem;">Clothing remaining:</div>
+           <div id="clothingRemainingLabel" style="color: #9ca3af; margin-bottom: 0.25rem;">Clothing remaining:</div>
            <div id="clothingItemsList" style="color: #e5e7eb; font-weight: 600;"></div>
            <div id="clothingMilestoneProgress" style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.25rem;"></div>
          </div>
@@ -1396,7 +1497,7 @@
      <div id="freePlayControls" class="receiver-p1" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; display: none;">
   <!-- Starting Receiver Selection (always visible) -->
   <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; background: rgba(2, 6, 23, 0.3);">
-    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; font-size: 0.85rem;">Who starts as receiver?</label>
+    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; font-size: 0.85rem;">Who starts as follow?</label>
     <div class="row" style="justify-content: center; gap: 0.5rem;">
       <button class="secondary" id="startReceiverP1" style="min-width: 100px;">Partner 1</button>
       <button class="secondary" id="startReceiverP2" style="min-width: 100px;">Partner 2</button>
@@ -1564,8 +1665,8 @@
       <!-- Placeholder for layout (voice controls moved to Preferences); kept hidden -->
       <div id="voiceToggleRow" class="row" style="display: none !important;"></div>
       <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
-        <div class="output"><strong>Where:</strong> <span id="whereOutput">—</span></div>
-        <div class="output"><strong>What to do:</strong> <span id="whatOutput">—</span></div>
+        <div class="output"><strong id="whereLabel">Where:</strong> <span id="whereOutput">—</span></div>
+        <div class="output"><strong id="whatLabel">What to do:</strong> <span id="whatOutput">—</span></div>
         <div class="output"><strong>Clothing action:</strong> <span id="clothingOutput">—</span></div>
         <div class="row" style="margin-top: 0.5rem; justify-content: flex-end;">
           <button type="button" class="secondary small" id="needHelpBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Need help understanding?</button>
@@ -1635,13 +1736,14 @@
   </div>
 
   <!-- Load scripts in dependency order (cache-bust with version param) -->
-  <script src="tables.js?v=6"></script>
+  <script src="tables.js?v=7"></script>
   <script src="prompt-help.js?v=1"></script>
   <script src="state.js?v=6"></script>
+  <script src="phase3-anatomy.js?v=12"></script>
   <script src="speech.js?v=7"></script>
   <script src="clothing.js?v=6"></script>
   <script src="ui-helpers.js?v=6"></script>
-  <script src="guided-mode.js?v=6"></script>
+  <script src="guided-mode.js?v=8"></script>
   <script src="free-play.js?v=6"></script>
   <script src="main.js?v=6"></script>
 </body>

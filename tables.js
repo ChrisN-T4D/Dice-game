@@ -97,7 +97,7 @@ const tables = {
   17: 'Keep doing the same action, but every 10 movements make each movement slightly larger (longer or fuller), then continue.',
   18: 'Use hands, mouth, feet, or genitals: do five identical movements, then five quicker, shorter ones; that’s one set. Complete four sets.',
   19: 'Use hands, mouth, feet, or genitals to do 30 tracing movements (about one second each), without pausing.',
-  20: 'Use hands, mouth, feet, or genitals: four-step sequence—slow stroke, medium stroke, fast stroke, brief stillness—repeated eight times in a row.'
+  20: 'Use hands, mouth, feet, or genitals: four-step sequence, slow stroke, medium stroke, fast stroke, brief stillness, repeated eight times in a row.'
     }
   },
 
@@ -105,30 +105,125 @@ const tables = {
     name: 'Its so hot in here',
     description: 'Explicitly sexual acts, orgasm‑oriented play, and possible penetration if desired.',
     positions: {
-  1:  "Missionary: one partner on their back, the other on top facing them.",
-  2:  "Doggy style / rear-entry: one partner on hands-and-knees or leaning forward; the other behind.",
-  3:  "Cowgirl: receiving partner on top, facing the other (straddling, face-to-face).",
-  4:  "Reverse cowgirl: receiving partner on top, facing away from the other.",
-  5:  "Spooning: both on their sides, one partner behind the other (spooning from behind).",
-  6:  "Side-by-side: both on their sides facing each other.",
-  7:  "Seated / lap: one partner sits; the other sits or straddles on their lap (face-to-face or facing away).",
-  8:  "Standing: both standing (e.g. one against a wall; alignment depends on height and comfort).",
-  9:  "Lotus: seated face-to-face with legs wrapped around each other; close full-body contact.",
-  10: "Tabletop: one partner lies back on a bed/table/counter; the other stands or kneels in front.",
-  11: "Coital alignment technique (CAT): missionary-style but with bodies shifted so clitoris gets contact; shallow, sustained movement rather than deep thrusting.",
-  12: "69: partners head-to-toe so each can give oral to the other at the same time.",
-  13: "Mutual masturbation: partners touch themselves and/or each other with hands only (no penetration unless you add it).",
-  14: "Frottage: bodies or genitals rubbing together (e.g. between thighs, stomachs, or genitals) with no penetration.",
-  15: "Intercrural (thigh sex): thrusting or rubbing between the receiving partner’s closed thighs; no penetration.",
-  16: "Tribadism / scissoring: genital-to-genital rubbing (e.g. legs interlocked or overlapping); no penetration.",
-  17: "Butterfly: one partner lies on their back with legs bent and feet on the surface (or in the air); the other kneels or stands between the legs.",
-  18: "Wheelbarrow: one partner in a plank/push-up position; the other holds their legs (standing or kneeling).",
-  19: "Bridge: one partner lifts their hips into a bridge pose (back and shoulders on surface); the other is in front (e.g. for oral or penetration).",
-  20: "Standing face-to-face: both standing in a close embrace (e.g. against a wall)."
+  1: {
+    penisVulva: "Missionary: one partner on their back, the other on top facing them. Options: vaginal or anal penetration with penis, or clitoral/vulval contact. The partner on top can control speed, rhythm, and depth if penetration chosen.",
+    vulvaPenis: "Missionary: one partner on their back, the other on top facing them. Options: lead's vulva/clitoris as main focus, or penetration with follow's penis (vaginal, between thighs, or anal). Lead controls speed, rhythm, and depth if penetration chosen.",
+    vulvaVulva: "Missionary: one partner on their back, the other on top facing them. Options: vaginal or anal penetration (fingers, toys, or strap-on), or external focus on clitoral/vulval contact. The partner on top controls speed, rhythm, and depth if penetration chosen.",
+    penisPenis: "Missionary: one partner on their back, the other on top facing them. Options: anal penetration or intercrural (between thighs), or focus on each other's penis/scrotum. The partner on top controls speed, rhythm, and depth if penetration chosen."
+  },
+  2: {
+    penisVulva: "Doggy style / rear-entry: one partner on hands-and-knees or leaning forward (hips up); the other behind. Options: vaginal or anal penetration with penis, or external stimulation of vulva/clitoris from behind. The partner behind can control speed, rhythm, and depth if penetration chosen; the partner in front can adjust angle and push back. (Unlike prone: here you're on hands-and-knees, not flat.)",
+    vulvaPenis: "Doggy style / rear-entry: one partner on hands-and-knees or leaning forward (hips up); the other behind. Options: follow's penis from behind (between thighs or anal), or external stimulation of lead's vulva/clitoris from behind. Lead can control angle and push back; the partner behind controls rhythm and depth if penetration chosen.",
+    vulvaVulva: "Doggy style / rear-entry: one partner on hands-and-knees or leaning forward (hips up); the other behind. Options: vaginal or anal penetration (fingers, toys, or strap-on) from behind, or external stimulation of vulva/clitoris from behind. The partner behind can control speed, rhythm, and depth if penetration chosen; the partner in front can adjust angle and push back. (Unlike prone: here you're on hands-and-knees, not flat.)",
+    penisPenis: "Doggy style / rear-entry: one partner on hands-and-knees or leaning forward (hips up); the other behind. Options: anal penetration or intercrural from behind, or external stimulation of penis/scrotum from behind. The partner behind can control speed, rhythm, and depth if penetration chosen; the partner in front can adjust angle and push back. (Unlike prone: here you're on hands-and-knees, not flat.)"
+  },
+  3: {
+    penisVulva: "Straddle (face-to-face): one partner on top, straddling, facing the other (face-to-face). Options: vaginal or anal penetration with penis, or the partner on top can control clitoral/vulval contact. The partner on top controls speed, rhythm, and depth if penetration chosen.",
+    vulvaPenis: "Straddle (face-to-face): one partner on top, straddling, facing the other (face-to-face). Options: penetration with follow's penis (vaginal, between thighs, or anal), or lead controls clitoral contact. Lead controls speed, rhythm, and depth if penetration chosen.",
+    vulvaVulva: "Straddle (face-to-face): one partner on top, straddling, facing the other (face-to-face). Options: vaginal or anal penetration (fingers, toys, or strap-on), or the partner on top controls clitoral/vulval contact. The partner on top controls speed, rhythm, and depth if penetration chosen.",
+    penisPenis: "Straddle (face-to-face): one partner on top, straddling, facing the other (face-to-face). Options: anal penetration or intercrural, or focus on each other's penis/scrotum. The partner on top controls speed, rhythm, and depth if penetration chosen."
+  },
+  4: {
+    penisVulva: "Straddle (facing away): one partner on top, straddling, facing away from the other. Options: vaginal or anal penetration with penis, or external stimulation of vulva/clitoris. The partner on top controls speed, rhythm, and depth if penetration chosen.",
+    vulvaPenis: "Straddle (facing away): one partner on top, straddling, facing away from the other. Options: follow's penis (between thighs or anal), or external stimulation of lead's vulva/clitoris. Lead controls speed, rhythm, and depth if penetration chosen.",
+    vulvaVulva: "Straddle (facing away): one partner on top, straddling, facing away from the other. Options: vaginal or anal penetration (fingers, toys, or strap-on), or external stimulation of vulva/clitoris. The partner on top controls speed, rhythm, and depth if penetration chosen.",
+    penisPenis: "Straddle (facing away): one partner on top, straddling, facing away from the other. Options: anal penetration or intercrural, or external stimulation of penis/scrotum. The partner on top controls speed, rhythm, and depth if penetration chosen."
+  },
+  5: {
+    penisVulva: "Spooning: both on their sides, one partner behind the other (spooning from behind). Options: vaginal or anal penetration with penis from behind, or external stimulation of vulva/clitoris. The partner behind can control speed, rhythm, and depth if penetration chosen; intimate and comfortable for longer play.",
+    vulvaPenis: "Spooning: both on their sides, one partner behind the other (spooning from behind). Options: follow's penis from behind (between thighs or anal), or external stimulation of lead's vulva/clitoris. Lead can control rhythm; the partner behind controls depth; intimate and comfortable for longer play.",
+    vulvaVulva: "Spooning: both on their sides, one partner behind the other (spooning from behind). Options: vaginal or anal penetration (fingers, toys, or strap-on) from behind, or external stimulation of vulva/clitoris. The partner behind can control speed, rhythm, and depth if penetration chosen; intimate and comfortable for longer play.",
+    penisPenis: "Spooning: both on their sides, one partner behind the other (spooning from behind). Options: anal penetration or intercrural from behind, or external stimulation of penis/scrotum. The partner behind can control speed, rhythm, and depth if penetration chosen; intimate and comfortable for longer play."
+  },
+  6: {
+    penisVulva: "Side-by-side: both on their sides facing each other. Options: vaginal or anal penetration with penis, or mutual genital contact; both partners can use hands for additional stimulation. Both can share control of speed, rhythm, and depth; good for mutual stimulation and eye contact.",
+    vulvaPenis: "Side-by-side: both on their sides facing each other. Options: penetration with follow's penis (vaginal, between thighs, or anal) or mutual genital contact; both can use hands. Lead can emphasize vulva/clitoris; both share control; good for mutual stimulation and eye contact.",
+    vulvaVulva: "Side-by-side: both on their sides facing each other. Options: vaginal or anal penetration (fingers, toys, or strap-on), or mutual vulva/clitoral contact; both can use hands for additional stimulation. Both can share control of speed, rhythm, and depth; good for mutual stimulation and eye contact.",
+    penisPenis: "Side-by-side: both on their sides facing each other. Options: anal penetration or intercrural, or mutual penis/scrotum contact; both can use hands. Both can share control of speed, rhythm, and depth; good for mutual stimulation and eye contact."
+  },
+  7: {
+    penisVulva: "Seated / lap: one partner sits; the other sits or straddles on their lap (face-to-face or facing away). Options: vaginal or anal penetration with penis, or clitoral/vulval contact. The partner on lap can control speed, rhythm, and depth if penetration chosen; good for eye contact and intimacy.",
+    vulvaPenis: "Seated / lap: one partner sits; the other sits or straddles on their lap (face-to-face or facing away). Options: follow's penis (oral, between thighs, or anal) or lead's clitoral/vulval contact. Lead can control speed, rhythm, and depth; good for eye contact and intimacy.",
+    vulvaVulva: "Seated / lap: one partner sits; the other sits or straddles on their lap (face-to-face or facing away). Options: vaginal or anal penetration (fingers, toys, or strap-on), or clitoral/vulval contact. The partner on lap can control speed, rhythm, and depth if penetration chosen; good for eye contact and intimacy.",
+    penisPenis: "Seated / lap: one partner sits; the other sits or straddles on their lap (face-to-face or facing away). Options: anal penetration or intercrural, or focus on each other's penis/scrotum. The partner on lap can control speed, rhythm, and depth if penetration chosen; good for eye contact and intimacy."
+  },
+  8: {
+    penisVulva: "Standing: both standing (e.g. one against a wall; alignment depends on height and comfort). Options: vaginal or anal penetration with penis, or external stimulation of vulva/clitoris. The partner not against the wall can control angle, speed, rhythm, and depth if penetration chosen; requires balance and coordination.",
+    vulvaPenis: "Standing: both standing (e.g. one against a wall; alignment depends on height and comfort). Options: follow's penis (between thighs or anal) or external stimulation of lead's vulva/clitoris. Lead can control angle and rhythm; requires balance and coordination.",
+    vulvaVulva: "Standing: both standing (e.g. one against a wall; alignment depends on height and comfort). Options: vaginal or anal penetration (fingers, toys, or strap-on), or external stimulation of vulva/clitoris. The partner not against the wall can control angle, speed, rhythm, and depth if penetration chosen; requires balance and coordination.",
+    penisPenis: "Standing: both standing (e.g. one against a wall; alignment depends on height and comfort). Options: anal penetration or intercrural, or external stimulation of penis/scrotum. The partner not against the wall can control angle, speed, rhythm, and depth if penetration chosen; requires balance and coordination."
+  },
+  9: {
+    penisVulva: "Lotus: seated face-to-face with legs wrapped around each other; close full-body contact. Options: vaginal or anal penetration with penis, or clitoral/vulval contact. Both can rock and share control; one may take the lead on speed, rhythm, and depth if penetration chosen. Intimate position with full body contact.",
+    vulvaPenis: "Lotus: seated face-to-face with legs wrapped around each other; close full-body contact. Options: follow's penis (vaginal, between thighs, or anal) or lead's clitoral/vulval contact. Both can rock and share control; lead may take the lead on speed, rhythm, and depth. Intimate position with full body contact.",
+    vulvaVulva: "Lotus: seated face-to-face with legs wrapped around each other; close full-body contact. Options: vaginal or anal penetration (fingers, toys, or strap-on), or clitoral/vulval contact. Both can rock and share control; one may take the lead on speed, rhythm, and depth if penetration chosen. Intimate position with full body contact.",
+    penisPenis: "Lotus: seated face-to-face with legs wrapped around each other; close full-body contact. Options: anal penetration or intercrural, or focus on each other's penis/scrotum. Both can rock and share control; one may take the lead on speed, rhythm, and depth if penetration chosen. Intimate position with full body contact."
+  },
+  10: {
+    penisVulva: "Tabletop: one partner lies back on a bed/table/counter; the other stands or kneels in front. Options: vaginal or anal penetration with penis, or oral/genital contact. The partner standing or kneeling can control speed, rhythm, and depth if penetration chosen; good access and visibility.",
+    vulvaPenis: "Tabletop: one partner lies back on a bed/table/counter; the other stands or kneels in front. Options: oral or penetration with follow's penis (between thighs or anal), or oral on lead's vulva/clitoris. Lead or the partner in front can control speed, rhythm, and depth; good access and visibility.",
+    vulvaVulva: "Tabletop: one partner lies back on a bed/table/counter; the other stands or kneels in front. Options: vaginal or anal penetration (fingers, toys, or strap-on), or oral/genital contact. The partner standing or kneeling can control speed, rhythm, and depth if penetration chosen; good access and visibility.",
+    penisPenis: "Tabletop: one partner lies back on a bed/table/counter; the other stands or kneels in front. Options: anal penetration or intercrural, or oral/genital contact. The partner standing or kneeling can control speed, rhythm, and depth if penetration chosen; good access and visibility."
+  },
+  11: {
+    penisVulva: "Prone (face-down): one partner lies flat face-down on the bed or surface, hips on the bed (unlike doggy: not on hands-and-knees); the other can lie on top or be at an angle. Options: vaginal or anal penetration from behind, or body-to-body contact. The partner on top or behind can control speed, rhythm, and depth if penetration chosen.",
+    vulvaPenis: "Prone (face-down): one partner lies flat face-down on the bed or surface, hips on the bed (unlike doggy: not on hands-and-knees); the other can lie on top or be at an angle. Options: follow's penis from behind (between thighs or anal), or body-to-body contact. Lead or the partner behind can control speed, rhythm, and depth. Different from doggy: bent flat, not on hands-and-knees.",
+    vulvaVulva: "Prone (face-down): one partner lies flat face-down on the bed or surface, hips on the bed (unlike doggy: not on hands-and-knees); the other can lie on top or be at an angle. Options: vaginal or anal penetration (fingers, toys, or strap-on) from behind, or body-to-body contact. The partner on top or behind can control speed, rhythm, and depth if penetration chosen.",
+    penisPenis: "Prone (face-down): one partner lies flat face-down on the bed or surface, hips on the bed (unlike doggy: not on hands-and-knees); the other can lie on top or be at an angle. Options: anal penetration or intercrural from behind, or body-to-body contact. The partner on top or behind can control speed, rhythm, and depth if penetration chosen."
+  },
+  12: {
+    penisVulva: "69: partners head-to-toe so each can give oral to the other at the same time. Options: each stimulates the other's penis/scrotum or vulva/clitoris with mouth; no penetration unless added manually. Both can set rhythm and intensity; mutual focus.",
+    vulvaPenis: "69: partners head-to-toe so each can give oral to the other at the same time. Lead can stimulate follow's penis/scrotum with mouth; follow can stimulate lead's vulva/clitoris. No penetration unless added manually. Both can set rhythm and intensity; mutual focus.",
+    vulvaVulva: "69: partners head-to-toe so each can give oral to the other at the same time. Options: each stimulates the other's vulva/clitoris with mouth; no penetration unless added manually. Both can set rhythm and intensity; mutual focus.",
+    penisPenis: "69: partners head-to-toe so each can give oral to the other at the same time. Options: each stimulates the other's penis/scrotum with mouth; no penetration unless added manually. Both can set rhythm and intensity; mutual focus."
+  },
+  13: {
+    penisVulva: "Mutual masturbation: partners touch themselves and/or each other with hands only (no penetration unless you add it). Options: hands can stimulate penis/scrotum or vulva/clitoris. Both control their own rhythm; can watch and match each other. No penetration unless manually added.",
+    vulvaPenis: "Mutual masturbation: partners touch themselves and/or each other with hands only (no penetration unless you add it). Options: hands can stimulate follow's penis/scrotum or lead's vulva/clitoris. Both control their own rhythm; can watch and match each other. No penetration unless manually added.",
+    vulvaVulva: "Mutual masturbation: partners touch themselves and/or each other with hands only (no penetration unless you add it). Options: hands can stimulate vulva/clitoris. Both control their own rhythm; can watch and match each other. No penetration unless manually added.",
+    penisPenis: "Mutual masturbation: partners touch themselves and/or each other with hands only (no penetration unless you add it). Options: hands can stimulate penis/scrotum. Both control their own rhythm; can watch and match each other. No penetration unless manually added."
+  },
+  14: {
+    penisVulva: "Body/genital rubbing and scissoring: bodies or genitals rubbing together with no penetration, in any configuration (e.g. between thighs, stomachs, or genitals; or legs interlocked for genital-to-genital). Both can control pressure and rhythm. No penetration.",
+    vulvaPenis: "Body/genital rubbing: bodies or genitals rubbing together with no penetration (e.g. between thighs, focus on follow's penis or lead's vulva; legs interlocked). Both can control pressure and rhythm. No penetration.",
+    vulvaVulva: "Body/genital rubbing and scissoring: bodies or vulvas rubbing together with no penetration, in any configuration (e.g. between thighs, stomachs, or genitals; or legs interlocked for vulva-to-vulva). Both can control pressure and rhythm. No penetration.",
+    penisPenis: "Body/genital rubbing: bodies or penises rubbing together with no penetration (e.g. between thighs, frottage, or intercrural). Both can control pressure and rhythm. No penetration."
+  },
+  15: {
+    penisVulva: "Bent over / standing rear-entry: one partner bent over a bed, table, or surface (e.g. hands on surface, hips supported); the other standing behind. Options: vaginal or anal penetration with penis from behind; the standing partner can control angle, speed, rhythm, and depth if penetration chosen. Different from doggy: bent over a surface rather than on hands-and-knees.",
+    vulvaPenis: "Bent over / standing rear-entry: one partner bent over a bed, table, or surface (e.g. hands on surface, hips supported); the other standing behind. Options: follow's penis from behind (between thighs or anal); the standing partner can control angle, speed, rhythm, and depth. Different from doggy: bent over a surface rather than on hands-and-knees.",
+    vulvaVulva: "Bent over / standing rear-entry: one partner bent over a bed, table, or surface (e.g. hands on surface, hips supported); the other standing behind. Options: vaginal or anal penetration (fingers, toys, or strap-on) from behind; the standing partner can control angle, speed, rhythm, and depth if penetration chosen. Different from doggy: bent over a surface rather than on hands-and-knees.",
+    penisPenis: "Bent over / standing rear-entry: one partner bent over a bed, table, or surface (e.g. hands on surface, hips supported); the other standing behind. Options: anal penetration or intercrural from behind; the standing partner can control angle, speed, rhythm, and depth if penetration chosen. Different from doggy: bent over a surface rather than on hands-and-knees."
+  },
+  16: {
+    penisVulva: "Kneeling (face-to-face): both kneeling, facing each other (e.g. on a bed or floor). Options: vaginal or anal penetration with penis, or genital contact; both can control angle and rhythm. Good for eye contact and balance.",
+    vulvaPenis: "Kneeling (face-to-face): both kneeling, facing each other (e.g. on a bed or floor). Options: follow's penis (oral, between thighs, or anal) or genital contact with lead's vulva/clitoris; both can control angle and rhythm. Good for eye contact and balance.",
+    vulvaVulva: "Kneeling (face-to-face): both kneeling, facing each other (e.g. on a bed or floor). Options: vaginal or anal penetration (fingers, toys, or strap-on), or genital contact; both can control angle and rhythm. Good for eye contact and balance.",
+    penisPenis: "Kneeling (face-to-face): both kneeling, facing each other (e.g. on a bed or floor). Options: anal penetration or intercrural, or genital contact; both can control angle and rhythm. Good for eye contact and balance."
+  },
+  17: {
+    penisVulva: "Butterfly: one partner lies on their back with legs bent and feet on the surface (or in the air); the other kneels or stands between the legs. Options: vaginal or anal penetration with penis, or oral/genital contact. The partner between the legs can control speed, rhythm, and depth if penetration chosen; good access and visibility.",
+    vulvaPenis: "Butterfly: one partner lies on their back with legs bent and feet on the surface (or in the air); the other kneels or stands between the legs. Options: oral or penetration with follow's penis (between thighs or anal), or oral on lead's vulva/clitoris. Good access and visibility.",
+    vulvaVulva: "Butterfly: one partner lies on their back with legs bent and feet on the surface (or in the air); the other kneels or stands between the legs. Options: vaginal or anal penetration (fingers, toys, or strap-on), or oral/genital contact. The partner between the legs can control speed, rhythm, and depth if penetration chosen; good access and visibility.",
+    penisPenis: "Butterfly: one partner lies on their back with legs bent and feet on the surface (or in the air); the other kneels or stands between the legs. Options: anal penetration or intercrural, or oral/genital contact. The partner between the legs can control speed, rhythm, and depth if penetration chosen; good access and visibility."
+  },
+  18: {
+    penisVulva: "Wheelbarrow: one partner in a plank/push-up position; the other holds their legs (standing or kneeling). Options: vaginal or anal penetration with penis, or oral/genital contact. Requires strength and balance. Optional—if too demanding for either partner, agree to substitute another position (e.g. tabletop or butterfly) instead.",
+    vulvaPenis: "Wheelbarrow: one partner in a plank/push-up position; the other holds their legs (standing or kneeling). Options: oral or penetration with follow's penis, or oral on lead's vulva/clitoris. Requires strength and balance. Optional—if too demanding, agree to substitute (e.g. tabletop or butterfly) instead.",
+    vulvaVulva: "Wheelbarrow: one partner in a plank/push-up position; the other holds their legs (standing or kneeling). Options: vaginal or anal penetration (fingers, toys, or strap-on), or oral/genital contact. Requires strength and balance. Optional—if too demanding, agree to substitute (e.g. tabletop or butterfly) instead.",
+    penisPenis: "Wheelbarrow: one partner in a plank/push-up position; the other holds their legs (standing or kneeling). Options: anal penetration or intercrural, or oral/genital contact. Requires strength and balance. Optional—if too demanding, agree to substitute (e.g. tabletop or butterfly) instead."
+  },
+  19: {
+    penisVulva: "Bridge: one partner lifts their hips into a bridge pose (back and shoulders on surface); the other is in front (e.g. for oral or penetration). Options: vaginal or anal penetration with penis, or oral/genital contact. The person bridging can lower when needed. Good access and angle. Optional—if too demanding, agree to substitute (e.g. butterfly or tabletop) instead.",
+    vulvaPenis: "Bridge: one partner lifts their hips into a bridge pose (back and shoulders on surface); the other is in front (e.g. for oral or penetration). Options: oral or penetration with follow's penis, or oral on lead's vulva/clitoris. The person bridging can lower when needed. Optional—if too demanding, agree to substitute (e.g. butterfly or tabletop) instead.",
+    vulvaVulva: "Bridge: one partner lifts their hips into a bridge pose (back and shoulders on surface); the other is in front (e.g. for oral or penetration). Options: vaginal or anal penetration (fingers, toys, or strap-on), or oral/genital contact. The person bridging can lower when needed. Optional—if too demanding, agree to substitute (e.g. butterfly or tabletop) instead.",
+    penisPenis: "Bridge: one partner lifts their hips into a bridge pose (back and shoulders on surface); the other is in front (e.g. for oral or penetration). Options: anal penetration or intercrural, or oral/genital contact. The person bridging can lower when needed. Optional—if too demanding, agree to substitute (e.g. butterfly or tabletop) instead."
+  },
+  20: "Critical roll: double time. Reroll for position; spend twice as long in whichever position comes up."
 },
    modifiers: {
   1:  "Timer block: 60s at a steady pace, then 15s of full stillness (no movement), then 45s steady again.",
-  2:  "Tempo ladder: every 15s switch tempo—slow, then medium, then fast, then back to medium.",
+  2:  "Tempo ladder: every 15s switch tempo, slow, then medium, then fast, then back to medium.",
   3:  "Stop-start: 10s of movement, then 5s pause; repeat that 6 times.",
   4:  "Pace wave: 20s medium, 20s faster, 20s medium, 20s faster, 10s medium.",
   5:  "Edge-of-control: for 90s keep intensity high but still manageable (just under “too much”); don’t change tempo.",
@@ -136,7 +231,7 @@ const tables = {
   7:  "Breath sync: for 30s match your inhales and exhales while keeping the same rhythm; then continue as you like.",
   8:  "Counting focus: count down from 30 out loud together (one number per second) while keeping the same rhythm.",
   9:  "Silence rule: no talking for 60s (same pace throughout); then you can talk again.",
-  10: "Sound-only: for 45s only nonverbal sounds (moans, sighs—no words); keep rhythm steady.",
+  10: "Sound-only: for 45s only nonverbal sounds (moans, sighs, no words); keep rhythm steady.",
   11: "Eyes choice: 30s both eyes closed, 30s both eyes open, 30s your choice; keep pace the same.",
   12: "Hands-only: for 60s only hands may be used (no mouth, no toys); keep tempo steady.",
   13: "No-hands: for 30s neither partner uses hands (e.g. bodies only, or mouth/toy); then 60s normal (hands allowed).",

@@ -5,18 +5,99 @@ const clothingPresets = {
   casual: ['Socks', 'Watch', 'Shirt', 'Pants', 'Underwear'],
   dressCasual: ['Socks', 'Watch', 'Dress', 'Underwear'],
   lingerie: ['Stockings', 'Bra', 'Panties', 'Robe'],
+  lingerieLace: ['Stockings', 'Bralette', 'Thong', 'Garter belt', 'Babydoll'],
+  lingerieClassic: ['Bra', 'Panties', 'Chemise', 'Robe'],
   minimal: ['Top', 'Bottom', 'Underwear'],
   fullOutfit: ['Socks', 'Shoes', 'Watch', 'Shirt', 'Undershirt', 'Pants', 'Belt', 'Underwear'],
   dateNight: ['Heels', 'Stockings', 'Dress', 'Bra', 'Panties', 'Jewelry'],
-  loungeWear: ['Socks', 'Sweatpants', 'T-shirt', 'Underwear']
+  loungeWear: ['Socks', 'Sweatpants', 'T-shirt', 'Underwear'],
+  athletic: ['Sports bra', 'Shorts', 'Tank top', 'Sneakers', 'Socks'],
+  cozy: ['Socks', 'Sweatpants', 'Hoodie', 'T-shirt', 'Underwear'],
+  layered: ['Tank top', 'Shirt', 'Cardigan', 'Pants', 'Scarf', 'Belt']
+};
+
+// Visual: emoji (or short label) per item for card-style selection
+const clothingEmoji = {
+  Socks: '🧦', Shoes: '👟', Watch: '⌚', Jewelry: '💍', Heels: '👠', Stockings: '🧦',
+  Shirt: '👕', Undershirt: '👕', 'T-shirt': '👕', Dress: '👗', Top: '👚',
+  Pants: '👖', Sweatpants: '🩳', Bottom: '👖', Belt: '🪢',
+  Bra: '👙', Panties: '🩲', Underwear: '🩲', Robe: '🧥',
+  Shorts: '🩳', Skirt: '👗', Cardigan: '🧥', Jacket: '🧥', Hoodie: '🧥',
+  'Tank top': '👕', Scarf: '🧣', Hat: '🧢', Glasses: '👓',
+  'Sports bra': '👙', Sneakers: '👟',
+  Bralette: '👙', Teddy: '👗', 'Garter belt': '🎀', Corset: '👗', Babydoll: '👗',
+  Chemise: '👗', Thong: '🩲', Boyshorts: '🩲', Bodysuit: '👗', Camisole: '👚'
 };
 
 const allClothingItems = [
   'Socks', 'Shoes', 'Watch', 'Jewelry', 'Heels', 'Stockings',
-  'Shirt', 'Undershirt', 'T-shirt', 'Dress', 'Top',
-  'Pants', 'Sweatpants', 'Bottom', 'Belt',
-  'Bra', 'Panties', 'Underwear', 'Robe'
+  'Shirt', 'Undershirt', 'T-shirt', 'Dress', 'Top', 'Tank top',
+  'Pants', 'Sweatpants', 'Shorts', 'Skirt', 'Bottom', 'Belt',
+  'Cardigan', 'Jacket', 'Hoodie', 'Scarf', 'Hat', 'Glasses',
+  'Bra', 'Sports bra', 'Panties', 'Underwear', 'Robe',
+  'Bralette', 'Teddy', 'Garter belt', 'Corset', 'Babydoll', 'Chemise', 'Thong', 'Boyshorts', 'Bodysuit', 'Camisole'
 ];
+
+// Body region for display order (top to bottom). Shoes/feet = bottom row.
+const clothingBodyRegion = {
+  Hat: 0, Glasses: 0, Jewelry: 0, Watch: 0,
+  Scarf: 1,
+  Cardigan: 2, Jacket: 2, Hoodie: 2, Robe: 2,
+  Shirt: 3, Undershirt: 3, 'T-shirt': 3, 'Tank top': 3, Dress: 3, Top: 3, Camisole: 3,
+  Bra: 3, 'Sports bra': 3, Bralette: 3, Corset: 3, Bodysuit: 3, Babydoll: 3, Chemise: 3, Teddy: 3,
+  Belt: 4,
+  Pants: 5, Sweatpants: 5, Shorts: 5, Skirt: 5, Bottom: 5,
+  Panties: 5, Underwear: 5, Thong: 5, Boyshorts: 5, 'Garter belt': 5,
+  Stockings: 6, Socks: 6, Heels: 6, Sneakers: 6, Shoes: 6
+};
+
+const bodyRegionLabels = {
+  0: 'Head & accessories',
+  1: 'Neck',
+  2: 'Upper body (outer)',
+  3: 'Upper body',
+  4: 'Waist',
+  5: 'Lower body',
+  6: 'Feet & legs'
+};
+
+function getBodyRegion(item) {
+  return clothingBodyRegion[item] !== undefined ? clothingBodyRegion[item] : 3;
+}
+
+// Items sorted by body position (head → feet)
+function getClothingItemsByBody() {
+  return [...allClothingItems].sort((a, b) => {
+    const rA = getBodyRegion(a);
+    const rB = getBodyRegion(b);
+    return rA !== rB ? rA - rB : a.localeCompare(b);
+  });
+}
+
+// Removal order: item can only be removed after its prerequisite is off
+// (Outer layer / supporting item must be removed first.)
+const removalPrerequisite = {
+  Socks: 'Shoes',           // shoes before socks
+  Pants: 'Belt',            // belt before pants
+  Stockings: 'Shoes',       // shoes/heels before stockings
+  Undershirt: 'Shirt',      // shirt before undershirt (layering)
+  'T-shirt': 'Hoodie',      // hoodie before t-shirt
+  'Tank top': 'Shirt',     // shirt before tank when layered
+  Skirt: 'Belt',
+  Shorts: 'Belt',
+  Bottom: 'Belt',
+  Sweatpants: 'Belt',
+  'Garter belt': 'Stockings'  // stockings off before garter belt
+};
+
+// Removal priority: lower = removed first. Lingerie/intimate kept on longer (higher number).
+const removalPriority = {
+  Socks: 0, Shoes: 0, Watch: 0, Jewelry: 0, Heels: 0, Sneakers: 0, Scarf: 0, Hat: 0, Glasses: 0, Belt: 0,
+  Jacket: 1, Cardigan: 1, Robe: 1,
+  Shirt: 2, Undershirt: 2, 'T-shirt': 2, Dress: 2, Top: 2, 'Tank top': 2, Pants: 2, Sweatpants: 2, Shorts: 2, Skirt: 2, Bottom: 2, Camisole: 2,
+  Bra: 3, 'Sports bra': 3, Panties: 3, Underwear: 3, Stockings: 3,
+  Bralette: 3, Teddy: 3, 'Garter belt': 3, Corset: 3, Babydoll: 3, Chemise: 3, Thong: 3, Boyshorts: 3, Bodysuit: 3
+};
 
 // Clothing d6 table - describes HOW to remove clothing
 // The program will determine WHAT item to remove
@@ -32,62 +113,123 @@ const clothingTable = {
 
 // ----- Shared clothing removal logic -----
 
-// Roll d6 and remove a random item from the given array, return the removed item or null
+// Items that can be removed: prerequisite must be absent (e.g. Socks only if Shoes not in list)
+function getRemovableCandidates(itemsArray) {
+  return itemsArray.filter(item => {
+    const mustBeOffFirst = removalPrerequisite[item];
+    if (!mustBeOffFirst) return true;
+    return !itemsArray.includes(mustBeOffFirst);
+  });
+}
+
+// Priority for removal (default 2 if unknown). Lower = removed first; lingerie = 3 (last).
+function getRemovalPriority(item) {
+  return removalPriority[item] !== undefined ? removalPriority[item] : 2;
+}
+
+// Remove one item: shoes before socks (prerequisite), and remove less-intimate items first (priority).
+// Returns the removed item or null.
 function removeRandomClothingItem(itemsArray) {
   if (itemsArray.length === 0) return null;
 
+  const candidates = getRemovableCandidates(itemsArray);
+  if (candidates.length === 0) return null;
+
+  const minPriority = Math.min(...candidates.map(getRemovalPriority));
+  const tier = candidates.filter(item => getRemovalPriority(item) === minPriority);
+
   const roll = Math.floor(Math.random() * 6) + 1;
   let index;
-  if (itemsArray.length === 1) {
+  if (tier.length === 1) {
     index = 0;
-  } else if (itemsArray.length <= 6) {
-    index = (roll - 1) % itemsArray.length;
+  } else if (tier.length <= 6) {
+    index = (roll - 1) % tier.length;
   } else {
-    index = Math.floor((roll - 1) * (itemsArray.length / 6));
+    index = Math.floor((roll - 1) * (tier.length / 6));
   }
 
-  const removedItem = itemsArray[index];
-  itemsArray.splice(index, 1);
+  const removedItem = tier[index];
+  const spliceIndex = itemsArray.indexOf(removedItem);
+  if (spliceIndex !== -1) itemsArray.splice(spliceIndex, 1);
   return removedItem;
 }
 
-// Shared function to populate clothing checkboxes for any container
+// Get emoji for a clothing item (fallback: first letter in a circle-style)
+function getClothingEmoji(item) {
+  return clothingEmoji[item] || (item ? item.charAt(0).toUpperCase() : '•');
+}
+
+// Shared function to populate clothing checkboxes with visual card UI, grouped by body region
 function populateClothingCheckboxes(containerId, prefix, itemsToCheck = []) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  // Clear existing content safely
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  allClothingItems.forEach(item => {
-    const label = document.createElement('label');
-    label.className = 'clothing-item';
-    if (itemsToCheck.includes(item)) label.classList.add('selected');
+  const itemsByBody = getClothingItemsByBody();
+  const byRegion = {};
+  itemsByBody.forEach(item => {
+    const r = getBodyRegion(item);
+    if (!byRegion[r]) byRegion[r] = [];
+    byRegion[r].push(item);
+  });
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `${prefix}_${item.replace(/\s+/g, '_')}`;
-    checkbox.value = item;
-    checkbox.checked = itemsToCheck.includes(item);
+  const regionOrder = [0, 1, 2, 3, 4, 5, 6];
+  regionOrder.forEach(regionNum => {
+    const items = byRegion[regionNum];
+    if (!items || items.length === 0) return;
 
-    const checkmark = document.createElement('span');
-    checkmark.className = 'checkmark';
-    checkmark.textContent = '\u2713';
+    const rowWrap = document.createElement('div');
+    rowWrap.className = 'clothing-body-row';
 
-    const text = document.createElement('span');
-    text.textContent = item;
+    const regionLabel = document.createElement('div');
+    regionLabel.className = 'clothing-region-label';
+    regionLabel.textContent = bodyRegionLabels[regionNum] || '';
+    rowWrap.appendChild(regionLabel);
 
-    label.appendChild(checkbox);
-    label.appendChild(checkmark);
-    label.appendChild(text);
+    const row = document.createElement('div');
+    row.className = 'clothing-body-row-items';
 
-    label.addEventListener('click', (e) => {
-      e.preventDefault();
-      checkbox.checked = !checkbox.checked;
-      label.classList.toggle('selected', checkbox.checked);
+    items.forEach(item => {
+      const label = document.createElement('label');
+      label.className = 'clothing-item clothing-card';
+      if (itemsToCheck.includes(item)) label.classList.add('selected');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `${prefix}_${item.replace(/\s+/g, '_')}`;
+      checkbox.value = item;
+      checkbox.checked = itemsToCheck.includes(item);
+
+      const emojiSpan = document.createElement('span');
+      emojiSpan.className = 'clothing-emoji';
+      emojiSpan.textContent = getClothingEmoji(item);
+      emojiSpan.setAttribute('aria-hidden', 'true');
+
+      const checkmark = document.createElement('span');
+      checkmark.className = 'checkmark';
+      checkmark.textContent = '\u2713';
+
+      const text = document.createElement('span');
+      text.className = 'clothing-label';
+      text.textContent = item;
+
+      label.appendChild(checkbox);
+      label.appendChild(emojiSpan);
+      label.appendChild(checkmark);
+      label.appendChild(text);
+
+      label.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkbox.checked = !checkbox.checked;
+        label.classList.toggle('selected', checkbox.checked);
+      });
+
+      row.appendChild(label);
     });
 
-    container.appendChild(label);
+    rowWrap.appendChild(row);
+    container.appendChild(rowWrap);
   });
 }
 

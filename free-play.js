@@ -51,19 +51,24 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     what  = phaseTable.actions?.[actionRoll] ?? '';
   }
 
-  // Add giver/receiver context if provided
+  // Add giver/receiver context if provided (use partner names when available)
   if (giverPartner && receiverPartner) {
+    const giverName = typeof getPartnerName === 'function' ? getPartnerName(giverPartner) : `Partner ${giverPartner}`;
+    const receiverName = typeof getPartnerName === 'function' ? getPartnerName(receiverPartner) : `Partner ${receiverPartner}`;
     if (where) {
-      const whereLabel = currentPhase === 3 ? 'position' : 'location';
-      where = `Partner ${giverPartner} (giver) touches Partner ${receiverPartner}'s (receiver) ${where}`;
+      where = `${giverName} (giver) touches ${receiverName}'s (receiver) ${where}`;
     }
     if (what) {
-      what = `Partner ${giverPartner} (giver): ${what}`;
+      what = `${giverName} (giver): ${what}`;
     }
   }
 
   if (whereOutput) whereOutput.textContent = where || '—';
   if (whatOutput) whatOutput.textContent = what || '—';
+
+  if (typeof setCurrentPrompt === 'function') {
+    setCurrentPrompt(currentPhase, locationRoll, actionRoll);
+  }
 }
 
 function handleRerollPrompt() {
@@ -242,8 +247,8 @@ function handleUserRoll() {
       if (freePlayClothingEnabled && phase < 3) {
         const currentGiver = freePlayCurrentReceiver === 1 ? 2 : 1;
         const currentReceiver = freePlayCurrentReceiver;
-        const giverLabel = `Partner ${currentGiver} (giver)`;
-        const receiverLabel = `Partner ${currentReceiver} (receiver)`;
+        const giverLabel = `${getPartnerName(currentGiver)} (giver)`;
+        const receiverLabel = `${getPartnerName(currentReceiver)} (receiver)`;
         
         if (clothingRoll === 1) {
           // Roll 1: No change

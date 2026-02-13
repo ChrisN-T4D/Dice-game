@@ -40,6 +40,36 @@ let freePlayClothingItemsP1 = [];
 let freePlayClothingItemsP2 = [];
 let freePlayCurrentReceiver = 1; // 1 or 2 - who is receiving touch
 
+// Partner display names (optional; fallback to "Partner 1" / "Partner 2")
+let partnerName1 = '';
+let partnerName2 = '';
+
+// Current prompt (for "Need help understanding?" – set when a prompt is shown)
+let currentPrompt = null; // { phase, locationRoll, actionRoll }
+
+function setCurrentPrompt(phaseNum, locationRoll, actionRoll) {
+  currentPrompt = (phaseNum != null && locationRoll != null && actionRoll != null)
+    ? { phase: phaseNum, locationRoll, actionRoll }
+    : null;
+}
+
+/**
+ * Display name for partner 1 or 2 (for UI and TTS).
+ * @param {1|2} partnerNum - Partner number
+ * @returns {string} - Custom name or "Partner 1" / "Partner 2"
+ */
+function getPartnerName(partnerNum) {
+  if (partnerNum === 1) {
+    const name = (partnerName1 || '').trim();
+    return name || 'Partner 1';
+  }
+  if (partnerNum === 2) {
+    const name = (partnerName2 || '').trim();
+    return name || 'Partner 2';
+  }
+  return partnerNum === 1 ? 'Partner 1' : 'Partner 2';
+}
+
 function saveState() {
   const state = {
     phase,
@@ -66,8 +96,11 @@ function saveState() {
     freePlayClothingItemsP1,
     freePlayClothingItemsP2,
     freePlayCurrentReceiver,
+    partnerName1,
+    partnerName2,
     clothingPromptsEnabled,
     awaitingPartnerTurn,
+    currentPrompt,
     lastSaveTime: Date.now()
   };
   
@@ -116,10 +149,15 @@ function loadState() {
     freePlayClothingItemsP1 = state.freePlayClothingItemsP1 || [];
     freePlayClothingItemsP2 = state.freePlayClothingItemsP2 || [];
     freePlayCurrentReceiver = state.freePlayCurrentReceiver || 1;
-    
+    partnerName1 = state.partnerName1 || '';
+    partnerName2 = state.partnerName2 || '';
+
     // Restore other state
     clothingPromptsEnabled = state.clothingPromptsEnabled !== undefined ? state.clothingPromptsEnabled : true;
     awaitingPartnerTurn = state.awaitingPartnerTurn || false;
+    currentPrompt = state.currentPrompt && typeof state.currentPrompt.phase === 'number' && typeof state.currentPrompt.locationRoll === 'number' && typeof state.currentPrompt.actionRoll === 'number'
+      ? { phase: state.currentPrompt.phase, locationRoll: state.currentPrompt.locationRoll, actionRoll: state.currentPrompt.actionRoll }
+      : null;
     
     // Only consider state worth restoring if there's actual progress
     // (not just a default fresh state that got auto-saved)

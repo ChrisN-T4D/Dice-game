@@ -414,6 +414,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!isActive) {
           header.classList.add('active');
           if (content) content.classList.add('open');
+          // On mobile, voices often load late — refresh voice dropdowns when Preferences is opened
+          if (header.getAttribute('data-section') === 'preferences' && typeof populateVoiceSelect === 'function') {
+            document.querySelectorAll('.voice-select').forEach(el => populateVoiceSelect(el));
+            if (typeof syncVoiceSelects === 'function') syncVoiceSelects();
+          }
         }
       });
     });

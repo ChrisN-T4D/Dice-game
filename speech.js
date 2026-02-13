@@ -58,12 +58,16 @@ function pickVoice() {
 }
 
 /**
- * Get the voice to use: selected if set and found, otherwise pickVoice().
+ * Get the voice to use: selected if set and found (by URI or by name on mobile), otherwise pickVoice().
  */
 function getSelectedVoice() {
   if (selectedVoiceURI) {
     const voices = window.speechSynthesis.getVoices();
-    const found = voices.find(v => v.voiceURI === selectedVoiceURI);
+    let found = voices.find(v => v.voiceURI === selectedVoiceURI);
+    if (!found && selectedVoiceURI.startsWith('name:')) {
+      const namePart = selectedVoiceURI.slice(5);
+      found = voices.find(v => v.name === namePart);
+    }
     if (found) return found;
   }
   return pickVoice();
@@ -103,7 +107,7 @@ function populateVoiceSelect(selectEl) {
   selectEl.appendChild(defaultOpt);
   voices.forEach(v => {
     const opt = document.createElement('option');
-    opt.value = v.voiceURI;
+    opt.value = v.voiceURI || ('name:' + v.name);
     opt.textContent = v.name + (v.lang ? ` (${v.lang})` : '');
     if (v.default) opt.textContent += ' [system default]';
     selectEl.appendChild(opt);
@@ -206,8 +210,8 @@ function getInstructionsText(options) {
 
   const parts = [];
   if (includeMessage && message && message !== '—') parts.push(message);
-  if (where && where !== '—') parts.push(where);
-  if (what && what !== '—') parts.push(what);
+  if (where && where !== '—') parts.push('Where: ' + where);
+  if (what && what !== '—') parts.push('How: ' + what);
   if (clothing && clothing.trim()) parts.push('Clothing: ' + clothing);
 
   return parts.length ? parts.join('. ') + '.' : '';
@@ -282,16 +286,15 @@ function updateVoiceButtons() {
   });
 }
 
-// Chrome loads voices asynchronously — prime cache, set default to Zira if none saved, refresh dropdowns
+// Chrome/mobile load voices asynchronously — prime cache, set default to Zira if none saved, refresh dropdowns
 if (isSpeechSupported()) {
-  window.speechSynthesis.onvoiceschanged = () => {
+  function refreshVoiceDropdowns() {
     window.speechSynthesis.getVoices(); // prime the cache
-    // If user never picked a voice, default to Zira when available
     if (!localStorage.getItem('selectedVoiceURI')) {
       const voices = window.speechSynthesis.getVoices();
       const zira = voices.find(v => v.lang.startsWith('en') && /zira/i.test(v.name));
       if (zira) {
-        selectedVoiceURI = zira.voiceURI;
+        selectedVoiceURI = zira.voiceURI || ('name:' + zira.name);
         localStorage.setItem('selectedVoiceURI', selectedVoiceURI);
       }
     }
@@ -299,5 +302,14 @@ if (isSpeechSupported()) {
       if (typeof populateVoiceSelect === 'function') populateVoiceSelect(el);
     });
     syncVoiceSelects();
-  };
+  }
+  window.speechSynthesis.onvoiceschanged = refreshVoiceDropdowns;
+  // Mobile: voices often load only after user interaction; re-run when document becomes visible
+  if (document.visibilityState !== undefined) {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && window.speechSynthesis.getVoices().length === 0) {
+        setTimeout(refreshVoiceDropdowns, 100);
+      }
+    });
+  }
 }

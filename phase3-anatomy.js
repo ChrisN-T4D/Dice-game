@@ -38,7 +38,9 @@ function tailorPhase3Position(text, giverPartner, receiverPartner) {
 
   let out = text;
 
-  // Both vulva (lead has vulva, receiver has vulva)
+  // Rule: vaginal is only removed when there is no vagina (i.e. both partners have penis anatomy). All other combos keep vaginal where applicable.
+
+  // Both vulva (lead has vulva, receiver has vulva) — keep vaginal
   if (giverAnatomy === 'vulva' && receiverAnatomy === 'vulva') {
     out = out
       .replace(/\bvaginal or anal penetration with penis\b/gi, 'vaginal or anal penetration (fingers, toys, or strap-on)')
@@ -58,7 +60,7 @@ function tailorPhase3Position(text, giverPartner, receiverPartner) {
       'Lead chooses position (who is on top and who is on their back). Options: vaginal or anal penetration (fingers, toys, or strap-on), or external focus on lead\'s clitoral/vulval contact. Lead controls speed, rhythm, and depth if penetration chosen.'
     );
   } else if (giverAnatomy === 'penis' && receiverAnatomy === 'penis') {
-    // Both penis
+    // Both penis — no vagina present; vaginal is the only option we remove (replace with anal/intercrural)
     out = out
       .replace(/\bvaginal or anal penetration with penis\b/gi, 'anal penetration or intercrural (between thighs)')
       .replace(/\bAllows for vaginal or anal penetration with penis\b/gi, 'Allows for anal penetration or intercrural (between thighs)')
@@ -82,12 +84,12 @@ function tailorPhase3Position(text, giverPartner, receiverPartner) {
       'Lead chooses position (who is on top and who is on their back). Options: anal penetration or intercrural (between thighs), or focus on each other\'s penis/scrotum. Lead controls speed, rhythm, and depth if penetration chosen.'
     );
   } else if (giverAnatomy === 'vulva' && receiverAnatomy === 'penis') {
-    // Giver vulva, receiver penis
+    // Giver vulva, receiver penis — lead has vulva, follow has penis; vaginal penetration (of lead by follow) is an option
     out = out
-      .replace(/\bvaginal or anal penetration with penis\b/gi, 'follow\'s penis (oral, between thighs, or anal penetration)')
-      .replace(/\bAllows for vaginal or anal penetration with penis\b/gi, 'Allows for focus on follow\'s penis (oral, between thighs, or anal); lead can get clitoral contact in some variants')
-      .replace(/\bpenetration with penis from behind\b/gi, 'follow\'s penis from behind (between thighs or anal)')
-      .replace(/\bpenetration with penis\b/gi, 'follow\'s penis (oral, between thighs, or anal)')
+      .replace(/\bvaginal or anal penetration with penis\b/gi, 'penetration with follow\'s penis (vaginal, between thighs, or anal)')
+      .replace(/\bAllows for vaginal or anal penetration with penis\b/gi, 'Allows for penetration with follow\'s penis (vaginal, between thighs, or anal); lead can get clitoral contact in some variants')
+      .replace(/\bpenetration with penis from behind\b/gi, 'follow\'s penis from behind (vaginal, between thighs, or anal)')
+      .replace(/\bpenetration with penis\b/gi, 'penetration with follow\'s penis (vaginal, between thighs, or anal)')
       .replace(/\bclitoral\/vulval contact\b/gi, 'clitoral contact for lead')
       .replace(/\bthe receiving partner can control clitoral\/vulval contact\b/gi, 'the follow (with penis) can control rhythm; lead can add clitoral touch')
       .replace(/\bexternal stimulation of vulva\/clitoris\b/gi, 'external stimulation of lead\'s vulva/clitoris')
@@ -103,7 +105,7 @@ function tailorPhase3Position(text, giverPartner, receiverPartner) {
     );
     out = out.replace(/\bThe partner on top can control (?:depth and rhythm|speed, rhythm, and depth if penetration chosen)\.\b/g, 'Lead controls speed, rhythm, and depth if penetration chosen.');
   } else {
-    // Giver penis, receiver vulva (default combo): light tailoring
+    // Giver penis, receiver vulva (default combo): light tailoring — keep vaginal (follow has vulva)
     out = out
       .replace(/\bclitoral\/vulval contact\b/gi, 'follow\'s clitoral/vulval contact')
       .replace(/\bexternal stimulation of vulva\/clitoris\b/gi, 'external stimulation of follow\'s vulva/clitoris')
@@ -228,16 +230,35 @@ function tailorPhase2Location(locationText, locationRoll, receiverPartner) {
 }
 
 /**
+ * Phase 2 location rolls where using genitals on that body part is not practical
+ * (e.g. nape of neck, ears, mouth—genital contact there is not feasible).
+ */
+var phase2GenitalCapableLocationRolls = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20];
+
+/**
  * Tailor Phase 2 action (what) text to giver and receiver anatomy.
  * Replaces generic "genitals" with anatomy-aware wording.
+ * When locationRoll is not genital-capable (e.g. nape of neck, ears), omits genitals so the prompt is feasible.
  */
-function tailorPhase2Action(actionText, giverPartner, receiverPartner) {
+function tailorPhase2Action(actionText, giverPartner, receiverPartner, locationRoll) {
   if (!actionText || typeof actionText !== 'string') return actionText;
   if (giverPartner == null || receiverPartner == null) return actionText;
+
+  let out = actionText;
+
+  // Capability check: on locations like nape of neck, ears, mouth, collarbone, hips—genital use isn't practical; use hands, mouth, feet only.
+  const genitalCapable = locationRoll == null || phase2GenitalCapableLocationRolls.indexOf(Number(locationRoll)) !== -1;
+  if (!genitalCapable) {
+    out = out.replace(/\bUse genitals\b/gi, 'Use hands, mouth, or feet');
+    out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands');
+    out = out.replace(/\bUsing hands, mouth, feet, or genitals\b/gi, 'Using hands, mouth, or feet');
+    out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, or feet');
+    return out;
+  }
+
   const giverAnatomy = getAnatomy(giverPartner);
   const receiverAnatomy = getAnatomy(receiverPartner);
 
-  let out = actionText;
   if (giverAnatomy === 'vulva' && receiverAnatomy === 'vulva') {
     out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, feet, or genitals (fingers, toys)');
     out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands or genitals (fingers, toys)');
@@ -249,13 +270,13 @@ function tailorPhase2Action(actionText, giverPartner, receiverPartner) {
     out = out.replace(/\bUse genitals\b/gi, 'Use penis/scrotum');
     out = out.replace(/\bor genitals\b/gi, 'or penis/scrotum');
   } else if (giverAnatomy === 'penis' && receiverAnatomy === 'vulva') {
-    out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, feet, or genitals (your penis/scrotum or partner\'s vulva/clitoris)');
-    out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands or genitals (your penis/scrotum or partner\'s vulva/clitoris)');
-    out = out.replace(/\bUse genitals\b/gi, 'Use your penis/scrotum or partner\'s vulva/clitoris');
+    out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, feet, or your penis/scrotum');
+    out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands or your penis/scrotum');
+    out = out.replace(/\bUse genitals\b/gi, 'Use your penis/scrotum');
   } else {
-    out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, feet, or genitals (your vulva/clitoris or partner\'s penis/scrotum)');
-    out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands or genitals (your vulva/clitoris or partner\'s penis/scrotum)');
-    out = out.replace(/\bUse genitals\b/gi, 'Use your vulva/clitoris or partner\'s penis/scrotum');
+    out = out.replace(/\bhands, mouth, feet, or genitals\b/gi, 'hands, mouth, feet, or your vulva/clitoris');
+    out = out.replace(/\bUse hands or genitals\b/gi, 'Use hands or your vulva/clitoris');
+    out = out.replace(/\bUse genitals\b/gi, 'Use your vulva/clitoris');
   }
   return out;
 }

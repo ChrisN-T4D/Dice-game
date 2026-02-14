@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Intimacy D20 Journey</title>
+  <title>Random Sex Journey</title>
+  <meta name="description" content="Guided intimate sessions with timed turns, voice prompts, and structured phases from warm-up to deep intimacy. Set your duration and let the app guide you, or use Free Play to roll your own." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -228,6 +229,16 @@
       color: #fee2e2;
     }
 
+    /* Touch-friendly checkboxes (mobile-primary); ~44px minimum tap target */
+    input[type="checkbox"].touch-checkbox {
+      width: 2.75rem;
+      height: 2.75rem;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
     .output {
       margin-top: 0.75rem;
       padding: 0.75rem;
@@ -237,6 +248,10 @@
       min-height: 3rem;
       font-size: 0.95rem;
       white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .message {
@@ -985,21 +1000,21 @@
   <!-- Landing Modal -->
   <div id="landingModal">
     <div class="landing-content">
-      <h1 class="landing-title">Intimacy D20 Journey</h1>
-      <p class="landing-subtitle">Choose your play mode to begin</p>
+      <h1 class="landing-title">Random Sex Journey</h1>
+      <p class="landing-subtitle">Guided intimate sessions with timed turns and voice prompts, or roll your own in Free Play</p>
       
       <div class="mode-buttons">
-        <div class="mode-button freeplay" id="landingFreePlay">
-          <div class="mode-button-title">🎲 Free Play</div>
-          <div class="mode-button-desc">
-            Roll dice manually at your own pace. Full control over timing, turns, and progression. Perfect for casual exploration.
-          </div>
-        </div>
-        
         <div class="mode-button guided" id="landingGuided">
           <div class="mode-button-title">⏱️ Guided Mode</div>
           <div class="mode-button-desc">
-            Automated session with timed turns and structured progression. Set duration, turn length, and let the app guide you through phases.
+            The main experience: set your session length and turn time, then follow timed prompts through warm-up, heating up, and deep intimacy. Voice reads aloud; optional clothing removal and phase check-ins.
+          </div>
+        </div>
+        
+        <div class="mode-button freeplay" id="landingFreePlay">
+          <div class="mode-button-title">🎲 Free Play</div>
+          <div class="mode-button-desc">
+            Roll manually and enter your numbers. Full control over timing and when to advance. No timer. Good when you prefer to set your own pace.
           </div>
         </div>
       </div>
@@ -1011,9 +1026,9 @@
     <!-- Main card -->
     <div class="card">
       <div class="card-header">
-        <h1>Intimacy D20 Journey</h1>
+        <h1>Random Sex Journey</h1>
         <p>
-          Enter your two d20 rolls and an optional d6 clothing roll for the current phase.
+          Guided sessions with timed turns and voice prompts are the main focus. Choose Guided Mode to start. In Free Play, enter your two rolls (1–20) and optional clothing roll (1–12) for the current phase.
         </p>
       </div>
 
@@ -1076,6 +1091,27 @@
        </button>
      </div>
 
+     <!-- Prompt detail: Beginner (short) / Regular (full) / Expert (full + future unlocks) -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+       <label style="font-weight: 600; margin-right: 0.5rem;">Prompt detail:</label>
+       <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
+         <button type="button" class="secondary prompt-detail-btn" data-mode="beginner" title="Full descriptions, longer pause before next prompt, slower speech">Beginner</button>
+         <button type="button" class="secondary prompt-detail-btn" data-mode="regular" title="Some descriptions removed, medium pace">Regular</button>
+         <button type="button" class="secondary prompt-detail-btn" data-mode="expert" title="Short prompts; more variety and variation options can unlock later">Expert</button>
+       </div>
+       <span id="promptDetailSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
+     </div>
+
+     <!-- Penetration preference -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+       <label style="font-weight: 600; margin-right: 0.5rem;">Penetration:</label>
+       <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
+         <button type="button" class="secondary penetration-pref-btn" data-pref="prefer" title="Penetration is an option when the prompt allows it">Prefer penetration</button>
+         <button type="button" class="secondary penetration-pref-btn" data-pref="minimal" title="Focus on external play; penetration only if you both want">Minimal penetration</button>
+       </div>
+       <span id="penetrationPrefSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
+     </div>
+
      <!-- Preferences (Background, Music, Voice) – 3-bar expander -->
      <div class="collapsible-section" style="margin-bottom: 1rem;">
        <div class="collapsible-header" data-section="preferences">
@@ -1115,6 +1151,22 @@
                <span id="backgroundMusicVolumeLabel" style="font-size: 0.85rem; color: #9ca3af; min-width: 2.5rem;">50%</span>
              </div>
            </div>
+           <!-- Pause for check-in between phases (Guided mode only) -->
+           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+             <label style="font-weight: 600; font-size: 0.9rem;">Pause for check-in between phases:</label>
+             <div class="row" style="align-items: center; gap: 0.5rem;">
+               <input type="checkbox" class="touch-checkbox" id="guidedPhaseCheckInEnabled" style="accent-color: #22c55e;" title="When on, Guided mode pauses at the end of each phase so you can check in before continuing." />
+               <label for="guidedPhaseCheckInEnabled" style="font-size: 0.85rem; color: #9ca3af;">Pause at end of each phase to check in, then continue</label>
+             </div>
+           </div>
+           <!-- Vibrators available (Phase 3 modifiers 17–19 are skipped if off) -->
+           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+             <label style="font-weight: 600; font-size: 0.9rem;">Vibrators available:</label>
+             <div class="row" style="align-items: center; gap: 0.5rem;">
+               <input type="checkbox" class="touch-checkbox" id="vibratorsPresent" style="accent-color: #22c55e;" title="When off, Phase 3 vibrator/toy modifiers (Vibrator ladder, Pulse vs steady, Hand + toy duet) are rerolled and toy-optional text is hidden." />
+               <label for="vibratorsPresent" style="font-size: 0.85rem; color: #9ca3af;">Include vibrator/toy modifiers in Phase 3 (if off, those rolls are rerolled)</label>
+             </div>
+           </div>
            <!-- Voice for reading aloud -->
            <div class="row" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
              <label style="font-weight: 600; font-size: 0.9rem;">Voice for reading aloud:</label>
@@ -1151,6 +1203,7 @@
              <div>
                <div class="collapsible-title">Phase Time Distribution</div>
                <div class="collapsible-selection" id="phaseDistSelection">Select distribution</div>
+               <div id="phaseDistDescription" style="display: none; font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; line-height: 1.3;"></div>
              </div>
            </div>
            <span class="collapsible-icon">▼</span>
@@ -1162,7 +1215,7 @@
                <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Sensate-Focused</button>
                <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">A Little Spicy</button>
                <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Intimacy-Focused</button>
-               <button class="secondary" id="phaseDistQuickie" style="min-width: 100px; font-size: 0.85rem;">Quickie</button>
+               <button class="secondary" id="phaseDistQuickie" style="min-width: 100px; font-size: 0.85rem;" title="Short session: 15 min, 1 min turns, double clothing removal. No critical rolls (no extended time).">Quickie</button>
                <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
              </div>
 
@@ -1396,7 +1449,7 @@
             <!-- Double clothing removal option -->
             <div id="quickieOptions" style="margin-top: 0.75rem; text-align: center;">
               <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; padding: 0.4rem 0.75rem; border-radius: 0.375rem; border: 1px solid #475569; background: rgba(2, 6, 23, 0.5);">
-                <input type="checkbox" id="quickieDoubleClothing" style="accent-color: #f59e0b; width: 1.1rem; height: 1.1rem; cursor: pointer;" />
+                <input type="checkbox" class="touch-checkbox" id="quickieDoubleClothing" style="accent-color: #f59e0b; cursor: pointer;" />
                 Remove 2 clothing items per turn
               </label>
             </div>
@@ -1452,12 +1505,12 @@
              <span id="totalTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
            </div>
            <div style="text-align: center;">
-             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Phase Time Left:</label>
-             <span id="phaseTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
+             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Est. turns left:</label>
+             <span id="phaseTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">—</span>
            </div>
-           <div style="text-align: center;">
-             <label id="turnTimeLeftLabel" style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Turn Time Left:</label>
-             <span id="turnTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
+           <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+             <label id="turnTimeLeftLabel" style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Current action:</label>
+             <span id="turnTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">—</span>
            </div>
          </div>
 
@@ -1471,6 +1524,7 @@
          </div>
        </div>
        <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+         <button class="secondary primary" id="continueAfterPhaseCheckInBtn" style="display: none;">Continue to Phase 2</button>
          <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next Turn</button>
          <button class="secondary" id="rerollGuidedPrompt">Reroll prompt</button>
          <button class="secondary" id="pauseGuided">Pause</button>
@@ -1603,18 +1657,18 @@
 
      <div class="roll-grid" style="margin-bottom: 0.75rem;">
        <div class="roll-col label">
-         <label id="locationLabel" for="locationRoll">Location roll d20</label>
+         <label id="locationLabel" for="locationRoll">Location roll (1–20)</label>
          <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
        </div>
 
        <div class="roll-col label">
-         <label id="actionLabel" for="actionRoll">Action roll d20</label>
+         <label id="actionLabel" for="actionRoll">Action roll (1–20)</label>
          <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
        </div>
 
        <div class="roll-col label">
-         <label for="clothingRoll">Clothing roll d6</label>
-         <input id="clothingRoll" type="number" min="1" max="6" inputmode="numeric" />
+         <label for="clothingRoll">Clothing roll (1–12)</label>
+         <input id="clothingRoll" type="number" min="1" max="12" inputmode="numeric" />
        </div>
      </div>
 
@@ -1664,9 +1718,10 @@
 
       <!-- Placeholder for layout (voice controls moved to Preferences); kept hidden -->
       <div id="voiceToggleRow" class="row" style="display: none !important;"></div>
-      <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1);">
-        <div class="output"><strong id="whereLabel">Where:</strong> <span id="whereOutput">—</span></div>
-        <div class="output"><strong id="whatLabel">What to do:</strong> <span id="whatOutput">—</span></div>
+      <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1); width: 100%; min-width: 0; max-width: 100%; overflow-wrap: break-word; word-break: break-word; box-sizing: border-box; overflow-x: auto;">
+        <div class="output" style="min-width: 0;"><strong>Instruction:</strong> <span id="instructionOutput">—</span></div>
+        <div class="output output-detail" style="display: none;"><strong id="whereLabel">Where:</strong> <span id="whereOutput">—</span></div>
+        <div class="output output-detail" style="display: none;"><strong id="whatLabel">What to do:</strong> <span id="whatOutput">—</span></div>
         <div class="output"><strong>Clothing action:</strong> <span id="clothingOutput">—</span></div>
         <div class="row" style="margin-top: 0.5rem; justify-content: flex-end;">
           <button type="button" class="secondary small" id="needHelpBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Need help understanding?</button>

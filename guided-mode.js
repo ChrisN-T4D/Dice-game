@@ -4,6 +4,19 @@
 /** Pre-rolled next turn (set at break start, used when break ends). Not persisted. */
 let guidedNextTurnRolls = null;
 
+/** Phase complete: awaiting check-in before advancing. guidedCompletedPhase = phase that just ended (1 or 2). */
+let guidedInPhaseCheckIn = false;
+let guidedCompletedPhase = 0;
+
+/** Each phase: each partner must be receiver at least once before we can advance. */
+let guidedReceiverOnceP1 = false;
+let guidedReceiverOnceP2 = false;
+
+/** Current action: "Removing clothes" window countdown (so UI and total time run continuously). */
+let guidedInClothingWindow = false;
+let guidedClothingWindowRemaining = 0;
+let guidedClothingWindowTimerId = null;
+
 /**
  * Parse the "what" prompt text for duration/repetition hints and return a suggested minimum turn length in seconds.
  * Used so Phase 2/3 prompts like "repeat 10 times" or "60s then 30s" get enough turn time.
@@ -117,6 +130,8 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   // Reset to phase 1
   phase = 1;
   rollCount = 0;
+  guidedReceiverOnceP1 = false;
+  guidedReceiverOnceP2 = false;
   usedWhereThisPhase = new Set();
   usedWhatThisPhase = new Set();
   awaitingPartnerTurn = false;
@@ -149,21 +164,30 @@ function performGuidedTurn() {
     const act = rollD20();
     actRoll = act;
     extendedTime = false;
-    if (act === 20) {
+    // Quickie preset: no critical rolls (no extended time)
+    if (act === 20 && guidedDistributionMode !== 'quickie') {
       extendedTime = true;
       actRoll = Math.floor(Math.random() * 19) + 1;
     }
+    // Phase 3, vibrators not present: reroll vibrator-only modifiers (17, 18, 19)
+    while (phase === 3 && typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(actRoll)) {
+      actRoll = rollD20();
+      if (actRoll === 20 && guidedDistributionMode !== 'quickie') {
+        extendedTime = true;
+        actRoll = Math.floor(Math.random() * 19) + 1;
+      }
+    }
   }
 
-  // Phase 3 position 20 = critical: reroll position (1–19) and double time
-  if (typeof phase !== 'undefined' && phase === 3 && loc === 20) {
-    loc = Math.floor(Math.random() * 19) + 1;
-    extendedTime = true;
-  }
+  // Phase 3: only the modifier (second d20) is critical. Position 20 is now "Roller's choice" in the table, no reroll.
 
   // Show the exercise
   const giver = guidedCurrentPartner;
   const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+
+  // Track that this partner has been receiver at least once this phase
+  if (receiver === 1) guidedReceiverOnceP1 = true;
+  if (receiver === 2) guidedReceiverOnceP2 = true;
 
   if (extendedTime && messageBox) {
     const giverName = getPartnerName(giver);
@@ -178,51 +202,52 @@ function performGuidedTurn() {
 
   showExercise(phase, loc, actRoll, giver, receiver);
 
-  if (extendedTime && whatOutput) {
+  if (extendedTime) {
     const locationText = phase === 3 ? 'position' : 'location';
-    whatOutput.textContent += ` Spend about twice as long on this ${locationText}.`;
+    const ext = ` Spend about twice as long on this ${locationText}.`;
+    if (whatOutput) whatOutput.textContent += ext;
+    if (instructionOutput) instructionOutput.textContent += ext;
   }
 
   // Milestone-based clothing removal (only in Phase 1 & 2)
   let clothingRemoved = false;
   const receiverItems = receiver === 1 ? guidedClothingItemsP1 : guidedClothingItemsP2;
   if (clothingSystemEnabled && phase < 3 && turnsSinceLastRemoval >= clothingMilestoneInterval && receiverItems.length > 0) {
-    const removedItem = removeClothingItem(receiver);
+    const removedItems = [];
+    removedItems.push(removeClothingItem(receiver));
     turnsSinceLastRemoval = 0;
 
-    if (removedItem && clothingOutput) {
+    if (removedItems[0] && clothingOutput) {
       clothingRemoved = true;
-      // Roll d6 to determine "how" to remove
-      const howRoll = Math.floor(Math.random() * 6) + 1;
+      // Roll d12 to determine "how" to remove; reroll 10 (music) if no music selected
+      let howRoll = Math.floor(Math.random() * 12) + 1;
+      const musicSelected = typeof window.isBackgroundMusicSelected === 'function' && window.isBackgroundMusicSelected();
+      while (howRoll === 10 && !musicSelected) {
+        howRoll = Math.floor(Math.random() * 12) + 1;
+      }
       const clothingEntry = clothingTable[howRoll];
       const giverLabel = getPartnerName(giver);
       const receiverLabel = getPartnerName(receiver);
 
-      if (howRoll === 1) {
-        // Roll 1: No change (but we already removed an item, so just show it)
-        clothingOutput.textContent = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
-      } else if (howRoll === 6) {
-        // Roll 6: Remove 2 items
+      // Critical (12): remove a second item; same "how" applies to both
+      if (howRoll === 12) {
         const secondItem = removeClothingItem(receiver);
-        if (secondItem) {
-          const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
-          clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem} and ${secondItem}${methodText}`;
-        } else {
-          clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem} (only 1 item remaining)`;
-        }
-      } else {
-        // Rolls 2-5: Remove with style
-        const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
-        clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${removedItem}${methodText}`;
+        if (secondItem) removedItems.push(secondItem);
+      }
+      // Quickie double: remove one more item; same "how" applies to all
+      if (quickieDoubleClothing && (receiver === 1 ? guidedClothingItemsP1 : guidedClothingItemsP2).length > 0) {
+        const bonusItem = removeClothingItem(receiver);
+        if (bonusItem) removedItems.push(bonusItem);
       }
 
-      // Quickie double clothing: remove a second item if enabled
-      if (quickieDoubleClothing && receiverItems.length > 0) {
-        const bonusItem = removeClothingItem(receiver);
-        if (bonusItem) {
-          clothingOutput.textContent += `, also remove ${receiverLabel}'s ${bonusItem}`;
-        }
-      }
+      const prefixWithPartner = (clothingEntry.prefix || '').replace(/\{receiver\}/g, receiverLabel);
+      const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+      const itemsPhrase = removedItems.length === 1
+        ? `${removedItems[0]}`
+        : removedItems.slice(0, -1).join(', ') + ' and ' + removedItems[removedItems.length - 1];
+      let text = `${giverLabel} ${prefixWithPartner} ${receiverLabel}'s ${itemsPhrase}${methodText}`;
+      if (howRoll === 12 && removedItems.length === 1) text += ' (only 1 item remaining)';
+      clothingOutput.textContent = text;
     } else if (receiverItems.length === 0 && clothingOutput) {
       clothingOutput.textContent = `All of ${receiverLabel}'s clothing has been removed.`;
     }
@@ -233,6 +258,16 @@ function performGuidedTurn() {
     } else {
       clothingOutput.textContent = '';
     }
+  }
+
+  // Double clothing removal time if receiver has twice (or more) as many items as the other partner
+  let effectiveClothingSeconds = 0;
+  if (clothingRemoved && guidedClothingRemovalSeconds > 0) {
+    const receiverRemaining = receiver === 1 ? guidedClothingItemsP1.length : guidedClothingItemsP2.length;
+    const otherRemaining = receiver === 1 ? guidedClothingItemsP2.length : guidedClothingItemsP1.length;
+    effectiveClothingSeconds = (receiverRemaining >= 2 * otherRemaining)
+      ? 2 * guidedClothingRemovalSeconds
+      : guidedClothingRemovalSeconds;
   }
 
   // Update clothing display
@@ -251,12 +286,8 @@ function performGuidedTurn() {
 
   // Set turn duration: base time, then extend if the prompt says "X times" or "Xs / X seconds"
   guidedTurnTimeRemaining = guidedTurnSeconds;
-  if (clothingRemoved && guidedClothingRemovalSeconds > 0) {
-    guidedTurnTimeRemaining += guidedClothingRemovalSeconds;
-    if (messageBox) {
-      const currentMessage = messageBox.textContent;
-      messageBox.textContent = `${currentMessage}. Extra time has been added for removing the clothing item`;
-    }
+  if (clothingRemoved && effectiveClothingSeconds > 0) {
+    guidedTurnTimeRemaining += effectiveClothingSeconds;
   }
   const whatText = (whatOutput && whatOutput.textContent) || '';
   const suggestedFromPrompt = getSuggestedTurnSecondsFromPrompt(whatText);
@@ -290,15 +321,79 @@ function performGuidedTurn() {
     }
   }
 
-  // Read instructions aloud (always, even if Voice is off), then start timer when reading is done
-  if (typeof speakInstructionsThen === 'function') {
-    speakInstructionsThen({ includeMessage: true }, () => {
-      startGuidedTurnTimer();
-      saveState();
-    });
-  } else {
+  // Flow: 1) Time to switch (or already done in pause). 2) Who's giver/receiver. 3) Ease-in ("settle in"). 4) Clothing (if any) then instruction. 5) Start timer.
+  const clothingText = (clothingRemoved && clothingOutput && clothingOutput.textContent) ? clothingOutput.textContent.trim() : '';
+  const instructionText = (instructionOutput && instructionOutput.textContent) ? instructionOutput.textContent.trim() : '';
+  const EASE_IN_SECONDS = 5;
+  const SWITCH_SECONDS_WHEN_NO_PAUSE = 5;
+  const onStartTimer = () => { startGuidedTurnTimer(); saveState(); };
+
+  const giverName = getPartnerName(giver);
+  const receiverName = getPartnerName(receiver);
+  const giverReceiverOnly = (typeof phase !== 'undefined' && phase === 3)
+    ? `${giverName} leads, ${receiverName} follows.`
+    : `${giverName} is giver, ${receiverName} is receiver.`;
+  const easeInPhrase = 'Take the next few seconds to settle in. No rush.';
+
+  const runClothingThenInstruction = () => {
+      if (clothingText) {
+        speakText(clothingText, {
+          force: true,
+          onEnd: () => {
+            const clothingSec = effectiveClothingSeconds > 0 ? effectiveClothingSeconds : (typeof guidedClothingRemovalSeconds === 'number' ? guidedClothingRemovalSeconds : 30);
+            guidedInClothingWindow = true;
+            guidedClothingWindowRemaining = clothingSec;
+            if (guidedClothingWindowTimerId) clearInterval(guidedClothingWindowTimerId);
+            guidedClothingWindowTimerId = setInterval(() => {
+              guidedClothingWindowRemaining -= 1;
+              guidedPhaseTimeRemaining -= 1;
+              updateGuidedModeUI();
+              if (guidedClothingWindowRemaining <= 0) {
+                clearInterval(guidedClothingWindowTimerId);
+                guidedClothingWindowTimerId = null;
+                guidedInClothingWindow = false;
+                if (instructionText) {
+                  speakText(instructionText, { force: true, onEnd: onStartTimer });
+                } else {
+                  onStartTimer();
+                }
+              }
+            }, 1000);
+          }
+        });
+      } else {
+        if (instructionText) {
+          speakText(instructionText, { force: true, onEnd: onStartTimer });
+        } else {
+          onStartTimer();
+        }
+      }
+  };
+
+  const runEaseIn = () => {
+    speakText(easeInPhrase, { force: true, onEnd: () => {
+      setTimeout(runClothingThenInstruction, EASE_IN_SECONDS * 1000);
+    } });
+  };
+
+  const runAfterGiverReceiver = () => {
+    speakText(giverReceiverOnly, { force: true, onEnd: runEaseIn });
+  };
+
+  if (typeof speakText !== 'function' || (typeof isSpeechSupported === 'function' && !isSpeechSupported())) {
     startGuidedTurnTimer();
     saveState();
+    return;
+  }
+
+  if (guidedPauseSeconds > 0) {
+    // Pause already gave "time to switch" and "giver/receiver"; go straight to ease-in.
+    runEaseIn();
+  } else {
+    // No pause: 1) Time to switch (speak + wait), 2) Giver/receiver, 3) Ease-in, then clothing/instruction.
+    speakText(`Time to switch. You have ${SWITCH_SECONDS_WHEN_NO_PAUSE} seconds.`, { force: true, onEnd: () => {
+      setTimeout(runAfterGiverReceiver, SWITCH_SECONDS_WHEN_NO_PAUSE * 1000);
+    } });
   }
 }
 
@@ -314,7 +409,8 @@ function rerollGuidedPrompt() {
   let actRoll = act;
   let extendedTime = false;
 
-  if (act === 20) {
+  // Quickie preset: no critical rolls (no extended time)
+  if (act === 20 && guidedDistributionMode !== 'quickie') {
     extendedTime = true;
     actRoll = Math.floor(Math.random() * 19) + 1;
     if (messageBox) {
@@ -329,13 +425,23 @@ function rerollGuidedPrompt() {
       flashMessage('flash');
     }
   }
+  // Phase 3, vibrators not present: reroll vibrator-only modifiers (17, 18, 19)
+  while (phase === 3 && typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(actRoll)) {
+    actRoll = rollD20();
+    if (actRoll === 20 && guidedDistributionMode !== 'quickie') {
+      extendedTime = true;
+      actRoll = Math.floor(Math.random() * 19) + 1;
+    }
+  }
 
   const giver = guidedCurrentPartner;
   const receiver = guidedCurrentPartner === 1 ? 2 : 1;
   showExercise(phase, loc, actRoll, giver, receiver);
 
-  if (extendedTime && whatOutput) {
-    whatOutput.textContent += ' Spend about twice as long on this location.';
+  if (extendedTime) {
+    const ext = ' Spend about twice as long on this location.';
+    if (whatOutput) whatOutput.textContent += ext;
+    if (instructionOutput) instructionOutput.textContent += ext;
     // Double the remaining turn time for critical roll
     guidedTurnTimeRemaining *= 2;
   }
@@ -359,6 +465,11 @@ function rerollGuidedPrompt() {
 
 function startGuidedTurnTimer() {
   clearInterval(guidedTurnTimerId);
+  if (guidedClothingWindowTimerId) {
+    clearInterval(guidedClothingWindowTimerId);
+    guidedClothingWindowTimerId = null;
+    guidedInClothingWindow = false;
+  }
 
   // If this turn has segments (multi-step or single with completion), speak the first step now
   if (guidedStepSegments.length >= 1 && typeof speakText === 'function') {
@@ -433,9 +544,15 @@ function completeTurn() {
   // Switch partner
   guidedCurrentPartner = guidedCurrentPartner === 1 ? 2 : 1;
 
-  // Check if phase time is up
-  if (guidedPhaseTimeRemaining <= 0) {
-    advanceGuidedPhase();
+  // Check if phase time is up and both partners have been receiver at least once
+  const bothReceivedThisPhase = guidedReceiverOnceP1 && guidedReceiverOnceP2;
+  if (guidedPhaseTimeRemaining <= 0 && bothReceivedThisPhase) {
+    if (typeof guidedPhaseCheckInEnabled !== 'undefined' && guidedPhaseCheckInEnabled) {
+      startPhaseCheckIn();
+    } else {
+      advanceGuidedPhase();
+    }
+    return;
   } else {
     // Start pause between turns (if configured)
     if (guidedPauseSeconds > 0) {
@@ -471,59 +588,19 @@ function startGuidedPause() {
     messageBox.textContent = `Take this time to finish what you're doing and switch. Next: ${nextLabel}`;
   }
 
-  // Announce the break
+  // No preview or preroll during pause — instruction and roll happen when the turn starts
+  if (whereOutput) whereOutput.textContent = '—';
+  if (whatOutput) whatOutput.textContent = '—';
+  if (instructionOutput) instructionOutput.textContent = '—';
+  if (clothingOutput) clothingOutput.textContent = '';
+
+  const switchSec = typeof guidedPauseSeconds === 'number' ? guidedPauseSeconds : 30;
+  const switchAnnounce = (typeof phase !== 'undefined' && phase === 3)
+    ? `${giverName} leads, ${receiverName} follows. You have ${switchSec} seconds to switch.`
+    : `${giverName} is giver, ${receiverName} is receiver. You have ${switchSec} seconds to switch.`;
+
   if (typeof speakText === 'function') {
-    speakText('Take this time to finish what you are doing and switch.', { force: true });
-  }
-
-  // Pre-roll the next turn so we can show WHERE early (position preview)
-  let loc = rollD20();
-  const act = rollD20();
-  let actRoll = act;
-  let extendedTime = false;
-  if (act === 20) {
-    extendedTime = true;
-    actRoll = Math.floor(Math.random() * 19) + 1;
-  }
-  // Phase 3 position 20 = critical: reroll position (1–19) and double time; show rerolled position in preview
-  if (typeof phase !== 'undefined' && phase === 3 && loc === 20) {
-    loc = Math.floor(Math.random() * 19) + 1;
-    extendedTime = true;
-  }
-  guidedNextTurnRolls = { loc, actRoll, extendedTime };
-
-  // Show the next WHERE in the output so they can get into position
-  const phaseTable = typeof tables !== 'undefined' ? tables[phase] : null;
-  if (phaseTable) {
-    let nextWhere = phase === 3 && typeof getPhase3PositionText === 'function'
-      ? getPhase3PositionText(loc, giver, receiver)
-      : (phase === 3 ? (() => { const p = phaseTable.positions?.[loc]; return typeof p === 'string' ? p : (p && (p.penisVulva || p.vulvaVulva || p.vulvaPenis || p.penisPenis)) || ''; })() : (phaseTable.locations?.[loc] ?? ''));
-    if (nextWhere && phase === 2 && typeof tailorPhase2Location === 'function') {
-      nextWhere = tailorPhase2Location(nextWhere, loc, receiver);
-    }
-    if (nextWhere && phase === 1 && typeof tailorPhase1Location === 'function') {
-      nextWhere = tailorPhase1Location(nextWhere, loc, receiver);
-    }
-    if (nextWhere) {
-      const giverName = typeof getPartnerName === 'function' ? getPartnerName(giver) : `Partner ${giver}`;
-      if (phase === 3) {
-        // Phase 3: positions - giver leads
-        nextWhere = `Get ready, ${giverName} leads: ${nextWhere}`;
-      } else {
-        // Phase 1-2: locations
-        const whereLabel = 'location';
-        nextWhere = `Get ready, next ${whereLabel}: ${nextWhere}`;
-      }
-      if (whereOutput) whereOutput.textContent = nextWhere;
-      if (whatOutput) whatOutput.textContent = 'Instructions coming when the turn starts...';
-      if (clothingOutput) clothingOutput.textContent = '';
-
-      // After a few seconds, announce the next location/position so they can get ready
-      setTimeout(() => {
-        if (!isGuidedMode || !guidedInPause || guidedPaused || typeof speakText !== 'function') return;
-        speakText(nextWhere, { force: true });
-      }, 4000);
-    }
+    speakText(switchAnnounce, { force: true });
   }
 
   guidedTurnTimerId = setInterval(() => {
@@ -543,9 +620,14 @@ function startGuidedPause() {
       clearInterval(guidedTurnTimerId);
       guidedInPause = false;
 
-      // Check if phase time ran out during pause
-      if (guidedPhaseTimeRemaining <= 0) {
-        advanceGuidedPhase();
+      // Check if phase time ran out during pause and both partners have been receiver this phase
+      const bothReceivedThisPhase = guidedReceiverOnceP1 && guidedReceiverOnceP2;
+      if (guidedPhaseTimeRemaining <= 0 && bothReceivedThisPhase) {
+        if (typeof guidedPhaseCheckInEnabled !== 'undefined' && guidedPhaseCheckInEnabled) {
+          startPhaseCheckIn();
+        } else {
+          advanceGuidedPhase();
+        }
       } else {
         performGuidedTurn();
       }
@@ -553,10 +635,41 @@ function startGuidedPause() {
   }, 1000);
 }
 
+function startPhaseCheckIn() {
+  guidedInPhaseCheckIn = true;
+  guidedCompletedPhase = phase;
+  guidedPaused = true;
+
+  const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' };
+  // Message is about the phase that just ended — check-in is now, at the end of that phase
+  if (messageBox) {
+    messageBox.textContent = phase < maxPhase
+      ? `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to continue to ${phaseNames[phase + 1]}.`
+      : `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`;
+  }
+  if (typeof speakText === 'function') {
+    speakText(phase < maxPhase
+      ? `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap Continue to ${phaseNames[phase + 1]}.`
+      : `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`, { force: true });
+  }
+  updateGuidedModeUI();
+  if (typeof saveState === 'function') saveState();
+}
+
+function continueAfterPhaseCheckIn() {
+  if (!guidedInPhaseCheckIn) return;
+  guidedInPhaseCheckIn = false;
+  guidedCompletedPhase = 0;
+  guidedPaused = false;
+  advanceGuidedPhase();
+}
+
 function advanceGuidedPhase() {
   if (phase < maxPhase) {
     phase++;
     guidedPhaseTimeRemaining = guidedPhaseSeconds[phase - 1];
+    guidedReceiverOnceP1 = false;
+    guidedReceiverOnceP2 = false;
     usedWhereThisPhase = new Set();
     usedWhatThisPhase = new Set();
     rollCount = 0;
@@ -617,6 +730,14 @@ function resumeGuidedMode() {
 function stopGuidedMode() {
   isGuidedMode = false;
   guidedPaused = false;
+  guidedInPhaseCheckIn = false;
+  guidedCompletedPhase = 0;
+  guidedReceiverOnceP1 = false;
+  guidedReceiverOnceP2 = false;
+  guidedInClothingWindow = false;
+  guidedClothingWindowRemaining = 0;
+  if (guidedClothingWindowTimerId) clearInterval(guidedClothingWindowTimerId);
+  guidedClothingWindowTimerId = null;
   clearInterval(guidedTurnTimerId);
   clearInterval(guidedPhaseTimerId);
   stopSpeaking();
@@ -648,6 +769,7 @@ function updateGuidedModeUI() {
   const rerollPromptBtn = document.getElementById('rerollGuidedPrompt');
   const pauseBtn = document.getElementById('pauseGuided');
   const resumeBtn = document.getElementById('resumeGuided');
+  const continuePhaseBtn = document.getElementById('continueAfterPhaseCheckInBtn');
 
   if (isGuidedMode) {
     // === GUIDED MODE ACTIVE ===
@@ -690,24 +812,27 @@ function updateGuidedModeUI() {
       }
     }
 
-    // Update timer displays
-    if (totalTimeLeftSpan) {
-      const remainingLaterPhases = phase === 1 ? (guidedPhaseSeconds[1] || 0) + (guidedPhaseSeconds[2] || 0)
-        : phase === 2 ? (guidedPhaseSeconds[2] || 0) : 0;
-      totalTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining + remainingLaterPhases);
-    }
-    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = formatTime(guidedPhaseTimeRemaining);
-    if (turnTimeLeftLabel) {
-      turnTimeLeftLabel.textContent = guidedInPause ? 'Pause Time:' : 'Turn Time Left:';
-    }
+    // Update timer displays — total runs continuously (phase remaining + later phases)
+    const remainingLaterPhases = phase === 1 ? (guidedPhaseSeconds[1] || 0) + (guidedPhaseSeconds[2] || 0)
+      : phase === 2 ? (guidedPhaseSeconds[2] || 0) : 0;
+    const totalRemaining = guidedPhaseTimeRemaining + remainingLaterPhases;
+    if (totalTimeLeftSpan) totalTimeLeftSpan.textContent = formatTime(totalRemaining);
+
+    // Est. turns left per partner (cycle = turn + pause; turns per partner ≈ half of total turns in phase)
+    const cycleSec = (guidedTurnSeconds || 120) + (guidedPauseSeconds || 0);
+    const estTurnsTotal = cycleSec > 0 ? Math.max(0, Math.floor(guidedPhaseTimeRemaining / cycleSec)) : 0;
+    const estTurnsPerPartner = Math.floor(estTurnsTotal / 2);
+    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = estTurnsTotal > 0 ? `~${estTurnsPerPartner} each` : '0';
+
+    // Current action (name on one line, time on the next)
+    const actionName = guidedInPause ? 'Pause' : (guidedInClothingWindow ? 'Removing clothes' : 'Turn/touch');
+    const actionTime = guidedInPause ? guidedPauseTimeRemaining : (guidedInClothingWindow ? guidedClothingWindowRemaining : guidedTurnTimeRemaining);
+    if (turnTimeLeftLabel) turnTimeLeftLabel.textContent = `Current action: ${actionName}`;
     if (turnTimeLeftSpan) {
-      if (guidedInPause) {
-        turnTimeLeftSpan.textContent = formatTime(guidedPauseTimeRemaining);
-        turnTimeLeftSpan.style.color = '#a7f3d0';
-      } else {
-        turnTimeLeftSpan.textContent = formatTime(guidedTurnTimeRemaining);
-        turnTimeLeftSpan.style.color = '#e5e7eb';
-      }
+      turnTimeLeftSpan.textContent = formatTime(actionTime);
+      if (guidedInPause) turnTimeLeftSpan.style.color = '#a7f3d0';
+      else if (guidedInClothingWindow) turnTimeLeftSpan.style.color = '#fcd34d';
+      else turnTimeLeftSpan.style.color = '#e5e7eb';
     }
 
     // Show phase allocation
@@ -731,18 +856,28 @@ function updateGuidedModeUI() {
     if (typeof window.applyPartnerColors === 'function') window.applyPartnerColors();
 
     // Control buttons visibility
+    const inPhaseCheckIn = guidedInPhaseCheckIn === true;
+    const phaseNames = { 1: 'Phase 2', 2: 'Phase 3', 3: 'End session' };
+    if (continuePhaseBtn) {
+      continuePhaseBtn.style.display = inPhaseCheckIn ? 'inline-block' : 'none';
+      if (inPhaseCheckIn && guidedCompletedPhase >= 1 && guidedCompletedPhase <= 3) {
+        continuePhaseBtn.textContent = phaseNames[guidedCompletedPhase] || 'Continue';
+      }
+    }
     if (nextTurnBtn) {
-      nextTurnBtn.style.display = (guidedInPause || guidedPaused) ? 'none' : 'inline-block';
+      nextTurnBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
     }
     if (rerollPromptBtn) {
-      rerollPromptBtn.style.display = (guidedInPause || guidedPaused) ? 'none' : 'inline-block';
+      rerollPromptBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
     }
     if (pauseBtn && resumeBtn) {
-      pauseBtn.style.display = guidedPaused ? 'none' : 'inline-block';
-      resumeBtn.style.display = guidedPaused ? 'inline-block' : 'none';
+      const showResume = guidedPaused && !inPhaseCheckIn;
+      pauseBtn.style.display = (guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
+      resumeBtn.style.display = showResume ? 'inline-block' : 'none';
     }
   } else {
     // === GUIDED MODE STOPPED - only show free play UI if user chose free play (don't overwrite guided-setup) ===
+    if (continuePhaseBtn) continuePhaseBtn.style.display = 'none';
     // Reset box colors to default cyan
     if (guidedStatus) { guidedStatus.style.borderColor = ''; guidedStatus.style.background = ''; }
     if (outputBox) { outputBox.style.borderColor = ''; outputBox.style.background = ''; }

@@ -2,7 +2,7 @@
 // ----- UI helper functions -----
 
 // Global DOM references
-let messageBox, whereOutput, whatOutput, clothingOutput, timerSound;
+let messageBox, whereOutput, whatOutput, instructionOutput, clothingOutput, timerSound;
 
 // Reliable way to find the output display box (works with both old and new HTML)
 function getOutputDisplayBox() {
@@ -47,11 +47,11 @@ function updateRollLabels(currentPhase) {
   if (!locationLabel || !actionLabel) return;
 
   if (currentPhase === 3) {
-    locationLabel.textContent = 'Position roll d20';
-    actionLabel.textContent = 'Modifier roll d20';
+    locationLabel.textContent = 'Position roll (1–20)';
+    actionLabel.textContent = 'Modifier roll (1–20)';
   } else {
-    locationLabel.textContent = 'Location roll d20';
-    actionLabel.textContent = 'Action roll d20';
+    locationLabel.textContent = 'Location roll (1–20)';
+    actionLabel.textContent = 'Action roll (1–20)';
   }
 }
 
@@ -68,6 +68,126 @@ function updateOutputLabels(currentPhase) {
     whereLabel.textContent = 'Where:';
     whatLabel.textContent = 'What to do:';
   }
+}
+
+/**
+ * Prompt detail: Beginner = full text (need the info), Regular = some removed, Expert = short (more variety later).
+ * Shorten prompt text for Regular (medium) and Expert (short) modes.
+ * @param {string} fullText - Full prompt text
+ * @param {'where'|'what'} kind - Type of prompt
+ * @returns {string} - Full, medium, or short text depending on promptDetailMode
+ */
+function shortenForDetailMode(fullText, kind) {
+  if (typeof fullText !== 'string' || !fullText.trim()) return fullText || '';
+  const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
+  // Beginner: full descriptions (no shortening)
+  if (mode === 'beginner') return fullText;
+
+  if (kind === 'where') {
+    const colonIdx = fullText.indexOf(': ');
+    const titlePart = colonIdx > 0 && colonIdx < 80 ? fullText.slice(0, colonIdx).trim() : null;
+    if (mode === 'expert') {
+      return titlePart || fullText.slice(0, 55).trim() + (fullText.length > 55 ? '…' : '');
+    }
+    // Regular: first sentence or first 120 chars
+    if (titlePart && titlePart.length <= 120) return titlePart;
+    const firstSentence = fullText.match(/^[^.!?]+[.!?]?/);
+    if (firstSentence && firstSentence[0].length <= 120) return firstSentence[0].trim();
+    if (fullText.length <= 120) return fullText;
+    return fullText.slice(0, 120).trim() + '…';
+  }
+
+  if (kind === 'what') {
+    if (mode === 'expert') {
+      const firstSentence = fullText.match(/^[^.!?]+[.!?]?/);
+      if (firstSentence && firstSentence[0].length <= 65) return firstSentence[0].trim();
+      return fullText.length <= 65 ? fullText : fullText.slice(0, 65).trim() + '…';
+    }
+    // Regular: full text (no truncation) so the instruction line is not cut off
+    return fullText;
+  }
+
+  return fullText;
+}
+
+/**
+ * Delay in ms before speaking the next prompt (guided mode). Beginner = longer, Expert = shorter.
+ */
+function getPromptAnnounceDelayMs() {
+  const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
+  if (mode === 'beginner') return 8000;
+  if (mode === 'expert') return 2000;
+  return 4000;
+}
+
+/**
+ * Apply penetration preference to prompt text. When minimal and text mentions penetration, append a focus-on-external line to what.
+ * @param {string} where - Where/position text
+ * @param {string} what - What/action/modifier text
+ * @param {number} currentPhase - 1, 2, or 3
+ * @returns {{ where: string, what: string }}
+ */
+function applyPenetrationPreference(where, what, currentPhase) {
+  const pref = typeof penetrationPreference !== 'undefined' ? penetrationPreference : 'prefer';
+  if (pref !== 'minimal') return { where: where || '', what: what || '' };
+  const combined = ((where || '') + ' ' + (what || '')).toLowerCase();
+  if (!combined.includes('penetration')) return { where: where || '', what: what || '' };
+  const line = 'Focus on external play; penetration only if you both want.';
+  const newWhat = (what || '').trim() + (what ? '. ' : '') + line;
+  return { where: where || '', what: newWhat };
+}
+
+/**
+ * Remove parenthetical asides from text so instructions read more cleanly.
+ * @param {string} text
+ * @returns {string}
+ */
+function stripParentheticals(text) {
+  if (!text || typeof text !== 'string') return text || '';
+  return text
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Turn Where and What into one flowing instruction that reads as a cohesive sentence or short paragraph.
+ * Strips redundant "GiverName: " from what, strips parentheticals, and joins with where using a comma (phase 1/2) or period (phase 3).
+ * @param {string} where - Where/position text (e.g. "Alex touches Sam's Nipples / Areolas")
+ * @param {string} what - What/action text (e.g. "Alex: Feather-light fingertips: Use only...")
+ * @param {number} phase - 1, 2, or 3
+ * @returns {string} - Single flowing instruction
+ */
+function toFlowingInstruction(where, what, phase) {
+  let w = (where || '').trim();
+  let wt = (what || '').trim();
+  w = stripParentheticals(w);
+  wt = stripParentheticals(wt);
+  if (!w && !wt) return '';
+  if (!wt) return w;
+  if (!w) return wt;
+
+  // Strip leading "GiverName: " from what so we don't repeat the name
+  let rest = wt;
+  const touchesMatch = w.match(/^([^:]+?)\s+touches\s+/i);
+  const leadsMatch = w.match(/^([^:]+?)\s+leads\s*[:\s]/i);
+  const giver = (touchesMatch && touchesMatch[1]) || (leadsMatch && leadsMatch[1]);
+  if (giver && typeof giver === 'string') {
+    const prefix = giver.trim() + ': ';
+    if (rest.toLowerCase().startsWith(prefix.toLowerCase())) {
+      rest = rest.slice(prefix.length).trim();
+      if (rest.length > 0) rest = rest.charAt(0).toLowerCase() + rest.slice(1);
+    }
+  }
+
+  // Join: phase 1/2 = one sentence with comma; phase 3 = position then action with period. Avoid "., " (period then comma).
+  const wTrimmed = w.replace(/\.\s*$/, '').trim();
+  const sep = (phase === 3 || w !== wTrimmed) ? '. ' : ', ';
+  let out = wTrimmed + sep + rest;
+  out = out.replace(/\.\s*\./g, '.');
+  // Ensure colons have space on both sides
+  out = out.replace(/(\S):/g, '$1 :').replace(/:(\S)/g, ': $1');
+  return out.trim();
 }
 
 // ----- Phase change messaging & theming -----
@@ -94,10 +214,10 @@ function notifyPhaseChange(newPhase) {
     messageBox.textContent = 'Now in Phase 1: gentle, non-genital warm-up.';
   } else if (newPhase === 2) {
     messageBox.textContent =
-      'You\'ve unlocked Phase 2: more erogenous exploration. Check in with each other before continuing.';
+      'We are now moving into Phase 2: more erogenous exploration. Check in with each other before continuing.';
   } else if (newPhase === 3) {
     messageBox.textContent =
-      'You\'ve unlocked Phase 3: explicitly sexual goals. Proceed only if both partners actively consent.';
+      'We are now moving into Phase 3: deep intimacy. Positions, rhythm, and shared pleasure. Penetration and orgasm are options only if you both want.';
   } else {
     messageBox.textContent = `Now in Phase ${newPhase}.`;
   }

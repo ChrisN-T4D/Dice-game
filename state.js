@@ -57,6 +57,23 @@ let partnerAnatomy2 = 'vulva';
 // Quickie double clothing removal
 let quickieDoubleClothing = false;
 
+// Prompt detail: 'beginner' = full descriptions, longer pause, slower speech; 'regular' = some detail removed, medium pace; 'expert' = short prompts, faster, more variety/variation options later
+let promptDetailMode = 'regular';
+
+// Penetration preference: 'prefer' = penetration is an option (default); 'minimal' = focus on external play, penetration only if both want
+let penetrationPreference = 'prefer';
+
+// Guided mode: pause at end of each phase for check-in before continuing (option in Preferences; default off for smoother flow)
+let guidedPhaseCheckInEnabled = false;
+
+// Vibrators available: when false, Phase 3 vibrator modifiers (17, 18, 19) are rerolled and vibrator/toy text is hidden
+let vibratorsPresent = true;
+
+/** Phase 3 modifier rolls that require a vibrator/toy (17 = Vibrator ladder, 18 = Pulse vs steady, 19 = Hand + toy duet). */
+function isPhase3VibratorModifier(roll) {
+  return roll === 17 || roll === 18 || roll === 19;
+}
+
 // Current prompt (for "Need help understanding?" – set when a prompt is shown)
 let currentPrompt = null; // { phase, locationRoll, actionRoll }
 
@@ -118,6 +135,10 @@ function saveState() {
     partnerAnatomy1,
     partnerAnatomy2,
     quickieDoubleClothing,
+    promptDetailMode,
+    penetrationPreference,
+    guidedPhaseCheckInEnabled,
+    vibratorsPresent,
     clothingPromptsEnabled,
     awaitingPartnerTurn,
     currentPrompt,
@@ -178,6 +199,10 @@ function loadState() {
     partnerAnatomy1 = state.partnerAnatomy1 || 'penis';
     partnerAnatomy2 = state.partnerAnatomy2 || 'vulva';
     quickieDoubleClothing = state.quickieDoubleClothing || false;
+    promptDetailMode = (state.promptDetailMode === 'beginner' || state.promptDetailMode === 'expert') ? state.promptDetailMode : 'regular';
+    penetrationPreference = (state.penetrationPreference === 'minimal') ? 'minimal' : 'prefer';
+    guidedPhaseCheckInEnabled = state.guidedPhaseCheckInEnabled === true;
+    vibratorsPresent = state.vibratorsPresent !== false;
 
     // Restore other state
     clothingPromptsEnabled = state.clothingPromptsEnabled !== undefined ? state.clothingPromptsEnabled : true;

@@ -39,6 +39,7 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
   if (!phaseTable) {
     if (whereOutput) whereOutput.textContent = '—';
     if (whatOutput) whatOutput.textContent = 'Unknown phase.';
+    if (instructionOutput) instructionOutput.textContent = '—';
     return;
   }
 
@@ -52,6 +53,10 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     if (giverPartner != null && receiverPartner != null && what && typeof tailorPhase3Modifier === 'function') {
       what = tailorPhase3Modifier(what, giverPartner, receiverPartner);
     }
+    // When vibrators not present, remove toy-optional wording from modifier text
+    if (typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && what) {
+      what = what.replace(/\s*\(toy optional\)\.?/gi, '').trim();
+    }
   } else if (currentPhase === 2) {
     where = phaseTable.locations?.[locationRoll] ?? '';
     what  = phaseTable.actions?.[actionRoll] ?? '';
@@ -60,7 +65,7 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
         where = tailorPhase2Location(where, locationRoll, receiverPartner);
       }
       if (what && typeof tailorPhase2Action === 'function') {
-        what = tailorPhase2Action(what, giverPartner, receiverPartner);
+        what = tailorPhase2Action(what, giverPartner, receiverPartner, locationRoll);
       }
     }
   } else if (currentPhase === 1) {
@@ -72,6 +77,12 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
   } else {
     where = phaseTable.locations?.[locationRoll] ?? '';
     what  = phaseTable.actions?.[actionRoll] ?? '';
+  }
+
+  // Beginner mode: shorten location/position and action/modifier text (before adding names)
+  if (typeof shortenForDetailMode === 'function') {
+    if (where) where = shortenForDetailMode(where, 'where');
+    if (what) what = shortenForDetailMode(what, 'what');
   }
 
   // Add giver/receiver context if provided (use partner names when available)
@@ -99,8 +110,17 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
   if (where) where = expandSecondsInText(where);
   if (what) what = expandSecondsInText(what);
 
+  // Apply penetration preference (minimal = append focus-on-external line when prompt mentions penetration)
+  if (typeof applyPenetrationPreference === 'function') {
+    const applied = applyPenetrationPreference(where, what, currentPhase);
+    where = applied.where;
+    what = applied.what;
+  }
+
   if (whereOutput) whereOutput.textContent = where || '—';
   if (whatOutput) whatOutput.textContent = what || '—';
+  const flowing = typeof toFlowingInstruction === 'function' ? toFlowingInstruction(where, what, currentPhase) : '';
+  if (instructionOutput) instructionOutput.textContent = flowing || '—';
 
   if (typeof setCurrentPrompt === 'function') {
     setCurrentPrompt(currentPhase, locationRoll, actionRoll);
@@ -113,19 +133,14 @@ function handleRerollPrompt() {
   // Generate a new prompt without advancing turns/rounds
   let loc = rollD20();
   let act = rollD20();
-  let positionCritical = false;
+  // Phase 3, vibrators not present: reroll vibrator-only modifiers (17, 18, 19)
+  while (phase === 3 && typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(act)) {
+    act = rollD20();
+  }
 
-  // Phase 3 position 20 = critical: reroll position (1–19) and double time
+  // Phase 3: only the modifier (second d20) is critical. Position 20 is "Roller's choice" in the table.
   const locationRollInput = document.getElementById('locationRoll');
   const actionRollInput = document.getElementById('actionRoll');
-  if (phase === 3 && loc === 20) {
-    loc = Math.floor(Math.random() * 19) + 1;
-    positionCritical = true;
-    if (messageBox) {
-      messageBox.textContent = '⭐ Critical position! Double time. Position rerolled to ' + loc + '.';
-      flashMessage('flash');
-    }
-  }
 
   // Update inputs so the UI stays consistent with the shown prompt
   if (locationRollInput) locationRollInput.value = String(loc);
@@ -137,10 +152,7 @@ function handleRerollPrompt() {
 
   showExercise(phase, loc, act, giver, receiver);
 
-  if (positionCritical && whatOutput) {
-    whatOutput.textContent = (whatOutput.textContent || '') + ' Spend about twice as long on this position.';
-  }
-  if (messageBox && !positionCritical) {
+  if (messageBox) {
     messageBox.textContent = "Prompt rerolled (turn/round unchanged).";
   }
 }
@@ -197,7 +209,8 @@ function resetSession() {
 
   // Reset output displays
   if (whereOutput) whereOutput.textContent = '—';
-  if (whatOutput) whatOutput.textContent = 'New session started. Enter both d20 rolls (and optional d6) when ready.';
+  if (whatOutput) whatOutput.textContent = 'New session started. Enter both rolls (1–20) and optional clothing roll (1–12) when ready.';
+  if (instructionOutput) instructionOutput.textContent = 'New session started. Enter both rolls (1–20) and optional clothing roll (1–12) when ready.';
   if (clothingOutput) clothingOutput.textContent = '';
 }
 
@@ -227,7 +240,7 @@ function handleUserRoll() {
 
   if (!validLoc || !validAct) {
     if (errorBox) {
-      errorBox.textContent = 'Please enter whole numbers between 1 and 20 for both d20 rolls.';
+      errorBox.textContent = 'Please enter whole numbers between 1 and 20 for both rolls.';
     }
     return;
   }
@@ -236,32 +249,30 @@ function handleUserRoll() {
   let clothingRoll = null;
   if (clothingRollInput && clothingRollInput.value.trim() !== '') {
     const raw = Number(clothingRollInput.value);
-    if (Number.isInteger(raw) && raw >= 1 && raw <= 6) {
+    if (Number.isInteger(raw) && raw >= 1 && raw <= 12) {
       clothingRoll = raw;
     }
   }
 
   let extendedTime = false;
-  let positionCritical = false;
-  // Phase 3 position 20 = critical: reroll position (1–19) and double time
-  if (phase === 3 && loc === 20) {
-    loc = Math.floor(Math.random() * 19) + 1;
-    extendedTime = true;
-    positionCritical = true;
-    if (locationRollInput) locationRollInput.value = String(loc);
-    if (messageBox) {
-      messageBox.textContent = '⭐ Critical position! Double time. Position rerolled to ' + loc + '.';
-      flashMessage('flash');
-    }
-  }
+  // Phase 3: only the modifier (second d20) is critical. Position 20 is "Roller's choice" in the table.
   if (act === 20) {
     extendedTime = true;
     act = Math.floor(Math.random() * 19) + 1;
-    if (messageBox && !positionCritical) {
+    if (messageBox) {
       messageBox.textContent = '⭐ Critical roll! This action gets extended time.';
       flashMessage('flash');
     }
   }
+  // Phase 3, vibrators not present: reroll vibrator-only modifiers (17, 18, 19)
+  while (phase === 3 && typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(act)) {
+    act = rollD20();
+    if (act === 20) {
+      extendedTime = true;
+      act = Math.floor(Math.random() * 19) + 1;
+    }
+  }
+  if (actionRollInput && act !== Number(actRaw)) actionRollInput.value = String(act);
 
   // Repeat detection
   let isWhereRepeat = false;
@@ -278,7 +289,9 @@ function handleUserRoll() {
   showExercise(phase, loc, act);
 
   if (extendedTime) {
-    if (whatOutput) whatOutput.textContent += (phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.');
+    const ext = phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.';
+    if (whatOutput) whatOutput.textContent += ext;
+    if (instructionOutput) instructionOutput.textContent += ext;
   } else if (isWhereRepeat || isWhatRepeat) {
     if (isWhereRepeat && isWhatRepeat) {
       if (messageBox) {
@@ -301,8 +314,14 @@ function handleUserRoll() {
     if (!clothingPromptsEnabled || clothingRoll === null) {
       clothingOutput.textContent = '';
     } else {
-      // Get the "how" description from the d6 roll
-      const clothingEntry = clothingTable[clothingRoll];
+      // Get the "how" description from the d12 roll; treat 10 (music) as reroll if no music selected
+      let effectiveClothingRoll = clothingRoll;
+      const musicSelected = typeof window.isBackgroundMusicSelected === 'function' && window.isBackgroundMusicSelected();
+      if (clothingRoll === 10 && !musicSelected) {
+        const otherRolls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12];
+        effectiveClothingRoll = otherRolls[Math.floor(Math.random() * otherRolls.length)];
+      }
+      const clothingEntry = clothingTable[effectiveClothingRoll];
 
       // If Free Play clothing system is enabled, combine with specific item
       if (freePlayClothingEnabled && phase < 3) {
@@ -311,19 +330,21 @@ function handleUserRoll() {
         const giverLabel = getPartnerName(currentGiver);
         const receiverLabel = getPartnerName(currentReceiver);
         
-        if (clothingRoll === 1) {
-          // Roll 1: No change
-          clothingOutput.textContent = `${clothingEntry.prefix} - ${clothingEntry.fullText}`;
-        } else if (clothingRoll === 6) {
-          // Roll 6: Remove 2 items
+        const prefixWithPartner = (clothingEntry.prefix || '').replace(/\{receiver\}/g, receiverLabel);
+        if (effectiveClothingRoll === 12) {
+          // Roll 12: Remove 2 items; same "how" for both
           const result1 = removeFreePlayClothingItem();
           const result2 = removeFreePlayClothingItem();
 
           if (result1 && result2) {
-            const methodText = clothingEntry.method ? ` (${clothingEntry.method})` : '';
-            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result1.item} and ${result2.item}${methodText}`;
+            const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+            clothingOutput.textContent = `${giverLabel} ${prefixWithPartner} ${receiverLabel}'s ${result1.item} and ${result2.item}${methodText}`;
           } else if (result1) {
-            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result1.item} (only 1 item remaining)`;
+            const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
+            clothingOutput.textContent = `${giverLabel} ${prefixWithPartner} ${receiverLabel}'s ${result1.item}${methodText}`;
+            if (clothingOutput.textContent.indexOf('(only 1 item remaining)') === -1) {
+              clothingOutput.textContent += ' (only 1 item remaining)';
+            }
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }
@@ -331,12 +352,12 @@ function handleUserRoll() {
           // Update the display
           updateFreePlayClothingDisplay();
         } else {
-          // Rolls 2-5: Remove 1 item with the specified style
+          // Rolls 1-11 (or 10 rerolled): Remove 1 item with the specified style
           const result = removeFreePlayClothingItem();
 
           if (result) {
             const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
-            clothingOutput.textContent = `${giverLabel} ${clothingEntry.prefix} ${receiverLabel}'s ${result.item}${methodText}`;
+            clothingOutput.textContent = `${giverLabel} ${prefixWithPartner} ${receiverLabel}'s ${result.item}${methodText}`;
           } else {
             clothingOutput.textContent = 'All clothing has been removed.';
           }

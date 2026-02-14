@@ -173,8 +173,13 @@ function speakText(text, options) {
   window.speechSynthesis.cancel();
   duckBackgroundMusicForSpeech();
 
+  // Prompt detail mode: Beginner = slower (0.9), Regular = normal, Expert = slightly faster (1.1)
+  const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
+  const rateMultiplier = mode === 'beginner' ? 0.9 : mode === 'expert' ? 1.1 : 1.0;
+  const effectiveRate = (typeof voiceRate === 'number' ? voiceRate : 1.0) * rateMultiplier;
+
   const utterance = new SpeechSynthesisUtterance(cleaned);
-  utterance.rate   = voiceRate;
+  utterance.rate   = Math.max(0.5, Math.min(2, effectiveRate));
   utterance.pitch  = 1.0;
   utterance.volume  = 1.0;
 
@@ -206,14 +211,19 @@ function stopSpeaking() {
 function getInstructionsText(options) {
   const includeMessage = options && options.includeMessage === true;
   const message = document.getElementById('message')?.textContent?.trim() || '';
-  const where    = document.getElementById('whereOutput')?.textContent || '';
-  const what     = document.getElementById('whatOutput')?.textContent || '';
+  const instruction = document.getElementById('instructionOutput')?.textContent?.trim() || '';
+  const where = document.getElementById('whereOutput')?.textContent || '';
+  const what = document.getElementById('whatOutput')?.textContent || '';
   const clothing = document.getElementById('clothingOutput')?.textContent || '';
 
   const parts = [];
   if (includeMessage && message && message !== '—') parts.push(message);
-  if (where && where !== '—') parts.push('Where: ' + where);
-  if (what && what !== '—') parts.push('How: ' + what);
+  if (instruction && instruction !== '—') {
+    parts.push(instruction);
+  } else {
+    if (where && where !== '—') parts.push('Where: ' + where);
+    if (what && what !== '—') parts.push('How: ' + what);
+  }
   if (clothing && clothing.trim()) parts.push('Clothing: ' + clothing);
 
   return parts.length ? parts.join('. ') + '.' : '';

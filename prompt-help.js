@@ -72,32 +72,32 @@
     16: 'Outer vulva only (outer lips); no penetration. Touch or mouth as agreed.',
     17: 'Penis and scrotum; touch or mouth as agreed. No penetration unless you both agree.',
     18: 'Skin just beside the genitals (e.g. where thigh meets groin, or just outside the most sensitive spots).',
-    19: 'The bony hip bones on the sides—the “handhold” area. Gripping or stroking.',
+    19: 'The bony hip bones on the sides, the “handhold” area. Gripping or stroking.',
     20: 'The person who rolled chooses any Phase 2 location you both want to revisit, or you reroll for a new one.'
   };
 
   // Phase 2 – action help (subset)
   tables[2].actionHelp = {
-    1: 'One hand, 20 strokes in one direction at a steady pace. Count if it helps; keep the rhythm even.',
-    2: 'One hand: 10 short, quick strokes, then 10 slow, long strokes. Then repeat that whole sequence once.',
-    3: 'Both hands: 15 light brushing strokes, then right away 15 steadier rubbing strokes on the same area.',
-    4: 'Mouth and tongue: 10 slow licks in straight lines, then 10 small circular licks. Stay on the location.',
-    5: 'One hand with lube: 20 smooth, gliding strokes in one continuous motion (no stopping).',
-    6: 'Fingers or a toy (e.g. dildo or vibrator): move slowly in and out (or back and forth) 15 times, with a short pause after every fifth.',
-    7: 'Genitals (e.g. grinding or thrusting): 20 slow movements, with one full second of stillness after every fourth. Penetration only if agreed.',
-    8: 'Use hands, mouth, feet, or genitals: 30 seconds at a steady rhythm, then 30 seconds faster, then 30 seconds back to the first steady rhythm.',
-    9: 'The giver uses two body parts (e.g. one hand + mouth): one does 10 slow strokes while the other does 10 quick; then swap which is slow and which is quick.',
-    10: 'Hands or genitals only: exactly 10 slow strokes, then 10 medium-speed, then 10 fast, in that order. No skipping.',
-    11: 'Three-step pattern: one slow movement, one medium, one fast. Repeat that pattern 10 times.',
-    12: 'With each of 10 strokes, add an exhale or a small sound (moan, sigh). Stay in rhythm.',
-    13: 'Pattern: three light touches, then one firmer touch. Repeat that sequence eight times.',
-    14: 'Stop-start: five movements in a row, then one full second of no movement. Repeat that cycle 10 times.',
-    15: 'For 60 seconds, use only small circles at a constant speed (hands, mouth, feet, or genitals).',
-    16: 'After every 10 movements, pause and check in: green = good, yellow = slow down, red = stop. Then do the next 10.',
-    17: 'Keep the same action, but every 10 movements make each movement a bit larger (longer or fuller).',
-    18: 'One set = five identical movements plus five quicker, shorter ones. Do four sets total.',
-    19: '30 tracing movements (about one second each), no pauses. Keep a steady pace.',
-    20: 'Four steps: slow stroke, medium stroke, fast stroke, brief stillness. Do that four-step sequence eight times in a row.'
+    1: 'One hand, 20 strokes in one direction at a steady pace for the turn. Count if it helps; keep the rhythm even.',
+    2: 'One hand: 10 short, quick strokes, then 10 slow, long strokes. Then repeat that whole sequence once for the turn.',
+    3: 'Both hands: 15 light brushing strokes, then right away 15 steadier rubbing strokes on the same area for the turn.',
+    4: 'Mouth and tongue: 10 slow licks in straight lines, then 10 small circular licks for the turn. Stay on the location.',
+    5: 'One hand with lube: 20 smooth, gliding strokes in one continuous motion for the turn (no stopping).',
+    6: 'Fingers or a toy (e.g. dildo or vibrator): move slowly in and out (or back and forth) 15 times for the turn, with a short pause after every fifth.',
+    7: 'Genitals (e.g. grinding or thrusting): 20 slow movements for the turn, with one full second of stillness after every fourth. Penetration only if agreed.',
+    8: 'Use hands, mouth, feet, or genitals: for the turn, 30 seconds at a steady rhythm, then 30 seconds faster, then 30 seconds back to the first steady rhythm.',
+    9: 'The giver uses two body parts (e.g. one hand + mouth): one does 10 slow strokes while the other does 10 quick for the turn; then swap which is slow and which is quick.',
+    10: 'Hands or genitals only: exactly 10 slow strokes, then 10 medium-speed, then 10 fast, in that order, for the turn. No skipping.',
+    11: 'Three-step pattern: one slow movement, one medium, one fast. Repeat that pattern 10 times for the turn.',
+    12: 'With each of 10 strokes for the turn, add an exhale or a small sound (moan, sigh). Stay in rhythm.',
+    13: 'Pattern: three light touches, then one firmer touch. Repeat that sequence eight times for the turn.',
+    14: 'Stop-start: five movements in a row, then one full second of no movement. Repeat that cycle 10 times for the turn.',
+    15: 'For the turn, for 60 seconds use only small circles at a constant speed (hands, mouth, feet, or genitals).',
+    16: 'For the turn, after every 10 movements, pause and check in: green = good, yellow = slow down, red = stop. Then do the next 10.',
+    17: 'Keep the same action for the turn, but every 10 movements make each movement a bit larger (longer or fuller).',
+    18: 'One set = five identical movements plus five quicker, shorter ones. Do four sets total for the turn.',
+    19: '30 tracing movements for the turn (about one second each), no pauses. Keep a steady pace.',
+    20: 'Four steps: slow stroke, medium stroke, fast stroke, brief stillness. Do that four-step sequence eight times in a row for the turn.'
   };
 
   // Phase 3 – position help
@@ -112,7 +112,7 @@
     8: 'Both standing (e.g. one against a wall). Alignment depends on height; use pillows or a step if needed.',
     9: 'Seated face-to-face with legs wrapped around each other. Very close; movement is often subtle and rocking.',
     10: 'One lies back on a bed, table, or counter; the other stands or kneels in front. Good for oral or penetration.',
-    11: 'Prone: one partner lies flat face-down, hips on the bed (unlike doggy—not on hands-and-knees); the other on top or at an angle. Good for penetration from behind or body-to-body contact.',
+    11: 'Prone: one partner lies flat face-down, hips on the bed (unlike doggy, not on hands-and-knees); the other on top or at an angle. Good for penetration from behind or body-to-body contact.',
     12: 'Head-to-toe so each person can give oral to the other at the same time. Coordination and comfort matter; adjust angles as needed.',
     13: 'Partners touch themselves and/or each other with hands only. No penetration unless you add it. Focus on rhythm and watching.',
     14: 'Body/genital rubbing and scissoring: bodies or genitals rubbing together with no penetration, in any configuration (e.g. thighs, stomachs, genitals; or legs interlocked). Build rhythm and pressure together.',
@@ -126,26 +126,26 @@
 
   // Phase 3 – modifier help
   tables[3].modifierHelp = {
-    1: 'Follow the clock: 60 seconds at a steady pace, then 15 seconds of complete stillness (no movement), then 45 seconds steady again. The pause is part of the game.',
-    2: 'Change tempo every 15 seconds: slow, then medium, then fast, then back to medium. One person can call the switches.',
-    3: 'Do 10 seconds of movement, then 5 seconds of pause. Repeat that 6 times. Clear stop-and-go structure.',
-    4: 'Pace wave: 20s medium, 20s faster, 20s medium, 20s faster, 10s medium. Build and ease in waves.',
-    5: 'For 90 seconds keep the intensity high but still under “too much.” No tempo change; ride the edge together. Ease off if anyone says so.',
-    6: 'For the whole round, add a 1-second pause after every 8 seconds of movement. Small breaks without losing the rhythm.',
-    7: 'For 30 seconds try to match your breathing (inhale and exhale together) while keeping the same rhythm. Then continue as you like.',
-    8: 'Count down from 30 out loud together (one number per second) while keeping the same rhythm. Adds focus and playfulness.',
-    9: 'No talking for 60 seconds; keep the same pace. After 60 seconds you can talk again. Nonverbal only during the minute.',
-    10: 'For 45 seconds only nonverbal sounds (moans, sighs, no words). Keep the rhythm steady. Then you can talk again.',
-    11: '30 seconds both with eyes closed, 30 seconds both open, 30 seconds your choice. Keep the pace the same throughout.',
-    12: 'For 60 seconds only hands may be used (no mouth, no toys). Keep tempo steady. Then you can add mouth or toys again.',
-    13: 'For 30 seconds neither partner uses hands (e.g. bodies only, or mouth/toy). Then 60 seconds with hands allowed. Same tempo idea throughout.',
-    14: 'One partner sets the rhythm for 20 seconds; the other copies it for 20 seconds. Then repeat once and swap who leads.',
-    15: 'Do “slow, slow, fast” over and over for 60 seconds, then 30 seconds of steady medium pace. Simple pattern, then steady.',
-    16: 'Keep the same tempo the whole time. For 45 seconds gradually make each movement larger (longer or fuller), then for 45 seconds gradually make them smaller again.',
-    17: 'If using a vibrator: 20s low, 20s medium, 20s high, then 30s at whoever’s preferred setting. Where to use it: agree together first.',
-    18: 'If using a vibrator: 30s steady, 30s pulse mode, 30s steady. Where to use it: agree together.',
-    19: 'One person keeps a steady rhythm with hands while the other adds a toy for 45 seconds; then swap roles for 45 seconds. Same tempo throughout.',
-    20: 'Structure: 20s build (slower), 20s peak (faster), 20s slow down, 10s stillness. Then continue at whatever pace you want; toy is optional.'
+    1: 'Follow the clock: for the turn, 60 seconds at a steady pace, then 15 seconds of complete stillness (no movement), then 45 seconds steady again. The pause is part of the game.',
+    2: 'Change tempo for the turn: every 15 seconds, slow, then medium, then fast, then back to medium. One person can call the switches.',
+    3: 'For the turn, do 10 seconds of movement, then 5 seconds of pause. Repeat that 6 times. Clear stop-and-go structure.',
+    4: 'Pace wave: for the turn, 20s medium, 20s faster, 20s medium, 20s faster, 10s medium. Build and ease in waves.',
+    5: 'For the turn, for 90 seconds keep the intensity high but still under “too much.” No tempo change; ride the edge together. Ease off if anyone says so.',
+    6: 'For the turn, add a 1-second pause after every 8 seconds of movement. Small breaks without losing the rhythm.',
+    7: 'For the turn, for 30 seconds try to match your breathing (inhale and exhale together) while keeping the same rhythm. Then continue as you like.',
+    8: 'For the turn, count down from 30 out loud together (one number per second) while keeping the same rhythm. Adds focus and playfulness.',
+    9: 'For the turn, no talking for 60 seconds; keep the same pace. After 60 seconds you can talk again. Nonverbal only during the minute.',
+    10: 'For the turn, for 45 seconds only nonverbal sounds (moans, sighs, no words). Keep the rhythm steady. Then you can talk again.',
+    11: 'For the turn, 30 seconds both with eyes closed, 30 seconds both open, 30 seconds your choice. Keep the pace the same throughout.',
+    12: 'For the turn, for 60 seconds only hands may be used (no mouth, no toys). Keep tempo steady. Then you can add mouth or toys again.',
+    13: 'For the turn, for 30 seconds neither partner uses hands (e.g. bodies only, or mouth/toy). Then 60 seconds with hands allowed. Same tempo idea throughout.',
+    14: 'For the turn, one partner sets the rhythm for 20 seconds; the other copies it for 20 seconds. Then repeat once and swap who leads.',
+    15: 'For the turn, do “slow, slow, fast” over and over for 60 seconds, then 30 seconds of steady medium pace. Simple pattern, then steady.',
+    16: 'For the turn, keep the same tempo the whole time. For 45 seconds gradually make each movement larger (longer or fuller), then for 45 seconds gradually make them smaller again.',
+    17: 'For the turn, if using a vibrator: 20s low, 20s medium, 20s high, then 30s at whoever’s preferred setting. Where to use it: agree together first.',
+    18: 'For the turn, if using a vibrator: 30s steady, 30s pulse mode, 30s steady. Where to use it: agree together.',
+    19: 'For the turn, one person keeps a steady rhythm with hands while the other adds a toy for 45 seconds; then swap roles for 45 seconds. Same tempo throughout.',
+    20: 'For the turn, structure: 20s build (slower), 20s peak (faster), 20s slow down, 10s stillness. Then continue at whatever pace you want; toy is optional.'
   };
 
   window.getPromptHelp = function (phase, type, roll) {
@@ -161,7 +161,12 @@
       return (p.locationHelp && p.locationHelp[r]) || (p.locations && p.locations[r]) || '';
     }
     if (type === 'what') {
-      if (phase === 3) return (p.modifierHelp && p.modifierHelp[r]) || (p.modifiers && p.modifiers[r]) || '';
+      if (phase === 3) {
+        if (typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(r)) {
+          return 'Vibrators not in use; this modifier is skipped.';
+        }
+        return (p.modifierHelp && p.modifierHelp[r]) || (p.modifiers && p.modifiers[r]) || '';
+      }
       return (p.actionHelp && p.actionHelp[r]) || (p.actions && p.actions[r]) || '';
     }
     return '';

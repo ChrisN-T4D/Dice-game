@@ -99,16 +99,22 @@ const removalPriority = {
   Bralette: 3, Teddy: 3, 'Garter belt': 3, Corset: 3, Babydoll: 3, Chemise: 3, Thong: 3, Boyshorts: 3, Bodysuit: 3
 };
 
-// Clothing d6 table - describes HOW to remove clothing
-// The program will determine WHAT item to remove
-// Format: verb phrase that can be followed by "their [item]"
+// Clothing d12 table - describes HOW to remove clothing
+// The program will determine WHAT item(s) to remove
+// Format: verb phrase that can be followed by "their [item]" (use {receiver} for partner name)
 const clothingTable = {
-  1: { prefix: 'No clothing change', fullText: 'all touch stays over whatever is currently being worn' },
+  1: { prefix: 'Remove', method: 'with your eyes closed' },
   2: { prefix: 'Remove', method: 'using only one hand' },
   3: { prefix: 'Remove', method: 'using only your mouth/teeth (no hands)' },
-  4: { prefix: 'Remove', method: 'while maintaining eye contact throughout' },
-  5: { prefix: 'Have the receiver keep their hands behind their back while you remove', method: '' },
-  6: { prefix: 'Critical: Remove 2 items', method: 'one with your hands, one with your mouth' }
+  4: { prefix: 'Remove', method: 'slowly, one button or strap at a time' },
+  5: { prefix: 'Guide {receiver}\'s hands in taking off', method: 'hand on top of hand' },
+  6: { prefix: 'Remove', method: 'using only your non-dominant hand' },
+  7: { prefix: 'Remove', method: 'without using your thumbs (fingertips only)' },
+  8: { prefix: 'Remove', method: 'while maintaining eye contact throughout' },
+  9: { prefix: 'Remove', method: 'as slowly as possible' },
+  10: { prefix: 'Remove', method: 'to the rhythm of the music' },
+  11: { prefix: 'Have {receiver} keep their eyes closed while you remove', method: '' },
+  12: { prefix: 'Critical: Remove 2 items', method: 'one with your hands, one with your mouth' }
 };
 
 // ----- Shared clothing removal logic -----

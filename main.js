@@ -40,6 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const rollCountDisplay = document.getElementById('rollCountDisplay');
   whereOutput = document.getElementById('whereOutput');
   whatOutput = document.getElementById('whatOutput');
+  instructionOutput = document.getElementById('instructionOutput');
   clothingOutput = document.getElementById('clothingOutput');
   messageBox = document.getElementById('message');
   const errorBox = document.getElementById('error');
@@ -390,6 +391,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const clothingMilestoneInput = document.getElementById('clothingMilestone');
   // Guided preset buttons are wired dynamically below
   const startGuidedBtn = document.getElementById('startGuided');
+  const continueAfterPhaseCheckInBtn = document.getElementById('continueAfterPhaseCheckInBtn');
   const nextTurnGuidedBtn = document.getElementById('nextTurnGuided');
   const rerollGuidedPromptBtn = document.getElementById('rerollGuidedPrompt');
   const pauseGuidedBtn = document.getElementById('pauseGuided');
@@ -477,6 +479,87 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!isGuidedMode) {
         showMode('guided-setup');
       }
+    });
+  }
+
+  // Prompt detail: Beginner = full + slower, Regular = some detail, Expert = short + more variety later
+  function updatePromptDetailUI() {
+    const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
+    const labels = { beginner: 'Full descriptions, slower pace', regular: 'Some detail, medium pace', expert: 'Short prompts, more variety later' };
+    updateSelectionDisplay('promptDetailSelection', labels[mode] || labels.regular);
+    document.querySelectorAll('.prompt-detail-btn').forEach((btn) => {
+      const m = btn.getAttribute('data-mode');
+      if (m === mode) {
+        btn.classList.add('primary');
+        btn.classList.remove('secondary');
+      } else {
+        btn.classList.remove('primary');
+        btn.classList.add('secondary');
+      }
+    });
+  }
+  document.querySelectorAll('.prompt-detail-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      if (mode && (mode === 'beginner' || mode === 'regular' || mode === 'expert')) {
+        promptDetailMode = mode;
+        updatePromptDetailUI();
+        saveState();
+      }
+    });
+  });
+
+  // Penetration preference: Prefer vs Minimal
+  function updatePenetrationPrefUI() {
+    const pref = typeof penetrationPreference !== 'undefined' ? penetrationPreference : 'prefer';
+    updateSelectionDisplay('penetrationPrefSelection', pref === 'minimal' ? 'Minimal (focus external)' : 'Prefer penetration');
+    document.querySelectorAll('.penetration-pref-btn').forEach((btn) => {
+      const p = btn.getAttribute('data-pref');
+      if (p === pref) {
+        btn.classList.add('primary');
+        btn.classList.remove('secondary');
+      } else {
+        btn.classList.remove('primary');
+        btn.classList.add('secondary');
+      }
+    });
+  }
+  document.querySelectorAll('.penetration-pref-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const pref = btn.getAttribute('data-pref');
+      if (pref && (pref === 'prefer' || pref === 'minimal')) {
+        penetrationPreference = pref;
+        updatePenetrationPrefUI();
+        saveState();
+      }
+    });
+  });
+
+  // Phase check-in between phases (Preferences)
+  const guidedPhaseCheckInCheckbox = document.getElementById('guidedPhaseCheckInEnabled');
+  function updatePhaseCheckInCheckbox() {
+    if (guidedPhaseCheckInCheckbox) {
+      guidedPhaseCheckInCheckbox.checked = typeof guidedPhaseCheckInEnabled !== 'undefined' ? guidedPhaseCheckInEnabled : false;
+    }
+  }
+  if (guidedPhaseCheckInCheckbox) {
+    guidedPhaseCheckInCheckbox.addEventListener('change', () => {
+      guidedPhaseCheckInEnabled = guidedPhaseCheckInCheckbox.checked;
+      saveState();
+    });
+  }
+
+  // Vibrators available (Phase 3 modifiers 17–19 are rerolled if off)
+  const vibratorsPresentCheckbox = document.getElementById('vibratorsPresent');
+  function updateVibratorsCheckbox() {
+    if (vibratorsPresentCheckbox) {
+      vibratorsPresentCheckbox.checked = typeof vibratorsPresent !== 'undefined' ? vibratorsPresent : true;
+    }
+  }
+  if (vibratorsPresentCheckbox) {
+    vibratorsPresentCheckbox.addEventListener('change', () => {
+      vibratorsPresent = vibratorsPresentCheckbox.checked;
+      saveState();
     });
   }
 
@@ -589,15 +672,25 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Phase distribution mode buttons
+  // Phase distribution mode buttons (labels shown in phaseDistSelection when selected)
   const phaseDistLabels = [
     'Equal (33/33/34%)',
     'Sensate-Focused (50/30/20%)',
     'A Little Spicy (30/40/30%)',
     'Intimacy-Focused (20/30/50%)',
-    'Quickie (10/30/60%)',
+    'Quickie (10/30/60%) · No critical rolls',
     'Custom percentages'
   ];
+
+  // Optional short descriptions for each preset (shown under phase dist selection when set)
+  const phaseDistDescriptions = {
+    equal: 'Balanced time across all three phases.',
+    phase1: 'More time in Phase 1 (sensate focus).',
+    phase2: 'More time in Phase 2 (a little spicy).',
+    phase3: 'More time in Phase 3 (intimacy-focused).',
+    quickie: 'Short session: 15 min, 1 min turns, double clothing removal. No critical rolls (no extended time).',
+    custom: ''
+  };
 
   // Map phase distribution presets to clothing interval (spicier = faster removal)
   const phaseDistClothingInterval = {
@@ -626,6 +719,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const label = phaseDistLabels[phaseDistValues.indexOf(val)];
     const isCustom = val === 'custom';
     updateSelectionDisplay('phaseDistSelection', label, !isCustom);
+    const descEl = document.getElementById('phaseDistDescription');
+    if (descEl) {
+      const desc = phaseDistDescriptions[val] || '';
+      descEl.textContent = desc;
+      descEl.style.display = desc ? 'block' : 'none';
+    }
     if (customPhaseInputs) customPhaseInputs.style.display = isCustom ? 'block' : 'none';
     if (!isCustom && percentError) percentError.style.display = 'none';
 
@@ -844,6 +943,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Guided mode control buttons
+  if (continueAfterPhaseCheckInBtn && typeof continueAfterPhaseCheckIn === 'function') {
+    continueAfterPhaseCheckInBtn.addEventListener('click', continueAfterPhaseCheckIn);
+  }
   if (nextTurnGuidedBtn) nextTurnGuidedBtn.addEventListener('click', skipToNextTurn);
   if (rerollGuidedPromptBtn && typeof rerollGuidedPrompt === 'function') {
     rerollGuidedPromptBtn.addEventListener('click', rerollGuidedPrompt);
@@ -1039,7 +1141,13 @@ window.addEventListener('DOMContentLoaded', () => {
   
   // Update clothing mode buttons to reflect enabled default
   updateClothingModeButtons();
-  
+
+  // Prompt detail mode (Beginner / Regular / Expert)
+  updatePromptDetailUI();
+  updatePenetrationPrefUI();
+  updatePhaseCheckInCheckbox();
+  updateVibratorsCheckbox();
+
   // Show clothing interval and extra time sections by default (clothing is enabled)
   if (clothingSetupInputs) clothingSetupInputs.style.display = 'block';
 
@@ -1051,7 +1159,25 @@ window.addEventListener('DOMContentLoaded', () => {
   if (stateLoaded) {
     // Hide landing modal - we have a real session to restore
     if (landingModal) landingModal.style.display = 'none';
-    
+
+    // Sync phase dist selection and description to restored mode
+    const phaseDistSel = document.getElementById('phaseDistSelection');
+    const phaseDistDescEl = document.getElementById('phaseDistDescription');
+    if (phaseDistSel && phaseDistributionMode) {
+      const idx = phaseDistValues.indexOf(phaseDistributionMode);
+      if (idx >= 0) phaseDistSel.textContent = phaseDistLabels[idx];
+      if (phaseDistDescEl) {
+        const desc = phaseDistDescriptions[phaseDistributionMode] || '';
+        phaseDistDescEl.textContent = desc;
+        phaseDistDescEl.style.display = desc ? 'block' : 'none';
+      }
+    }
+
+    updatePromptDetailUI();
+    updatePenetrationPrefUI();
+    updatePhaseCheckInCheckbox();
+    updateVibratorsCheckbox();
+
     notifyPhaseChange(phase);
     updatePhaseUI(phase, rollCount);
     
@@ -1081,7 +1207,8 @@ window.addEventListener('DOMContentLoaded', () => {
       
       if (whereOutput) whereOutput.textContent = '—';
       if (whatOutput) whatOutput.textContent = 'Session restored. Enter rolls to continue.';
-      
+      if (instructionOutput) instructionOutput.textContent = 'Session restored. Enter rolls to continue.';
+
       showToast('✓ Free Play session restored');
     }
   } else {
@@ -1096,9 +1223,10 @@ window.addEventListener('DOMContentLoaded', () => {
     notifyPhaseChange(phase);
     
     if (whereOutput) whereOutput.textContent = '—';
-    if (whatOutput) whatOutput.textContent = 'Enter both d20 rolls (and optional d6) to get your first prompt.';
+    if (whatOutput) whatOutput.textContent = 'Enter both rolls (1–20) and optional clothing roll (1–12) to get your first prompt.';
+    if (instructionOutput) instructionOutput.textContent = 'Enter both rolls (1–20) and optional clothing roll (1–12) to get your first prompt.';
   }
-  
+
   updateRollLabels(phase);
 
   // Partner names: restore into inputs and update all labels
@@ -1244,6 +1372,11 @@ window.addEventListener('DOMContentLoaded', () => {
   // Background music: track (none or 1–4) and volume; ducked when voice reads (see speech.js)
   window.backgroundMusicElement = null;
   window.backgroundMusicVolume = 0.5;
+  /** True if user has selected a music track (not "none"). Used so clothing roll 10 "to the rhythm of the music" only applies when music is on. */
+  window.isBackgroundMusicSelected = function () {
+    const el = document.getElementById('backgroundMusicSelect');
+    return el && el.value && el.value !== 'none';
+  };
   const bgMusicSelect = document.getElementById('backgroundMusicSelect');
   const bgMusicVolumeSlider = document.getElementById('backgroundMusicVolume');
   const bgMusicVolumeLabel = document.getElementById('backgroundMusicVolumeLabel');

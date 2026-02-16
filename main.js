@@ -184,6 +184,32 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Summary overlay toggle
+  // Hamburger menu for preferences (mobile-friendly slide-out)
+  const hamburgerMenuBtn = document.getElementById('hamburgerMenuBtn');
+  const preferencesSidebar = document.getElementById('preferencesSidebar');
+  const preferencesOverlay = document.getElementById('preferencesOverlay');
+  const closePreferencesBtn = document.getElementById('closePreferencesBtn');
+  
+  function openPreferencesMenu() {
+    if (preferencesSidebar) preferencesSidebar.classList.add('open');
+    if (preferencesOverlay) preferencesOverlay.classList.add('open');
+  }
+  
+  function closePreferencesMenu() {
+    if (preferencesSidebar) preferencesSidebar.classList.remove('open');
+    if (preferencesOverlay) preferencesOverlay.classList.remove('open');
+  }
+  
+  if (hamburgerMenuBtn) {
+    hamburgerMenuBtn.addEventListener('click', openPreferencesMenu);
+  }
+  if (closePreferencesBtn) {
+    closePreferencesBtn.addEventListener('click', closePreferencesMenu);
+  }
+  if (preferencesOverlay) {
+    preferencesOverlay.addEventListener('click', closePreferencesMenu);
+  }
+  
   const toggleSummaryBtn = document.getElementById('toggleSummary');
   const closeSummaryBtn = document.getElementById('closeSummary');
   const summaryOverlay = document.getElementById('summaryOverlay');
@@ -304,6 +330,11 @@ window.addEventListener('DOMContentLoaded', () => {
       if (guidedSetup) {
         guidedSetup.style.display = 'block';
         
+        // Reset wizard to step 1
+        wizardCurrentStep = 1;
+        showWizardStep(1);
+        syncWizardPartnerInputs();
+        
         // Make sure Start Guided Session button is directly inside guidedSetup, not inside a collapsible section
         const startBtn = document.getElementById('startGuided');
         if (startBtn) {
@@ -312,13 +343,6 @@ window.addEventListener('DOMContentLoaded', () => {
             guidedSetup.appendChild(startBtnContainer);
           }
         }
-        
-        setTimeout(() => {
-          const firstHeader = guidedSetup.querySelector('.collapsible-header');
-          if (firstHeader && !firstHeader.classList.contains('active')) {
-            firstHeader.click();
-          }
-        }, 100);
       }
       if (guidedStatus) guidedStatus.style.display = 'none';
       if (freePlayControls) freePlayControls.style.display = 'none';
@@ -341,7 +365,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (mode === 'guided-active') {
       // Guided mode is actively running - show status panel + output displays
       if (guidedSetup) guidedSetup.style.display = 'none';
-      if (guidedStatus) guidedStatus.style.display = 'flex';
+      if (guidedStatus) guidedStatus.style.display = 'block';
       if (freePlayControls) freePlayControls.style.display = 'none';
       if (actionTimerSection) actionTimerSection.style.display = 'none';
       // Hide free-play-only elements
@@ -390,6 +414,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const turn3Btn = document.getElementById('turn3');
   const turn5Btn = document.getElementById('turn5');
   const pause0Btn = document.getElementById('pause0');
+  const pause10Btn = document.getElementById('pause10');
+  const pause15Btn = document.getElementById('pause15');
+  const pause20Btn = document.getElementById('pause20');
   const pause30Btn = document.getElementById('pause30');
   const pause60Btn = document.getElementById('pause60');
   const pause90Btn = document.getElementById('pause90');
@@ -794,9 +821,9 @@ window.addEventListener('DOMContentLoaded', () => {
     updateSelectionDisplay('turnTimeSelection', `${val} minute${val === 1 ? '' : 's'}`, true);
   });
 
-  const pauseButtons = [pause0Btn, pause30Btn, pause60Btn, pause90Btn, pause120Btn];
-  const pauseValues = [0, 30, 60, 90, 120];
-  const pauseLabels = ['None', '30 seconds', '1 minute', '1.5 minutes', '2 minutes'];
+  const pauseButtons = [pause0Btn, pause10Btn, pause15Btn, pause20Btn, pause30Btn, pause60Btn, pause90Btn, pause120Btn];
+  const pauseValues = [0, 10, 15, 20, 30, 60, 90, 120];
+  const pauseLabels = ['None', '10 seconds', '15 seconds', '20 seconds', '30 seconds', '1 minute', '1.5 minutes', '2 minutes'];
   function updatePauseButtonStyles() { updateButtonGroup(pauseButtons, pauseValues, selectedPauseTime); }
 
   // Wire pause time buttons
@@ -860,18 +887,6 @@ window.addEventListener('DOMContentLoaded', () => {
     quickie: 1   // quickie: every turn
   };
 
-  function setClothingInterval(turns) {
-    if (clothingMilestoneInput) {
-      clothingMilestoneInput.value = turns;
-      const plural = turns === 1 ? 'turn' : 'turns';
-      if (clothingMilestoneValueLabel) clothingMilestoneValueLabel.textContent = `${turns} ${plural}`;
-      updateSelectionDisplay('clothingIntervalSelection', `Every ${turns} ${plural}`, false);
-    }
-  }
-
-  const quickieOptions = document.getElementById('quickieOptions');
-  const quickieDoubleCheckbox = document.getElementById('quickieDoubleClothing');
-
   wireButtonGroup(phaseDistButtons, phaseDistValues, (val) => {
     phaseDistributionMode = val;
     updatePhaseDistButtons();
@@ -887,34 +902,17 @@ window.addEventListener('DOMContentLoaded', () => {
     if (customPhaseInputs) customPhaseInputs.style.display = isCustom ? 'block' : 'none';
     if (!isCustom && percentError) percentError.style.display = 'none';
 
-    // Auto-adjust clothing interval for non-custom presets
-    if (!isCustom && phaseDistClothingInterval[val] !== undefined) {
-      setClothingInterval(phaseDistClothingInterval[val]);
-      // Quickie preset: set total time to 15 minutes, turn duration to 1 minute, and check double clothing
-      if (val === 'quickie') {
-        selectedTime = 15;
-        updateTimeButtonStyles();
-        updateSelectionDisplay('sessionTimeSelection', '15 minutes', true);
-        selectedTurnTime = 1;
-        updateTurnButtonStyles();
-        updateSelectionDisplay('turnTimeSelection', '1 minute', true);
-        if (quickieDoubleCheckbox) {
-          quickieDoubleCheckbox.checked = true;
-          quickieDoubleClothing = true;
-        }
-        saveState();
-      }
+    // Quickie preset: set total time to 15 minutes, turn duration to 1 minute
+    if (val === 'quickie') {
+      selectedTime = 15;
+      updateTimeButtonStyles();
+      updateSelectionDisplay('sessionTimeSelection', '15 minutes', true);
+      selectedTurnTime = 1;
+      updateTurnButtonStyles();
+      updateSelectionDisplay('turnTimeSelection', '1 minute', true);
+      saveState();
     }
   });
-
-  if (quickieDoubleCheckbox) {
-    // Restore saved state
-    quickieDoubleCheckbox.checked = quickieDoubleClothing || false;
-    quickieDoubleCheckbox.addEventListener('change', () => {
-      quickieDoubleClothing = quickieDoubleCheckbox.checked;
-      saveState();
-    });
-  }
 
   // Guided Mode Clothing system buttons
   let clothingMode = 'enabled';
@@ -989,8 +987,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Guided Mode Clothing preset buttons - wire both partners via data
-  const presetNames = ['Casual', 'DressCasual', 'Lingerie', 'LingerieLace', 'LingerieClassic', 'Minimal', 'FullOutfit', 'DateNight', 'LoungeWear', 'Athletic', 'Cozy', 'Layered'];
-  const presetKeys = ['casual', 'dressCasual', 'lingerie', 'lingerieLace', 'lingerieClassic', 'minimal', 'fullOutfit', 'dateNight', 'loungeWear', 'athletic', 'cozy', 'layered'];
+  const presetNames = ['Casual', 'DressCasual', 'Lingerie', 'LingerieLace', 'LingerieClassic', 'Minimal', 'FullOutfit', 'DateNight', 'LoungeWear', 'Athletic', 'Cozy', 'Layered', 'UndergarmentsMale', 'UndergarmentsFemale'];
+  const presetKeys = ['casual', 'dressCasual', 'lingerie', 'lingerieLace', 'lingerieClassic', 'minimal', 'fullOutfit', 'dateNight', 'loungeWear', 'athletic', 'cozy', 'layered', 'undergarmentsMale', 'undergarmentsFemale'];
 
   [1, 2].forEach(partner => {
     const containerId = `guidedClothingCheckboxContainerP${partner}`;
@@ -1059,28 +1057,54 @@ window.addEventListener('DOMContentLoaded', () => {
       let phasePercents = presetPhasePercents[phaseDistributionMode];
 
       if (!phasePercents) {
-        // Custom distribution - validate first
-        const p1 = parseInt(phase1PercentInput.value) || 0;
-        const p2 = parseInt(phase2PercentInput.value) || 0;
-        const p3 = parseInt(phase3PercentInput.value) || 0;
+        // Custom distribution - check wizard sliders first, then fallback to legacy inputs
+        const wizardP1Slider = document.getElementById('wizardPhase1Percent');
+        const wizardP2Slider = document.getElementById('wizardPhase2Percent');
+        const wizardP3Slider = document.getElementById('wizardPhase3Percent');
+        const wizardPercentError = document.getElementById('wizardPercentError');
+        
+        let p1, p2, p3;
+        if (wizardP1Slider && wizardP2Slider && wizardP3Slider) {
+          // Use wizard slider values
+          p1 = parseInt(wizardP1Slider.value) || 0;
+          p2 = parseInt(wizardP2Slider.value) || 0;
+          p3 = parseInt(wizardP3Slider.value) || 0;
+        } else {
+          // Fallback to legacy inputs
+          p1 = parseInt(phase1PercentInput?.value) || 0;
+          p2 = parseInt(phase2PercentInput?.value) || 0;
+          p3 = parseInt(phase3PercentInput?.value) || 0;
+        }
+        
         const total = p1 + p2 + p3;
 
         if (total !== 100) {
+          const errorMsg = `Total is ${total}%. Must equal 100%.`;
+          if (wizardPercentError) {
+            wizardPercentError.style.display = 'block';
+            wizardPercentError.textContent = errorMsg;
+          }
           if (percentError) {
             percentError.style.display = 'block';
-            percentError.textContent = `Total is ${total}%. Must equal 100%.`;
+            percentError.textContent = errorMsg;
           }
           return;
         }
         if (p1 === 0 && p2 === 0 && p3 === 0) {
+          const errorMsg = 'At least one phase must be more than 0%.';
+          if (wizardPercentError) {
+            wizardPercentError.style.display = 'block';
+            wizardPercentError.textContent = errorMsg;
+          }
           if (percentError) {
             percentError.style.display = 'block';
-            percentError.textContent = 'At least one phase must be more than 0%.';
+            percentError.textContent = errorMsg;
           }
           return;
         }
 
         phasePercents = [p1, p2, p3];
+        if (wizardPercentError) wizardPercentError.style.display = 'none';
         if (percentError) percentError.style.display = 'none';
       }
 
@@ -1097,9 +1121,9 @@ window.addEventListener('DOMContentLoaded', () => {
         window._guidedSetupP1Items = p1Items;
         window._guidedSetupP2Items = p2Items;
 
-        if (clothingMilestoneInput) {
-          milestoneInterval = parseInt(clothingMilestoneInput.value) || 3;
-        }
+        // Auto-calculate clothing removal interval based on Phase 1 & 2 turn estimates
+        // This will be calculated in startGuidedMode based on total clothing and estimated turns
+        milestoneInterval = 3; // Placeholder, will be recalculated
       }
 
       // Switch to guided-active mode (shows status + output, hides setup + roll inputs)
@@ -1325,7 +1349,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateSelectionDisplay('pauseTimeSelection', '30 seconds');
   updateSelectionDisplay('phaseDistSelection', 'Equal (33/33/34%)');
   updateSelectionDisplay('clothingSelection', 'Enabled - Configure below');
-  updateSelectionDisplay('clothingIntervalSelection', 'Every 3 turns');
+  // Clothing interval selection removed - auto-calculated now
   updateSelectionDisplay('clothingExtraTimeSelection', '30 seconds');
   
   // Update clothing mode buttons to reflect enabled default
@@ -1585,6 +1609,21 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   
   setupVoiceSelects();
+
+  // Voice speed slider
+  const voiceSpeedSlider = document.getElementById('voiceSpeedSlider');
+  const voiceSpeedDisplay = document.getElementById('voiceSpeedDisplay');
+  if (voiceSpeedSlider) {
+    const rate = typeof getVoiceRate === 'function' ? getVoiceRate() : 1.0;
+    voiceSpeedSlider.value = rate;
+    if (voiceSpeedDisplay) voiceSpeedDisplay.textContent = rate.toFixed(1) + '×';
+    
+    voiceSpeedSlider.addEventListener('input', () => {
+      const val = parseFloat(voiceSpeedSlider.value);
+      if (typeof setVoiceRate === 'function') setVoiceRate(val);
+      if (voiceSpeedDisplay) voiceSpeedDisplay.textContent = val.toFixed(1) + '×';
+    });
+  }
 
   // Background image: none or one of two; fades into phase colors
   const bgImageSelect = document.getElementById('backgroundImageSelect');
@@ -1878,4 +1917,887 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Initialize voice toggle buttons from saved preference
   if (typeof updateVoiceButtons === 'function') updateVoiceButtons();
+  
+  // Wizard-style setup navigation
+  let wizardCurrentStep = 1;
+  const wizardTotalSteps = 10;
+  const wizardSteps = [];
+  const wizardSelections = {
+    phaseDist: null,
+    sessionTime: null,
+    turnTime: null,
+    pauseTime: null,
+    clothingEnabled: null,
+    clothingExtraTime: null
+  };
+  
+  // Initialize wizard steps array
+  for (let i = 1; i <= wizardTotalSteps; i++) {
+    const step = document.querySelector(`.wizard-step[data-step="${i}"]`);
+    if (step) wizardSteps.push(step);
+  }
+  
+  function updateWizardProgress() {
+    const progressText = document.getElementById('wizardProgressText');
+    const progressFill = document.getElementById('wizardProgressFill');
+    const percent = (wizardCurrentStep / wizardTotalSteps) * 100;
+    
+    if (progressText) {
+      progressText.textContent = `Step ${wizardCurrentStep} of ${wizardTotalSteps}`;
+    }
+    if (progressFill) {
+      progressFill.style.width = percent + '%';
+    }
+  }
+  
+  function showWizardStep(stepNum) {
+    wizardSteps.forEach((step, index) => {
+      if (index + 1 === stepNum) {
+        step.classList.add('active');
+      } else {
+        step.classList.remove('active');
+      }
+    });
+    wizardCurrentStep = stepNum;
+    updateWizardProgress();
+    
+    // Sync partner inputs when showing partner setup steps
+    if (stepNum === 1 || stepNum === 2) {
+      syncWizardPartnerInputs();
+    }
+    
+    // When showing step 6 (pause), if Quickie is selected, show a note that 15 min and 1 min were auto-selected
+    if (stepNum === 6 && wizardSelections.phaseDist === 'quickie') {
+      const stepContent = document.querySelector(`.wizard-step[data-step="6"] .wizard-step-content`);
+      if (stepContent) {
+        // Check if note already exists
+        let quickieNote = stepContent.querySelector('.quickie-auto-select-note');
+        if (!quickieNote) {
+          quickieNote = document.createElement('div');
+          quickieNote.className = 'quickie-auto-select-note';
+          quickieNote.style.cssText = 'text-align: center; padding: 0.75rem; margin-bottom: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 0.5rem; font-size: 0.85rem; color: #93c5fd;';
+          quickieNote.textContent = 'Quickie preset: 15 minutes total time and 1 minute turns are already selected.';
+          stepContent.insertBefore(quickieNote, stepContent.firstChild);
+        }
+      }
+    } else {
+      // Remove note if it exists when not on step 6 or Quickie not selected
+      document.querySelectorAll('.quickie-auto-select-note').forEach(note => note.remove());
+    }
+    
+    // Update back button state
+    const backBtn = document.querySelector(`#wizardBack${stepNum}`);
+    if (backBtn) {
+      backBtn.disabled = stepNum === 1;
+    }
+  }
+  
+  function goToNextStep() {
+    // Handle conditional steps
+    if (wizardCurrentStep === 3 && wizardSelections.phaseDist === 'quickie') {
+      // Skip total session time (step 4) and turn duration (step 5) when Quickie is selected
+      wizardCurrentStep = 6; // Skip to pause between turns
+    } else if (wizardCurrentStep === 7 && wizardSelections.clothingEnabled === 'disabled') {
+      // Skip clothing steps if disabled, go to clothing extra time
+      wizardCurrentStep = 10; // Skip steps 8 and 9
+    } else if (wizardCurrentStep < wizardTotalSteps) {
+      wizardCurrentStep++;
+    }
+    
+    // Populate clothing checkboxes when entering clothing steps
+    if (wizardCurrentStep === 8 || wizardCurrentStep === 9) {
+      setTimeout(() => populateWizardClothingCheckboxes(), 100);
+    }
+    
+    showWizardStep(wizardCurrentStep);
+  }
+  
+  function goToPreviousStep() {
+    // Handle conditional steps when going back
+    if (wizardCurrentStep === 6 && wizardSelections.phaseDist === 'quickie') {
+      // Skip back over total session time (step 4) and turn duration (step 5) when Quickie is selected
+      wizardCurrentStep = 3; // Go back to phase distribution
+    } else if (wizardCurrentStep === 10 && wizardSelections.clothingEnabled === 'disabled') {
+      wizardCurrentStep = 7; // Skip back over clothing steps
+    } else if (wizardCurrentStep > 1) {
+      wizardCurrentStep--;
+    }
+    
+    // Populate clothing checkboxes when entering clothing steps
+    if (wizardCurrentStep === 8 || wizardCurrentStep === 9) {
+      setTimeout(() => populateWizardClothingCheckboxes(), 100);
+    }
+    
+    showWizardStep(wizardCurrentStep);
+  }
+  
+  // Wire up wizard option buttons to sync with existing logic
+  document.querySelectorAll('.wizard-option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const step = parseInt(btn.dataset.step);
+      const value = btn.dataset.value;
+      
+      // Remove active state from other buttons in this step
+      document.querySelectorAll(`.wizard-option-btn[data-step="${step}"]`).forEach(b => {
+        b.classList.remove('primary');
+        b.classList.add('secondary');
+      });
+      
+      // Mark this button as selected
+      btn.classList.remove('secondary');
+      btn.classList.add('primary');
+      
+      // Sync with existing setup logic
+      if (step === 3) {
+        wizardSelections.phaseDist = value;
+        // Trigger existing phase distribution logic
+        const phaseDistMap = { equal: 0, phase1: 1, phase2: 2, phase3: 3, quickie: 4, custom: 5 };
+        const idx = phaseDistMap[value];
+        if (idx !== undefined && phaseDistButtons && phaseDistButtons[idx]) {
+          phaseDistButtons[idx].click();
+        }
+        // Handle custom phase distribution
+        if (value === 'custom') {
+          const customInputs = document.getElementById('wizardCustomPhaseInputs');
+          if (customInputs) customInputs.style.display = 'block';
+          // Initialize wizard sliders
+          initializeWizardPhaseSliders();
+        } else {
+          const customInputs = document.getElementById('wizardCustomPhaseInputs');
+          if (customInputs) customInputs.style.display = 'none';
+        }
+        
+        // Quickie preset: auto-select total time (15 min) and turn duration (1 min)
+        if (value === 'quickie') {
+          // Auto-select 15 minutes total time
+          wizardSelections.sessionTime = 15;
+          selectedTime = 15;
+          updateTimeButtonStyles();
+          updateSelectionDisplay('sessionTimeSelection', '15 minutes', true);
+          
+          // Auto-select 1 minute turn duration
+          wizardSelections.turnTime = 1;
+          selectedTurnTime = 1;
+          updateTurnButtonStyles();
+          updateSelectionDisplay('turnTimeSelection', '1 minute', true);
+          
+          // Update wizard buttons visually
+          document.querySelectorAll('.wizard-option-btn[data-step="4"]').forEach(b => {
+            if (b.dataset.value === '15') {
+              b.classList.remove('secondary');
+              b.classList.add('primary');
+            } else {
+              b.classList.remove('primary');
+              b.classList.add('secondary');
+            }
+          });
+          
+          document.querySelectorAll('.wizard-option-btn[data-step="5"]').forEach(b => {
+            if (b.dataset.value === '1') {
+              b.classList.remove('secondary');
+              b.classList.add('primary');
+            } else {
+              b.classList.remove('primary');
+              b.classList.add('secondary');
+            }
+          });
+          
+          saveState();
+        }
+      } else if (step === 4) {
+        wizardSelections.sessionTime = parseInt(value);
+        selectedTime = wizardSelections.sessionTime;
+        updateTimeButtonStyles();
+        updateSelectionDisplay('sessionTimeSelection', `${selectedTime} minutes`, true);
+      } else if (step === 5) {
+        wizardSelections.turnTime = parseInt(value);
+        selectedTurnTime = wizardSelections.turnTime;
+        updateTurnButtonStyles();
+        updateSelectionDisplay('turnTimeSelection', `${selectedTurnTime} minute${selectedTurnTime > 1 ? 's' : ''}`, true);
+      } else if (step === 6) {
+        wizardSelections.pauseTime = parseInt(value);
+        selectedPauseTime = wizardSelections.pauseTime;
+        updatePauseButtonStyles();
+        const pauseLabel = wizardSelections.pauseTime === 0 ? 'None' : 
+          wizardSelections.pauseTime === 10 ? '10 seconds' :
+          wizardSelections.pauseTime === 15 ? '15 seconds' :
+          wizardSelections.pauseTime === 20 ? '20 seconds' :
+          wizardSelections.pauseTime === 30 ? '30 seconds' :
+          wizardSelections.pauseTime === 60 ? '1 minute' :
+          wizardSelections.pauseTime === 90 ? '1.5 minutes' : '2 minutes';
+        updateSelectionDisplay('pauseTimeSelection', pauseLabel, true);
+      } else if (step === 7) {
+        wizardSelections.clothingEnabled = value;
+        clothingMode = value === 'enabled' ? 'enabled' : 'disabled';
+        updateClothingModeButtons();
+        updateSelectionDisplay('clothingSelection', value === 'enabled' ? 'Enabled - Configure below' : 'Disabled', false);
+        if (clothingSetupInputs) {
+          clothingSetupInputs.style.display = value === 'enabled' ? 'block' : 'none';
+        }
+      } else if (step === 10) {
+        wizardSelections.clothingExtraTime = parseInt(value);
+        selectedClothingRemovalTime = wizardSelections.clothingExtraTime;
+        const extraTimeLabel = wizardSelections.clothingExtraTime === 0 ? 'None' :
+          wizardSelections.clothingExtraTime === 30 ? '30 seconds' :
+          wizardSelections.clothingExtraTime === 60 ? '1 minute' : '1.5 minutes';
+        updateSelectionDisplay('clothingExtraTimeSelection', extraTimeLabel, true);
+      }
+      
+      saveState();
+      
+      // Enable next button
+      const nextBtn = document.querySelector(`#wizardNext${step}`);
+      if (nextBtn) {
+        nextBtn.disabled = false;
+      }
+    });
+  });
+  
+  // Wire up wizard partner name inputs
+  const wizardPartnerName1 = document.getElementById('wizardPartnerName1');
+  const wizardPartnerName2 = document.getElementById('wizardPartnerName2');
+  if (wizardPartnerName1) {
+    wizardPartnerName1.addEventListener('input', (e) => {
+      partnerName1 = e.target.value || 'Partner 1';
+      if (partnerName1Input) partnerName1Input.value = partnerName1;
+      updatePartnerNameDisplays();
+      saveState();
+    });
+    // Sync with existing input
+    wizardPartnerName1.addEventListener('focus', () => {
+      if (partnerName1Input && partnerName1Input.value) {
+        wizardPartnerName1.value = partnerName1Input.value;
+      }
+    });
+  }
+  if (wizardPartnerName2) {
+    wizardPartnerName2.addEventListener('input', (e) => {
+      partnerName2 = e.target.value || 'Partner 2';
+      if (partnerName2Input) partnerName2Input.value = partnerName2;
+      updatePartnerNameDisplays();
+      saveState();
+    });
+    // Sync with existing input
+    wizardPartnerName2.addEventListener('focus', () => {
+      if (partnerName2Input && partnerName2Input.value) {
+        wizardPartnerName2.value = partnerName2Input.value;
+      }
+    });
+  }
+  
+  // Wire up wizard color dots
+  document.querySelectorAll('.wizard-color-dot').forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const partner = parseInt(dot.getAttribute('data-partner'), 10);
+      const color = dot.getAttribute('data-color');
+      
+      // Update selected state
+      document.querySelectorAll(`.wizard-color-dot[data-partner="${partner}"]`).forEach(d => {
+        d.classList.remove('selected');
+      });
+      dot.classList.add('selected');
+      
+      // Update global state
+      if (partner === 1) {
+        partnerColor1 = color;
+        // Sync with existing color dots
+        document.querySelectorAll('#colorPresetsP1 .color-dot').forEach(d => {
+          if (d.getAttribute('data-color') === color) {
+            d.classList.add('selected');
+          } else {
+            d.classList.remove('selected');
+          }
+        });
+      } else {
+        partnerColor2 = color;
+        // Sync with existing color dots
+        document.querySelectorAll('#colorPresetsP2 .color-dot').forEach(d => {
+          if (d.getAttribute('data-color') === color) {
+            d.classList.add('selected');
+          } else {
+            d.classList.remove('selected');
+          }
+        });
+      }
+      
+      applyPartnerColors();
+      saveState();
+    });
+  });
+  
+  // Wire up wizard anatomy buttons
+  document.querySelectorAll('.wizard-anatomy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const partner = parseInt(btn.getAttribute('data-partner'), 10);
+      const value = btn.getAttribute('data-value');
+      
+      // Update button styles
+      document.querySelectorAll(`.wizard-anatomy-btn[data-partner="${partner}"]`).forEach(b => {
+        b.classList.remove('primary');
+        b.classList.add('secondary');
+      });
+      btn.classList.remove('secondary');
+      btn.classList.add('primary');
+      
+      // Update global state
+      if (partner === 1) {
+        partnerAnatomy1 = value;
+        // Sync with existing anatomy buttons
+        document.querySelectorAll('.anatomy-btn[data-partner="1"]').forEach(b => {
+          if (b.getAttribute('data-value') === value) {
+            b.classList.remove('secondary');
+            b.classList.add('primary');
+          } else {
+            b.classList.remove('primary');
+            b.classList.add('secondary');
+          }
+        });
+      } else {
+        partnerAnatomy2 = value;
+        // Sync with existing anatomy buttons
+        document.querySelectorAll('.anatomy-btn[data-partner="2"]').forEach(b => {
+          if (b.getAttribute('data-value') === value) {
+            b.classList.remove('secondary');
+            b.classList.add('primary');
+          } else {
+            b.classList.remove('primary');
+            b.classList.add('secondary');
+          }
+        });
+      }
+      
+      saveState();
+    });
+  });
+  
+  // Sync wizard partner inputs when showing wizard steps 1 and 2
+  function syncWizardPartnerInputs() {
+    if (wizardPartnerName1 && partnerName1Input) {
+      wizardPartnerName1.value = partnerName1Input.value || '';
+    }
+    if (wizardPartnerName2 && partnerName2Input) {
+      wizardPartnerName2.value = partnerName2Input.value || '';
+    }
+    
+    // Sync color dots
+    document.querySelectorAll('.wizard-color-dot[data-partner="1"]').forEach(dot => {
+      if (dot.getAttribute('data-color') === partnerColor1) {
+        dot.classList.add('selected');
+      } else {
+        dot.classList.remove('selected');
+      }
+    });
+    document.querySelectorAll('.wizard-color-dot[data-partner="2"]').forEach(dot => {
+      if (dot.getAttribute('data-color') === partnerColor2) {
+        dot.classList.add('selected');
+      } else {
+        dot.classList.remove('selected');
+      }
+    });
+    
+    // Sync anatomy buttons
+    document.querySelectorAll('.wizard-anatomy-btn[data-partner="1"]').forEach(btn => {
+      if (btn.getAttribute('data-value') === (partnerAnatomy1 || 'penis')) {
+        btn.classList.remove('secondary');
+        btn.classList.add('primary');
+      } else {
+        btn.classList.remove('primary');
+        btn.classList.add('secondary');
+      }
+    });
+    document.querySelectorAll('.wizard-anatomy-btn[data-partner="2"]').forEach(btn => {
+      if (btn.getAttribute('data-value') === (partnerAnatomy2 || 'vulva')) {
+        btn.classList.remove('secondary');
+        btn.classList.add('primary');
+      } else {
+        btn.classList.remove('primary');
+        btn.classList.add('secondary');
+      }
+    });
+  }
+  
+  // Wire up next/back buttons
+  for (let i = 1; i <= wizardTotalSteps; i++) {
+    const nextBtn = document.getElementById(`wizardNext${i}`);
+    const backBtn = document.getElementById(`wizardBack${i}`);
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (i === wizardTotalSteps) {
+          // Final step - start session
+          if (typeof startGuidedBtn !== 'undefined' && startGuidedBtn) {
+            startGuidedBtn.click();
+          }
+        } else {
+          goToNextStep();
+        }
+      });
+    }
+    
+    if (backBtn) {
+      backBtn.addEventListener('click', goToPreviousStep);
+    }
+  }
+  
+  // Helper to populate clothing checkboxes in wizard steps
+  function populateWizardClothingCheckboxes() {
+    // Ensure source containers are populated first
+    if (typeof populateGuidedClothingCheckboxes === 'function') {
+      populateGuidedClothingCheckboxes(1);
+      populateGuidedClothingCheckboxes(2);
+    }
+    
+    // Get selected items from source containers
+    const sourceP1 = document.getElementById('guidedClothingCheckboxContainerP1');
+    const sourceP2 = document.getElementById('guidedClothingCheckboxContainerP2');
+    const wizardP1 = document.getElementById('wizardClothingCheckboxContainerP1');
+    const wizardP2 = document.getElementById('wizardClothingCheckboxContainerP2');
+    
+    // Get selected items from source containers
+    let p1Selected = [];
+    let p2Selected = [];
+    if (sourceP1) {
+      p1Selected = Array.from(sourceP1.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    }
+    if (sourceP2) {
+      p2Selected = Array.from(sourceP2.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    }
+    
+    // Populate wizard containers directly using the clothing function
+    if (wizardP1 && typeof populateClothingCheckboxes === 'function') {
+      populateClothingCheckboxes('wizardClothingCheckboxContainerP1', 'wizard_p1', p1Selected);
+    }
+    if (wizardP2 && typeof populateClothingCheckboxes === 'function') {
+      populateClothingCheckboxes('wizardClothingCheckboxContainerP2', 'wizard_p2', p2Selected);
+    }
+    
+    // Update preset button states after populating
+    setTimeout(() => {
+      if (typeof updatePresetButtonStates === 'function') {
+        updatePresetButtonStates();
+      }
+    }, 50);
+    
+    // Wire up wizard clothing preset buttons - directly populate instead of triggering source buttons
+    const presetMap = {
+      'wizardP1PresetCasual': { key: 'casual', partner: 1 },
+      'wizardP1PresetDressCasual': { key: 'dressCasual', partner: 1 },
+      'wizardP1PresetLingerie': { key: 'lingerie', partner: 1 },
+      'wizardP1PresetMinimal': { key: 'minimal', partner: 1 },
+      'wizardP1PresetFullOutfit': { key: 'fullOutfit', partner: 1 },
+      'wizardP1PresetDateNight': { key: 'dateNight', partner: 1 },
+      'wizardP1PresetLoungeWear': { key: 'loungeWear', partner: 1 },
+      'wizardP1PresetLingerieLace': { key: 'lingerieLace', partner: 1 },
+      'wizardP1PresetLingerieClassic': { key: 'lingerieClassic', partner: 1 },
+      'wizardP1PresetAthletic': { key: 'athletic', partner: 1 },
+      'wizardP1PresetCozy': { key: 'cozy', partner: 1 },
+      'wizardP1PresetLayered': { key: 'layered', partner: 1 },
+      'wizardP1PresetUndergarmentsMale': { key: 'undergarmentsMale', partner: 1 },
+      'wizardP1PresetUndergarmentsFemale': { key: 'undergarmentsFemale', partner: 1 },
+      'wizardP2PresetCasual': { key: 'casual', partner: 2 },
+      'wizardP2PresetDressCasual': { key: 'dressCasual', partner: 2 },
+      'wizardP2PresetLingerie': { key: 'lingerie', partner: 2 },
+      'wizardP2PresetMinimal': { key: 'minimal', partner: 2 },
+      'wizardP2PresetFullOutfit': { key: 'fullOutfit', partner: 2 },
+      'wizardP2PresetDateNight': { key: 'dateNight', partner: 2 },
+      'wizardP2PresetLoungeWear': { key: 'loungeWear', partner: 2 },
+      'wizardP2PresetLingerieLace': { key: 'lingerieLace', partner: 2 },
+      'wizardP2PresetLingerieClassic': { key: 'lingerieClassic', partner: 2 },
+      'wizardP2PresetAthletic': { key: 'athletic', partner: 2 },
+      'wizardP2PresetCozy': { key: 'cozy', partner: 2 },
+      'wizardP2PresetLayered': { key: 'layered', partner: 2 },
+      'wizardP2PresetUndergarmentsMale': { key: 'undergarmentsMale', partner: 2 },
+      'wizardP2PresetUndergarmentsFemale': { key: 'undergarmentsFemale', partner: 2 }
+    };
+    
+    Object.keys(presetMap).forEach(wizardId => {
+      const wizardBtn = document.getElementById(wizardId);
+      if (wizardBtn) {
+        // Check if already wired (has data attribute)
+        if (wizardBtn.dataset.wired === 'true') return;
+        
+        const presetInfo = presetMap[wizardId];
+        wizardBtn.addEventListener('click', () => {
+          // Get preset items directly from clothingPresets
+          const presetItems = typeof clothingPresets !== 'undefined' && clothingPresets[presetInfo.key] 
+            ? clothingPresets[presetInfo.key] 
+            : [];
+          
+          if (presetItems.length > 0) {
+            // Remove selected state from all preset buttons for this partner
+            const partnerPresetPrefix = presetInfo.partner === 1 ? 'wizardP1Preset' : 'wizardP2Preset';
+            document.querySelectorAll(`[id^="${partnerPresetPrefix}"]`).forEach(btn => {
+              btn.classList.remove('preset-selected');
+            });
+            
+            // Add selected state to clicked button
+            wizardBtn.classList.add('preset-selected');
+            
+            // Populate source container first
+            if (typeof populateGuidedClothingCheckboxes === 'function') {
+              populateGuidedClothingCheckboxes(presetInfo.partner, presetItems);
+            }
+            
+            // Then directly populate wizard container
+            const wizardContainerId = presetInfo.partner === 1 
+              ? 'wizardClothingCheckboxContainerP1' 
+              : 'wizardClothingCheckboxContainerP2';
+            const wizardPrefix = presetInfo.partner === 1 ? 'wizard_p1' : 'wizard_p2';
+            
+            if (typeof populateClothingCheckboxes === 'function') {
+              populateClothingCheckboxes(wizardContainerId, wizardPrefix, presetItems);
+            }
+          }
+        });
+        
+        // Mark as wired to prevent duplicate listeners
+        wizardBtn.dataset.wired = 'true';
+      }
+    });
+    
+    // Update preset button selected states based on current selections
+    function updatePresetButtonStates() {
+      [1, 2].forEach(partner => {
+        const containerId = partner === 1 ? 'wizardClothingCheckboxContainerP1' : 'wizardClothingCheckboxContainerP2';
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const selectedItems = Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+          .map(cb => cb.value);
+        
+        // Clear all selected states first
+        const prefix = partner === 1 ? 'wizardP1Preset' : 'wizardP2Preset';
+        document.querySelectorAll(`[id^="${prefix}"]`).forEach(btn => {
+          btn.classList.remove('preset-selected');
+        });
+        
+        if (selectedItems.length === 0) {
+          return;
+        }
+        
+        // Check which preset matches the current selection
+        const presetKeyToButtonId = {
+          'casual': 'Casual',
+          'dressCasual': 'DressCasual',
+          'lingerie': 'Lingerie',
+          'lingerieLace': 'LingerieLace',
+          'lingerieClassic': 'LingerieClassic',
+          'minimal': 'Minimal',
+          'fullOutfit': 'FullOutfit',
+          'dateNight': 'DateNight',
+          'loungeWear': 'LoungeWear',
+          'athletic': 'Athletic',
+          'cozy': 'Cozy',
+          'layered': 'Layered',
+          'undergarmentsMale': 'UndergarmentsMale',
+          'undergarmentsFemale': 'UndergarmentsFemale'
+        };
+        
+        Object.keys(presetKeyToButtonId).forEach(key => {
+          if (typeof clothingPresets !== 'undefined' && clothingPresets[key]) {
+            const presetItems = clothingPresets[key];
+            // Check if arrays match (same length and all items present)
+            const matches = presetItems.length === selectedItems.length && 
+              presetItems.every(item => selectedItems.includes(item)) &&
+              selectedItems.every(item => presetItems.includes(item));
+            
+            if (matches) {
+              const btnId = `wizardP${partner}Preset${presetKeyToButtonId[key]}`;
+              const btn = document.getElementById(btnId);
+              if (btn) {
+                btn.classList.add('preset-selected');
+              }
+            }
+          }
+        });
+      });
+    }
+    
+    // Wire up clear all buttons
+    const wizardP1Clear = document.getElementById('wizardP1ClearAll');
+    const wizardP2Clear = document.getElementById('wizardP2ClearAll');
+    if (wizardP1Clear && wizardP1Clear.dataset.wired !== 'true') {
+      wizardP1Clear.addEventListener('click', () => {
+        // Clear source container
+        const sourceClear = document.getElementById('guidedP1ClearAll');
+        if (sourceClear) sourceClear.click();
+        
+        // Clear wizard container directly
+        if (typeof clearClothingSelections === 'function') {
+          clearClothingSelections('wizardClothingCheckboxContainerP1');
+        }
+        
+        // Clear preset button selected states
+        document.querySelectorAll('[id^="wizardP1Preset"]').forEach(btn => {
+          btn.classList.remove('preset-selected');
+        });
+      });
+      wizardP1Clear.dataset.wired = 'true';
+    }
+    if (wizardP2Clear && wizardP2Clear.dataset.wired !== 'true') {
+      wizardP2Clear.addEventListener('click', () => {
+        // Clear source container
+        const sourceClear = document.getElementById('guidedP2ClearAll');
+        if (sourceClear) sourceClear.click();
+        
+        // Clear wizard container directly
+        if (typeof clearClothingSelections === 'function') {
+          clearClothingSelections('wizardClothingCheckboxContainerP2');
+        }
+        
+        // Clear preset button selected states
+        document.querySelectorAll('[id^="wizardP2Preset"]').forEach(btn => {
+          btn.classList.remove('preset-selected');
+        });
+      });
+      wizardP2Clear.dataset.wired = 'true';
+    }
+    
+    // Wire up checkbox changes in wizard to sync back to source and update preset states
+    if (wizardP1) {
+      wizardP1.querySelectorAll('input[type="checkbox"]').forEach(wizardCb => {
+        wizardCb.addEventListener('change', () => {
+          // Update preset button states when checkboxes change
+          setTimeout(() => updatePresetButtonStates(), 50);
+          // Find corresponding checkbox in source and sync
+          const itemName = wizardCb.value;
+          const sourceCb = sourceP1?.querySelector(`input[value="${itemName}"]`);
+          if (sourceCb) {
+            sourceCb.checked = wizardCb.checked;
+            const sourceLabel = sourceCb.closest('label');
+            if (sourceLabel) {
+              sourceLabel.classList.toggle('selected', wizardCb.checked);
+            }
+          }
+        });
+      });
+    }
+    
+    if (wizardP2) {
+      wizardP2.querySelectorAll('input[type="checkbox"]').forEach(wizardCb => {
+        wizardCb.addEventListener('change', () => {
+          // Update preset button states when checkboxes change
+          setTimeout(() => updatePresetButtonStates(), 50);
+          // Find corresponding checkbox in source and sync
+          const itemName = wizardCb.value;
+          const sourceCb = sourceP2?.querySelector(`input[value="${itemName}"]`);
+          if (sourceCb) {
+            sourceCb.checked = wizardCb.checked;
+            const sourceLabel = sourceCb.closest('label');
+            if (sourceLabel) {
+              sourceLabel.classList.toggle('selected', wizardCb.checked);
+            }
+          }
+        });
+      });
+    }
+  }
+  
+  // Initialize wizard when guided setup is shown
+  const originalShowMode = window.showMode;
+  if (typeof showMode === 'function') {
+    window.showMode = function(mode) {
+      originalShowMode(mode);
+      if (mode === 'guided-setup') {
+        wizardCurrentStep = 1;
+        showWizardStep(1);
+        // Reset selections
+        Object.keys(wizardSelections).forEach(key => wizardSelections[key] = null);
+        // Reset button states
+        document.querySelectorAll('.wizard-option-btn').forEach(btn => {
+          btn.classList.remove('primary');
+          btn.classList.add('secondary');
+        });
+        // Hide custom inputs
+        const customInputs = document.getElementById('wizardCustomPhaseInputs');
+        if (customInputs) customInputs.style.display = 'none';
+        // Populate clothing checkboxes
+        setTimeout(() => populateWizardClothingCheckboxes(), 200);
+        // Update partner names in wizard titles
+        const p1Title = document.getElementById('wizardClothingP1Title');
+        const p2Title = document.getElementById('wizardClothingP2Title');
+        if (p1Title) p1Title.textContent = (typeof getPartnerName === 'function' ? getPartnerName(1) : 'Partner 1') + ' Clothing';
+        if (p2Title) p2Title.textContent = (typeof getPartnerName === 'function' ? getPartnerName(2) : 'Partner 2') + ' Clothing';
+      }
+    };
+  }
+  
+  // Initialize wizard phase sliders with dynamic adjustment
+  function initializeWizardPhaseSliders() {
+    const wizardP1Slider = document.getElementById('wizardPhase1Percent');
+    const wizardP2Slider = document.getElementById('wizardPhase2Percent');
+    const wizardP3Slider = document.getElementById('wizardPhase3Percent');
+    const wizardP1Display = document.getElementById('wizardPhase1PercentDisplay');
+    const wizardP2Display = document.getElementById('wizardPhase2PercentDisplay');
+    const wizardP3Display = document.getElementById('wizardPhase3PercentDisplay');
+    const wizardTotalDisplay = document.getElementById('wizardPhaseTotalDisplay');
+    const wizardPercentError = document.getElementById('wizardPercentError');
+    
+    let isAdjusting = false; // Prevent infinite loops
+    
+    function updateWizardPhaseDisplays() {
+      if (isAdjusting) return;
+      
+      const p1 = parseInt(wizardP1Slider?.value || '33');
+      const p2 = parseInt(wizardP2Slider?.value || '33');
+      const p3 = parseInt(wizardP3Slider?.value || '34');
+      const total = p1 + p2 + p3;
+      
+      if (wizardP1Display) wizardP1Display.textContent = p1 + '%';
+      if (wizardP2Display) wizardP2Display.textContent = p2 + '%';
+      if (wizardP3Display) wizardP3Display.textContent = p3 + '%';
+      if (wizardTotalDisplay) {
+        wizardTotalDisplay.textContent = total + '%';
+        wizardTotalDisplay.style.color = total === 100 ? '#22c55e' : '#fecaca';
+      }
+      
+      // Hide error since sliders now maintain 100%
+      if (wizardPercentError) {
+        wizardPercentError.style.display = 'none';
+      }
+      
+      // Sync with existing inputs
+      if (phase1PercentInput) phase1PercentInput.value = String(p1);
+      if (phase2PercentInput) phase2PercentInput.value = String(p2);
+      if (phase3PercentInput) phase3PercentInput.value = String(p3);
+      
+      // Update phase distribution if custom is selected
+      if (phaseDistributionMode === 'custom') {
+        updateSelectionDisplay('phaseDistSelection', `Custom (${p1}/${p2}/${p3}%)`, false);
+        if (typeof saveState === 'function') saveState();
+      }
+    }
+    
+    function adjustSlidersToMaintainTotal(changedSlider, newValue) {
+      if (isAdjusting) return;
+      isAdjusting = true;
+      
+      const sliders = [
+        { slider: wizardP1Slider, display: wizardP1Display, name: 'p1' },
+        { slider: wizardP2Slider, display: wizardP2Display, name: 'p2' },
+        { slider: wizardP3Slider, display: wizardP3Display, name: 'p3' }
+      ];
+      
+      const changedIndex = sliders.findIndex(s => s.slider === changedSlider);
+      const otherSliders = sliders.filter((_, i) => i !== changedIndex);
+      
+      // Get current values
+      const currentValues = sliders.map(s => parseInt(s.slider?.value || '0'));
+      const oldTotal = currentValues.reduce((sum, val) => sum + val, 0);
+      const oldChangedValue = currentValues[changedIndex];
+      const change = newValue - oldChangedValue;
+      
+      // Calculate how much we need to adjust the other sliders
+      const otherTotal = oldTotal - oldChangedValue;
+      const targetOtherTotal = 100 - newValue;
+      const adjustmentNeeded = targetOtherTotal - otherTotal;
+      
+      if (otherTotal > 0 && Math.abs(adjustmentNeeded) > 0.1) {
+        // Distribute adjustment proportionally among other sliders
+        let adjusted = 0;
+        otherSliders.forEach((other, idx) => {
+          if (otherTotal > 0) {
+            const proportion = currentValues[sliders.indexOf(other)] / otherTotal;
+            const adjustment = Math.round(adjustmentNeeded * proportion);
+            const newOtherValue = Math.max(0, Math.min(100, currentValues[sliders.indexOf(other)] + adjustment));
+            
+            if (other.slider) {
+              other.slider.value = String(newOtherValue);
+              adjusted += newOtherValue;
+            }
+          }
+        });
+        
+        // If there's a rounding difference, add/subtract from the first other slider
+        const finalTotal = newValue + adjusted;
+        if (finalTotal !== 100 && otherSliders.length > 0 && otherSliders[0].slider) {
+          const diff = 100 - finalTotal;
+          const firstOtherValue = parseInt(otherSliders[0].slider.value);
+          const correctedValue = Math.max(0, Math.min(100, firstOtherValue + diff));
+          otherSliders[0].slider.value = String(correctedValue);
+        }
+      } else if (otherTotal === 0) {
+        // If other sliders are at 0, we can't adjust them - limit the changed slider
+        if (changedSlider) {
+          changedSlider.value = String(Math.min(100, newValue));
+        }
+      }
+      
+      isAdjusting = false;
+      updateWizardPhaseDisplays();
+    }
+    
+    // Wire up sliders with dynamic adjustment
+    if (wizardP1Slider) {
+      wizardP1Slider.addEventListener('input', (e) => {
+        const newValue = parseInt(e.target.value);
+        adjustSlidersToMaintainTotal(wizardP1Slider, newValue);
+      });
+    }
+    if (wizardP2Slider) {
+      wizardP2Slider.addEventListener('input', (e) => {
+        const newValue = parseInt(e.target.value);
+        adjustSlidersToMaintainTotal(wizardP2Slider, newValue);
+      });
+    }
+    if (wizardP3Slider) {
+      wizardP3Slider.addEventListener('input', (e) => {
+        const newValue = parseInt(e.target.value);
+        adjustSlidersToMaintainTotal(wizardP3Slider, newValue);
+      });
+    }
+    
+    // Initialize displays
+    updateWizardPhaseDisplays();
+  }
+  
+  // Wire up wizard preset buttons
+  const wizardPresets = [
+    { id: 'wizardPreset20-20-60', values: [20, 20, 60] },
+    { id: 'wizardPreset25-25-50', values: [25, 25, 50] },
+    { id: 'wizardPreset30-30-40', values: [30, 30, 40] }
+  ];
+  
+  wizardPresets.forEach(preset => {
+    const btn = document.getElementById(preset.id);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const wizardP1Slider = document.getElementById('wizardPhase1Percent');
+        const wizardP2Slider = document.getElementById('wizardPhase2Percent');
+        const wizardP3Slider = document.getElementById('wizardPhase3Percent');
+        
+        // Set all values directly (presets always total 100%)
+        if (wizardP1Slider) wizardP1Slider.value = String(preset.values[0]);
+        if (wizardP2Slider) wizardP2Slider.value = String(preset.values[1]);
+        if (wizardP3Slider) wizardP3Slider.value = String(preset.values[2]);
+        
+        // Trigger display update (but skip adjustment since preset is already 100%)
+        const wizardP1Display = document.getElementById('wizardPhase1PercentDisplay');
+        const wizardP2Display = document.getElementById('wizardPhase2PercentDisplay');
+        const wizardP3Display = document.getElementById('wizardPhase3PercentDisplay');
+        const wizardTotalDisplay = document.getElementById('wizardPhaseTotalDisplay');
+        
+        if (wizardP1Display) wizardP1Display.textContent = preset.values[0] + '%';
+        if (wizardP2Display) wizardP2Display.textContent = preset.values[1] + '%';
+        if (wizardP3Display) wizardP3Display.textContent = preset.values[2] + '%';
+        if (wizardTotalDisplay) {
+          wizardTotalDisplay.textContent = '100%';
+          wizardTotalDisplay.style.color = '#22c55e';
+        }
+        
+        // Sync with existing inputs
+        if (phase1PercentInput) phase1PercentInput.value = String(preset.values[0]);
+        if (phase2PercentInput) phase2PercentInput.value = String(preset.values[1]);
+        if (phase3PercentInput) phase3PercentInput.value = String(preset.values[2]);
+      });
+    }
+  });
+  
+  // Initialize wizard on page load if already in guided-setup mode
+  if (guidedSetup && guidedSetup.style.display !== 'none') {
+    showWizardStep(1);
+    setTimeout(() => populateWizardClothingCheckboxes(), 200);
+  }
 });

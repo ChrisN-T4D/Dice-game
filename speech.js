@@ -14,7 +14,24 @@ let selectedVoiceURI = ''; // empty = use default (pickVoice())
   if (saved === 'true') voiceEnabled = true;
   const uri = localStorage.getItem('selectedVoiceURI');
   if (uri) selectedVoiceURI = uri;
+  const rate = parseFloat(localStorage.getItem('voiceRate'));
+  if (!isNaN(rate) && rate >= 0.5 && rate <= 2) voiceRate = rate;
 })();
+
+/**
+ * Set and persist voice speed (0.5 to 2). 1 = normal.
+ */
+function setVoiceRate(rate) {
+  voiceRate = Math.max(0.5, Math.min(2, rate));
+  localStorage.setItem('voiceRate', String(voiceRate));
+}
+
+/**
+ * Get current voice rate.
+ */
+function getVoiceRate() {
+  return typeof voiceRate === 'number' ? voiceRate : 1.0;
+}
 
 function isSpeechSupported() {
   return 'speechSynthesis' in window;
@@ -222,8 +239,33 @@ function getInstructionsText(options) {
   if (instruction && instruction !== '—') {
     parts.push(instruction);
   } else {
-    if (where && where !== '—') parts.push('Where: ' + where);
-    if (what && what !== '—') parts.push('How: ' + what);
+    const w = (where || '').trim();
+    const wt = (what || '').trim();
+    if (w && wt && w !== '—' && wt !== '—') {
+      const whatLower = wt.charAt(0).toLowerCase() + wt.slice(1);
+      const whatLowerText = whatLower.toLowerCase();
+      // Check if "what" already has connector words
+      const hasUsing = /^\s*using\s+/i.test(whatLower);
+      const hasWith = /\bwith\b/i.test(whatLower);
+      const hasBy = /^\s*by\s+/i.test(whatLower);
+      const hasThrough = /^\s*through\s+/i.test(whatLower);
+      
+      let connector = '';
+      if (hasUsing || hasWith) {
+        // Already has "using" or "with" - just join with comma
+        connector = ', ';
+      } else if (hasBy || hasThrough) {
+        // "by" or "through" suggests a method - join with comma
+        connector = ', ';
+      } else {
+        // Default: use "with" to create a natural phrase
+        connector = ' with ';
+      }
+      parts.push(w + connector + whatLower);
+    } else {
+      if (where && where !== '—') parts.push('Where: ' + where);
+      if (what && what !== '—') parts.push('How: ' + what);
+    }
   }
   if (clothing && clothing.trim()) parts.push('Clothing: ' + clothing);
 

@@ -82,7 +82,7 @@
     2: 'One hand: 10 short, quick strokes, then 10 slow, long strokes. Then repeat that whole sequence once for the turn.',
     3: 'Both hands: 15 light brushing strokes, then right away 15 steadier rubbing strokes on the same area for the turn.',
     4: 'Mouth and tongue: 10 slow licks in straight lines, then 10 small circular licks for the turn. Stay on the location.',
-    5: 'One hand with lube: 20 smooth, gliding strokes in one continuous motion for the turn (no stopping).',
+    5: 'Using one hand with lube: 20 smooth, gliding strokes in one continuous motion for the turn (no stopping).',
     6: 'Fingers or a toy (e.g. dildo or vibrator): move slowly in and out (or back and forth) 15 times for the turn, with a short pause after every fifth.',
     7: 'Genitals (e.g. grinding or thrusting): 20 slow movements for the turn, with one full second of stillness after every fourth. Penetration only if agreed.',
     8: 'Use hands, mouth, feet, or genitals: for the turn, 30 seconds at a steady rhythm, then 30 seconds faster, then 30 seconds back to the first steady rhythm.',

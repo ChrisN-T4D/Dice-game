@@ -98,7 +98,13 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     if (where) {
       if (currentPhase === 3) {
         // Phase 3: positions - giver leads
-        where = `${giverName} leads: ${where}`;
+        // For heterosexual couples with alternating focus, add instructions for both partners
+        if (typeof guidedPhase3AlternatingFocus !== 'undefined' && guidedPhase3AlternatingFocus) {
+          const otherName = giverPartner === 1 ? receiverName : giverName;
+          where = `${giverName} leads: ${where}. Focus on ${giverName}'s pleasure, then switch to focus on ${otherName}'s pleasure, or find ways to stimulate both partners simultaneously.`;
+        } else {
+          where = `${giverName} leads: ${where}`;
+        }
       } else {
         // Phase 1-2: locations - giver touches receiver's location
         where = `${giverName} touches ${receiverName}'s ${where}`;

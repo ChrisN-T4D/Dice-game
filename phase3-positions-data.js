@@ -199,10 +199,24 @@ function getPhase3PositionsForTable() {
   return positions;
 }
 
+/**
+ * Scrub hetero-specific position names to neutral alternatives
+ */
+function scrubHeteroPositionName(name) {
+  if (!name || typeof name !== 'string') return name;
+  return name
+    .replace(/\bcowgirl\b/gi, 'Straddle')
+    .replace(/\breverse cowgirl\b/gi, 'Reverse straddle')
+    .replace(/\bdoggy\b/gi, 'Rear entry')
+    .replace(/\bdoggy style\b/gi, 'Rear entry style');
+}
+
 function getPhase3PositionName(positionNumber) {
   const n = parseInt(positionNumber, 10);
   if (n < 1 || n > PHASE3_POSITION_COUNT) return '';
-  return PHASE3_POSITIONS_LIST[n - 1].name;
+  const pos = PHASE3_POSITIONS_LIST[n - 1];
+  if (!pos) return '';
+  return scrubHeteroPositionName(pos.name);
 }
 
 function getPhase3PositionHelp(positionNumber) {
@@ -271,4 +285,41 @@ function isPhase3AnalPosition(positionNumber) {
   const n = parseInt(positionNumber, 10);
   if (n < 1 || n > PHASE3_POSITION_COUNT) return false;
   return PHASE3_ANAL_POSITION_NUMBERS.indexOf(n) !== -1;
+}
+
+/**
+ * In hetero descriptions, "lead" = typically penis-owner, "follow" = typically vulva-owner.
+ * Returns which role gets more focus in this position: 'lead', 'follow', or 'neutral'.
+ */
+function getPhase3PositionFocusRole(positionNumber) {
+  const n = parseInt(positionNumber, 10);
+  if (n < 1 || n > PHASE3_POSITION_COUNT) return 'neutral';
+  const entry = PHASE3_POSITIONS_LIST[n - 1];
+  const group = (entry && entry.group) ? entry.group.toLowerCase() : '';
+  const desc = (entry && entry.description) ? entry.description.toLowerCase() : '';
+  // Follow on top (cowgirl, reverse cowgirl, straddle) -> follow-focused
+  if (/cowgirl|reverse_cowgirl|straddle|squatting_reverse/.test(group)) return 'follow';
+  // Lead on top or behind (missionary, doggy, prone, standing bent, rear entry) -> lead-focused
+  if (/missionary|doggy|prone|standing_bent_over|standing_rear|legs_elevated|legs_on_shoulders|one_leg_over_shoulder|kneeling_rear_entry|rear_entry|side_saddle_rear|tabletop|standing_wall|standing_carry|standing_wrap|standing_leg_lift|bridge|folded|legs_wide|legs_raised_wide/.test(group)) return 'lead';
+  // Neutral: side-lying, seated, kneeling wrap, rollers_choice
+  if (/side_lying|seated|kneeling_wrap|rollers_choice|leg_wrapped/.test(group)) return 'neutral';
+  // Default from description
+  if (/\bfollow\s+on\s+top\b|\bperson on top\s+controls\b/.test(desc)) return 'follow';
+  if (/\blead\s+on\s+their\s+back\b|\bpartner on top\s+can\s+control\b|\bother\s+kneeling\s+behind\b/.test(desc)) return 'lead';
+  return 'neutral';
+}
+
+/**
+ * Returns which partner (1 or 2) this position is more focused on, given anatomies.
+ * anatomy1/anatomy2: 'penis' or 'vulva'. Used for alternating stimulation in Phase 3.
+ */
+function getPhase3PositionFocusPartner(positionNumber, anatomy1, anatomy2) {
+  const role = getPhase3PositionFocusRole(positionNumber);
+  const a1 = (anatomy1 || '').toLowerCase();
+  const a2 = (anatomy2 || '').toLowerCase();
+  const leadPartner = (a1 === 'penis' && a2 === 'vulva') ? 1 : (a1 === 'vulva' && a2 === 'penis') ? 2 : 1;
+  const followPartner = leadPartner === 1 ? 2 : 1;
+  if (role === 'lead') return leadPartner;
+  if (role === 'follow') return followPartner;
+  return leadPartner; // neutral: default to lead partner
 }

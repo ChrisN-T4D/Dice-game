@@ -82,7 +82,7 @@ const tables = {
   2: 'Use one hand: do 10 short, rapid strokes, then 10 slow, long strokes; repeat that sequence for the turn.',
   3: 'Use hands: do 15 light brushing strokes, then 15 steadier rubbing strokes over the area; repeat that sequence for the turn.',
   4: 'Use mouth and tongue: do 10 slow licks in straight lines, then 10 small circular licks on the location; repeat that pattern for the turn.',
-  5: 'Use one hand with lubricant to give 20 smooth, gliding strokes in one continuous motion; repeat for the turn.',
+  5: 'Using one hand with lubricant, give 20 smooth, gliding strokes in one continuous motion; repeat for the turn.',
   6: 'Use fingers or a toy: do 15 slow back-and-forth motions with a brief pause after every fifth; repeat that pattern for the turn.',
   7: 'Use genitals: do 20 slow motions with one second of stillness after every fourth; repeat that pattern for the turn.',
   8: 'Use hands, mouth, feet, or genitals: do steady rhythm for 30 seconds, then faster for 30 seconds, then back to the original rhythm for 30 seconds; repeat that cycle for the turn.',

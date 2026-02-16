@@ -221,14 +221,41 @@ function toFlowingInstruction(where, what, phase) {
     }
   }
 
-  // Join: phase 1/2 = one sentence with comma; phase 3 = position then action with period. Avoid "., " (period then comma).
+  // Join where and how/what intelligently - check if "what" already has a connector word
   const wTrimmed = w.replace(/\.\s*$/, '').trim();
-  const sep = (phase === 3 || w !== wTrimmed) ? '. ' : ', ';
-  let out = wTrimmed + sep + rest;
-  out = out.replace(/\.\s*\./g, '.');
+  if (rest.length === 0) return wTrimmed;
+  
+  // Lowercase the start of rest for smooth joining
+  rest = rest.charAt(0).toLowerCase() + rest.slice(1);
+  
+  // Check if rest already contains connector words that make "with" redundant
+  const restLower = rest.toLowerCase();
+  const hasUsing = /^\s*using\s+/i.test(rest);
+  const hasWith = /\bwith\b/i.test(rest);
+  const hasBy = /^\s*by\s+/i.test(rest);
+  const hasThrough = /^\s*through\s+/i.test(rest);
+  const hasVia = /^\s*via\s+/i.test(rest);
+  
+  let connector = '';
+  if (hasUsing || hasWith) {
+    // Already has "using" or "with" - just join with a comma or period
+    connector = (phase === 3) ? '. ' : ', ';
+  } else if (hasBy) {
+    // "by" suggests a method - join with comma
+    connector = ', ';
+  } else if (hasThrough || hasVia) {
+    // "through" or "via" suggests a method - join with comma
+    connector = ', ';
+  } else {
+    // Default: use "with" to create a natural phrase
+    connector = ' with ';
+  }
+  
+  const out = wTrimmed + connector + rest;
+  let result = out.replace(/\.\s*\./g, '.');
   // Ensure colons have space on both sides
-  out = out.replace(/(\S):/g, '$1 :').replace(/:(\S)/g, ': $1');
-  return out.trim();
+  result = result.replace(/(\S):/g, '$1 :').replace(/:(\S)/g, ': $1');
+  return result.trim();
 }
 
 // ----- Phase change messaging & theming -----

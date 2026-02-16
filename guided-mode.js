@@ -132,9 +132,32 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   clothingItems = clothingEnabled ? [...clothingList] : []; // legacy combined
   guidedClothingItemsP1 = clothingEnabled ? [...(window._guidedSetupP1Items || [])] : [];
   guidedClothingItemsP2 = clothingEnabled ? [...(window._guidedSetupP2Items || [])] : [];
-  clothingMilestoneInterval = milestoneInterval;
+  
+  // Auto-calculate clothing removal interval based on Phase 1 & 2 turn estimates
+  // Goal: Remove all clothing by end of Phase 2
+  if (clothingEnabled && (guidedClothingItemsP1.length > 0 || guidedClothingItemsP2.length > 0)) {
+    const totalClothingItems = guidedClothingItemsP1.length + guidedClothingItemsP2.length;
+    const phase1And2Seconds = guidedPhaseSeconds[0] + guidedPhaseSeconds[1];
+    const cycleSeconds = guidedTurnSeconds + guidedPauseSeconds; // One turn cycle = turn + pause
+    const estimatedTurnsInPhase1And2 = cycleSeconds > 0 ? Math.floor(phase1And2Seconds / cycleSeconds) : 0;
+    
+    // Calculate interval: distribute clothing removal evenly across Phase 1 & 2 turns
+    // Ensure at least one item per turn if needed, but prefer spacing them out
+    if (estimatedTurnsInPhase1And2 > 0 && totalClothingItems > 0) {
+      // Target: remove all items by end of Phase 2, spacing them evenly
+      // Add buffer: aim to finish removal slightly before Phase 2 ends
+      const targetTurnsForRemoval = Math.max(1, Math.floor(estimatedTurnsInPhase1And2 * 0.9));
+      clothingMilestoneInterval = Math.max(1, Math.floor(targetTurnsForRemoval / totalClothingItems));
+    } else {
+      clothingMilestoneInterval = 3; // Fallback
+    }
+  } else {
+    clothingMilestoneInterval = 3; // Not used if clothing disabled
+  }
+  
   turnsSinceLastRemoval = 0;
   totalTurnsInSession = 0;
+  guidedClothingBonusRound = false; // Track if we need bonus round at end of Phase 2
 
   // Find first phase with allocation > 0 (skip phases with 0% allocation)
   let startPhase = 1;
@@ -172,9 +195,9 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
     'Clothing removal prompts will tell you when and how. ',
   ];
   const introClosings = [
-    'After each turn you will hear when to switch, then settle in, then the next prompt. Let us begin.',
-    'Between turns you will hear when to switch, then time to settle in, then the next prompt. Let us begin.',
-    'Each turn ends with a switch, then settle in, then the next prompt. Let us begin.',
+    'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
+    'Between turns you will hear when to switch, then time to settle into position, then the next prompt. Let us begin.',
+    'Each turn ends with a switch, then settle into position, then the next prompt. Let us begin.',
   ];
   let intro = pick(introOpenings);
   if (clothingEnabled) intro += pick(introClothingLines);
@@ -245,9 +268,25 @@ function performGuidedTurn() {
 
   // Phase 3: only the modifier (second d20) is critical. Position 20 is now "Roller's choice" in the table, no reroll.
 
-  // Show the exercise
-  const giver = guidedCurrentPartner;
-  const receiver = guidedCurrentPartner === 1 ? 2 : 1;
+  // Phase 3: Position-based focus + alternating stimulation for heterosexual couples
+  let giver = guidedCurrentPartner;
+  let receiver = guidedCurrentPartner === 1 ? 2 : 1;
+  
+  if (phase === 3 && guidedPhase3AlternatingFocus) {
+    const anatomy1 = typeof partnerAnatomy1 !== 'undefined' ? partnerAnatomy1 : 'penis';
+    const anatomy2 = typeof partnerAnatomy2 !== 'undefined' ? partnerAnatomy2 : 'vulva';
+    const positionFocus = typeof getPhase3PositionFocusPartner === 'function'
+      ? getPhase3PositionFocusPartner(loc, anatomy1, anatomy2)
+      : 1;
+    // Alternate stimulation: if we had a focus last turn, switch to the other; else use position-based focus
+    const desiredFocus = (typeof guidedPhase3LastFocusPartner !== 'undefined' && guidedPhase3LastFocusPartner !== 0)
+      ? (3 - guidedPhase3LastFocusPartner)
+      : (positionFocus || 1);
+    guidedPhase3FocusPartner = desiredFocus;
+    if (typeof guidedPhase3LastFocusPartner !== 'undefined') guidedPhase3LastFocusPartner = guidedPhase3FocusPartner;
+    giver = guidedPhase3FocusPartner;
+    receiver = guidedPhase3FocusPartner === 1 ? 2 : 1;
+  }
 
   // Track that this partner has been receiver at least once this phase
   if (receiver === 1) guidedReceiverOnceP1 = true;
@@ -268,6 +307,31 @@ function performGuidedTurn() {
   if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
   // Ensure Phase 3 buttons (view position reference, favorites) are visible
   if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
+  // Auto-show Phase 3 position reference image (unless it's Roller's choice)
+  if (phase === 3 && loc !== 64 && loc !== 127) {
+    const positionRefModal = document.getElementById('positionRefModal');
+    const positionRefImage = document.getElementById('positionRefImage');
+    const positionRefCaption = document.getElementById('positionRefCaption');
+    if (positionRefModal && positionRefImage) {
+      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(loc) : ('positions/' + loc + '.png');
+      positionRefImage.src = path;
+      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(loc) || 'Position reference') : 'Position reference';
+      positionRefImage.alt = name;
+      if (positionRefCaption) {
+        if (typeof getPhase3PositionGroupInfo === 'function') {
+          const info = getPhase3PositionGroupInfo(loc);
+          if (info && info.variationLabel && info.groupDisplay) {
+            positionRefCaption.textContent = info.groupDisplay + (info.variationLabel ? ' (' + info.variationLabel + ')' : '');
+          } else {
+            positionRefCaption.textContent = name;
+          }
+        } else {
+          positionRefCaption.textContent = name;
+        }
+      }
+      positionRefModal.style.display = 'flex';
+    }
+  }
 
   if (extendedTime) {
     const locationText = phase === 3 ? 'position' : 'location';
@@ -419,7 +483,7 @@ function performGuidedTurn() {
   const nextTurnPhraseOptions = [
     'That finishes that turn. Time to switch.',
     'That\'s the end of that turn. Time to switch.',
-    'Turn over. Time to switch.',
+    'This turn is over. Time to switch.',
     'Switch when you\'re ready.',
   ];
   const nextTurnPhrase = pick(nextTurnPhraseOptions);
@@ -438,8 +502,8 @@ function performGuidedTurn() {
       ];
   const firstTurnPhrase = pick(firstTurnPhraseOptions);
   const easeInPhraseOptions = [
-    'Take the next few seconds to settle in. No rush.',
-    'Settle in when you\'re ready. No rush.',
+    'Take the next few seconds to settle into position. No rush.',
+    'Settle into position when you\'re ready. No rush.',
     'Use the next few seconds to get comfortable. No rush.',
     'Whenever you\'re ready. No rush.',
   ];
@@ -473,6 +537,8 @@ function performGuidedTurn() {
         guidedBreakTimerId = setInterval(() => {
           if (guidedPaused) return;
           guidedBreakCountdown -= 1;
+          guidedPhaseTimeRemaining -= 1;
+          guidedTotalTimeRemaining -= 1;
           updateGuidedModeUI();
           if (guidedBreakCountdown <= 0) {
             clearInterval(guidedBreakTimerId);
@@ -487,6 +553,8 @@ function performGuidedTurn() {
       if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
       guidedBreakTimerId = setInterval(() => {
         guidedBreakCountdown -= 1;
+        guidedPhaseTimeRemaining -= 1;
+        guidedTotalTimeRemaining -= 1;
         updateGuidedModeUI();
         if (guidedBreakCountdown <= 0) {
           clearInterval(guidedBreakTimerId);
@@ -549,6 +617,8 @@ function performGuidedTurn() {
       guidedBreakTimerId = setInterval(() => {
         if (guidedPaused) return;
         guidedBreakCountdown -= 1;
+        guidedPhaseTimeRemaining -= 1;
+        guidedTotalTimeRemaining -= 1;
         updateGuidedModeUI();
         if (guidedBreakCountdown <= 0) {
           clearInterval(guidedBreakTimerId);
@@ -573,6 +643,8 @@ function performGuidedTurn() {
     guidedBreakTimerId = setInterval(() => {
       if (guidedPaused) return;
       guidedBreakCountdown -= 1;
+      guidedPhaseTimeRemaining -= 1;
+      guidedTotalTimeRemaining -= 1;
       updateGuidedModeUI();
       if (guidedBreakCountdown <= 0) {
         clearInterval(guidedBreakTimerId);
@@ -583,9 +655,11 @@ function performGuidedTurn() {
   };
 
   const hasVoice = typeof speakText === 'function' && (typeof isSpeechSupported !== 'function' || isSpeechSupported());
-  const isFirstTurn = totalTurnsInSession === 1;
-  if (isFirstTurn) {
-    // First turn: show popup for duration of TTS (or fallback), no dong, no "That finishes that turn".
+  const isFirstTurnOfSession = totalTurnsInSession === 1;
+  const isFirstTurnOfPhase3 = (typeof phase !== 'undefined' && phase === 3 && typeof guidedFirstTurnOfPhase3 !== 'undefined' && guidedFirstTurnOfPhase3);
+  const useFirstTurnPhrase = isFirstTurnOfSession || isFirstTurnOfPhase3;
+  if (useFirstTurnPhrase) {
+    if (isFirstTurnOfPhase3 && typeof guidedFirstTurnOfPhase3 !== 'undefined') guidedFirstTurnOfPhase3 = false;
     if (typeof showFirstTurnPopup === 'function') showFirstTurnPopup(firstTurnPhrase);
     if (hasVoice) {
       speakText(firstTurnPhrase, { force: true, onEnd: () => {
@@ -600,7 +674,6 @@ function performGuidedTurn() {
       }, firstTurnPopupDurationMs);
     }
   } else {
-    // Dong sound removed per user request
     startNextTurnCountdown();
   }
 }
@@ -663,6 +736,31 @@ function rerollGuidedPrompt() {
   if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
   // Ensure Phase 3 buttons (view position reference, favorites) are visible
   if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
+  // Auto-show Phase 3 position reference image (unless it's Roller's choice)
+  if (phase === 3 && loc !== 64 && loc !== 127) {
+    const positionRefModal = document.getElementById('positionRefModal');
+    const positionRefImage = document.getElementById('positionRefImage');
+    const positionRefCaption = document.getElementById('positionRefCaption');
+    if (positionRefModal && positionRefImage) {
+      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(loc) : ('positions/' + loc + '.png');
+      positionRefImage.src = path;
+      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(loc) || 'Position reference') : 'Position reference';
+      positionRefImage.alt = name;
+      if (positionRefCaption) {
+        if (typeof getPhase3PositionGroupInfo === 'function') {
+          const info = getPhase3PositionGroupInfo(loc);
+          if (info && info.variationLabel && info.groupDisplay) {
+            positionRefCaption.textContent = info.groupDisplay + (info.variationLabel ? ' (' + info.variationLabel + ')' : '');
+          } else {
+            positionRefCaption.textContent = name;
+          }
+        } else {
+          positionRefCaption.textContent = name;
+        }
+      }
+      positionRefModal.style.display = 'flex';
+    }
+  }
 
   if (extendedTime) {
     const ext = ' Spend about twice as long on this location.';
@@ -909,6 +1007,22 @@ function continueAfterPhaseCheckIn() {
 
 function advanceGuidedPhase() {
   if (phase < maxPhase) {
+    // Check if we're moving from Phase 2 to Phase 3 and clothing needs bonus removal
+    if (phase === 2 && clothingSystemEnabled && (guidedClothingItemsP1.length > 0 || guidedClothingItemsP2.length > 0)) {
+      guidedClothingBonusRound = true;
+      // Remove all remaining clothing items
+      while (guidedClothingItemsP1.length > 0) {
+        removeClothingItem(1);
+      }
+      while (guidedClothingItemsP2.length > 0) {
+        removeClothingItem(2);
+      }
+      updateClothingDisplay();
+      if (messageBox) {
+        messageBox.textContent = 'Bonus clothing removal: All remaining clothing removed for Phase 3.';
+      }
+    }
+    
     phase++;
     guidedPhaseTimeRemaining = guidedPhaseSeconds[phase - 1];
     guidedReceiverOnceP1 = false;
@@ -916,6 +1030,20 @@ function advanceGuidedPhase() {
     usedWhereThisPhase = new Set();
     usedWhatThisPhase = new Set();
     rollCount = 0;
+    guidedClothingBonusRound = false; // Reset bonus round flag
+    
+    // Phase 3: Set up alternating focus for heterosexual couples
+    if (phase === 3) {
+      const anatomy1 = typeof partnerAnatomy1 !== 'undefined' ? partnerAnatomy1 : 'penis';
+      const anatomy2 = typeof partnerAnatomy2 !== 'undefined' ? partnerAnatomy2 : 'vulva';
+      const isHetero = (anatomy1 === 'penis' && anatomy2 === 'vulva') || (anatomy1 === 'vulva' && anatomy2 === 'penis');
+      guidedPhase3AlternatingFocus = isHetero;
+      guidedPhase3FocusPartner = 1;
+      guidedPhase3LastFocusPartner = 0; // No previous focus yet
+      guidedFirstTurnOfPhase3 = true;   // First turn of Phase 3 will use first-turn phrase, not "Turn over"
+    } else {
+      guidedPhase3AlternatingFocus = false;
+    }
 
     notifyPhaseChange(phase);
     updatePhaseUI(phase, rollCount);
@@ -975,8 +1103,17 @@ function resumeGuidedMode() {
       if (guidedPauseTimeRemaining <= 0) {
         clearInterval(guidedTurnTimerId);
         guidedInPause = false;
-        if (guidedPhaseTimeRemaining <= 0) advanceGuidedPhase();
-        else performGuidedTurn();
+        // Check if phase time is up and both partners have been receiver at least once
+        const bothReceivedThisPhase = guidedReceiverOnceP1 && guidedReceiverOnceP2;
+        if (guidedPhaseTimeRemaining <= 0 && bothReceivedThisPhase) {
+          if (typeof guidedPhaseCheckInEnabled !== 'undefined' && guidedPhaseCheckInEnabled) {
+            startPhaseCheckIn();
+          } else {
+            advanceGuidedPhase();
+          }
+        } else {
+          performGuidedTurn();
+        }
       }
     }, 1000);
   }
@@ -1026,6 +1163,7 @@ function updateGuidedModeUI() {
   const turnTimeLeftSpan = document.getElementById('turnTimeLeft');
   const turnTimeLeftLabel = document.getElementById('turnTimeLeftLabel');
   const phaseAllocationSpan = document.getElementById('phaseAllocation');
+  const phaseIndicator = document.getElementById('phaseIndicator');
   const nextTurnBtn = document.getElementById('nextTurnGuided');
   const rerollPromptBtn = document.getElementById('rerollGuidedPrompt');
   const pauseBtn = document.getElementById('pauseGuided');
@@ -1043,32 +1181,34 @@ function updateGuidedModeUI() {
     if (phaseRow) phaseRow.style.display = 'none';
 
     // Show guided status panel and output displays
-    if (guidedStatus) guidedStatus.style.display = 'flex';
+    if (guidedStatus) guidedStatus.style.display = 'block';
     if (voiceToggleRow) voiceToggleRow.style.display = '';
     if (outputBox) outputBox.style.display = 'block';
     if (messageDiv) messageDiv.style.display = '';
     if (errorDiv) errorDiv.style.display = '';
 
+    // Update phase indicator (prominent display)
+    if (phaseIndicator && typeof phase !== 'undefined') {
+      const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' };
+      phaseIndicator.textContent = phaseNames[phase] || `Phase ${phase}`;
+    }
+    
     // Update partner display
     if (currentPartnerSpan) {
       const giverName = getPartnerName(guidedCurrentPartner);
       if (typeof phase !== 'undefined' && phase === 3) {
         if (guidedInPause) {
           currentPartnerSpan.textContent = `Break - Next: ${giverName} leads`;
-          currentPartnerSpan.style.fontSize = '1.2rem';
         } else {
           currentPartnerSpan.textContent = `${giverName} leads`;
-          currentPartnerSpan.style.fontSize = '1.5rem';
         }
       } else {
         const receiver = guidedCurrentPartner === 1 ? 2 : 1;
         const receiverName = getPartnerName(receiver);
         if (guidedInPause) {
           currentPartnerSpan.textContent = `Break - Next: ${giverName} → ${receiverName}`;
-          currentPartnerSpan.style.fontSize = '1.2rem';
         } else {
           currentPartnerSpan.textContent = `${giverName} → ${receiverName}`;
-          currentPartnerSpan.style.fontSize = '1.5rem';
         }
       }
     }
@@ -1076,27 +1216,26 @@ function updateGuidedModeUI() {
     // Update timer displays — use directly tracked total time for accuracy
     if (totalTimeLeftSpan) totalTimeLeftSpan.textContent = formatTime(Math.max(0, guidedTotalTimeRemaining));
 
-    // Est. turns left per partner (cycle = turn + pause; turns per partner ≈ half of total turns in phase)
-    const cycleSec = (guidedTurnSeconds || 120) + (guidedPauseSeconds || 0);
+    // Est. turns left till end of phase (total turns, not per partner)
+    // Use same turn length as current phase: Phase 3 can use double turn time when preference is on
+    const baseTurnForCycle = (typeof phase !== 'undefined' && phase === 3 && typeof phase3DoubleTime !== 'undefined' && phase3DoubleTime)
+      ? (guidedTurnSeconds || 120) * 2
+      : (guidedTurnSeconds || 120);
+    const cycleSec = baseTurnForCycle + (guidedPauseSeconds || 0);
     const estTurnsTotal = cycleSec > 0 ? Math.max(0, Math.floor(guidedPhaseTimeRemaining / cycleSec)) : 0;
-    const estTurnsPerPartner = Math.floor(estTurnsTotal / 2);
-    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = estTurnsTotal > 0 ? `~${estTurnsPerPartner} each` : '0';
+    if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = estTurnsTotal > 0 ? `~${estTurnsTotal}` : '0';
 
     // Current action (name on one line, time on the next). Include switch/settle-in countdown when in break flow.
     let actionName = guidedInPause ? 'Pause' : (guidedInClothingWindow ? 'Removing clothes' : 'Turn/touch');
     let actionTime = guidedInPause ? guidedPauseTimeRemaining : (guidedInClothingWindow ? guidedClothingWindowRemaining : guidedTurnTimeRemaining);
     if (guidedBreakPhase !== 'none') {
-      const breakLabels = { next_turn: 'Time to switch', before_clothing: 'Clothing in', settle_in: 'Settle in' };
+      const breakLabels = { next_turn: 'Time to switch', before_clothing: 'Clothing in', settle_in: 'Settle into position' };
       actionName = breakLabels[guidedBreakPhase] || actionName;
       actionTime = Math.max(0, guidedBreakCountdown);
     }
-    if (turnTimeLeftLabel) turnTimeLeftLabel.textContent = `Current action: ${actionName}`;
+    if (turnTimeLeftLabel) turnTimeLeftLabel.textContent = actionName;
     if (turnTimeLeftSpan) {
       turnTimeLeftSpan.textContent = formatTime(actionTime);
-      if (guidedBreakPhase !== 'none') turnTimeLeftSpan.style.color = '#a7f3d0';
-      else if (guidedInPause) turnTimeLeftSpan.style.color = '#a7f3d0';
-      else if (guidedInClothingWindow) turnTimeLeftSpan.style.color = '#fcd34d';
-      else turnTimeLeftSpan.style.color = '#e5e7eb';
     }
 
     // Show phase allocation

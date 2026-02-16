@@ -32,10 +32,15 @@ let guidedDistributionMode = 'equal'; // 'equal', 'phase1', 'phase2', 'phase3', 
 let clothingItems = []; // DEPRECATED – kept for backward compat; use guidedClothingItemsP1/P2
 let guidedClothingItemsP1 = []; // Partner 1's remaining clothing (Guided Mode)
 let guidedClothingItemsP2 = []; // Partner 2's remaining clothing (Guided Mode)
-let clothingMilestoneInterval = 3; // Remove clothing every N turns
+let clothingMilestoneInterval = 3; // Remove clothing every N turns (auto-calculated)
 let turnsSinceLastRemoval = 0;
 let clothingSystemEnabled = true;
 let totalTurnsInSession = 0;
+let guidedClothingBonusRound = false; // Track if bonus clothing removal round needed at end of Phase 2
+let guidedPhase3AlternatingFocus = false; // Track alternating focus for heterosexual couples in Phase 3
+let guidedPhase3FocusPartner = 1; // Current focus partner for alternating (1 or 2)
+let guidedPhase3LastFocusPartner = 0; // Last turn's focus partner (0 = none yet) for alternating
+let guidedFirstTurnOfPhase3 = false; // True when Phase 3 just started so we say first-turn phrase instead of "Turn over"
 
 // Free Play specific clothing state
 let freePlayClothingEnabled = false;
@@ -214,6 +219,11 @@ function saveState() {
     turnsSinceLastRemoval,
     clothingSystemEnabled,
     totalTurnsInSession,
+    guidedClothingBonusRound,
+    guidedPhase3AlternatingFocus,
+    guidedPhase3FocusPartner,
+    guidedPhase3LastFocusPartner,
+    guidedFirstTurnOfPhase3,
     freePlayClothingEnabled,
     freePlayClothingItemsP1,
     freePlayClothingItemsP2,
@@ -291,6 +301,11 @@ function loadState() {
     turnsSinceLastRemoval = state.turnsSinceLastRemoval || 0;
     clothingSystemEnabled = state.clothingSystemEnabled !== undefined ? state.clothingSystemEnabled : true;
     totalTurnsInSession = state.totalTurnsInSession || 0;
+    guidedClothingBonusRound = state.guidedClothingBonusRound || false;
+    guidedPhase3AlternatingFocus = state.guidedPhase3AlternatingFocus || false;
+    guidedPhase3FocusPartner = state.guidedPhase3FocusPartner || 1;
+    guidedPhase3LastFocusPartner = state.guidedPhase3LastFocusPartner || 0;
+    guidedFirstTurnOfPhase3 = state.guidedFirstTurnOfPhase3 || false;
     
     // Restore free play state
     freePlayClothingEnabled = state.freePlayClothingEnabled || false;

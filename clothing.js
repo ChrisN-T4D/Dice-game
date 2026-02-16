@@ -13,7 +13,9 @@ const clothingPresets = {
   loungeWear: ['Socks', 'Sweatpants', 'T-shirt', 'Underwear'],
   athletic: ['Sports bra', 'Shorts', 'Tank top', 'Sneakers', 'Socks'],
   cozy: ['Socks', 'Sweatpants', 'Hoodie', 'T-shirt', 'Underwear'],
-  layered: ['Tank top', 'Shirt', 'Cardigan', 'Pants', 'Scarf', 'Belt']
+  layered: ['Tank top', 'Shirt', 'Cardigan', 'Pants', 'Scarf', 'Belt'],
+  undergarmentsMale: ['Underwear', 'Undershirt'],
+  undergarmentsFemale: ['Bra', 'Underwear', 'Undershirt']
 };
 
 // Visual: emoji (or short label) per item for card-style selection

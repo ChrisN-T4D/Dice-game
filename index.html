@@ -134,12 +134,19 @@
 
     .card-header {
       margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      min-width: 0;
     }
 
     .card-header h1 {
       margin: 0;
       font-size: 1.1rem;
       font-weight: 700;
+      flex: 1;
+      min-width: 0;
     }
 
     .card-header p {
@@ -156,9 +163,13 @@
       min-width: 0;
     }
 
-    /* Preferences: all rows left-justified */
+    /* Preferences: all rows left-justified, compact vertical spacing */
     .preferences-body .row {
       justify-content: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .preferences-body {
+      padding-bottom: 0.5rem;
     }
 
     /* Small icon before preference option labels (body parts, effort level) */
@@ -182,8 +193,219 @@
     /* Preference section separator (line between groups) */
     .preferences-body .pref-sep {
       border-top: 1px solid #475569;
-      margin-top: 0.75rem;
-      padding-top: 0.75rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    /* Compact preference blocks */
+    .preferences-body .pref-block {
+      margin-bottom: 0.5rem;
+    }
+    .preferences-body .pref-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .pref-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1rem;
+      align-items: start;
+    }
+    @media (max-width: 380px) {
+      .pref-two-col { grid-template-columns: 1fr; }
+    }
+
+    /* Hamburger menu inline with title in card header */
+    .hamburger-menu-btn {
+      flex-shrink: 0;
+      background: rgba(2, 6, 23, 0.95);
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.65rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      color: #ffffff;
+      line-height: 1;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hamburger-menu-btn:hover {
+      background: rgba(2, 6, 23, 1);
+    }
+    
+    .preferences-sidebar {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: min(90vw, 400px);
+      height: 100vh;
+      background: rgba(2, 6, 23, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 1001;
+      overflow-y: auto;
+      transition: right 0.3s ease-in-out;
+      border-left: 1px solid #475569;
+      padding: 1rem;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .preferences-sidebar.open {
+      right: 0;
+    }
+    
+    .preferences-sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+    
+    .preferences-sidebar-overlay.open {
+      display: block;
+    }
+    
+    .preferences-sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #475569;
+    }
+    
+    .preferences-sidebar-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .close-preferences-btn {
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      line-height: 1;
+    }
+    
+    /* Wizard-style setup */
+    .wizard-container {
+      position: relative;
+      min-height: 400px;
+    }
+    
+    .wizard-step {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .wizard-step.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .wizard-progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem;
+      background: rgba(2, 6, 23, 0.6);
+      border-radius: 0.5rem;
+      border: 1px solid #334155;
+    }
+    
+    .wizard-progress-text {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+    
+    .wizard-progress-bar {
+      flex: 1;
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+      margin: 0 1rem;
+      overflow: hidden;
+    }
+    
+    .wizard-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #a855f7, #22c55e);
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+    
+    .wizard-step-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .wizard-step-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+    
+    .wizard-step-description {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    
+    .wizard-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #334155;
+      gap: 1rem;
+    }
+    
+    .wizard-nav-btn {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+    }
+    
+    .wizard-nav-btn.back {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid #475569;
+      color: #e5e7eb;
+    }
+    
+    .wizard-nav-btn.next {
+      background: linear-gradient(to right, #a855f7, #22c55e);
+      color: #020617;
+      border: none;
+    }
+    
+    .wizard-nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .wizard-step-content {
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     /* Keep form controls and selects within viewport on mobile */
@@ -222,8 +444,11 @@
     }
 
     button.small {
-      padding: 0.25rem 0.55rem;
-      font-size: 0.82rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      min-height: 44px; /* Touch-friendly minimum height */
+      min-width: 60px; /* Touch-friendly minimum width */
+      touch-action: manipulation; /* Prevent double-tap zoom */
     }
 
     .primary {
@@ -235,6 +460,25 @@
       background-color: #020617;
       color: #e5e7eb;
       border: 1px solid #4b5563;
+      transition: all 0.2s ease;
+    }
+    
+    .secondary:hover {
+      background-color: rgba(2, 6, 23, 0.8);
+      border-color: #64748b;
+    }
+    
+    /* Selected preset button styling */
+    .secondary.preset-selected {
+      background-color: rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    
+    .secondary.preset-selected:hover {
+      background-color: rgba(59, 130, 246, 0.3);
+      border-color: #60a5fa;
     }
 
     .pepper {
@@ -1057,87 +1301,22 @@
     <div class="card">
       <div class="card-header">
         <h1>Discovering Between Us</h1>
-        <p>
-          Guided sessions with timed turns and voice prompts are the main focus. Choose Guided Mode to start. In Free Play, enter your two rolls (1–20) and optional clothing roll (1–12) for the current phase.
-        </p>
+        <button class="hamburger-menu-btn" id="hamburgerMenuBtn" title="Open preferences">☰</button>
       </div>
 
-     <!-- Partner names & colors -->
-     <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5);">
-       <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Partner names, colors & anatomy:</label>
-       <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-         <!-- Partner 1 -->
-         <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-           <label for="partnerName1" style="font-size: 0.85rem; color: #9ca3af; min-width: 1rem;">1</label>
-           <input type="text" id="partnerName1" placeholder="Partner 1" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
-           <div class="color-presets" id="colorPresetsP1" data-partner="1">
-             <span class="color-dot selected" data-color="#3b82f6" style="background: #3b82f6; color: #3b82f6;" title="Blue"></span>
-             <span class="color-dot" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
-             <span class="color-dot" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
-             <span class="color-dot" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
-             <span class="color-dot" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
-             <span class="color-dot" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
-             <span class="color-dot" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
-             <span class="color-dot" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
-           </div>
-           <div class="row anatomy-toggle-group" style="gap: 0.25rem;" role="group" aria-label="Partner 1 anatomy">
-             <button type="button" class="secondary small anatomy-btn" data-partner="1" data-value="penis" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Penis & scrotum</button>
-             <button type="button" class="secondary small anatomy-btn" data-partner="1" data-value="vulva" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Vulva</button>
-           </div>
-         </div>
-         <!-- Partner 2 -->
-         <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-           <label for="partnerName2" style="font-size: 0.85rem; color: #9ca3af; min-width: 1rem;">2</label>
-           <input type="text" id="partnerName2" placeholder="Partner 2" maxlength="30" style="width: 8rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 0.9rem;" />
-           <div class="color-presets" id="colorPresetsP2" data-partner="2">
-             <span class="color-dot selected" data-color="#ec4899" style="background: #ec4899; color: #ec4899;" title="Pink"></span>
-             <span class="color-dot" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
-             <span class="color-dot" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
-             <span class="color-dot" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
-             <span class="color-dot" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
-             <span class="color-dot" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
-             <span class="color-dot" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
-             <span class="color-dot" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
-           </div>
-           <div class="row anatomy-toggle-group" style="gap: 0.25rem;" role="group" aria-label="Partner 2 anatomy">
-             <button type="button" class="secondary small anatomy-btn" data-partner="2" data-value="penis" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Penis & scrotum</button>
-             <button type="button" class="secondary small anatomy-btn" data-partner="2" data-value="vulva" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">Vulva</button>
-           </div>
-         </div>
-       </div>
-     </div>
+     <!-- Partner names & colors moved to wizard steps -->
 
-     <!-- Mode selection + Summary -->
-     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-       <div class="row" style="gap: 0.5rem; align-items: center;">
-         <label style="font-weight: 600; margin-right: 0.75rem;">Play Mode:</label>
-         <div class="row" style="gap: 0.5rem;">
-           <button class="secondary" id="freePlayMode" style="font-weight: 600;">Free Play</button>
-           <button class="secondary" id="guidedMode" style="font-weight: 600;">Guided Mode</button>
-         </div>
+     <!-- Preferences sidebar (slide-out panel) -->
+     <div class="preferences-sidebar-overlay" id="preferencesOverlay"></div>
+     <div class="preferences-sidebar" id="preferencesSidebar">
+       <div class="preferences-sidebar-header">
+         <h2>Preferences</h2>
+         <button class="close-preferences-btn" id="closePreferencesBtn" title="Close preferences">✕</button>
        </div>
-       <button class="secondary" id="toggleSummary" style="font-size: 1.5rem; padding: 0.4rem 0.75rem; line-height: 1;" title="View Current Selections">
-         📋
-       </button>
-     </div>
-
-     <!-- Preferences (Prompt detail, Penetration, Display, Phase 3, Voice, etc.) -->
-     <div class="collapsible-section" style="margin-bottom: 1rem;">
-       <div class="collapsible-header" data-section="preferences">
-         <div class="collapsible-header-left">
-           <span class="collapsible-icon collapsible-icon-static" style="font-size: 1.1rem;">☰</span>
-           <div>
-             <div class="collapsible-title">Preferences</div>
-             <div class="collapsible-selection" id="preferencesSelection" style="font-size: 0.8rem; color: #9ca3af;">Prompt detail, penetration, display, Phase 3, voice</div>
-           </div>
-         </div>
-         <span class="collapsible-icon">▼</span>
-       </div>
-      <div class="collapsible-content">
-        <div class="collapsible-body preferences-body">
+       <div class="preferences-body">
           <!-- Prompt & play style -->
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Prompt detail:</label>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label">Prompt detail:</label>
             <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
               <button type="button" class="secondary prompt-detail-btn" data-mode="beginner" title="Full descriptions, longer pause before next prompt, slower speech">Beginner</button>
               <button type="button" class="secondary prompt-detail-btn" data-mode="regular" title="Some descriptions removed, medium pace">Regular</button>
@@ -1145,8 +1324,8 @@
             </div>
             <span id="promptDetailSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
           </div>
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Penetration:</label>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label">Penetration:</label>
             <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
               <button type="button" class="secondary penetration-pref-btn" data-pref="prefer" title="Penetration is an option when the prompt allows it">Prefer penetration</button>
               <button type="button" class="secondary penetration-pref-btn" data-pref="minimal" title="Focus on external play; penetration only if you both want">Minimal penetration</button>
@@ -1154,16 +1333,16 @@
             <span id="penetrationPrefSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
           </div>
           <!-- Display (background, music) -->
-          <div class="row pref-sep" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Background:</label>
+          <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <label class="pref-label">Background:</label>
             <select id="backgroundImageSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
               <option value="none">None</option>
               <option value="1">Fiery hearts</option>
               <option value="2">Triangles</option>
             </select>
           </div>
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Background music:</label>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <label class="pref-label">Background music:</label>
             <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
               <select id="backgroundMusicSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
                 <option value="none">None</option>
@@ -1185,72 +1364,68 @@
             </div>
           </div>
           <!-- Exclude body parts: when touching vs when being touched -->
-           <div class="pref-sep" style="margin-bottom: 1rem;">
-             <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;">Exclude body parts from prompts</div>
-             <div style="display: flex; flex-direction: column; gap: 1rem;">
+           <div class="pref-sep pref-block">
+             <div class="pref-label" style="margin-bottom: 0.35rem;">Exclude body parts from prompts</div>
+             <div class="pref-two-col">
                <div>
-                 <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.35rem;">When I'm touching (giving):</div>
-                 <div class="row" style="flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;">
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
+                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">When giving:</div>
+                 <div class="row" style="flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: center;">
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
                  </div>
                </div>
                <div>
-                 <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.35rem;">When I'm being touched (receiving):</div>
-                 <div class="row" style="flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;">
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
+                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">When receiving:</div>
+                 <div class="row" style="flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: center;">
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
                  </div>
                </div>
              </div>
            </div>
 <!-- Phase 3: include anal positions -->
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
 <input type="checkbox" class="touch-checkbox" id="analPositionsEnabled" style="accent-color: #22c55e;" title="When off, positions that are mainly anal-oriented (e.g. reverse missionary, rear entry on back) are rerolled." />
               <span>Include anal positions</span>
             </label>
-            <span style="font-size: 0.8rem; color: #64748b;">When off, positions that are mainly anal-oriented are rerolled. Other positions can still appear.</span>
           </div>
           <!-- Phase 3: include positions by physical effort level (bed/lying, standing, heavy) -->
-          <div class="row" style="margin-bottom: 1rem; flex-direction: column; gap: 0.5rem; align-items: flex-start;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Phase 3: include positions by effort level</label>
-            <p style="font-size: 0.8rem; color: #64748b; margin: 0; text-align: left;">Uncheck to exclude from rolls: Bed/lying (low), Standing (moderate), Heavy (high effort).</p>
-            <div id="phase3GroupCheckboxes" style="display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; max-height: 12rem; overflow-y: auto; padding: 0.5rem 0; justify-content: flex-start;"></div>
+          <div class="row pref-block" style="flex-direction: column; gap: 0.35rem; align-items: flex-start;">
+            <label class="pref-label">Phase 3 effort level</label>
+            <div id="phase3GroupCheckboxes" style="display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; max-height: 8rem; overflow-y: auto; padding: 0.25rem 0; justify-content: flex-start;"></div>
           </div>
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
               <input type="checkbox" class="touch-checkbox" id="phase3DoubleTime" style="accent-color: #22c55e;" title="In guided mode, each Phase 3 turn gets twice as long so it doesn't feel hurried." />
-              <span>Double Phase 3 turn length (guided mode)</span>
+              <span>Double Phase 3 turn length (guided)</span>
             </label>
-            <span style="font-size: 0.8rem; color: #64748b;">When on, each turn in Phase 3 gets twice the usual time per position.</span>
           </div>
-          <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;"><svg class="pref-icon-svg" viewBox="0 0 24 10" aria-hidden="true" focusable="false"><path d="M6 2 L18 2 Q22 5 18 8 L6 8 Q2 5 6 2 Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Vibrators available:</label>
-            <div class="row" style="align-items: center; gap: 0.5rem;">
-              <input type="checkbox" class="touch-checkbox" id="vibratorsPresent" style="accent-color: #22c55e;" title="When off, Phase 3 vibrator/toy modifiers (Vibrator ladder, Pulse vs steady, Hand + toy duet) are rerolled and toy-optional text is hidden." />
-              <label for="vibratorsPresent" style="font-size: 0.85rem; color: #9ca3af;">Include vibrator/toy modifiers in Phase 3 (if off, those rolls are rerolled)</label>
-            </div>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label"><svg class="pref-icon-svg" viewBox="0 0 24 10" aria-hidden="true" focusable="false"><path d="M6 2 L18 2 Q22 5 18 8 L6 8 Q2 5 6 2 Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Vibrators:</label>
+            <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #9ca3af; cursor: pointer;">
+              <input type="checkbox" class="touch-checkbox" id="vibratorsPresent" style="accent-color: #22c55e;" title="When off, Phase 3 vibrator/toy modifiers are rerolled." />
+              <span>Include vibrator/toy modifiers in Phase 3</span>
+            </label>
           </div>
           <!-- Guided mode -->
-          <div class="row pref-sep" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Pause for check-in between phases:</label>
-            <div class="row" style="align-items: center; gap: 0.5rem;">
+          <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; cursor: pointer;">
               <input type="checkbox" class="touch-checkbox" id="guidedPhaseCheckInEnabled" style="accent-color: #22c55e;" title="When on, Guided mode pauses at the end of each phase so you can check in before continuing." />
-              <label for="guidedPhaseCheckInEnabled" style="font-size: 0.85rem; color: #9ca3af;">Pause at end of each phase to check in, then continue</label>
-            </div>
+              <span>Pause for check-in between phases</span>
+            </label>
           </div>
           <!-- Voice for reading aloud -->
-           <div class="row pref-sep" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-             <label style="font-weight: 600; font-size: 0.9rem;">Voice for reading aloud:</label>
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <label class="pref-label">Voice:</label>
              <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                <button class="secondary small voice-toggle-btn" id="voiceToggleMain" style="font-size: 0.9rem; padding: 0.35rem 0.65rem;" title="Toggle voice on/off">🔇 Voice Off</button>
                <select id="voiceSelect" class="voice-select" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;" title="Choose voice for reading aloud">
@@ -1260,17 +1435,412 @@
               <button class="secondary small" id="readAloudBtn" style="font-size: 0.85rem; padding: 0.35rem 0.6rem;" title="Read current instructions aloud">🔊 Read aloud</button>
              </div>
            </div>
-           <!-- View favorite positions (Phase 3) -->
-           <div class="row pref-sep" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-             <button type="button" class="secondary small" id="viewFavoritesPrefBtn" style="font-size: 0.85rem; padding: 0.35rem 0.6rem;" title="View your saved favorite Phase 3 positions">♥ View favorite positions</button>
+           <!-- Voice speed -->
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <label class="pref-label">Voice speed:</label>
+             <div class="row" style="align-items: center; gap: 0.75rem; flex: 1; min-width: 200px;">
+               <span style="font-size: 0.8rem; color: #9ca3af;">Slower</span>
+               <input type="range" id="voiceSpeedSlider" min="0.5" max="2" step="0.1" value="1" style="flex: 1; min-width: 120px; height: 8px; accent-color: #3b82f6; cursor: pointer;" title="Adjust how fast the voice reads aloud">
+               <span style="font-size: 0.8rem; color: #9ca3af;">Faster</span>
+               <span id="voiceSpeedDisplay" style="font-size: 0.9rem; font-weight: 600; min-width: 3rem; color: #e5e7eb;">1.0×</span>
+             </div>
            </div>
-           <p style="font-size: 0.8rem; color: #94a3b8; margin: 1rem 0 0; padding-top: 0.75rem; border-top: 1px solid #334155;">All preferences and favorites are saved locally on this device and are not transmitted anywhere else.</p>
+           <!-- View favorite positions (Phase 3) -->
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <button type="button" class="secondary small" id="viewFavoritesPrefBtn" style="font-size: 0.8rem; padding: 0.3rem 0.5rem;" title="View your saved favorite Phase 3 positions">♥ Favorites</button>
+           </div>
+       </div>
+     </div>
+     
+     <!-- Mode selection -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); justify-content: center; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+       <div class="row" style="gap: 0.5rem; align-items: center;">
+         <label style="font-weight: 600; margin-right: 0.75rem;">Play Mode:</label>
+         <div class="row" style="gap: 0.5rem;">
+           <button class="secondary" id="freePlayMode" style="font-weight: 600;">Free Play</button>
+           <button class="secondary" id="guidedMode" style="font-weight: 600;">Guided Mode</button>
          </div>
        </div>
      </div>
 
-     <!-- Guided mode session setup (hidden by default) -->
+     <!-- Guided mode session setup - Wizard style (hidden by default) -->
      <div id="guidedSetup" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1);">
+       <div class="wizard-container">
+         <!-- Progress indicator -->
+         <div class="wizard-progress">
+           <span class="wizard-progress-text" id="wizardProgressText">Step 1 of 9</span>
+           <div class="wizard-progress-bar">
+             <div class="wizard-progress-fill" id="wizardProgressFill" style="width: 11.1%;"></div>
+           </div>
+         </div>
+         
+         <!-- Step 1: Partner 1 Setup -->
+         <div class="wizard-step active" data-step="1">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Partner 1 Setup</div>
+             <div class="wizard-step-description">Set name, color, and anatomy for Partner 1</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+               <!-- Name -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.5rem;">Name</label>
+                 <input type="text" id="wizardPartnerName1" placeholder="Partner 1" maxlength="30" 
+                   style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 1rem;" />
+               </div>
+               
+               <!-- Color -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Color</label>
+                 <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#3b82f6" style="background: #3b82f6; color: #3b82f6;" title="Blue"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+                 </div>
+               </div>
+               
+               <!-- Anatomy -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Anatomy</label>
+                 <div class="row" style="justify-content: center; gap: 0.75rem;">
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="1" data-value="penis" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Penis & scrotum</button>
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="1" data-value="vulva" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Vulva</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" disabled>← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext1">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 2: Partner 2 Setup -->
+         <div class="wizard-step" data-step="2">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Partner 2 Setup</div>
+             <div class="wizard-step-description">Set name, color, and anatomy for Partner 2</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+               <!-- Name -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.5rem;">Name</label>
+                 <input type="text" id="wizardPartnerName2" placeholder="Partner 2" maxlength="30" 
+                   style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 1rem;" />
+               </div>
+               
+               <!-- Color -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Color</label>
+                 <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#ec4899" style="background: #ec4899; color: #ec4899;" title="Pink"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+                 </div>
+               </div>
+               
+               <!-- Anatomy -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Anatomy</label>
+                 <div class="row" style="justify-content: center; gap: 0.75rem;">
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="2" data-value="penis" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Penis & scrotum</button>
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="2" data-value="vulva" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Vulva</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack2">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext2">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 3: Phase Time Distribution -->
+         <div class="wizard-step" data-step="3">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Phase Time Distribution</div>
+             <div class="wizard-step-description">How would you like to allocate time across the three phases?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="3" data-value="equal" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Equal<br><span style="font-size: 0.8rem; color: #9ca3af;">33/33/34%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase1" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Sensate-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">50/30/20%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase2" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">A Little Spicy<br><span style="font-size: 0.8rem; color: #9ca3af;">30/40/30%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase3" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Intimacy-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">20/30/50%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="quickie" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Quickie<br><span style="font-size: 0.8rem; color: #9ca3af;">10/30/60% · 15 min · 1 min</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="custom" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Custom<br><span style="font-size: 0.8rem; color: #9ca3af;">Set your own</span></button>
+             </div>
+             <!-- Custom phase inputs (shown when custom selected) - Mobile-friendly sliders -->
+             <div id="wizardCustomPhaseInputs" style="display: none; margin-top: 1.5rem;">
+               <div style="text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: #9ca3af;">
+                 Adjust sliders to set percentages (must total 100%)
+               </div>
+               
+               <!-- Phase 1 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 1</label>
+                   <span id="wizardPhase1PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #22c55e; min-width: 3rem; text-align: right;">33%</span>
+                 </div>
+                 <input type="range" id="wizardPhase1Percent" min="0" max="100" value="33" 
+                   style="width: 100%; height: 8px; accent-color: #3b82f6; cursor: pointer;" />
+               </div>
+               
+               <!-- Phase 2 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 2</label>
+                   <span id="wizardPhase2PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #a855f7; min-width: 3rem; text-align: right;">33%</span>
+                 </div>
+                 <input type="range" id="wizardPhase2Percent" min="0" max="100" value="33" 
+                   style="width: 100%; height: 8px; accent-color: #a855f7; cursor: pointer;" />
+               </div>
+               
+               <!-- Phase 3 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 3</label>
+                   <span id="wizardPhase3PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #ec4899; min-width: 3rem; text-align: right;">34%</span>
+                 </div>
+                 <input type="range" id="wizardPhase3Percent" min="0" max="100" value="34" 
+                   style="width: 100%; height: 8px; accent-color: #ec4899; cursor: pointer;" />
+               </div>
+               
+               <!-- Total display -->
+               <div style="text-align: center; padding: 0.75rem; background: rgba(2, 6, 23, 0.6); border-radius: 0.5rem; border: 1px solid #334155; margin-bottom: 1rem;">
+                 <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.25rem;">Total</div>
+                 <div id="wizardPhaseTotalDisplay" style="font-size: 1.5rem; font-weight: 700; color: #e5e7eb;">100%</div>
+               </div>
+               
+               <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.8rem; color: #9ca3af;">Quick presets:</div>
+               <div class="row" style="justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                 <button class="secondary small" id="wizardPreset20-20-60">20/20/60</button>
+                 <button class="secondary small" id="wizardPreset25-25-50">25/25/50</button>
+                 <button class="secondary small" id="wizardPreset30-30-40">30/30/40</button>
+               </div>
+               <div id="wizardPercentError" style="color: #fecaca; font-size: 0.85rem; text-align: center; margin-top: 0.5rem; display: none;">
+                 Percentages must total 100%
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack3">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext3">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 3: Phase Time Distribution -->
+         <div class="wizard-step" data-step="3">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Phase Time Distribution</div>
+             <div class="wizard-step-description">How would you like to allocate time across the three phases?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="3" data-value="equal" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Equal<br><span style="font-size: 0.8rem; color: #9ca3af;">33/33/34%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase1" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Sensate-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">50/30/20%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase2" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">A Little Spicy<br><span style="font-size: 0.8rem; color: #9ca3af;">30/40/30%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase3" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Intimacy-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">20/30/50%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="quickie" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Quickie<br><span style="font-size: 0.8rem; color: #9ca3af;">10/30/60% · 15 min · 1 min</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="custom" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Custom<br><span style="font-size: 0.8rem; color: #9ca3af;">Set your own</span></button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack3">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext3">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 4: Total Session Time -->
+         <div class="wizard-step" data-step="4">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Total Session Time</div>
+             <div class="wizard-step-description">How long should the entire session be?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="4" data-value="15" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">15 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="30" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">30 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="45" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">45 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="60" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">60 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="90" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">90 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="120" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">120 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack4">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext4">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 5: Turn Duration -->
+         <div class="wizard-step" data-step="5">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Turn Duration</div>
+             <div class="wizard-step-description">How long should each turn be?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="5" data-value="1" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="2" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">2 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="3" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">3 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="5" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">5 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack5">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext5">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 6: Pause Between Turns -->
+         <div class="wizard-step" data-step="6">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Pause Between Turns</div>
+             <div class="wizard-step-description">How long should the pause be between turns?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="6" data-value="0" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">None</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="10" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">10 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="15" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">15 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="20" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">20 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="30" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">30 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="60" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="90" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">1.5 min</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="120" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">2 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack6">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext6">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 7: Clothing Enabled/Disabled -->
+         <div class="wizard-step" data-step="7">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Clothing Removal</div>
+             <div class="wizard-step-description">Would you like clothing removal prompts during the session?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 1rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="7" data-value="enabled" style="min-width: 150px; padding: 1.5rem; font-size: 1.1rem; font-weight: 600;">Enabled</button>
+               <button class="secondary wizard-option-btn" data-step="7" data-value="disabled" style="min-width: 150px; padding: 1.5rem; font-size: 1.1rem; font-weight: 600;">Disabled</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack7">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext7">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 8: Partner 1 Clothing (conditional) -->
+         <div class="wizard-step" data-step="8" id="wizardStepClothingP1">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title" id="wizardClothingP1Title">Partner 1 Clothing</div>
+             <div class="wizard-step-description">Select what Partner 1 is wearing. Use presets or select individually.</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="text-align: center; margin-bottom: 1rem;">
+               <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                 <button class="secondary small" id="wizardP1PresetCasual">Casual</button>
+                 <button class="secondary small" id="wizardP1PresetDressCasual">Dress Casual</button>
+                 <button class="secondary small" id="wizardP1PresetLingerie">Lingerie</button>
+                 <button class="secondary small" id="wizardP1PresetMinimal">Minimal</button>
+                 <button class="secondary small" id="wizardP1PresetFullOutfit">Full Outfit</button>
+                 <button class="secondary small" id="wizardP1PresetDateNight">Date Night</button>
+                 <button class="secondary small" id="wizardP1PresetLoungeWear">Lounge Wear</button>
+                 <button class="secondary small" id="wizardP1PresetLingerieLace">Lingerie Lace</button>
+                 <button class="secondary small" id="wizardP1PresetLingerieClassic">Lingerie Classic</button>
+                 <button class="secondary small" id="wizardP1PresetAthletic">Athletic</button>
+                 <button class="secondary small" id="wizardP1PresetCozy">Cozy</button>
+                 <button class="secondary small" id="wizardP1PresetLayered">Layered</button>
+                 <button class="secondary small" id="wizardP1PresetUndergarmentsMale">Undergarments - Male</button>
+                 <button class="secondary small" id="wizardP1PresetUndergarmentsFemale">Undergarments - Female</button>
+               </div>
+               <button class="secondary small" id="wizardP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2; margin-bottom: 0.75rem;">Clear All</button>
+             </div>
+             <div id="wizardClothingCheckboxContainerP1" style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 400px; overflow-y: auto;">
+               <!-- Partner 1 checkboxes populated by JS -->
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack8">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext8">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 9: Partner 2 Clothing (conditional) -->
+         <div class="wizard-step" data-step="9" id="wizardStepClothingP2">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title" id="wizardClothingP2Title">Partner 2 Clothing</div>
+             <div class="wizard-step-description">Select what Partner 2 is wearing. Use presets or select individually.</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="text-align: center; margin-bottom: 1rem;">
+               <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                 <button class="secondary small" id="wizardP2PresetCasual">Casual</button>
+                 <button class="secondary small" id="wizardP2PresetDressCasual">Dress Casual</button>
+                 <button class="secondary small" id="wizardP2PresetLingerie">Lingerie</button>
+                 <button class="secondary small" id="wizardP2PresetMinimal">Minimal</button>
+                 <button class="secondary small" id="wizardP2PresetFullOutfit">Full Outfit</button>
+                 <button class="secondary small" id="wizardP2PresetDateNight">Date Night</button>
+                 <button class="secondary small" id="wizardP2PresetLoungeWear">Lounge Wear</button>
+                 <button class="secondary small" id="wizardP2PresetLingerieLace">Lingerie Lace</button>
+                 <button class="secondary small" id="wizardP2PresetLingerieClassic">Lingerie Classic</button>
+                 <button class="secondary small" id="wizardP2PresetAthletic">Athletic</button>
+                 <button class="secondary small" id="wizardP2PresetCozy">Cozy</button>
+                 <button class="secondary small" id="wizardP2PresetLayered">Layered</button>
+                 <button class="secondary small" id="wizardP2PresetUndergarmentsMale">Undergarments - Male</button>
+                 <button class="secondary small" id="wizardP2PresetUndergarmentsFemale">Undergarments - Female</button>
+               </div>
+               <button class="secondary small" id="wizardP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2; margin-bottom: 0.75rem;">Clear All</button>
+             </div>
+             <div id="wizardClothingCheckboxContainerP2" style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 400px; overflow-y: auto;">
+               <!-- Partner 2 checkboxes populated by JS -->
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack9">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext9">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 10: Extra Time for Clothing Removal -->
+         <div class="wizard-step" data-step="10" id="wizardStepClothingTime">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Extra Time for Clothing Removal</div>
+             <div class="wizard-step-description">Add extra time to a turn when clothing is removed?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="10" data-value="0" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">None</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="30" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">30 sec</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="60" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="90" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1.5 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack10">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext10">Start Session</button>
+           </div>
+         </div>
+       </div>
+       
+       <!-- Legacy collapsible sections (hidden, kept for compatibility) -->
+       <div style="display: none;">
 
        <!-- Voice for reading aloud (setup option) -->
        <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #7c3aed; background: rgba(124, 58, 237, 0.12); flex-wrap: wrap; gap: 0.5rem; align-items: center;">
@@ -1406,6 +1976,9 @@
            <div class="collapsible-body">
              <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
                <button class="secondary" id="pause0">None</button>
+               <button class="secondary" id="pause10">10 sec</button>
+               <button class="secondary" id="pause15">15 sec</button>
+               <button class="secondary" id="pause20">20 sec</button>
                <button class="secondary" id="pause30">30 sec</button>
                <button class="secondary" id="pause60">1 min</button>
                <button class="secondary" id="pause90">1.5 min</button>
@@ -1457,6 +2030,8 @@
                <button class="secondary small" id="guidedP1PresetAthletic">Athletic</button>
                <button class="secondary small" id="guidedP1PresetCozy">Cozy</button>
                <button class="secondary small" id="guidedP1PresetLayered">Layered</button>
+               <button class="secondary small" id="guidedP1PresetUndergarmentsMale">Undergarments - Male</button>
+               <button class="secondary small" id="guidedP1PresetUndergarmentsFemale">Undergarments - Female</button>
              </div>
 
              <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1490,6 +2065,8 @@
                <button class="secondary small" id="guidedP2PresetAthletic">Athletic</button>
                <button class="secondary small" id="guidedP2PresetCozy">Cozy</button>
                <button class="secondary small" id="guidedP2PresetLayered">Layered</button>
+               <button class="secondary small" id="guidedP2PresetUndergarmentsMale">Undergarments - Male</button>
+               <button class="secondary small" id="guidedP2PresetUndergarmentsFemale">Undergarments - Female</button>
              </div>
 
              <div style="text-align: center; margin-bottom: 0.5rem;">
@@ -1509,41 +2086,7 @@
       </div>
       </div>
 
-      <!-- Section 6: Remove Clothing Interval -->
-      <div class="collapsible-section">
-        <div class="collapsible-header" data-section="clothingInterval">
-          <div class="collapsible-header-left">
-            <span class="collapsible-number">6</span>
-            <div>
-              <div class="collapsible-title">Remove Clothing Interval</div>
-              <div class="collapsible-selection" id="clothingIntervalSelection">Every 3 turns</div>
-            </div>
-          </div>
-          <span class="collapsible-icon">▼</span>
-        </div>
-        <div class="collapsible-content">
-          <div class="collapsible-body">
-            <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.85rem; color: #9ca3af;">
-              How often should clothing be removed during the session?
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem; justify-content: center; padding: 0 0.5rem;">
-              <label style="font-size: 0.85rem; white-space: nowrap;">Every</label>
-              <input type="range" id="clothingMilestone" min="1" max="10" value="3"
-                style="flex: 1; max-width: 200px; accent-color: #22d3ee; cursor: pointer;" />
-              <span id="clothingMilestoneValue" style="font-size: 1rem; font-weight: 700; min-width: 5rem; text-align: center;">3 turns</span>
-            </div>
-            <!-- Double clothing removal option -->
-            <div id="quickieOptions" style="margin-top: 0.75rem; text-align: center;">
-              <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; padding: 0.4rem 0.75rem; border-radius: 0.375rem; border: 1px solid #475569; background: rgba(2, 6, 23, 0.5);">
-                <input type="checkbox" class="touch-checkbox" id="quickieDoubleClothing" style="accent-color: #f59e0b; cursor: pointer;" />
-                Remove 2 clothing items per turn
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 7: Extra Time for Clothing Removal -->
+      <!-- Section 6: Extra Time for Clothing Removal -->
       <div class="collapsible-section">
         <div class="collapsible-header" data-section="clothingExtraTime">
           <div class="collapsible-header-left">
@@ -1573,50 +2116,48 @@
       <div style="margin-top: 1.5rem; text-align: center;">
         <button class="primary big" id="startGuided">Start Guided Session</button>
       </div>
+       </div>
      </div>
 
-     <!-- Guided mode status (hidden by default) -->
-     <div id="guidedStatus" class="row" style="display: none; margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1); flex-direction: column; gap: 1rem;">
-       <div style="display: flex; flex-direction: column; gap: 1rem;">
-         <!-- Current Partner -->
-         <div style="text-align: center;">
-           <label style="font-size: 1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem;">Current turn (lead):</label>
-           <span id="currentPartner" style="font-weight: 700; font-size: 1.5rem;">Partner 1</span>
+     <!-- Guided mode status - Clean mobile-focused UI (hidden by default) -->
+     <div id="guidedStatus" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.75rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5);">
+       <!-- Phase indicator - prominent at top -->
+       <div style="text-align: center; margin-bottom: 1rem;">
+         <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.25rem;">Current Phase</div>
+         <div id="phaseIndicator" style="font-weight: 700; font-size: 2rem; letter-spacing: 0.05em;">Phase 1</div>
+       </div>
+       
+       <!-- Current event timer - full row, big and prominent -->
+       <div style="width: 100%; text-align: center; padding: 1.25rem; margin-bottom: 1rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+         <div id="turnTimeLeftLabel" style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.35rem;">Current Action</div>
+         <div id="turnTimeLeft" style="font-weight: 700; font-size: 3rem; letter-spacing: 0.08em; line-height: 1.2;">—</div>
+       </div>
+       
+       <!-- Other timers - compact row -->
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+         <div style="text-align: center; padding: 0.75rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+           <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.25rem;">Total Time</div>
+           <div id="totalTimeLeft" style="font-weight: 700; font-size: 1.75rem; letter-spacing: 0.05em;">00:00</div>
          </div>
-
-         <!-- Time displays - larger and more prominent -->
-         <div class="row" style="justify-content: center; gap: 2rem; flex-wrap: wrap;">
-           <div style="text-align: center;">
-             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Total Time Left:</label>
-             <span id="totalTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">00:00</span>
-           </div>
-           <div style="text-align: center;">
-             <label style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Est. turns left:</label>
-             <span id="phaseTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">—</span>
-           </div>
-           <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
-             <label id="turnTimeLeftLabel" style="font-size: 1.1rem; color: #9ca3af; display: block; margin-bottom: 0.5rem; font-weight: 600;">Current action:</label>
-             <span id="turnTimeLeft" style="font-weight: 700; font-size: 2.5rem; display: block; letter-spacing: 0.05em;">—</span>
-           </div>
-         </div>
-
-         <div style="text-align: center; font-size: 0.8rem; color: #9ca3af; padding-top: 0.5rem; border-top: 1px solid #334155;">
-           <span id="phaseAllocation">Phase allocation: P1: 10m, P2: 10m, P3: 10m</span>
-         </div>
-         <div id="clothingStatus" style="display: none; text-align: center; font-size: 0.8rem; padding-top: 0.5rem; border-top: 1px solid #334155;">
-           <div id="clothingRemainingLabel" style="color: #9ca3af; margin-bottom: 0.25rem;">Clothing remaining:</div>
-           <div id="clothingItemsList" style="color: #e5e7eb; font-weight: 600;"></div>
-           <div id="clothingMilestoneProgress" style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.25rem;"></div>
+         <div style="text-align: center; padding: 0.75rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+           <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.25rem;">Est. Turns</div>
+           <div id="phaseTimeLeft" style="font-weight: 700; font-size: 1.75rem;">—</div>
          </div>
        </div>
-       <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-         <button class="secondary primary" id="continueAfterPhaseCheckInBtn" style="display: none;">Continue to Phase 2</button>
-         <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next Turn</button>
-         <button class="secondary" id="rerollGuidedPrompt">Reroll prompt</button>
+       
+       <!-- Current partner/turn info -->
+       <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.4);">
+         <span id="currentPartner" style="font-weight: 600; font-size: 1.1rem;">Partner 1</span>
+       </div>
+       
+       <!-- Control buttons - compact row -->
+       <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+         <button class="secondary primary" id="continueAfterPhaseCheckInBtn" style="display: none;">Continue</button>
+         <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next</button>
+         <button class="secondary" id="rerollGuidedPrompt">Reroll</button>
          <button class="secondary" id="pauseGuided">Pause</button>
          <button class="secondary" id="resumeGuided" style="display: none;">Resume</button>
-         <button class="secondary voice-toggle-btn" id="voiceToggleGuided">🔇 Voice Off</button>
-         <button class="secondary danger" id="stopGuided">Stop Guided Mode</button>
+         <button class="secondary danger" id="stopGuided">Stop</button>
          <div id="sessionCompleteButtons" style="display: none; width: 100%; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
            <button class="secondary primary" id="continueInFreePlayBtn">Continue in free play</button>
            <button class="secondary" id="endSessionBtn">End session</button>
@@ -1825,8 +2366,8 @@
         </div>
       </div>
 
-      <!-- Position reference image modal (Phase 3: show position .png) -->
-      <div id="positionRefModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1003; padding: 2rem; align-items: center; justify-content: center;" >
+      <!-- Position reference image modal (Phase 3: show position .png) - Auto-shown for Phase 3 prompts -->
+      <div id="positionRefModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1003; padding: 2rem; align-items: center; justify-content: center; flex-direction: column;" >
         <div style="max-width: 90vw; max-height: 90vh; position: relative;">
           <button type="button" class="secondary small" id="closePositionRefModal" style="position: absolute; top: -2rem; right: 0; padding: 0.25rem 0.5rem;">✕</button>
           <img id="positionRefImage" src="" alt="Position reference" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 0.5rem;" />

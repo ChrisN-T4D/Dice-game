@@ -1751,38 +1751,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Need help understanding?: show extended descriptions for current prompt
-  const needHelpBtn = document.getElementById('needHelpBtn');
-  const helpModal = document.getElementById('helpModal');
-  const helpModalBody = document.getElementById('helpModalBody');
-  const closeHelpModal = document.getElementById('closeHelpModal');
-  if (needHelpBtn && helpModal && helpModalBody) {
-    needHelpBtn.addEventListener('click', () => {
-      if (!currentPrompt || typeof getPromptHelp !== 'function') {
-        helpModalBody.textContent = 'No prompt is shown yet, or help is not loaded. Show a prompt first (enter rolls or start a guided turn).';
-        helpModal.style.display = 'flex';
-        return;
-      }
-      const p = currentPrompt;
-      const whereLabel = p.phase === 3 ? 'Position' : 'Where (location)';
-      const whatLabel = p.phase === 3 ? 'Modifier (how to do it)' : 'What to do (action)';
-      const whereHelp = getPromptHelp(p.phase, 'where', p.locationRoll);
-      const whatHelp = getPromptHelp(p.phase, 'what', p.actionRoll);
-      const parts = [];
-      if (whereHelp) parts.push(whereLabel + ', extended description:\n\n' + whereHelp);
-      if (whatHelp) parts.push(whatLabel + ', extended description:\n\n' + whatHelp);
-      helpModalBody.textContent = parts.length ? parts.join('\n\n') : 'No extended description available for this prompt.';
-      helpModal.style.display = 'flex';
-    });
-  }
-  if (closeHelpModal && helpModal) {
-    closeHelpModal.addEventListener('click', () => { helpModal.style.display = 'none'; });
-  }
-  if (helpModal) {
-    helpModal.addEventListener('click', (e) => {
-      if (e.target === helpModal) helpModal.style.display = 'none';
-    });
-  }
+  // Need help understanding button removed - was not showing useful content
 
   // View position reference (Phase 3): show position image modal
   const viewPositionRefBtn = document.getElementById('viewPositionRefBtn');

@@ -54,7 +54,13 @@ function updateRollLabels(currentPhase) {
     locationLabel.textContent = 'Position die 1 (1–20)';
     actionLabel.textContent = 'Modifier (1–20)';
     if (positionRoll2Col) positionRoll2Col.style.display = '';
-    if (viewPositionRefBtn) viewPositionRefBtn.style.display = 'inline-block';
+    // Check if current position is Roller's choice (64 or 127) - these don't have images
+    // Access currentPrompt from state.js (it's a global variable)
+    const isRollersChoice = typeof currentPrompt !== 'undefined' && currentPrompt && 
+      currentPrompt.phase === 3 && (currentPrompt.locationRoll === 64 || currentPrompt.locationRoll === 127);
+    if (viewPositionRefBtn) {
+      viewPositionRefBtn.style.display = (isRollersChoice) ? 'none' : 'inline-block';
+    }
     if (favoritePositionBtn) favoritePositionBtn.style.display = 'inline-block';
     if (viewFavoritesBtn) viewFavoritesBtn.style.display = 'inline-block';
   } else {

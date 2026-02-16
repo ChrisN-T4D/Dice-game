@@ -652,6 +652,8 @@ function rerollGuidedPrompt() {
   const receiver = guidedCurrentPartner === 1 ? 2 : 1;
   showExercise(phase, loc, actRoll, giver, receiver);
   if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
+  // Ensure Phase 3 buttons (view position reference, favorites) are visible
+  if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
 
   if (extendedTime) {
     const ext = ' Spend about twice as long on this location.';

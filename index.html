@@ -259,12 +259,12 @@
       color: #fee2e2;
     }
 
-    /* Touch-friendly checkboxes (mobile-primary); ~44px minimum tap target */
+    /* Touch-friendly checkboxes (mobile-primary); smaller size for preferences */
     input[type="checkbox"].touch-checkbox {
-      width: 2.75rem;
-      height: 2.75rem;
-      min-width: 2.75rem;
-      min-height: 2.75rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      min-width: 1.5rem;
+      min-height: 1.5rem;
       cursor: pointer;
       flex-shrink: 0;
     }
@@ -1206,15 +1206,6 @@
                  </div>
                </div>
              </div>
-           </div>
-           <!-- Phase 3 position preference (for visuals: bed only vs more physical) -->
-           <div class="row pref-sep" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-             <label style="font-weight: 600; font-size: 0.9rem;">Phase 3 positions:</label>
-             <div class="row" style="align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-               <button type="button" class="secondary position-intensity-btn" id="positionIntensityBedOnly" data-value="bed_only" style="font-size: 0.85rem;">Bed only</button>
-               <button type="button" class="secondary position-intensity-btn" id="positionIntensityMorePhysical" data-value="more_physical" style="font-size: 0.85rem;" title="Include standing, carrying, weight/balance positions (e.g. standing, tabletop, bent over, wheelbarrow, bridge).">More physical</button>
-             </div>
-             <span style="font-size: 0.8rem; color: #64748b;">Bed only excludes standing, tabletop, bent over, wheelbarrow, bridge.</span>
            </div>
 <!-- Phase 3: include anal positions -->
           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">

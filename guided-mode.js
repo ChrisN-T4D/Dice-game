@@ -115,9 +115,10 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   guidedDistributionMode = distributionMode; // Store the mode name
 
   // Calculate phase time allocations based on percentages
+  // Use Math.floor for first two, then assign remainder to last phase to ensure sum equals total
   guidedPhaseSeconds[0] = Math.floor(guidedTotalSeconds * (phasePercents[0] / 100));
   guidedPhaseSeconds[1] = Math.floor(guidedTotalSeconds * (phasePercents[1] / 100));
-  guidedPhaseSeconds[2] = Math.floor(guidedTotalSeconds * (phasePercents[2] / 100));
+  guidedPhaseSeconds[2] = guidedTotalSeconds - guidedPhaseSeconds[0] - guidedPhaseSeconds[1]; // Ensure sum equals total
 
   guidedPhaseTimeRemaining = guidedPhaseSeconds[0]; // Start with phase 1
   guidedTurnTimeRemaining = guidedTurnSeconds;
@@ -584,10 +585,7 @@ function performGuidedTurn() {
       }, firstTurnPopupDurationMs);
     }
   } else {
-    if (timerSound) {
-      timerSound.currentTime = 0;
-      timerSound.play().catch(() => {});
-    }
+    // Dong sound removed per user request
     startNextTurnCountdown();
   }
 }

@@ -13,6 +13,7 @@ let clothingPromptsEnabled = true; // can be turned off
 // ----- Guided mode state -----
 let isGuidedMode = false;
 let guidedTotalSeconds = 0;
+let guidedTotalTimeRemaining = 0; // Track total time remaining directly for accurate display
 let guidedPhaseSeconds = [0, 0, 0]; // time allocated per phase (array for custom distribution)
 let guidedPhaseTimeRemaining = 0;
 let guidedTurnSeconds = 120; // default 2 min per turn
@@ -194,6 +195,7 @@ function saveState() {
     rollCount,
     isGuidedMode,
     guidedTotalSeconds,
+    guidedTotalTimeRemaining,
     guidedPhaseSeconds,
     guidedPhaseTimeRemaining,
     guidedTurnSeconds,
@@ -260,6 +262,15 @@ function loadState() {
     // Restore guided mode state
     isGuidedMode = state.isGuidedMode || false;
     guidedTotalSeconds = state.guidedTotalSeconds || 0;
+    // Calculate total time remaining from phase times if not saved, for backward compatibility
+    if (state.guidedTotalTimeRemaining !== undefined) {
+      guidedTotalTimeRemaining = state.guidedTotalTimeRemaining;
+    } else {
+      // Backward compatibility: calculate from phase times
+      const remainingLaterPhases = phase === 1 ? ((state.guidedPhaseSeconds?.[1] || 0) + (state.guidedPhaseSeconds?.[2] || 0))
+        : phase === 2 ? (state.guidedPhaseSeconds?.[2] || 0) : 0;
+      guidedTotalTimeRemaining = (state.guidedPhaseTimeRemaining || 0) + remainingLaterPhases;
+    }
     guidedPhaseSeconds = state.guidedPhaseSeconds || [0, 0, 0];
     guidedPhaseTimeRemaining = state.guidedPhaseTimeRemaining || 0;
     guidedTurnSeconds = state.guidedTurnSeconds || 120;

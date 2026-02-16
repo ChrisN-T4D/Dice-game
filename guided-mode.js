@@ -150,6 +150,7 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   updateGuidedModeUI();
   updateClothingDisplay();
   notifyPhaseChange(phase);
+  if (typeof updateRollLabels === 'function') updateRollLabels(phase);
 
   // Speak guided-mode intro once (how it works, can substitute, flow; add clothing only if enabled), then start first turn.
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -907,6 +908,7 @@ function advanceGuidedPhase() {
 
     notifyPhaseChange(phase);
     updatePhaseUI(phase, rollCount);
+    if (typeof updateRollLabels === 'function') updateRollLabels(phase);
     updateGuidedModeUI();
     updateClothingDisplay();
     saveState();

@@ -100,29 +100,23 @@
     20: 'Four steps: slow stroke, medium stroke, fast stroke, brief stillness. Do that four-step sequence eight times in a row for the turn.'
   };
 
-  // Phase 3 – position help
-  tables[3].positionHelp = {
-    1: 'One partner lies on their back; the other lies or kneels on top facing them. Classic position; good for eye contact and kissing.',
-    2: 'Doggy: one partner on hands-and-knees (hips up); the other behind. Unlike prone, you are not flat. Check in about comfort and depth.',
-    3: 'Partner on top straddles the other face-to-face. They control speed, rhythm, and depth if penetration chosen; the other can touch and kiss.',
-    4: 'Partner on top facing away. Different angle and sensation; the person on bottom can touch their partner’s body.',
-    5: 'Both on their sides, one behind the other (spooning). Comfortable and intimate; good for longer sessions.',
-    6: 'Both on their sides facing each other. Full body contact; kissing and eye contact easy.',
-    7: 'One sits (e.g. on a chair or bed); the other sits or straddles on their lap. Face-to-face or facing away by preference.',
-    8: 'Both standing (e.g. one against a wall). Alignment depends on height; use pillows or a step if needed.',
-    9: 'Seated face-to-face with legs wrapped around each other. Very close; movement is often subtle and rocking.',
-    10: 'One lies back on a bed, table, or counter; the other stands or kneels in front. Good for oral or penetration.',
-    11: 'Prone: one partner lies flat face-down, hips on the bed (unlike doggy, not on hands-and-knees); the other on top or at an angle. Good for penetration from behind or body-to-body contact.',
-    12: 'Head-to-toe so each person can give oral to the other at the same time. Coordination and comfort matter; adjust angles as needed.',
-    13: 'Partners touch themselves and/or each other with hands only. No penetration unless you add it. Focus on rhythm and watching.',
-    14: 'Body/genital rubbing and scissoring: bodies or genitals rubbing together with no penetration, in any configuration (e.g. thighs, stomachs, genitals; or legs interlocked). Build rhythm and pressure together.',
-    15: 'Bent over / standing rear-entry: one partner bent over a surface (e.g. bed, table); the other standing behind. Different from doggy: bent over a surface, not on hands-and-knees.',
-    16: 'Kneeling (face-to-face): both kneeling, facing each other. Good for eye contact, penetration, or genital contact; both can control angle and rhythm.',
-    17: 'One lies on their back, legs bent, feet on the surface or in the air; the other kneels or stands between the legs. Good for oral or penetration.',
-    18: 'One in a plank or push-up position; the other holds their legs (like a wheelbarrow). Requires balance and strength; try only if both are comfortable.',
-    19: 'One lifts their hips into a bridge (back and shoulders on the surface); the other is in front. Good for oral or penetration; the person bridging can lower when needed.',
-    20: 'Critical roll: double time. Reroll for position; spend twice as long in whichever position comes up.'
-  };
+  // Phase 3 – position help: build from getPhase3PositionHelp (positions 1–156); append group/variation when available
+  tables[3].positionHelp = {};
+  if (typeof getPhase3PositionHelp === 'function') {
+    const count = typeof PHASE3_POSITION_COUNT !== 'undefined' ? PHASE3_POSITION_COUNT : 156;
+    const getGroupInfo = typeof getPhase3PositionGroupInfo === 'function' ? getPhase3PositionGroupInfo : null;
+    for (let i = 1; i <= count; i++) {
+      let text = getPhase3PositionHelp(i);
+      if (getGroupInfo) {
+        const info = getGroupInfo(i);
+        if (info && info.variationLabel && info.groupDisplay) {
+          text = (text || '') + ' Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ').';
+        }
+      }
+      tables[3].positionHelp[i] = text;
+    }
+  }
+  // (positionHelp 1–count built above from getPhase3PositionHelp)
 
   // Phase 3 – modifier help
   tables[3].modifierHelp = {

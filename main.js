@@ -29,7 +29,32 @@ function updatePartnerNameDisplays() {
   if (listL2) listL2.textContent = n2 + ':';
 }
 
+// Screen wake lock: keep screen on during guided or free play (prevents device from sleeping)
+let _wakeLockSentinel = null;
+async function requestWakeLock() {
+  if (!navigator.wakeLock) return;
+  try {
+    if (_wakeLockSentinel) return;
+    _wakeLockSentinel = await navigator.wakeLock.request('screen');
+    _wakeLockSentinel.addEventListener('release', () => { _wakeLockSentinel = null; });
+  } catch (_) {}
+}
+function releaseWakeLock() {
+  if (_wakeLockSentinel) {
+    try { _wakeLockSentinel.release(); } catch (_) {}
+    _wakeLockSentinel = null;
+  }
+}
+window.releaseWakeLock = releaseWakeLock;
+
 window.addEventListener('DOMContentLoaded', () => {
+  // Re-acquire wake lock when tab becomes visible (browsers release on background)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && (isGuidedMode || window.currentUIMode === 'freeplay')) {
+      requestWakeLock();
+    }
+  });
+
   // Landing modal references
   const landingModal = document.getElementById('landingModal');
   const landingFreePlayBtn = document.getElementById('landingFreePlay');
@@ -469,13 +494,16 @@ window.addEventListener('DOMContentLoaded', () => {
     freePlayModeBtn.addEventListener('click', () => {
       if (isGuidedMode) {
         stopGuidedMode();
+        releaseWakeLock();
       }
       showMode('freeplay');
+      requestWakeLock();
     });
   }
 
   if (guidedModeBtn) {
     guidedModeBtn.addEventListener('click', () => {
+      if (window.currentUIMode === 'freeplay') releaseWakeLock();
       if (!isGuidedMode) {
         showMode('guided-setup');
       }
@@ -559,6 +587,122 @@ window.addEventListener('DOMContentLoaded', () => {
   if (vibratorsPresentCheckbox) {
     vibratorsPresentCheckbox.addEventListener('change', () => {
       vibratorsPresent = vibratorsPresentCheckbox.checked;
+      saveState();
+    });
+  }
+  const excludeTouchIds = ['excludeTouchFeet', 'excludeTouchLicking', 'excludeTouchNipples', 'excludeTouchGenitals', 'excludeTouchButtocks', 'excludeTouchPerineum'];
+  const excludeTouchedIds = ['excludeTouchedFeet', 'excludeTouchedLicking', 'excludeTouchedNipples', 'excludeTouchedGenitals', 'excludeTouchedButtocks', 'excludeTouchedPerineum'];
+  const excludeBodyKeys = typeof EXCLUDE_BODY_KEYS !== 'undefined' ? EXCLUDE_BODY_KEYS : ['feet', 'licking', 'nipples', 'genitals', 'buttocks', 'perineum'];
+  function updateExcludeBodyCheckboxes() {
+    if (typeof excludeWhenTouching === 'undefined') return;
+    excludeBodyKeys.forEach((key, i) => {
+      const el = document.getElementById(excludeTouchIds[i]);
+      if (el) el.checked = excludeWhenTouching[key] === true;
+    });
+    if (typeof excludeWhenTouched === 'undefined') return;
+    excludeBodyKeys.forEach((key, i) => {
+      const el = document.getElementById(excludeTouchedIds[i]);
+      if (el) el.checked = excludeWhenTouched[key] === true;
+    });
+  }
+  excludeBodyKeys.forEach((key, i) => {
+    const touchEl = document.getElementById(excludeTouchIds[i]);
+    const touchedEl = document.getElementById(excludeTouchedIds[i]);
+    if (touchEl) {
+      touchEl.addEventListener('change', () => {
+        excludeWhenTouching[key] = touchEl.checked;
+        saveState();
+      });
+    }
+    if (touchedEl) {
+      touchedEl.addEventListener('change', () => {
+        excludeWhenTouched[key] = touchedEl.checked;
+        saveState();
+      });
+    }
+  });
+
+  // Phase 3 position preference (bed only vs more physical)
+  const positionIntensityBedOnlyBtn = document.getElementById('positionIntensityBedOnly');
+  const positionIntensityMorePhysicalBtn = document.getElementById('positionIntensityMorePhysical');
+  const positionIntensityButtons = [positionIntensityBedOnlyBtn, positionIntensityMorePhysicalBtn];
+  const positionIntensityValues = ['bed_only', 'more_physical'];
+  function updatePositionIntensityButtons() {
+    updateButtonGroup(positionIntensityButtons, positionIntensityValues, typeof positionIntensity !== 'undefined' ? positionIntensity : 'more_physical');
+  }
+  wireButtonGroup(positionIntensityButtons, positionIntensityValues, (val) => {
+    positionIntensity = val;
+    updatePositionIntensityButtons();
+    saveState();
+  });
+  const analPositionsCheckbox = document.getElementById('analPositionsEnabled');
+  function updateAnalPositionsCheckbox() {
+    if (analPositionsCheckbox) {
+      analPositionsCheckbox.checked = typeof analPositionsEnabled !== 'undefined' ? analPositionsEnabled : true;
+    }
+  }
+  if (analPositionsCheckbox) {
+    analPositionsCheckbox.addEventListener('change', () => {
+      analPositionsEnabled = analPositionsCheckbox.checked;
+      saveState();
+    });
+  }
+
+  // Phase 3 position groups by effort (multiselect: bed/lying, standing, heavy)
+  const phase3GroupCheckboxesContainer = document.getElementById('phase3GroupCheckboxes');
+  function getAllPhase3GroupIds() {
+    if (typeof getPhase3EffortGroups !== 'function') return [];
+    return (getPhase3EffortGroups() || []).map((g) => g.group);
+  }
+  function buildPhase3GroupCheckboxes() {
+    if (!phase3GroupCheckboxesContainer || typeof getPhase3EffortGroups !== 'function') return;
+    const groups = getPhase3EffortGroups();
+    phase3GroupCheckboxesContainer.innerHTML = '';
+    const allIds = getAllPhase3GroupIds();
+    const enabledIds = (typeof phase3EnabledGroupIds !== 'undefined' && Array.isArray(phase3EnabledGroupIds)) ? phase3EnabledGroupIds : null;
+    const isChecked = (gid) => enabledIds === null || (enabledIds.length > 0 && enabledIds.indexOf(gid) !== -1);
+    groups.forEach((g) => {
+      const label = document.createElement('label');
+      label.className = 'row';
+      label.style.cssText = 'align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af; cursor: pointer;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'touch-checkbox';
+      cb.style.accentColor = '#22c55e';
+      cb.dataset.groupId = g.group;
+      cb.checked = isChecked(g.group);
+      cb.addEventListener('change', () => {
+        const all = getAllPhase3GroupIds();
+        const current = (typeof phase3EnabledGroupIds !== 'undefined' && Array.isArray(phase3EnabledGroupIds)) ? phase3EnabledGroupIds : null;
+        let next;
+        if (cb.checked) {
+          next = (current && current.length > 0) ? current.slice() : all.slice();
+          if (next.indexOf(g.group) === -1) next.push(g.group);
+          if (next.length >= all.length) next = null;
+        } else {
+          next = (current == null) ? all.slice() : current.slice();
+          next = next.filter((id) => id !== g.group);
+        }
+        phase3EnabledGroupIds = next;
+        saveState();
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(g.groupDisplay || g.group));
+      phase3GroupCheckboxesContainer.appendChild(label);
+    });
+  }
+  buildPhase3GroupCheckboxes();
+
+  // Double Phase 3 time (guided mode)
+  const phase3DoubleTimeCheckbox = document.getElementById('phase3DoubleTime');
+  function updatePhase3DoubleTimeCheckbox() {
+    if (phase3DoubleTimeCheckbox) {
+      phase3DoubleTimeCheckbox.checked = typeof phase3DoubleTime !== 'undefined' ? phase3DoubleTime : false;
+    }
+  }
+  if (phase3DoubleTimeCheckbox) {
+    phase3DoubleTimeCheckbox.addEventListener('change', () => {
+      phase3DoubleTime = phase3DoubleTimeCheckbox.checked;
       saveState();
     });
   }
@@ -913,6 +1057,13 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           return;
         }
+        if (p1 === 0 && p2 === 0 && p3 === 0) {
+          if (percentError) {
+            percentError.style.display = 'block';
+            percentError.textContent = 'At least one phase must be more than 0%.';
+          }
+          return;
+        }
 
         phasePercents = [p1, p2, p3];
         if (percentError) percentError.style.display = 'none';
@@ -939,6 +1090,7 @@ window.addEventListener('DOMContentLoaded', () => {
       // Switch to guided-active mode (shows status + output, hides setup + roll inputs)
       showMode('guided-active');
       startGuidedMode(selectedTime, selectedTurnTime, selectedPauseTime, selectedClothingRemovalTime, phasePercents, clothingList, milestoneInterval, clothingEnabled, phaseDistributionMode);
+      requestWakeLock();
     });
   }
 
@@ -954,6 +1106,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (resumeGuidedBtn) resumeGuidedBtn.addEventListener('click', resumeGuidedMode);
   if (stopGuidedBtn) stopGuidedBtn.addEventListener('click', () => {
     stopGuidedMode();
+    releaseWakeLock();
     // Set layout to guided-setup so when modal is dismissed (Guided or Free Play), correct view shows
     showMode('guided-setup');
     if (landingModal) {
@@ -961,6 +1114,27 @@ window.addEventListener('DOMContentLoaded', () => {
       landingModal.classList.remove('hidden');
     }
   });
+  const continueInFreePlayBtn = document.getElementById('continueInFreePlayBtn');
+  const endSessionBtn = document.getElementById('endSessionBtn');
+  if (continueInFreePlayBtn) {
+    continueInFreePlayBtn.addEventListener('click', () => {
+      stopGuidedMode();
+      releaseWakeLock();
+      showMode('freeplay');
+      requestWakeLock();
+    });
+  }
+  if (endSessionBtn) {
+    endSessionBtn.addEventListener('click', () => {
+      stopGuidedMode();
+      releaseWakeLock();
+      showMode('guided-setup');
+      if (landingModal) {
+        landingModal.style.display = 'flex';
+        landingModal.classList.remove('hidden');
+      }
+    });
+  }
 
   // ----- Free Play clothing event listeners -----
 
@@ -1147,6 +1321,9 @@ window.addEventListener('DOMContentLoaded', () => {
   updatePenetrationPrefUI();
   updatePhaseCheckInCheckbox();
   updateVibratorsCheckbox();
+  updateExcludeBodyCheckboxes();
+  updatePositionIntensityButtons();
+  if (typeof updateAnalPositionsCheckbox === 'function') updateAnalPositionsCheckbox();
 
   // Show clothing interval and extra time sections by default (clothing is enabled)
   if (clothingSetupInputs) clothingSetupInputs.style.display = 'block';
@@ -1177,6 +1354,11 @@ window.addEventListener('DOMContentLoaded', () => {
     updatePenetrationPrefUI();
     updatePhaseCheckInCheckbox();
     updateVibratorsCheckbox();
+    updateExcludeBodyCheckboxes();
+    updatePositionIntensityButtons();
+    if (typeof updateAnalPositionsCheckbox === 'function') updateAnalPositionsCheckbox();
+    if (typeof buildPhase3GroupCheckboxes === 'function') buildPhase3GroupCheckboxes();
+    if (typeof updatePhase3DoubleTimeCheckbox === 'function') updatePhase3DoubleTimeCheckbox();
 
     notifyPhaseChange(phase);
     updatePhaseUI(phase, rollCount);
@@ -1191,6 +1373,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const giver = guidedCurrentPartner;
         const receiver = guidedCurrentPartner === 1 ? 2 : 1;
         showExercise(currentPrompt.phase, currentPrompt.locationRoll, currentPrompt.actionRoll, giver, receiver);
+        if (currentPrompt.phase === 3 && typeof window.refreshFavoriteButton === 'function') window.refreshFavoriteButton();
       }
       
       if (messageBox) {
@@ -1221,6 +1404,8 @@ window.addEventListener('DOMContentLoaded', () => {
     updatePhaseUI(phase, rollCount);
     updateTimerDisplay();
     notifyPhaseChange(phase);
+    if (typeof buildPhase3GroupCheckboxes === 'function') buildPhase3GroupCheckboxes();
+    if (typeof updatePhase3DoubleTimeCheckbox === 'function') updatePhase3DoubleTimeCheckbox();
     
     if (whereOutput) whereOutput.textContent = '—';
     if (whatOutput) whatOutput.textContent = 'Enter both rolls (1–20) and optional clothing roll (1–12) to get your first prompt.';
@@ -1381,28 +1566,99 @@ window.addEventListener('DOMContentLoaded', () => {
   const bgMusicVolumeSlider = document.getElementById('backgroundMusicVolume');
   const bgMusicVolumeLabel = document.getElementById('backgroundMusicVolumeLabel');
   const bgMusicTracks = [null, document.getElementById('bgMusic1'), document.getElementById('bgMusic2'), document.getElementById('bgMusic3'), document.getElementById('bgMusic4')];
+  const PLAYLIST_JAZZ = [4];        // Jazz: track 4 (Smooth jazz) only for now
+  const PLAYLIST_RB = [1, 2, 3];   // R&B: tracks 1–3
+  let playlistTrackIndices = [];
+  let playlistCurrentIndex = 0;
 
   function applyBackgroundMusicVolume(vol01) {
     window.backgroundMusicVolume = vol01;
     bgMusicTracks.forEach((el, i) => { if (i > 0 && el) el.volume = vol01; });
   }
 
-  function applyBackgroundMusicTrack(trackId) {
-    bgMusicTracks.forEach((el, i) => { if (i > 0 && el) { el.pause(); el.currentTime = 0; } });
-    window.backgroundMusicElement = null;
-    if (trackId && trackId !== 'none') {
-      const n = parseInt(trackId, 10);
-      const el = bgMusicTracks[n];
-      if (el) {
-        el.loop = true;
-        el.volume = window.backgroundMusicVolume;
-        el.play().catch(() => {});
-        window.backgroundMusicElement = el;
-      }
+  function playNextInPlaylist() {
+    if (!playlistTrackIndices.length) return;
+    playlistCurrentIndex = (playlistCurrentIndex + 1) % playlistTrackIndices.length;
+    const trackNum = playlistTrackIndices[playlistCurrentIndex];
+    const el = bgMusicTracks[trackNum];
+    if (el) {
+      el.currentTime = 0;
+      el.volume = window.backgroundMusicVolume;
+      el.play().catch(() => {});
+      window.backgroundMusicElement = el;
     }
   }
 
-  const savedTrack = localStorage.getItem('backgroundMusicTrack') || 'none';
+  function applyBackgroundMusicTrack(trackId) {
+    bgMusicTracks.forEach((el, i) => {
+      if (i > 0 && el) {
+        el.pause();
+        el.currentTime = 0;
+        el.removeEventListener('ended', window._playlistNextHandler);
+      }
+    });
+    window.backgroundMusicElement = null;
+    if (!trackId || trackId === 'none') return;
+    if (trackId === 'playlist-jazz') {
+      playlistTrackIndices = PLAYLIST_JAZZ.slice();
+      playlistCurrentIndex = 0;
+      window._playlistNextHandler = () => {
+        if (bgMusicSelect && bgMusicSelect.value !== 'playlist-jazz') return;
+        playNextInPlaylist();
+      };
+      playlistTrackIndices.forEach(i => {
+        const t = bgMusicTracks[i];
+        if (t) {
+          t.loop = false;
+          t.removeEventListener('ended', window._playlistNextHandler);
+          t.addEventListener('ended', window._playlistNextHandler);
+        }
+      });
+      const first = bgMusicTracks[playlistTrackIndices[0]];
+      if (first) {
+        first.currentTime = 0;
+        first.volume = window.backgroundMusicVolume;
+        first.play().catch(() => {});
+        window.backgroundMusicElement = first;
+      }
+      return;
+    }
+    if (trackId === 'playlist-rb') {
+      playlistTrackIndices = PLAYLIST_RB.slice();
+      playlistCurrentIndex = 0;
+      window._playlistNextHandler = () => {
+        if (bgMusicSelect && bgMusicSelect.value !== 'playlist-rb') return;
+        playNextInPlaylist();
+      };
+      playlistTrackIndices.forEach(i => {
+        const t = bgMusicTracks[i];
+        if (t) {
+          t.loop = false;
+          t.removeEventListener('ended', window._playlistNextHandler);
+          t.addEventListener('ended', window._playlistNextHandler);
+        }
+      });
+      const first = bgMusicTracks[playlistTrackIndices[0]];
+      if (first) {
+        first.currentTime = 0;
+        first.volume = window.backgroundMusicVolume;
+        first.play().catch(() => {});
+        window.backgroundMusicElement = first;
+      }
+      return;
+    }
+    const n = parseInt(trackId, 10);
+    const el = bgMusicTracks[n];
+    if (el) {
+      el.loop = true;
+      el.volume = window.backgroundMusicVolume;
+      el.play().catch(() => {});
+      window.backgroundMusicElement = el;
+    }
+  }
+
+  let savedTrack = localStorage.getItem('backgroundMusicTrack') || 'none';
+  if (savedTrack === 'playlist') savedTrack = 'playlist-rb'; // legacy: was "all tracks"
   const savedVol = Math.min(100, Math.max(0, parseInt(localStorage.getItem('backgroundMusicVolume'), 10) || 50));
   if (bgMusicSelect) bgMusicSelect.value = savedTrack;
   if (bgMusicVolumeSlider) bgMusicVolumeSlider.value = String(savedVol);
@@ -1465,6 +1721,129 @@ window.addEventListener('DOMContentLoaded', () => {
   if (helpModal) {
     helpModal.addEventListener('click', (e) => {
       if (e.target === helpModal) helpModal.style.display = 'none';
+    });
+  }
+
+  // View position reference (Phase 3): show position image modal
+  const viewPositionRefBtn = document.getElementById('viewPositionRefBtn');
+  const positionRefModal = document.getElementById('positionRefModal');
+  const positionRefImage = document.getElementById('positionRefImage');
+  const positionRefCaption = document.getElementById('positionRefCaption');
+  const closePositionRefModal = document.getElementById('closePositionRefModal');
+  if (viewPositionRefBtn && positionRefModal && positionRefImage) {
+    viewPositionRefBtn.addEventListener('click', () => {
+      if (!currentPrompt || currentPrompt.phase !== 3) {
+        if (positionRefModal) positionRefModal.style.display = 'none';
+        return;
+      }
+      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(currentPrompt.locationRoll) : ('positions/' + currentPrompt.locationRoll + '.png');
+      positionRefImage.src = path;
+      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(currentPrompt.locationRoll) || 'Position reference') : 'Position reference';
+      positionRefImage.alt = name;
+      if (positionRefCaption) {
+        if (typeof getPhase3PositionGroupInfo === 'function') {
+          const info = getPhase3PositionGroupInfo(currentPrompt.locationRoll);
+          if (info && info.variationLabel && info.groupDisplay) {
+            positionRefCaption.textContent = 'Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ')';
+            positionRefCaption.style.display = 'block';
+          } else {
+            positionRefCaption.textContent = '';
+            positionRefCaption.style.display = 'none';
+          }
+        } else {
+          positionRefCaption.textContent = '';
+          positionRefCaption.style.display = 'none';
+        }
+      }
+      positionRefModal.style.display = 'flex';
+    });
+  }
+  if (closePositionRefModal && positionRefModal) {
+    closePositionRefModal.addEventListener('click', () => { positionRefModal.style.display = 'none'; });
+  }
+  if (positionRefModal) {
+    positionRefModal.addEventListener('click', (e) => {
+      if (e.target === positionRefModal) positionRefModal.style.display = 'none';
+    });
+  }
+
+  // Favorites (Phase 3 positions): stored in localStorage, no database
+  const favoritePositionBtn = document.getElementById('favoritePositionBtn');
+  if (favoritePositionBtn && typeof toggleFavorite === 'function' && typeof isFavorite === 'function') {
+    window.refreshFavoriteButton = function refreshFavoriteButton() {
+      if (!currentPrompt || currentPrompt.phase !== 3) return;
+      const pos = currentPrompt.locationRoll;
+      const fav = isFavorite(pos);
+      favoritePositionBtn.textContent = fav ? '♥ Favorited' : '♡ Add to favorites';
+      favoritePositionBtn.title = fav ? 'Remove from favorites' : 'Save this position to Favorites (stored on this device)';
+    };
+    favoritePositionBtn.addEventListener('click', () => {
+      if (!currentPrompt || currentPrompt.phase !== 3) return;
+      toggleFavorite(currentPrompt.locationRoll);
+      if (typeof window.refreshFavoriteButton === 'function') window.refreshFavoriteButton();
+    });
+  }
+
+  // View favorites modal: list of saved positions, "View image" per row, privacy note at bottom
+  const favoritesModal = document.getElementById('favoritesModal');
+  const favoritesList = document.getElementById('favoritesList');
+  const favoritesEmptyMsg = document.getElementById('favoritesEmptyMsg');
+  const closeFavoritesModal = document.getElementById('closeFavoritesModal');
+  const viewFavoritesBtn = document.getElementById('viewFavoritesBtn');
+  const viewFavoritesPrefBtn = document.getElementById('viewFavoritesPrefBtn');
+
+  function openFavoritesModal() {
+    if (!favoritesModal || !favoritesList || !favoritesEmptyMsg) return;
+    const favs = typeof getFavorites === 'function' ? getFavorites() : [];
+    favoritesList.innerHTML = '';
+    if (favs.length === 0) {
+      favoritesEmptyMsg.style.display = 'block';
+    } else {
+      favoritesEmptyMsg.style.display = 'none';
+      favs.forEach((n) => {
+        const name = typeof getPhase3PositionName === 'function' ? getPhase3PositionName(n) : ('Position ' + n);
+        const li = document.createElement('li');
+        li.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #334155;';
+        const label = document.createElement('span');
+        label.textContent = n + '. ' + (name || 'Position ' + n);
+        const viewImgBtn = document.createElement('button');
+        viewImgBtn.type = 'button';
+        viewImgBtn.className = 'secondary small';
+        viewImgBtn.style.fontSize = '0.8rem';
+        viewImgBtn.textContent = 'View image';
+        viewImgBtn.addEventListener('click', () => {
+          if (typeof getPhase3PositionImagePath === 'function' && positionRefImage) {
+            positionRefImage.src = getPhase3PositionImagePath(n);
+            positionRefImage.alt = name || 'Position ' + n;
+            if (positionRefCaption && typeof getPhase3PositionGroupInfo === 'function') {
+              const info = getPhase3PositionGroupInfo(n);
+              if (info && info.variationLabel && info.groupDisplay) {
+                positionRefCaption.textContent = 'Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ')';
+                positionRefCaption.style.display = 'block';
+              } else {
+                positionRefCaption.textContent = '';
+                positionRefCaption.style.display = 'none';
+              }
+            }
+            if (positionRefModal) positionRefModal.style.display = 'flex';
+          }
+        });
+        li.appendChild(label);
+        li.appendChild(viewImgBtn);
+        favoritesList.appendChild(li);
+      });
+    }
+    favoritesModal.style.display = 'flex';
+  }
+
+  if (viewFavoritesBtn) viewFavoritesBtn.addEventListener('click', openFavoritesModal);
+  if (viewFavoritesPrefBtn) viewFavoritesPrefBtn.addEventListener('click', openFavoritesModal);
+  if (closeFavoritesModal && favoritesModal) {
+    closeFavoritesModal.addEventListener('click', () => { favoritesModal.style.display = 'none'; });
+  }
+  if (favoritesModal) {
+    favoritesModal.addEventListener('click', (e) => {
+      if (e.target === favoritesModal) favoritesModal.style.display = 'none';
     });
   }
 

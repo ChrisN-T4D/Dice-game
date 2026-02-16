@@ -117,6 +117,37 @@ const clothingTable = {
   12: { prefix: 'Critical: Remove 2 items', method: 'one with your hands, one with your mouth' }
 };
 
+// Removal time multiplier by item (1 = base time; >1 = more time). Complicated items get more time.
+const removalComplexityByItem = {
+  Corset: 1.8, 'Garter belt': 1.5, Bodysuit: 1.5, Teddy: 1.3, Stockings: 1.2,
+  Bra: 1.2, Bralette: 1.2, Dress: 1.2, Heels: 1.2, Belt: 1.1
+};
+// Method phrases that add time (multiplier). Default 1.0 for method.
+function getMethodComplexityMultiplier(methodText) {
+  if (!methodText || typeof methodText !== 'string') return 1.0;
+  const t = methodText.toLowerCase();
+  if (t.includes('as slowly as possible') || t.includes('one button or strap')) return 1.5;
+  if (t.includes('slowly') || t.includes('one button')) return 1.3;
+  if (t.includes('mouth') || t.includes('teeth')) return 1.2;
+  if (t.includes('eye contact') || t.includes('eyes closed')) return 1.1;
+  return 1.0;
+}
+
+/**
+ * Multiplier for clothing removal time based on items and method. Base = 1.0.
+ * @param {string[]} items - Item names being removed
+ * @param {string} methodText - Method text (e.g. from clothingTable entry)
+ */
+function getClothingRemovalComplexityMultiplier(items, methodText) {
+  let itemMult = 1.0;
+  if (Array.isArray(items) && items.length > 0) {
+    const maxItem = Math.max(...items.map(it => removalComplexityByItem[it] || 1.0));
+    itemMult = maxItem;
+  }
+  const methodMult = getMethodComplexityMultiplier(methodText);
+  return Math.min(2.0, itemMult * methodMult);
+}
+
 // ----- Shared clothing removal logic -----
 
 // Items that can be removed: prerequisite must be absent (e.g. Socks only if Shoes not in list)

@@ -43,15 +43,27 @@ function updatePhaseUI(currentPhase, currentRollCount) {
 function updateRollLabels(currentPhase) {
   const locationLabel = document.getElementById('locationLabel');
   const actionLabel = document.getElementById('actionLabel');
+  const positionRoll2Col = document.getElementById('positionRoll2Col');
 
   if (!locationLabel || !actionLabel) return;
 
+  const viewPositionRefBtn = document.getElementById('viewPositionRefBtn');
+  const favoritePositionBtn = document.getElementById('favoritePositionBtn');
+  const viewFavoritesBtn = document.getElementById('viewFavoritesBtn');
   if (currentPhase === 3) {
-    locationLabel.textContent = 'Position roll (1–20)';
-    actionLabel.textContent = 'Modifier roll (1–20)';
+    locationLabel.textContent = 'Position die 1 (1–20)';
+    actionLabel.textContent = 'Modifier (1–20)';
+    if (positionRoll2Col) positionRoll2Col.style.display = '';
+    if (viewPositionRefBtn) viewPositionRefBtn.style.display = '';
+    if (favoritePositionBtn) favoritePositionBtn.style.display = '';
+    if (viewFavoritesBtn) viewFavoritesBtn.style.display = '';
   } else {
     locationLabel.textContent = 'Location roll (1–20)';
     actionLabel.textContent = 'Action roll (1–20)';
+    if (positionRoll2Col) positionRoll2Col.style.display = 'none';
+    if (viewPositionRefBtn) viewPositionRefBtn.style.display = 'none';
+    if (favoritePositionBtn) favoritePositionBtn.style.display = 'none';
+    if (viewFavoritesBtn) viewFavoritesBtn.style.display = 'none';
   }
 }
 
@@ -80,8 +92,7 @@ function updateOutputLabels(currentPhase) {
 function shortenForDetailMode(fullText, kind) {
   if (typeof fullText !== 'string' || !fullText.trim()) return fullText || '';
   const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
-  // Beginner: full descriptions (no shortening)
-  if (mode === 'beginner') return fullText;
+  // Beginner = same as regular (same info level)
 
   if (kind === 'where') {
     const colonIdx = fullText.indexOf(': ');
@@ -111,13 +122,12 @@ function shortenForDetailMode(fullText, kind) {
 }
 
 /**
- * Delay in ms before speaking the next prompt (guided mode). Beginner = longer, Expert = shorter.
+ * Delay in ms before speaking the next prompt (guided mode). Beginner = same as regular; Expert = shorter.
  */
 function getPromptAnnounceDelayMs() {
   const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
-  if (mode === 'beginner') return 8000;
   if (mode === 'expert') return 2000;
-  return 4000;
+  return 4000; // beginner and regular same
 }
 
 /**
@@ -135,6 +145,31 @@ function applyPenetrationPreference(where, what, currentPhase) {
   const line = 'Focus on external play; penetration only if you both want.';
   const newWhat = (what || '').trim() + (what ? '. ' : '') + line;
   return { where: where || '', what: newWhat };
+}
+
+/**
+ * Apply exclude-body-part preferences to action/what text (feet and licking only affect text).
+ * Uses isBodyPartExcluded(key) so either "when touching" or "when touched" counts.
+ * @param {string} what - What/action text
+ * @returns {string}
+ */
+function applyExcludeBodyPreferences(what) {
+  if (!what || typeof what !== 'string') return what || '';
+  let out = what;
+  if (typeof isBodyPartExcluded === 'function' && isBodyPartExcluded('feet')) {
+    out = out.replace(/\s*,\s*feet\s*/gi, ', ');
+    out = out.replace(/\s*feet\s*,\s*/gi, ', ');
+    out = out.replace(/\s+or\s+feet\s+/gi, ' ');
+    out = out.replace(/\s+feet\s+or\s+/gi, ' ');
+    out = out.replace(/\bhands,\s*mouth,\s*feet,\s*or\s*genitals\b/gi, 'hands, mouth, or genitals');
+    out = out.replace(/\s+/g, ' ').trim();
+  }
+  if (typeof isBodyPartExcluded === 'function' && isBodyPartExcluded('licking')) {
+    out = out.replace(/\blicking\b/gi, 'kissing');
+    out = out.replace(/\blick\b/gi, 'kiss');
+    out = out.replace(/\s+/g, ' ').trim();
+  }
+  return out;
 }
 
 /**
@@ -210,16 +245,31 @@ function notifyPhaseChange(newPhase) {
 
   if (!messageBox) return;
 
+  const pickPhase = (arr) => arr[Math.floor(Math.random() * arr.length)];
   if (newPhase === 1) {
-    messageBox.textContent = 'Now in Phase 1: gentle, non-genital warm-up.';
+    const options = [
+      'Now in Phase 1: getting in touch with the body.',
+      'Phase 1: getting in touch with the body.',
+      'Moving into Phase 1: gentle, body-focused connection.',
+    ];
+    messageBox.textContent = pickPhase(options);
   } else if (newPhase === 2) {
-    messageBox.textContent =
-      'We are now moving into Phase 2: more erogenous exploration. Check in with each other before continuing.';
+    const options = [
+      'We are now moving into Phase 2: more erogenous exploration. Check in with each other before continuing.',
+      'Phase 2: more erogenous exploration. Check in with each other before continuing.',
+      'Moving into Phase 2: deeper touch and exploration. Check in before continuing.',
+    ];
+    messageBox.textContent = pickPhase(options);
   } else if (newPhase === 3) {
-    messageBox.textContent =
-      'We are now moving into Phase 3: deep intimacy. Positions, rhythm, and shared pleasure. Penetration and orgasm are options only if you both want.';
+    const options = [
+      'We are now moving into Phase 3: deep intimacy. Positions, rhythm, and shared pleasure. Penetration and orgasm are options only if you both want.',
+      'Phase 3: deep intimacy. Positions, rhythm, and shared pleasure. Penetration and orgasm are options only if you both want.',
+      'Moving into Phase 3: deep intimacy, positions, and shared pleasure. Penetration and orgasm only if you both want.',
+    ];
+    messageBox.textContent = pickPhase(options);
   } else {
-    messageBox.textContent = `Now in Phase ${newPhase}.`;
+    const options = [`Now in Phase ${newPhase}.`, `Phase ${newPhase}.`, `Moving into Phase ${newPhase}.`];
+    messageBox.textContent = pickPhase(options);
   }
 
   // Pulse the phase number display
@@ -230,11 +280,12 @@ function notifyPhaseChange(newPhase) {
     phaseDisplay.classList.add("pulse");
   }
 
-  // Announce phase change via TTS (skip if landing modal is still visible)
+  // Announce phase change via TTS (skip if landing modal visible or session start to avoid overriding intro/break flow)
   if (typeof speakText === 'function' && messageBox) {
     const landingModal = document.getElementById('landingModal');
+    const isSessionStart = typeof totalTurnsInSession !== 'undefined' && totalTurnsInSession === 0;
     if (!landingModal || landingModal.style.display !== 'flex') {
-      speakText(messageBox.textContent);
+      if (!isSessionStart) speakText(messageBox.textContent);
     }
   }
 }
@@ -356,4 +407,18 @@ function showToast(message, duration = 4000) {
       }
     }, 300);
   }, duration);
+}
+
+function showFirstTurnPopup(text) {
+  const popup = document.getElementById('firstTurnPopup');
+  const body = document.getElementById('firstTurnPopupBody');
+  if (popup && body) {
+    body.textContent = text;
+    popup.style.display = 'flex';
+  }
+}
+
+function hideFirstTurnPopup() {
+  const popup = document.getElementById('firstTurnPopup');
+  if (popup) popup.style.display = 'none';
 }

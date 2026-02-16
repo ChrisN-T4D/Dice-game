@@ -444,9 +444,17 @@ window.addEventListener('DOMContentLoaded', () => {
           header.classList.add('active');
           if (content) content.classList.add('open');
           // On mobile, voices often load late — refresh voice dropdowns when Preferences is opened
-          if (header.getAttribute('data-section') === 'preferences' && typeof populateVoiceSelect === 'function') {
-            document.querySelectorAll('.voice-select').forEach(el => populateVoiceSelect(el));
-            if (typeof syncVoiceSelects === 'function') syncVoiceSelects();
+          if (header.getAttribute('data-section') === 'preferences') {
+            // Force voices to load
+            window.speechSynthesis.getVoices();
+            setTimeout(() => {
+              if (typeof populateAllVoiceSelects === 'function') {
+                populateAllVoiceSelects();
+              } else if (typeof populateVoiceSelect === 'function') {
+                document.querySelectorAll('.voice-select').forEach(el => populateVoiceSelect(el));
+              }
+              if (typeof syncVoiceSelects === 'function') syncVoiceSelects();
+            }, 100);
           }
         }
       });
@@ -1536,12 +1544,47 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Voice selector: populate all voice dropdowns and save choice when any changes
-  document.querySelectorAll('.voice-select').forEach(sel => {
-    if (typeof populateVoiceSelect === 'function') populateVoiceSelect(sel);
-    sel.addEventListener('change', () => {
-      if (typeof setSelectedVoice === 'function') setSelectedVoice(sel.value || '');
+  // On mobile, ensure voices are loaded before populating and handle change events properly
+  function setupVoiceSelects() {
+    document.querySelectorAll('.voice-select').forEach(sel => {
+      // Populate initially
+      if (typeof populateVoiceSelect === 'function') populateVoiceSelect(sel);
+      
+      // On mobile, voices load asynchronously - reload when dropdown is opened
+      sel.addEventListener('focus', () => {
+        // Force voices to load when dropdown is opened (mobile requires user interaction)
+        if (window.speechSynthesis) {
+          window.speechSynthesis.getVoices(); // Prime the cache
+          setTimeout(() => {
+            if (typeof populateVoiceSelect === 'function') populateVoiceSelect(sel);
+            if (typeof syncVoiceSelects === 'function') syncVoiceSelects();
+          }, 100);
+        }
+      });
+      
+      // Handle selection change - use both 'change' and 'input' for mobile compatibility
+      const handleChange = (e) => {
+        const value = e.target.value || '';
+        if (typeof setSelectedVoice === 'function') {
+          setSelectedVoice(value);
+          // Sync all selects to show the same selection
+          if (typeof syncVoiceSelects === 'function') syncVoiceSelects();
+        }
+      };
+      
+      sel.addEventListener('change', handleChange);
+      sel.addEventListener('input', handleChange); // Mobile Safari sometimes uses 'input'
+      
+      // Also handle touchstart on mobile to ensure voices load
+      sel.addEventListener('touchstart', () => {
+        if (window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
+          window.speechSynthesis.getVoices();
+        }
+      }, { passive: true });
     });
-  });
+  }
+  
+  setupVoiceSelects();
 
   // Background image: none or one of two; fades into phase colors
   const bgImageSelect = document.getElementById('backgroundImageSelect');

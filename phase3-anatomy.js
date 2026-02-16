@@ -22,12 +22,29 @@ function getPhase3PositionText(positionRoll, giverPartner, receiverPartner) {
   if (!positions || positionRoll == null) return '';
   const raw = positions[positionRoll];
   if (raw == null) return '';
+  
+  let text;
   if (typeof raw === 'string') {
-    return tailorPhase3Position(raw, giverPartner, receiverPartner);
+    text = tailorPhase3Position(raw, giverPartner, receiverPartner);
+  } else {
+    const key = getPhase3AnatomyKey(giverPartner, receiverPartner);
+    text = raw[key] || raw.penisVulva || raw.vulvaPenis || raw.vulvaVulva || raw.penisPenis || '';
+    text = tailorPhase3Position(text, giverPartner, receiverPartner);
   }
-  const key = getPhase3AnatomyKey(giverPartner, receiverPartner);
-  const text = raw[key] || raw.penisVulva || raw.vulvaPenis || raw.vulvaVulva || raw.penisPenis || '';
-  return tailorPhase3Position(text, giverPartner, receiverPartner);
+  
+  // Append variation label if it exists (e.g. "Missionary (kneeling)" instead of just "Missionary")
+  if (typeof getPhase3PositionGroupInfo === 'function') {
+    const info = getPhase3PositionGroupInfo(positionRoll);
+    if (info && info.variationLabel && info.variationLabel.trim()) {
+      // Check if variation is already in the text to avoid duplication
+      const variationLower = info.variationLabel.toLowerCase();
+      if (!text.toLowerCase().includes(variationLower)) {
+        text = text.trim() + ' (' + info.variationLabel + ')';
+      }
+    }
+  }
+  
+  return text;
 }
 
 function tailorPhase3Position(text, giverPartner, receiverPartner) {

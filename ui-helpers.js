@@ -54,9 +54,9 @@ function updateRollLabels(currentPhase) {
     locationLabel.textContent = 'Position die 1 (1–20)';
     actionLabel.textContent = 'Modifier (1–20)';
     if (positionRoll2Col) positionRoll2Col.style.display = '';
-    if (viewPositionRefBtn) viewPositionRefBtn.style.display = '';
-    if (favoritePositionBtn) favoritePositionBtn.style.display = '';
-    if (viewFavoritesBtn) viewFavoritesBtn.style.display = '';
+    if (viewPositionRefBtn) viewPositionRefBtn.style.display = 'inline-block';
+    if (favoritePositionBtn) favoritePositionBtn.style.display = 'inline-block';
+    if (viewFavoritesBtn) viewFavoritesBtn.style.display = 'inline-block';
   } else {
     locationLabel.textContent = 'Location roll (1–20)';
     actionLabel.textContent = 'Action roll (1–20)';

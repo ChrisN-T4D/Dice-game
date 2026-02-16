@@ -1112,6 +1112,16 @@ function updateGuidedModeUI() {
     // Apply partner color theming to boxes
     if (typeof window.applyPartnerColors === 'function') window.applyPartnerColors();
 
+    // Ensure Phase 3 buttons (view position reference, favorites) are visible when in Phase 3
+    if (phase === 3) {
+      const viewPositionRefBtn = document.getElementById('viewPositionRefBtn');
+      const favoritePositionBtn = document.getElementById('favoritePositionBtn');
+      const viewFavoritesBtn = document.getElementById('viewFavoritesBtn');
+      if (viewPositionRefBtn) viewPositionRefBtn.style.display = 'inline-block';
+      if (favoritePositionBtn) favoritePositionBtn.style.display = 'inline-block';
+      if (viewFavoritesBtn) viewFavoritesBtn.style.display = 'inline-block';
+    }
+
     // Control buttons visibility
     const inPhaseCheckIn = guidedInPhaseCheckIn === true;
     const sessionCompleteButtons = document.getElementById('sessionCompleteButtons');

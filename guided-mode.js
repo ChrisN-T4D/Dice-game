@@ -120,7 +120,6 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   guidedPhaseSeconds[1] = Math.floor(guidedTotalSeconds * (phasePercents[1] / 100));
   guidedPhaseSeconds[2] = guidedTotalSeconds - guidedPhaseSeconds[0] - guidedPhaseSeconds[1]; // Ensure sum equals total
 
-  guidedPhaseTimeRemaining = guidedPhaseSeconds[0]; // Start with phase 1
   guidedTotalTimeRemaining = guidedTotalSeconds; // Initialize total time remaining
   guidedTurnTimeRemaining = guidedTurnSeconds;
   guidedPauseTimeRemaining = 0;
@@ -137,8 +136,16 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   turnsSinceLastRemoval = 0;
   totalTurnsInSession = 0;
 
-  // Reset to phase 1
-  phase = 1;
+  // Find first phase with allocation > 0 (skip phases with 0% allocation)
+  let startPhase = 1;
+  for (let i = 0; i < 3; i++) {
+    if (guidedPhaseSeconds[i] > 0) {
+      startPhase = i + 1;
+      break;
+    }
+  }
+  phase = startPhase;
+  guidedPhaseTimeRemaining = guidedPhaseSeconds[startPhase - 1];
   rollCount = 0;
   guidedReceiverOnceP1 = false;
   guidedReceiverOnceP2 = false;

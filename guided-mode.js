@@ -259,6 +259,8 @@ function performGuidedTurn() {
 
   showExercise(phase, loc, actRoll, giver, receiver);
   if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
+  // Ensure Phase 3 buttons (view position reference, favorites) are visible
+  if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
 
   if (extendedTime) {
     const locationText = phase === 3 ? 'position' : 'location';

@@ -193,11 +193,13 @@ window.addEventListener('DOMContentLoaded', () => {
   function openPreferencesMenu() {
     if (preferencesSidebar) preferencesSidebar.classList.add('open');
     if (preferencesOverlay) preferencesOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
   
   function closePreferencesMenu() {
     if (preferencesSidebar) preferencesSidebar.classList.remove('open');
     if (preferencesOverlay) preferencesOverlay.classList.remove('open');
+    document.body.style.overflow = '';
   }
   
   if (hamburgerMenuBtn) {
@@ -1792,38 +1794,60 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Need help understanding button removed - was not showing useful content
 
-  // View position reference (Phase 3): show position image modal
+  // View position reference (Phase 3): show position image modal (with optional alternate views)
   const viewPositionRefBtn = document.getElementById('viewPositionRefBtn');
   const positionRefModal = document.getElementById('positionRefModal');
   const positionRefImage = document.getElementById('positionRefImage');
   const positionRefCaption = document.getElementById('positionRefCaption');
+  const positionRefAlternateViews = document.getElementById('positionRefAlternateViews');
   const closePositionRefModal = document.getElementById('closePositionRefModal');
+
+  function showPositionRefModal(positionNumber) {
+    if (!positionRefModal || !positionRefImage) return;
+    const n = parseInt(positionNumber, 10);
+    const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(n) : ('positions/' + n + '.png');
+    positionRefImage.src = path;
+    const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(n) || 'Position reference') : 'Position reference';
+    positionRefImage.alt = name;
+    if (positionRefCaption) {
+      if (typeof getPhase3PositionGroupInfo === 'function') {
+        const info = getPhase3PositionGroupInfo(n);
+        if (info && info.variationLabel && info.groupDisplay) {
+          positionRefCaption.textContent = 'Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ')';
+          positionRefCaption.style.display = 'block';
+        } else {
+          positionRefCaption.textContent = '';
+          positionRefCaption.style.display = 'none';
+        }
+      } else {
+        positionRefCaption.textContent = '';
+        positionRefCaption.style.display = 'none';
+      }
+    }
+    if (positionRefAlternateViews) {
+      positionRefAlternateViews.innerHTML = '';
+      const alts = typeof getPhase3AlternateViewPositionNumbers === 'function' ? getPhase3AlternateViewPositionNumbers(n) : [];
+      alts.forEach((altNum, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'secondary small';
+        btn.style.fontSize = '0.8rem';
+        btn.textContent = alts.length === 1 ? 'Other view' : 'View ' + (idx + 2);
+        btn.addEventListener('click', () => showPositionRefModal(altNum));
+        positionRefAlternateViews.appendChild(btn);
+      });
+    }
+    positionRefModal.style.display = 'flex';
+  }
+  window.showPositionRefModal = showPositionRefModal;
+
   if (viewPositionRefBtn && positionRefModal && positionRefImage) {
     viewPositionRefBtn.addEventListener('click', () => {
       if (!currentPrompt || currentPrompt.phase !== 3) {
         if (positionRefModal) positionRefModal.style.display = 'none';
         return;
       }
-      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(currentPrompt.locationRoll) : ('positions/' + currentPrompt.locationRoll + '.png');
-      positionRefImage.src = path;
-      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(currentPrompt.locationRoll) || 'Position reference') : 'Position reference';
-      positionRefImage.alt = name;
-      if (positionRefCaption) {
-        if (typeof getPhase3PositionGroupInfo === 'function') {
-          const info = getPhase3PositionGroupInfo(currentPrompt.locationRoll);
-          if (info && info.variationLabel && info.groupDisplay) {
-            positionRefCaption.textContent = 'Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ')';
-            positionRefCaption.style.display = 'block';
-          } else {
-            positionRefCaption.textContent = '';
-            positionRefCaption.style.display = 'none';
-          }
-        } else {
-          positionRefCaption.textContent = '';
-          positionRefCaption.style.display = 'none';
-        }
-      }
-      positionRefModal.style.display = 'flex';
+      showPositionRefModal(currentPrompt.locationRoll);
     });
   }
   if (closePositionRefModal && positionRefModal) {
@@ -1880,20 +1904,8 @@ window.addEventListener('DOMContentLoaded', () => {
         viewImgBtn.style.fontSize = '0.8rem';
         viewImgBtn.textContent = 'View image';
         viewImgBtn.addEventListener('click', () => {
-          if (typeof getPhase3PositionImagePath === 'function' && positionRefImage) {
-            positionRefImage.src = getPhase3PositionImagePath(n);
-            positionRefImage.alt = name || 'Position ' + n;
-            if (positionRefCaption && typeof getPhase3PositionGroupInfo === 'function') {
-              const info = getPhase3PositionGroupInfo(n);
-              if (info && info.variationLabel && info.groupDisplay) {
-                positionRefCaption.textContent = 'Variation of: ' + info.groupDisplay + ' (' + info.variationLabel + ')';
-                positionRefCaption.style.display = 'block';
-              } else {
-                positionRefCaption.textContent = '';
-                positionRefCaption.style.display = 'none';
-              }
-            }
-            if (positionRefModal) positionRefModal.style.display = 'flex';
+          if (typeof window.showPositionRefModal === 'function') {
+            window.showPositionRefModal(n);
           }
         });
         li.appendChild(label);

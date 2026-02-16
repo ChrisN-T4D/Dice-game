@@ -308,29 +308,8 @@ function performGuidedTurn() {
   // Ensure Phase 3 buttons (view position reference, favorites) are visible
   if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
   // Auto-show Phase 3 position reference image (unless it's Roller's choice)
-  if (phase === 3 && loc !== 64 && loc !== 127) {
-    const positionRefModal = document.getElementById('positionRefModal');
-    const positionRefImage = document.getElementById('positionRefImage');
-    const positionRefCaption = document.getElementById('positionRefCaption');
-    if (positionRefModal && positionRefImage) {
-      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(loc) : ('positions/' + loc + '.png');
-      positionRefImage.src = path;
-      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(loc) || 'Position reference') : 'Position reference';
-      positionRefImage.alt = name;
-      if (positionRefCaption) {
-        if (typeof getPhase3PositionGroupInfo === 'function') {
-          const info = getPhase3PositionGroupInfo(loc);
-          if (info && info.variationLabel && info.groupDisplay) {
-            positionRefCaption.textContent = info.groupDisplay + (info.variationLabel ? ' (' + info.variationLabel + ')' : '');
-          } else {
-            positionRefCaption.textContent = name;
-          }
-        } else {
-          positionRefCaption.textContent = name;
-        }
-      }
-      positionRefModal.style.display = 'flex';
-    }
+  if (phase === 3 && loc !== 64 && loc !== 127 && typeof window.showPositionRefModal === 'function') {
+    window.showPositionRefModal(loc);
   }
 
   if (extendedTime) {
@@ -737,29 +716,8 @@ function rerollGuidedPrompt() {
   // Ensure Phase 3 buttons (view position reference, favorites) are visible
   if (phase === 3 && typeof updateRollLabels === 'function') updateRollLabels(phase);
   // Auto-show Phase 3 position reference image (unless it's Roller's choice)
-  if (phase === 3 && loc !== 64 && loc !== 127) {
-    const positionRefModal = document.getElementById('positionRefModal');
-    const positionRefImage = document.getElementById('positionRefImage');
-    const positionRefCaption = document.getElementById('positionRefCaption');
-    if (positionRefModal && positionRefImage) {
-      const path = typeof getPhase3PositionImagePath === 'function' ? getPhase3PositionImagePath(loc) : ('positions/' + loc + '.png');
-      positionRefImage.src = path;
-      const name = typeof getPhase3PositionName === 'function' ? (getPhase3PositionName(loc) || 'Position reference') : 'Position reference';
-      positionRefImage.alt = name;
-      if (positionRefCaption) {
-        if (typeof getPhase3PositionGroupInfo === 'function') {
-          const info = getPhase3PositionGroupInfo(loc);
-          if (info && info.variationLabel && info.groupDisplay) {
-            positionRefCaption.textContent = info.groupDisplay + (info.variationLabel ? ' (' + info.variationLabel + ')' : '');
-          } else {
-            positionRefCaption.textContent = name;
-          }
-        } else {
-          positionRefCaption.textContent = name;
-        }
-      }
-      positionRefModal.style.display = 'flex';
-    }
+  if (phase === 3 && loc !== 64 && loc !== 127 && typeof window.showPositionRefModal === 'function') {
+    window.showPositionRefModal(loc);
   }
 
   if (extendedTime) {

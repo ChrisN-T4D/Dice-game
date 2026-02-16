@@ -299,7 +299,7 @@ function notifyPhaseChange(newPhase) {
       'Phase 3: deep intimacy. Positions, rhythm, and shared pleasure. Penetration and orgasm are options only if you both want.',
       'Moving into Phase 3: deep intimacy, positions, and shared pleasure. Penetration and orgasm only if you both want.',
     ];
-    messageBox.textContent = pickPhase(options);
+    messageBox.textContent = pickPhase(options) + ' Reference images show one common arrangement; many positions can be reversed or adapted to your bodies.';
   } else {
     const options = [`Now in Phase ${newPhase}.`, `Phase ${newPhase}.`, `Moving into Phase ${newPhase}.`];
     messageBox.textContent = pickPhase(options);

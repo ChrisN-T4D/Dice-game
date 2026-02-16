@@ -12,10 +12,18 @@ let guidedCompletedPhase = 0;
 let guidedReceiverOnceP1 = false;
 let guidedReceiverOnceP2 = false;
 
+/** Session just completed: show "Continue in free play" / "End session" instead of stopping immediately. */
+let guidedSessionComplete = false;
+
 /** Current action: "Removing clothes" window countdown (so UI and total time run continuously). */
 let guidedInClothingWindow = false;
 let guidedClothingWindowRemaining = 0;
 let guidedClothingWindowTimerId = null;
+
+/** Break flow countdown: 'next_turn' (2s), 'before_clothing' (10s), 'settle_in' (20s). So Current action can show switch/settle-in countdown. */
+let guidedBreakPhase = 'none';
+let guidedBreakCountdown = 0;
+let guidedBreakTimerId = null;
 
 /**
  * Parse the "what" prompt text for duration/repetition hints and return a suggested minimum turn length in seconds.
@@ -141,8 +149,32 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   updateClothingDisplay();
   notifyPhaseChange(phase);
 
-  // Start first turn
-  performGuidedTurn();
+  // Speak guided-mode intro once (how it works, can substitute, flow; add clothing only if enabled), then start first turn.
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const introOpenings = [
+    'Guided mode: you will hear a prompt for each turn. If a prompt does not work for you, substitute something you both like. ',
+    'In guided mode you will get a prompt each turn. Feel free to swap in something you both prefer. ',
+    'Guided mode: each turn has a prompt. If you would rather do something else, substitute anything you both like. ',
+  ];
+  const introClothingLines = [
+    'During the session you will hear when to remove an item of clothing and how to do it. ',
+    'You will hear when to remove clothing and how. ',
+    'Clothing removal prompts will tell you when and how. ',
+  ];
+  const introClosings = [
+    'After each turn you will hear when to switch, then settle in, then the next prompt. Let us begin.',
+    'Between turns you will hear when to switch, then time to settle in, then the next prompt. Let us begin.',
+    'Each turn ends with a switch, then settle in, then the next prompt. Let us begin.',
+  ];
+  let intro = pick(introOpenings);
+  if (clothingEnabled) intro += pick(introClothingLines);
+  intro += pick(introClosings);
+  const hasVoice = typeof speakText === 'function' && (typeof isSpeechSupported !== 'function' || isSpeechSupported());
+  if (hasVoice) {
+    speakText(intro, { force: true, onEnd: () => { performGuidedTurn(); } });
+  } else {
+    performGuidedTurn();
+  }
 }
 
 function performGuidedTurn() {
@@ -160,17 +192,39 @@ function performGuidedTurn() {
     extendedTime = guidedNextTurnRolls.extendedTime;
     guidedNextTurnRolls = null;
   } else {
-    loc = rollD20();
+    if (phase === 3) {
+      // Phase 3: two d20s combine to position 1–100; one d20 for modifier
+      let loc1 = rollD20();
+      let loc2 = rollD20();
+      loc = ((loc1 - 1) * 20 + loc2 - 1) % 156 + 1;
+      while (typeof shouldRerollPhase3Position === 'function' && shouldRerollPhase3Position(loc)) {
+        loc1 = rollD20();
+        loc2 = rollD20();
+        loc = ((loc1 - 1) * 20 + loc2 - 1) % 156 + 1;
+      }
+    } else {
+      loc = rollD20();
+      while (typeof shouldRerollLocation === 'function' && shouldRerollLocation(phase, loc)) {
+        loc = rollD20();
+      }
+    }
     const act = rollD20();
     actRoll = act;
     extendedTime = false;
-    // Quickie preset: no critical rolls (no extended time)
     if (act === 20 && guidedDistributionMode !== 'quickie') {
       extendedTime = true;
       actRoll = Math.floor(Math.random() * 19) + 1;
     }
     // Phase 3, vibrators not present: reroll vibrator-only modifiers (17, 18, 19)
     while (phase === 3 && typeof vibratorsPresent !== 'undefined' && !vibratorsPresent && typeof isPhase3VibratorModifier === 'function' && isPhase3VibratorModifier(actRoll)) {
+      actRoll = rollD20();
+      if (actRoll === 20 && guidedDistributionMode !== 'quickie') {
+        extendedTime = true;
+        actRoll = Math.floor(Math.random() * 19) + 1;
+      }
+    }
+    // Phase 1: reroll action if it falls in an excluded body-part category (e.g. feet, licking)
+    while (phase === 1 && typeof shouldRerollActionPhase1 === 'function' && shouldRerollActionPhase1(actRoll)) {
       actRoll = rollD20();
       if (actRoll === 20 && guidedDistributionMode !== 'quickie') {
         extendedTime = true;
@@ -201,6 +255,7 @@ function performGuidedTurn() {
   }
 
   showExercise(phase, loc, actRoll, giver, receiver);
+  if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
 
   if (extendedTime) {
     const locationText = phase === 3 ? 'position' : 'location';
@@ -211,6 +266,8 @@ function performGuidedTurn() {
 
   // Milestone-based clothing removal (only in Phase 1 & 2)
   let clothingRemoved = false;
+  let currentRemovedItems = [];
+  let currentClothingMethodText = '';
   const receiverItems = receiver === 1 ? guidedClothingItemsP1 : guidedClothingItemsP2;
   if (clothingSystemEnabled && phase < 3 && turnsSinceLastRemoval >= clothingMilestoneInterval && receiverItems.length > 0) {
     const removedItems = [];
@@ -226,6 +283,8 @@ function performGuidedTurn() {
         howRoll = Math.floor(Math.random() * 12) + 1;
       }
       const clothingEntry = clothingTable[howRoll];
+      currentClothingMethodText = (clothingEntry && clothingEntry.method) || '';
+      currentRemovedItems = removedItems.slice();
       const giverLabel = getPartnerName(giver);
       const receiverLabel = getPartnerName(receiver);
 
@@ -239,6 +298,7 @@ function performGuidedTurn() {
         const bonusItem = removeClothingItem(receiver);
         if (bonusItem) removedItems.push(bonusItem);
       }
+      currentRemovedItems = removedItems.slice();
 
       const prefixWithPartner = (clothingEntry.prefix || '').replace(/\{receiver\}/g, receiverLabel);
       const methodText = clothingEntry.method ? ` ${clothingEntry.method}` : '';
@@ -260,14 +320,18 @@ function performGuidedTurn() {
     }
   }
 
-  // Double clothing removal time if receiver has twice (or more) as many items as the other partner
+  // Clothing removal time: base, doubled if receiver has 2x items, then multiplied by item/method complexity
   let effectiveClothingSeconds = 0;
   if (clothingRemoved && guidedClothingRemovalSeconds > 0) {
     const receiverRemaining = receiver === 1 ? guidedClothingItemsP1.length : guidedClothingItemsP2.length;
     const otherRemaining = receiver === 1 ? guidedClothingItemsP2.length : guidedClothingItemsP1.length;
-    effectiveClothingSeconds = (receiverRemaining >= 2 * otherRemaining)
+    let base = (receiverRemaining >= 2 * otherRemaining)
       ? 2 * guidedClothingRemovalSeconds
       : guidedClothingRemovalSeconds;
+    if (typeof getClothingRemovalComplexityMultiplier === 'function') {
+      base = Math.round(base * getClothingRemovalComplexityMultiplier(currentRemovedItems, currentClothingMethodText));
+    }
+    effectiveClothingSeconds = base;
   }
 
   // Update clothing display
@@ -284,8 +348,9 @@ function performGuidedTurn() {
     }
   }
 
-  // Set turn duration: base time, then extend if the prompt says "X times" or "Xs / X seconds"
-  guidedTurnTimeRemaining = guidedTurnSeconds;
+  // Set turn duration: base time (double in Phase 3 if "double Phase 3 time" is on), then extend if the prompt says "X times" or "Xs / X seconds"
+  const baseTurnSec = (phase === 3 && typeof phase3DoubleTime !== 'undefined' && phase3DoubleTime) ? guidedTurnSeconds * 2 : guidedTurnSeconds;
+  guidedTurnTimeRemaining = baseTurnSec;
   if (clothingRemoved && effectiveClothingSeconds > 0) {
     guidedTurnTimeRemaining += effectiveClothingSeconds;
   }
@@ -321,79 +386,209 @@ function performGuidedTurn() {
     }
   }
 
-  // Flow: 1) Time to switch (or already done in pause). 2) Who's giver/receiver. 3) Ease-in ("settle in"). 4) Clothing (if any) then instruction. 5) Start timer.
+  // Break order: dong → 2s → "next turn" + giver/receiver → 10s → clothing (variable time) → instructions read → settle in 20s → "turn begins" → start timer.
   const clothingText = (clothingRemoved && clothingOutput && clothingOutput.textContent) ? clothingOutput.textContent.trim() : '';
   const instructionText = (instructionOutput && instructionOutput.textContent) ? instructionOutput.textContent.trim() : '';
-  const EASE_IN_SECONDS = 5;
-  const SWITCH_SECONDS_WHEN_NO_PAUSE = 5;
-  const onStartTimer = () => { startGuidedTurnTimer(); saveState(); };
+  const AFTER_DONG_MS = 2000;
+  const AFTER_NEXT_TURN_MS = 10000;
+  const SETTLE_IN_PAUSE_SECONDS = 20;
+  const onStartTimer = () => {
+    guidedBreakPhase = 'none';
+    guidedBreakCountdown = 0;
+    if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+    guidedBreakTimerId = null;
+    startGuidedTurnTimer();
+    saveState();
+  };
 
   const giverName = getPartnerName(giver);
   const receiverName = getPartnerName(receiver);
-  const giverReceiverOnly = (typeof phase !== 'undefined' && phase === 3)
-    ? `${giverName} leads, ${receiverName} follows.`
-    : `${giverName} is giver, ${receiverName} is receiver.`;
-  const easeInPhrase = 'Take the next few seconds to settle in. No rush.';
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const nextTurnPhraseOptions = [
+    'That finishes that turn. Time to switch.',
+    'That\'s the end of that turn. Time to switch.',
+    'Turn over. Time to switch.',
+    'Switch when you\'re ready.',
+  ];
+  const nextTurnPhrase = pick(nextTurnPhraseOptions);
+  const firstTurnPhraseOptions = (typeof phase !== 'undefined' && phase === 3)
+    ? [
+        `First turn. ${giverName} leads, ${receiverName} follows.`,
+        `Kicking off. ${giverName} leads, ${receiverName} follows.`,
+        `Here we go. ${giverName} leads, ${receiverName} follows.`,
+        `Starting with ${giverName} leading and ${receiverName} following.`,
+      ]
+    : [
+        `First turn. ${giverName} is giver, ${receiverName} is receiver.`,
+        `Kicking off. ${giverName} gives, ${receiverName} receives.`,
+        `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
+        `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
+      ];
+  const firstTurnPhrase = pick(firstTurnPhraseOptions);
+  const easeInPhraseOptions = [
+    'Take the next few seconds to settle in. No rush.',
+    'Settle in when you\'re ready. No rush.',
+    'Use the next few seconds to get comfortable. No rush.',
+    'Whenever you\'re ready. No rush.',
+  ];
+  const easeInPhrase = pick(easeInPhraseOptions);
+  const turnBeginsOptions = [
+    'Turn begins.',
+    'Go.',
+    'Whenever you\'re ready.',
+    'Begin.',
+  ];
+  const turnBeginsPhrase = pick(turnBeginsOptions);
+
+  const runAfterSettleIn = () => {
+    guidedBreakPhase = 'none';
+    guidedBreakCountdown = 0;
+    if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+    guidedBreakTimerId = null;
+    if (typeof speakText === 'function') {
+      speakText(turnBeginsPhrase, { force: true, onEnd: onStartTimer });
+    } else {
+      onStartTimer();
+    }
+  };
+
+  const runSettleIn = () => {
+    if (typeof speakText === 'function') {
+      speakText(easeInPhrase, { force: true, onEnd: () => {
+        guidedBreakPhase = 'settle_in';
+        guidedBreakCountdown = SETTLE_IN_PAUSE_SECONDS;
+        if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+        guidedBreakTimerId = setInterval(() => {
+          guidedBreakCountdown -= 1;
+          updateGuidedModeUI();
+          if (guidedBreakCountdown <= 0) {
+            clearInterval(guidedBreakTimerId);
+            guidedBreakTimerId = null;
+            runAfterSettleIn();
+          }
+        }, 1000);
+      } });
+    } else {
+      guidedBreakPhase = 'settle_in';
+      guidedBreakCountdown = SETTLE_IN_PAUSE_SECONDS;
+      if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+      guidedBreakTimerId = setInterval(() => {
+        guidedBreakCountdown -= 1;
+        updateGuidedModeUI();
+        if (guidedBreakCountdown <= 0) {
+          clearInterval(guidedBreakTimerId);
+          guidedBreakTimerId = null;
+          runAfterSettleIn();
+        }
+      }, 1000);
+    }
+  };
+
+  const runAfterInstructions = () => { runSettleIn(); };
 
   const runClothingThenInstruction = () => {
-      if (clothingText) {
-        speakText(clothingText, {
-          force: true,
-          onEnd: () => {
-            const clothingSec = effectiveClothingSeconds > 0 ? effectiveClothingSeconds : (typeof guidedClothingRemovalSeconds === 'number' ? guidedClothingRemovalSeconds : 30);
-            guidedInClothingWindow = true;
-            guidedClothingWindowRemaining = clothingSec;
-            if (guidedClothingWindowTimerId) clearInterval(guidedClothingWindowTimerId);
-            guidedClothingWindowTimerId = setInterval(() => {
-              guidedClothingWindowRemaining -= 1;
-              guidedPhaseTimeRemaining -= 1;
-              updateGuidedModeUI();
-              if (guidedClothingWindowRemaining <= 0) {
-                clearInterval(guidedClothingWindowTimerId);
-                guidedClothingWindowTimerId = null;
-                guidedInClothingWindow = false;
-                if (instructionText) {
-                  speakText(instructionText, { force: true, onEnd: onStartTimer });
-                } else {
-                  onStartTimer();
-                }
-              }
-            }, 1000);
+    guidedBreakPhase = 'none';
+    guidedBreakCountdown = 0;
+    if (clothingText) {
+      const sayClothing = typeof speakText === 'function';
+      const onClothingSpoken = () => {
+        guidedBreakPhase = 'none';
+        guidedBreakCountdown = 0;
+        const clothingSec = effectiveClothingSeconds > 0 ? effectiveClothingSeconds : (typeof guidedClothingRemovalSeconds === 'number' ? guidedClothingRemovalSeconds : 30);
+        guidedInClothingWindow = true;
+        guidedClothingWindowRemaining = clothingSec;
+        if (guidedClothingWindowTimerId) clearInterval(guidedClothingWindowTimerId);
+        guidedClothingWindowTimerId = setInterval(() => {
+          guidedClothingWindowRemaining -= 1;
+          guidedPhaseTimeRemaining -= 1;
+          updateGuidedModeUI();
+          if (guidedClothingWindowRemaining <= 0) {
+            clearInterval(guidedClothingWindowTimerId);
+            guidedClothingWindowTimerId = null;
+            guidedInClothingWindow = false;
+            if (instructionText && sayClothing) {
+              speakText(instructionText, { force: true, onEnd: runAfterInstructions });
+            } else {
+              runAfterInstructions();
+            }
           }
-        });
+        }, 1000);
+      };
+      if (sayClothing) {
+        speakText(clothingText, { force: true, onEnd: onClothingSpoken });
       } else {
-        if (instructionText) {
-          speakText(instructionText, { force: true, onEnd: onStartTimer });
-        } else {
-          onStartTimer();
-        }
+        onClothingSpoken();
       }
+    } else {
+      if (instructionText && typeof speakText === 'function') {
+        speakText(instructionText, { force: true, onEnd: runAfterInstructions });
+      } else {
+        runAfterInstructions();
+      }
+    }
   };
 
-  const runEaseIn = () => {
-    speakText(easeInPhrase, { force: true, onEnd: () => {
-      setTimeout(runClothingThenInstruction, EASE_IN_SECONDS * 1000);
-    } });
+  const runAfterNextTurn = () => {
+    guidedBreakPhase = 'before_clothing';
+    guidedBreakCountdown = Math.floor(AFTER_NEXT_TURN_MS / 1000);
+    if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+    guidedBreakTimerId = setInterval(() => {
+      guidedBreakCountdown -= 1;
+      updateGuidedModeUI();
+      if (guidedBreakCountdown <= 0) {
+        clearInterval(guidedBreakTimerId);
+        guidedBreakTimerId = null;
+        runClothingThenInstruction();
+      }
+    }, 1000);
   };
 
-  const runAfterGiverReceiver = () => {
-    speakText(giverReceiverOnly, { force: true, onEnd: runEaseIn });
+  const runAfterDong = () => {
+    if (typeof speakText === 'function') {
+      speakText(nextTurnPhrase, { force: true, onEnd: runAfterNextTurn });
+    } else {
+      runAfterNextTurn();
+    }
   };
 
-  if (typeof speakText !== 'function' || (typeof isSpeechSupported === 'function' && !isSpeechSupported())) {
-    startGuidedTurnTimer();
-    saveState();
-    return;
-  }
+  const startNextTurnCountdown = () => {
+    guidedBreakPhase = 'next_turn';
+    guidedBreakCountdown = Math.floor(AFTER_DONG_MS / 1000);
+    if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+    guidedBreakTimerId = setInterval(() => {
+      guidedBreakCountdown -= 1;
+      updateGuidedModeUI();
+      if (guidedBreakCountdown <= 0) {
+        clearInterval(guidedBreakTimerId);
+        guidedBreakTimerId = null;
+        runAfterDong();
+      }
+    }, 1000);
+  };
 
-  if (guidedPauseSeconds > 0) {
-    // Pause already gave "time to switch" and "giver/receiver"; go straight to ease-in.
-    runEaseIn();
+  const hasVoice = typeof speakText === 'function' && (typeof isSpeechSupported !== 'function' || isSpeechSupported());
+  const isFirstTurn = totalTurnsInSession === 1;
+  if (isFirstTurn) {
+    // First turn: show popup for duration of TTS (or fallback), no dong, no "That finishes that turn".
+    if (typeof showFirstTurnPopup === 'function') showFirstTurnPopup(firstTurnPhrase);
+    if (hasVoice) {
+      speakText(firstTurnPhrase, { force: true, onEnd: () => {
+        if (typeof hideFirstTurnPopup === 'function') hideFirstTurnPopup();
+        runAfterNextTurn();
+      } });
+    } else {
+      const firstTurnPopupDurationMs = 4000;
+      setTimeout(() => {
+        if (typeof hideFirstTurnPopup === 'function') hideFirstTurnPopup();
+        runAfterNextTurn();
+      }, firstTurnPopupDurationMs);
+    }
   } else {
-    // No pause: 1) Time to switch (speak + wait), 2) Giver/receiver, 3) Ease-in, then clothing/instruction.
-    speakText(`Time to switch. You have ${SWITCH_SECONDS_WHEN_NO_PAUSE} seconds.`, { force: true, onEnd: () => {
-      setTimeout(runAfterGiverReceiver, SWITCH_SECONDS_WHEN_NO_PAUSE * 1000);
-    } });
+    if (timerSound) {
+      timerSound.currentTime = 0;
+      timerSound.play().catch(() => {});
+    }
+    startNextTurnCountdown();
   }
 }
 
@@ -404,10 +599,17 @@ function performGuidedTurn() {
 function rerollGuidedPrompt() {
   if (!isGuidedMode || guidedPaused || guidedInPause) return;
 
-  const loc = rollD20();
+  let loc = rollD20();
   const act = rollD20();
   let actRoll = act;
   let extendedTime = false;
+
+  while (typeof shouldRerollLocation === 'function' && shouldRerollLocation(phase, loc)) {
+    loc = rollD20();
+  }
+  while (phase === 3 && typeof shouldRerollPhase3Position === 'function' && shouldRerollPhase3Position(loc)) {
+    loc = rollD20();
+  }
 
   // Quickie preset: no critical rolls (no extended time)
   if (act === 20 && guidedDistributionMode !== 'quickie') {
@@ -433,10 +635,19 @@ function rerollGuidedPrompt() {
       actRoll = Math.floor(Math.random() * 19) + 1;
     }
   }
+  // Phase 1: reroll action if excluded body-part category (feet, licking)
+  while (phase === 1 && typeof shouldRerollActionPhase1 === 'function' && shouldRerollActionPhase1(actRoll)) {
+    actRoll = rollD20();
+    if (actRoll === 20 && guidedDistributionMode !== 'quickie') {
+      extendedTime = true;
+      actRoll = Math.floor(Math.random() * 19) + 1;
+    }
+  }
 
   const giver = guidedCurrentPartner;
   const receiver = guidedCurrentPartner === 1 ? 2 : 1;
   showExercise(phase, loc, actRoll, giver, receiver);
+  if (typeof setCurrentPrompt === 'function') setCurrentPrompt(phase, loc, actRoll);
 
   if (extendedTime) {
     const ext = ' Spend about twice as long on this location.';
@@ -535,11 +746,7 @@ function completeTurn() {
   guidedStepSegments = [];
   guidedLastSpokenStepIndex = -1;
 
-  // Play sound
-  if (timerSound) {
-    timerSound.currentTime = 0;
-    timerSound.play().catch(() => {});
-  }
+  // Dong plays at start of next turn's break flow (performGuidedTurn)
 
   // Switch partner
   guidedCurrentPartner = guidedCurrentPartner === 1 ? 2 : 1;
@@ -554,13 +761,8 @@ function completeTurn() {
     }
     return;
   } else {
-    // Start pause between turns (if configured)
-    if (guidedPauseSeconds > 0) {
-      startGuidedPause();
-    } else {
-      // No pause, continue immediately
-      performGuidedTurn();
-    }
+    // Go straight to next turn's break flow (dong, "That finishes that turn. Time to switch.", etc.). No separate "You have N seconds to switch" pause.
+    performGuidedTurn();
   }
 }
 
@@ -595,9 +797,18 @@ function startGuidedPause() {
   if (clothingOutput) clothingOutput.textContent = '';
 
   const switchSec = typeof guidedPauseSeconds === 'number' ? guidedPauseSeconds : 30;
-  const switchAnnounce = (typeof phase !== 'undefined' && phase === 3)
-    ? `${giverName} leads, ${receiverName} follows. You have ${switchSec} seconds to switch.`
-    : `${giverName} is giver, ${receiverName} is receiver. You have ${switchSec} seconds to switch.`;
+  const switchAnnounceOptions = (typeof phase !== 'undefined' && phase === 3)
+    ? [
+        `${giverName} leads, ${receiverName} follows. You have ${switchSec} seconds to switch.`,
+        `Next: ${giverName} leads, ${receiverName} follows. ${switchSec} seconds to switch.`,
+        `Time to switch. ${giverName} leads, ${receiverName} follows. You have ${switchSec} seconds.`,
+      ]
+    : [
+        `${giverName} is giver, ${receiverName} is receiver. You have ${switchSec} seconds to switch.`,
+        `Next: ${giverName} gives, ${receiverName} receives. ${switchSec} seconds to switch.`,
+        `Time to switch. ${giverName} is giver, ${receiverName} is receiver. You have ${switchSec} seconds.`,
+      ];
+  const switchAnnounce = switchAnnounceOptions[Math.floor(Math.random() * switchAnnounceOptions.length)];
 
   if (typeof speakText === 'function') {
     speakText(switchAnnounce, { force: true });
@@ -641,17 +852,31 @@ function startPhaseCheckIn() {
   guidedPaused = true;
 
   const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' };
-  // Message is about the phase that just ended — check-in is now, at the end of that phase
-  if (messageBox) {
-    messageBox.textContent = phase < maxPhase
-      ? `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to continue to ${phaseNames[phase + 1]}.`
-      : `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`;
-  }
-  if (typeof speakText === 'function') {
-    speakText(phase < maxPhase
-      ? `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap Continue to ${phaseNames[phase + 1]}.`
-      : `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`, { force: true });
-  }
+  const pickPhrase = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const phaseEndedContinueOptions = [
+    `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to continue to ${phaseNames[phase + 1]}.`,
+    `That's the end of ${phaseNames[phase]}. Check in with each other, then tap Continue to ${phaseNames[phase + 1]}.`,
+    `${phaseNames[phase]} is complete. Check in, then tap the button to continue to ${phaseNames[phase + 1]}.`,
+  ];
+  const phaseEndedEndSessionOptions = [
+    `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`,
+    `That's the end of ${phaseNames[phase]}. Check in with each other, then tap to end the session.`,
+    `${phaseNames[phase]} is complete. Check in, then tap the button to end the session.`,
+  ];
+  const phaseEndedContinueSpokenOptions = [
+    `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap Continue to ${phaseNames[phase + 1]}.`,
+    `That's the end of ${phaseNames[phase]}. Check in, then tap Continue to ${phaseNames[phase + 1]}.`,
+    `${phaseNames[phase]} is complete. Check in, then tap the button to continue to ${phaseNames[phase + 1]}.`,
+  ];
+  const phaseEndedEndSessionSpokenOptions = [
+    `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to end the session.`,
+    `That's the end of ${phaseNames[phase]}. Check in, then tap to end the session.`,
+    `${phaseNames[phase]} is complete. Check in, then tap the button to end the session.`,
+  ];
+  const messageText = phase < maxPhase ? pickPhrase(phaseEndedContinueOptions) : pickPhrase(phaseEndedEndSessionOptions);
+  const spokenText = phase < maxPhase ? pickPhrase(phaseEndedContinueSpokenOptions) : pickPhrase(phaseEndedEndSessionSpokenOptions);
+  if (messageBox) messageBox.textContent = messageText;
+  if (typeof speakText === 'function') speakText(spokenText, { force: true });
   updateGuidedModeUI();
   if (typeof saveState === 'function') saveState();
 }
@@ -685,12 +910,22 @@ function advanceGuidedPhase() {
       performGuidedTurn();
     }, 3000);
   } else {
-    // Session complete
-    stopGuidedMode();
+    // Session complete: offer "Continue in free play" or "End session"
+    guidedSessionComplete = true;
+    guidedPaused = true;
     if (messageBox) {
-      messageBox.textContent = 'Guided session complete! Check in with each other.';
+      messageBox.textContent = 'Guided session complete! Check in with each other. Continue in free play or end session.';
     }
-    speakText('Session complete. Check in with each other.');
+    const sessionCompletePhraseOptions = [
+      'Session complete. Check in with each other.',
+      'Guided session complete. Check in with each other.',
+      'That\'s the end of the guided session. Check in with each other.',
+      'All done. Check in with each other.',
+    ];
+    const sessionCompletePhrase = sessionCompletePhraseOptions[Math.floor(Math.random() * sessionCompletePhraseOptions.length)];
+    speakText(sessionCompletePhrase, { force: true });
+    updateGuidedModeUI();
+    if (typeof saveState === 'function') saveState();
   }
 }
 
@@ -729,6 +964,7 @@ function resumeGuidedMode() {
 
 function stopGuidedMode() {
   isGuidedMode = false;
+  guidedSessionComplete = false;
   guidedPaused = false;
   guidedInPhaseCheckIn = false;
   guidedCompletedPhase = 0;
@@ -738,9 +974,14 @@ function stopGuidedMode() {
   guidedClothingWindowRemaining = 0;
   if (guidedClothingWindowTimerId) clearInterval(guidedClothingWindowTimerId);
   guidedClothingWindowTimerId = null;
+  if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
+  guidedBreakTimerId = null;
+  guidedBreakPhase = 'none';
+  guidedBreakCountdown = 0;
   clearInterval(guidedTurnTimerId);
   clearInterval(guidedPhaseTimerId);
   stopSpeaking();
+  if (typeof window.releaseWakeLock === 'function') window.releaseWakeLock();
   updateGuidedModeUI();
   clearSavedState();
 }
@@ -824,13 +1065,19 @@ function updateGuidedModeUI() {
     const estTurnsPerPartner = Math.floor(estTurnsTotal / 2);
     if (phaseTimeLeftSpan) phaseTimeLeftSpan.textContent = estTurnsTotal > 0 ? `~${estTurnsPerPartner} each` : '0';
 
-    // Current action (name on one line, time on the next)
-    const actionName = guidedInPause ? 'Pause' : (guidedInClothingWindow ? 'Removing clothes' : 'Turn/touch');
-    const actionTime = guidedInPause ? guidedPauseTimeRemaining : (guidedInClothingWindow ? guidedClothingWindowRemaining : guidedTurnTimeRemaining);
+    // Current action (name on one line, time on the next). Include switch/settle-in countdown when in break flow.
+    let actionName = guidedInPause ? 'Pause' : (guidedInClothingWindow ? 'Removing clothes' : 'Turn/touch');
+    let actionTime = guidedInPause ? guidedPauseTimeRemaining : (guidedInClothingWindow ? guidedClothingWindowRemaining : guidedTurnTimeRemaining);
+    if (guidedBreakPhase !== 'none') {
+      const breakLabels = { next_turn: 'Time to switch', before_clothing: 'Clothing in', settle_in: 'Settle in' };
+      actionName = breakLabels[guidedBreakPhase] || actionName;
+      actionTime = Math.max(0, guidedBreakCountdown);
+    }
     if (turnTimeLeftLabel) turnTimeLeftLabel.textContent = `Current action: ${actionName}`;
     if (turnTimeLeftSpan) {
       turnTimeLeftSpan.textContent = formatTime(actionTime);
-      if (guidedInPause) turnTimeLeftSpan.style.color = '#a7f3d0';
+      if (guidedBreakPhase !== 'none') turnTimeLeftSpan.style.color = '#a7f3d0';
+      else if (guidedInPause) turnTimeLeftSpan.style.color = '#a7f3d0';
       else if (guidedInClothingWindow) turnTimeLeftSpan.style.color = '#fcd34d';
       else turnTimeLeftSpan.style.color = '#e5e7eb';
     }
@@ -857,22 +1104,27 @@ function updateGuidedModeUI() {
 
     // Control buttons visibility
     const inPhaseCheckIn = guidedInPhaseCheckIn === true;
+    const sessionCompleteButtons = document.getElementById('sessionCompleteButtons');
+    const stopGuidedBtn = document.getElementById('stopGuided');
+    if (sessionCompleteButtons) sessionCompleteButtons.style.display = guidedSessionComplete ? 'flex' : 'none';
+    if (stopGuidedBtn) stopGuidedBtn.style.display = guidedSessionComplete ? 'none' : 'inline-block';
+
     const phaseNames = { 1: 'Phase 2', 2: 'Phase 3', 3: 'End session' };
     if (continuePhaseBtn) {
-      continuePhaseBtn.style.display = inPhaseCheckIn ? 'inline-block' : 'none';
+      continuePhaseBtn.style.display = (inPhaseCheckIn && !guidedSessionComplete) ? 'inline-block' : 'none';
       if (inPhaseCheckIn && guidedCompletedPhase >= 1 && guidedCompletedPhase <= 3) {
         continuePhaseBtn.textContent = phaseNames[guidedCompletedPhase] || 'Continue';
       }
     }
     if (nextTurnBtn) {
-      nextTurnBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
+      nextTurnBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn || guidedSessionComplete) ? 'none' : 'inline-block';
     }
     if (rerollPromptBtn) {
-      rerollPromptBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
+      rerollPromptBtn.style.display = (guidedInPause || guidedPaused || inPhaseCheckIn || guidedSessionComplete) ? 'none' : 'inline-block';
     }
     if (pauseBtn && resumeBtn) {
-      const showResume = guidedPaused && !inPhaseCheckIn;
-      pauseBtn.style.display = (guidedPaused || inPhaseCheckIn) ? 'none' : 'inline-block';
+      const showResume = guidedPaused && !inPhaseCheckIn && !guidedSessionComplete;
+      pauseBtn.style.display = (guidedPaused || inPhaseCheckIn || guidedSessionComplete) ? 'none' : 'inline-block';
       resumeBtn.style.display = showResume ? 'inline-block' : 'none';
     }
   } else {

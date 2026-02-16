@@ -173,10 +173,11 @@ function speakText(text, options) {
   window.speechSynthesis.cancel();
   duckBackgroundMusicForSpeech();
 
-  // Prompt detail mode: Beginner = slower (0.9), Regular = normal, Expert = slightly faster (1.1)
+  // TTS 30% slower across the board; then prompt mode: Expert slightly faster, else same.
   const mode = typeof promptDetailMode !== 'undefined' ? promptDetailMode : 'regular';
-  const rateMultiplier = mode === 'beginner' ? 0.9 : mode === 'expert' ? 1.1 : 1.0;
-  const effectiveRate = (typeof voiceRate === 'number' ? voiceRate : 1.0) * rateMultiplier;
+  const baseSlower = 0.7; // 30% slower
+  const rateMultiplier = mode === 'expert' ? 1.1 : 1.0;
+  const effectiveRate = (typeof voiceRate === 'number' ? voiceRate : 1.0) * baseSlower * rateMultiplier;
 
   const utterance = new SpeechSynthesisUtterance(cleaned);
   utterance.rate   = Math.max(0.5, Math.min(2, effectiveRate));
@@ -280,7 +281,9 @@ function toggleVoice() {
   updateVoiceButtons();
 
   if (voiceEnabled) {
-    speakText('Voice enabled');
+    const voiceEnabledOptions = ['Voice enabled', 'Voice on', 'Voice is on', 'Sound on'];
+    const msg = voiceEnabledOptions[Math.floor(Math.random() * voiceEnabledOptions.length)];
+    speakText(msg);
   } else {
     stopSpeaking();
   }

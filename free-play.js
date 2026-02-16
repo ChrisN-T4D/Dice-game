@@ -59,6 +59,9 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     }
   } else if (currentPhase === 2) {
     where = phaseTable.locations?.[locationRoll] ?? '';
+    if (locationRoll === 20) {
+      where = "Roller's choice (pick any Phase 2 location or reroll)";
+    }
     what  = phaseTable.actions?.[actionRoll] ?? '';
     if (giverPartner != null && receiverPartner != null) {
       if (where && typeof tailorPhase2Location === 'function') {
@@ -70,6 +73,9 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     }
   } else if (currentPhase === 1) {
     where = phaseTable.locations?.[locationRoll] ?? '';
+    if (locationRoll === 20) {
+      where = "Roller's choice (pick any location from the list)";
+    }
     what  = phaseTable.actions?.[actionRoll] ?? '';
     if (where && receiverPartner != null && typeof tailorPhase1Location === 'function') {
       where = tailorPhase1Location(where, locationRoll, receiverPartner);
@@ -116,6 +122,9 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
     where = applied.where;
     what = applied.what;
   }
+  if (typeof applyExcludeBodyPreferences === 'function') {
+    what = applyExcludeBodyPreferences(what);
+  }
 
   if (whereOutput) whereOutput.textContent = where || '—';
   if (whatOutput) whatOutput.textContent = what || '—';
@@ -125,6 +134,7 @@ function showExercise(currentPhase, locationRoll, actionRoll, giverPartner = nul
   if (typeof setCurrentPrompt === 'function') {
     setCurrentPrompt(currentPhase, locationRoll, actionRoll);
   }
+  if (currentPhase === 3 && typeof window.refreshFavoriteButton === 'function') window.refreshFavoriteButton();
 }
 
 function handleRerollPrompt() {
@@ -226,21 +236,34 @@ function handleUserRoll() {
 
   const locationRollInput = document.getElementById('locationRoll');
   const actionRollInput = document.getElementById('actionRoll');
+  const positionRoll2Input = document.getElementById('positionRoll2');
   const clothingRollInput = document.getElementById('clothingRoll');
   const errorBox = document.getElementById('error');
 
   const locRaw = locationRollInput.value;
   const actRaw = actionRollInput.value;
+  const pos2Raw = phase === 3 && positionRoll2Input ? positionRoll2Input.value : '';
 
-  const loc = Number(locRaw);
+  let loc = Number(locRaw);
   let act = Number(actRaw);
 
-  const validLoc = Number.isInteger(loc) && loc >= 1 && loc <= 20;
+  if (phase === 3) {
+    const pos2 = Number(pos2Raw);
+    const validDie1 = Number.isInteger(loc) && loc >= 1 && loc <= 20;
+    const validPos2 = Number.isInteger(pos2) && pos2 >= 1 && pos2 <= 20;
+    if (!validDie1 || !validPos2) {
+      if (errorBox) errorBox.textContent = 'Phase 3: enter Position die 1 (1–20), Position die 2 (1–20), and Modifier (1–20).';
+      return;
+    }
+    loc = ((loc - 1) * 20 + pos2 - 1) % 156 + 1;
+  }
+
+  const validLoc = phase === 3 ? true : (Number.isInteger(loc) && loc >= 1 && loc <= 20);
   const validAct = Number.isInteger(act) && act >= 1 && act <= 20;
 
   if (!validLoc || !validAct) {
     if (errorBox) {
-      errorBox.textContent = 'Please enter whole numbers between 1 and 20 for both rolls.';
+      errorBox.textContent = phase === 3 ? 'Enter whole numbers: Position die 1 (1–20), Position die 2 (1–20), Modifier (1–20).' : 'Please enter whole numbers between 1 and 20 for both rolls.';
     }
     return;
   }

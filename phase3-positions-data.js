@@ -217,12 +217,12 @@ function getPhase3PositionImagePath(positionNumber) {
   return 'Position References/position ' + n + '.png';
 }
 
-/** Effort-based groups for Phase 3 multiselect: bed/lying, standing, heavy. */
+/** Effort-based groups for Phase 3 multiselect: bed/lying, standing, heavy. icon = small picture/emoji for UI. */
 function getPhase3EffortGroups() {
   return [
-    { group: 'bed', groupDisplay: 'Bed / lying' },
-    { group: 'standing', groupDisplay: 'Standing' },
-    { group: 'heavy', groupDisplay: 'Heavy effort' }
+    { group: 'bed', groupDisplay: 'Bed / lying', icon: '🛏️' },
+    { group: 'standing', groupDisplay: 'Standing', icon: '🧍' },
+    { group: 'heavy', groupDisplay: 'Heavy effort', icon: '💪' }
   ];
 }
 

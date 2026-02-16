@@ -687,6 +687,13 @@ window.addEventListener('DOMContentLoaded', () => {
         saveState();
       });
       label.appendChild(cb);
+      if (g.icon) {
+        const iconSpan = document.createElement('span');
+        iconSpan.setAttribute('aria-hidden', 'true');
+        iconSpan.style.fontSize = '1.1em';
+        iconSpan.textContent = g.icon + ' ';
+        label.appendChild(iconSpan);
+      }
       label.appendChild(document.createTextNode(g.groupDisplay || g.group));
       phase3GroupCheckboxesContainer.appendChild(label);
     });

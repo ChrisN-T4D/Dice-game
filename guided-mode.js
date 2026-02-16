@@ -121,6 +121,7 @@ function startGuidedMode(totalMinutes, turnMinutes, pauseSeconds, clothingRemova
   guidedPhaseSeconds[2] = guidedTotalSeconds - guidedPhaseSeconds[0] - guidedPhaseSeconds[1]; // Ensure sum equals total
 
   guidedPhaseTimeRemaining = guidedPhaseSeconds[0]; // Start with phase 1
+  guidedTotalTimeRemaining = guidedTotalSeconds; // Initialize total time remaining
   guidedTurnTimeRemaining = guidedTurnSeconds;
   guidedPauseTimeRemaining = 0;
   guidedInPause = false;
@@ -460,6 +461,7 @@ function performGuidedTurn() {
         guidedBreakCountdown = SETTLE_IN_PAUSE_SECONDS;
         if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
         guidedBreakTimerId = setInterval(() => {
+          if (guidedPaused) return;
           guidedBreakCountdown -= 1;
           updateGuidedModeUI();
           if (guidedBreakCountdown <= 0) {
@@ -502,6 +504,7 @@ function performGuidedTurn() {
         guidedClothingWindowTimerId = setInterval(() => {
           guidedClothingWindowRemaining -= 1;
           guidedPhaseTimeRemaining -= 1;
+          guidedTotalTimeRemaining -= 1; // Decrement total time
           updateGuidedModeUI();
           if (guidedClothingWindowRemaining <= 0) {
             clearInterval(guidedClothingWindowTimerId);
@@ -533,15 +536,16 @@ function performGuidedTurn() {
     guidedBreakPhase = 'before_clothing';
     guidedBreakCountdown = Math.floor(AFTER_NEXT_TURN_MS / 1000);
     if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
-    guidedBreakTimerId = setInterval(() => {
-      guidedBreakCountdown -= 1;
-      updateGuidedModeUI();
-      if (guidedBreakCountdown <= 0) {
-        clearInterval(guidedBreakTimerId);
-        guidedBreakTimerId = null;
-        runClothingThenInstruction();
-      }
-    }, 1000);
+      guidedBreakTimerId = setInterval(() => {
+        if (guidedPaused) return;
+        guidedBreakCountdown -= 1;
+        updateGuidedModeUI();
+        if (guidedBreakCountdown <= 0) {
+          clearInterval(guidedBreakTimerId);
+          guidedBreakTimerId = null;
+          runClothingThenInstruction();
+        }
+      }, 1000);
   };
 
   const runAfterDong = () => {
@@ -557,6 +561,7 @@ function performGuidedTurn() {
     guidedBreakCountdown = Math.floor(AFTER_DONG_MS / 1000);
     if (guidedBreakTimerId) clearInterval(guidedBreakTimerId);
     guidedBreakTimerId = setInterval(() => {
+      if (guidedPaused) return;
       guidedBreakCountdown -= 1;
       updateGuidedModeUI();
       if (guidedBreakCountdown <= 0) {
@@ -692,6 +697,7 @@ function startGuidedTurnTimer() {
 
     guidedTurnTimeRemaining -= 1;
     guidedPhaseTimeRemaining -= 1;
+    guidedTotalTimeRemaining -= 1; // Decrement total time
 
     // Handle step announcements
     if (guidedStepSegments.length >= 1 && typeof speakText === 'function') {
@@ -767,8 +773,9 @@ function completeTurn() {
 function skipToNextTurn() {
   if (!isGuidedMode || guidedPaused || guidedInPause) return;
   
-  // Deduct remaining turn time from phase time before completing
+  // Deduct remaining turn time from phase time and total time before completing
   guidedPhaseTimeRemaining -= guidedTurnTimeRemaining;
+  guidedTotalTimeRemaining -= guidedTurnTimeRemaining;
   guidedTurnTimeRemaining = 0;
   
   completeTurn();
@@ -817,6 +824,7 @@ function startGuidedPause() {
 
     guidedPauseTimeRemaining -= 1;
     guidedPhaseTimeRemaining -= 1; // Pause counts against phase time
+    guidedTotalTimeRemaining -= 1; // Decrement total time
 
     updateGuidedModeUI();
     
@@ -948,6 +956,7 @@ function resumeGuidedMode() {
       if (guidedPaused) return;
       guidedPauseTimeRemaining -= 1;
       guidedPhaseTimeRemaining -= 1;
+      guidedTotalTimeRemaining -= 1; // Decrement total time
       updateGuidedModeUI();
       if (guidedPauseTimeRemaining % 5 === 0) saveState();
       if (guidedPauseTimeRemaining <= 0) {
@@ -1051,11 +1060,8 @@ function updateGuidedModeUI() {
       }
     }
 
-    // Update timer displays — total runs continuously (phase remaining + later phases)
-    const remainingLaterPhases = phase === 1 ? (guidedPhaseSeconds[1] || 0) + (guidedPhaseSeconds[2] || 0)
-      : phase === 2 ? (guidedPhaseSeconds[2] || 0) : 0;
-    const totalRemaining = guidedPhaseTimeRemaining + remainingLaterPhases;
-    if (totalTimeLeftSpan) totalTimeLeftSpan.textContent = formatTime(totalRemaining);
+    // Update timer displays — use directly tracked total time for accuracy
+    if (totalTimeLeftSpan) totalTimeLeftSpan.textContent = formatTime(Math.max(0, guidedTotalTimeRemaining));
 
     // Est. turns left per partner (cycle = turn + pause; turns per partner ≈ half of total turns in phase)
     const cycleSec = (guidedTurnSeconds || 120) + (guidedPauseSeconds || 0);

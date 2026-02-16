@@ -214,6 +214,7 @@ function getPhase3PositionHelp(positionNumber) {
 function getPhase3PositionImagePath(positionNumber) {
   const n = parseInt(positionNumber, 10);
   if (n < 1 || n > PHASE3_POSITION_COUNT) return '';
+  // Use relative path - GitHub Pages is case-sensitive, ensure folder name matches exactly
   return 'Position References/position ' + n + '.png';
 }
 

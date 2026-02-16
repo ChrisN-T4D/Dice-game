@@ -1572,9 +1572,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const bgMusicSelect = document.getElementById('backgroundMusicSelect');
   const bgMusicVolumeSlider = document.getElementById('backgroundMusicVolume');
   const bgMusicVolumeLabel = document.getElementById('backgroundMusicVolumeLabel');
-  const bgMusicTracks = [null, document.getElementById('bgMusic1'), document.getElementById('bgMusic2'), document.getElementById('bgMusic3'), document.getElementById('bgMusic4')];
-  const PLAYLIST_JAZZ = [4];        // Jazz: track 4 (Smooth jazz) only for now
-  const PLAYLIST_RB = [1, 2, 3];   // R&B: tracks 1–3
+  const bgMusicTracks = [null, 
+    document.getElementById('bgMusic1'), 
+    document.getElementById('bgMusic2'), 
+    document.getElementById('bgMusic3'), 
+    document.getElementById('bgMusic4'),
+    document.getElementById('bgMusic5'),
+    document.getElementById('bgMusic6'),
+    document.getElementById('bgMusic7'),
+    document.getElementById('bgMusic8'),
+    document.getElementById('bgMusic9')
+  ];
+  const PLAYLIST_JAZZ = [4, 5, 6, 7, 8];  // Jazz: all smooth jazz tracks (4, 5, 6, 7, 8)
+  const PLAYLIST_RB = [1, 2, 3, 9];       // R&B: tracks 1–3 (sensual/sexy) + track 9 (slow kiss)
   let playlistTrackIndices = [];
   let playlistCurrentIndex = 0;
 

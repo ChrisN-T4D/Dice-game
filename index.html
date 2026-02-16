@@ -161,9 +161,27 @@
       justify-content: flex-start;
     }
 
+    /* Small icon before preference option labels (body parts, effort level) */
+    .pref-icon {
+      font-size: 1.05em;
+      line-height: 1;
+    }
+    .pref-icon-svg {
+      width: 1.15em;
+      height: 1.15em;
+      vertical-align: -0.2em;
+      color: inherit;
+    }
+    .pref-icon-img {
+      width: 1.15em;
+      height: 1.15em;
+      object-fit: contain;
+      vertical-align: -0.2em;
+    }
+
     /* Preference section separator (line between groups) */
     .preferences-body .pref-sep {
-      border-top: 1px solid rgba(51, 65, 85, 0.8);
+      border-top: 1px solid #475569;
       margin-top: 0.75rem;
       padding-top: 0.75rem;
     }
@@ -1168,23 +1186,23 @@
                <div>
                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.35rem;">When I'm touching (giving):</div>
                  <div class="row" style="flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;">
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchFeet" style="accent-color: #22c55e;" /> Feet</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchLicking" style="accent-color: #22c55e;" /> Licking</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchNipples" style="accent-color: #22c55e;" /> Nipples/breasts</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchGenitals" style="accent-color: #22c55e;" /> Genitals</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchButtocks" style="accent-color: #22c55e;" /> Buttocks</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchPerineum" style="accent-color: #22c55e;" /> Perineum</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
                  </div>
                </div>
                <div>
                  <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.35rem;">When I'm being touched (receiving):</div>
                  <div class="row" style="flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;">
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedFeet" style="accent-color: #22c55e;" /> Feet</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedLicking" style="accent-color: #22c55e;" /> Licking</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedNipples" style="accent-color: #22c55e;" /> Nipples/breasts</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedGenitals" style="accent-color: #22c55e;" /> Genitals</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedButtocks" style="accent-color: #22c55e;" /> Buttocks</label>
-                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedPerineum" style="accent-color: #22c55e;" /> Perineum</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
                  </div>
                </div>
              </div>
@@ -1206,10 +1224,10 @@
             </label>
             <span style="font-size: 0.8rem; color: #64748b;">When off, positions that are mainly anal-oriented are rerolled. Other positions can still appear.</span>
           </div>
-          <!-- Phase 3 position effort (multiselect: bed/lying, standing, heavy) -->
+          <!-- Phase 3: include positions by physical effort level (bed/lying, standing, heavy) -->
           <div class="row" style="margin-bottom: 1rem; flex-direction: column; gap: 0.5rem; align-items: flex-start;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Phase 3 position effort</label>
-            <p style="font-size: 0.8rem; color: #64748b; margin: 0; text-align: left;">Uncheck effort types to exclude from rolls. Bed/lying = low effort; Standing = moderate; Heavy = high effort.</p>
+            <label style="font-weight: 600; font-size: 0.9rem;">Phase 3: include positions by effort level</label>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 0; text-align: left;">Uncheck to exclude from rolls: Bed/lying (low), Standing (moderate), Heavy (high effort).</p>
             <div id="phase3GroupCheckboxes" style="display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; max-height: 12rem; overflow-y: auto; padding: 0.5rem 0; justify-content: flex-start;"></div>
           </div>
           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
@@ -1220,7 +1238,7 @@
             <span style="font-size: 0.8rem; color: #64748b;">When on, each turn in Phase 3 gets twice the usual time per position.</span>
           </div>
           <div class="row" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Vibrators available:</label>
+            <label style="font-weight: 600; font-size: 0.9rem;"><svg class="pref-icon-svg" viewBox="0 0 24 10" aria-hidden="true" focusable="false"><path d="M6 2 L18 2 Q22 5 18 8 L6 8 Q2 5 6 2 Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Vibrators available:</label>
             <div class="row" style="align-items: center; gap: 0.5rem;">
               <input type="checkbox" class="touch-checkbox" id="vibratorsPresent" style="accent-color: #22c55e;" title="When off, Phase 3 vibrator/toy modifiers (Vibrator ladder, Pulse vs steady, Hand + toy duet) are rerolled and toy-optional text is hidden." />
               <label for="vibratorsPresent" style="font-size: 0.85rem; color: #9ca3af;">Include vibrator/toy modifiers in Phase 3 (if off, those rolls are rerolled)</label>

@@ -6,43 +6,42 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 ---
 
-## 1. Cowgirl / Woman on top (facing partner)
+## 1. Straddle / Cowgirl (facing partner)
 
-**Criteria:** Female straddling male; male supine or seated; partners **facing each other**.
+**Criteria:** Female **straddling** male; male supine or seated; partners **facing each other**.
 
 | Position | Notes |
 |----------|--------|
-| 1 | Classic cowgirl: female straddling, facing partner, male supine |
-| 29 | Cowgirl twisted toward partner, both holding own ankles/legs (flexible) |
-| 35 | Cowgirl, one leg tucked, one extended to side |
-| 36 | Seated cowgirl, close embrace, face-to-face |
-| 38 | Cowgirl, seated upright, facing him |
-| 45 | Cowgirl face-to-face, legs wrapped |
-| 48 | Kneeling straddle/cowgirl, legs wrapped around him |
+| 38 | Straddle, seated upright, facing him |
+| 45 | Seated on edge of bed, woman straddling/squatting around man (facing him) |
+| 48 | Kneeling straddle, legs wrapped around him |
 | 51 | Seated embrace, lap sitting, face-to-face |
-| 53 | Seated cowgirl, close embrace |
-| 62 | Cowgirl with top figure arched backward |
-| 76 | Kneeling face-to-face, female arched back |
-| 106 | Seated cowgirl, both leaning back on hands |
-| 110 | Cowgirl, face-to-face, legs wrapped |
-| 111 | Cowgirl facing same direction, leaning forward, hands on surface |
-| 120 | Cowgirl, both facing same direction, female upright straddling |
-| 136 | Cowgirl leaning forward over him, arms on his chest |
-| 142 | Cowgirl, legs raised high and pulled in with arms |
-| 146 | Cowgirl leaning back, male supporting her |
-| 155 | Seated cowgirl, face-to-face, intimate embrace |
+| 53 | Seated straddle, close embrace |
+| 106 | Lotus (both seated, cross-legged) |
+| 110 | Straddle with woman's knees on man's shoulders |
+| 111 | Straddle facing same direction, leaning forward, hands on surface |
+| 136 | Straddle with man's legs pulled up |
+| 142 | Straddle with his legs tucked into her armpits |
+| 146 | Straddle leaning back, male supporting her |
+| 155 | Seated straddle, face-to-face, intimate embrace |
 
 ---
 
-## 2. Reverse cowgirl / Woman on top (facing away)
+## 2. Reverse cowgirl / Reverse straddle (facing away)
 
-**Criteria:** Female on top, straddling; **facing away** from partner's head (toward his feet).
+**Criteria:** Female on top, **straddling**; **facing away** from partner's head (toward his feet). Also includes male on top facing away (reverse orientation).
 
 | Position | Notes |
 |----------|--------|
+| 1 | Reverse cowgirl: woman straddling, facing away |
+| 4 | Top figure kneeling/straddling, facing away; bottom on back, legs splayed |
 | 5 | Reverse, legs wrapped high around bottom partner |
 | 12 | Reverse cowgirl, hands on surface for support |
 | 18 | Seated reverse, female leaning forward, hands on ground |
+| 29 | Reverse cowgirl, woman holding man's ankles |
+| 33 | Both reclined, she leaning back against him, facing same direction |
+| 35 | Reverse cowgirl, woman lying back with legs toward his legs |
+| 36 | Seated reverse cowgirl |
 | 50 | Reverse cowgirl, man legs extended |
 | 52 | Reverse cowgirl, kneeling, hands on surface |
 | 61 | Reverse cowgirl, both propped on arms |
@@ -54,9 +53,11 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 | 86 | Reverse cowgirl, legs splayed, hands on thighs |
 | 87 | Reverse cowgirl, seated upright |
 | 89 | Reverse cowgirl, one leg extended dramatically up |
+| 99 | Male seated/squatting facing her feet, her hips elevated, legs extended |
 | 107 | Reverse cowgirl, facing his feet |
 | 109 | Reverse cowgirl, both leaning back, embracing |
 | 114 | Man on top facing away (reverse orientation) |
+| 120 | Reverse straddle variation |
 | 125 | Reverse cowgirl, hands on his chest |
 | 138 | Reverse cowgirl, hands on his chest |
 | 150 | Seated reverse cowgirl, female upright |
@@ -66,11 +67,14 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 ## 3. Missionary / Male on top, female supine
 
-**Criteria:** Female on back; male on top or kneeling over her; **face-to-face**.
+**Criteria:** Female on back; male on top or kneeling over her; **face-to-face**. Includes legs wide/butterfly and intertwined leg variants.
 
 | Position | Notes |
 |----------|--------|
+| 3 | Legs wide, male kneeling holding her legs (butterfly-style) |
+| 7 | Female on back, legs elevated and spread; male standing straddling |
 | 9 | Legs over shoulders, male kneeling, supporting her lower back |
+| 13 | Female supine, legs spread; male kneeling with one leg raised between hers |
 | 15 | Legs-up missionary, female legs raised and spread |
 | 16 | Missionary, female legs widely splayed, male kneeling |
 | 44 | Missionary, legs wrapped high around him |
@@ -82,6 +86,7 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 | 63 | Legs-up missionary, legs wrapped around him |
 | 68 | Missionary side-lying, parallel, face-to-face |
 | 71 | Legs-up missionary, holding her thighs |
+| 76 | Both kneeling face-to-face, female arched back |
 | 84 | Missionary, kneeling, hands on ground beside her head |
 | 88 | Missionary, legs spread wide, knees between her legs |
 | 90 | Elevated missionary, male arched back, hands on her chest |
@@ -104,20 +109,9 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 ---
 
-## 4. Legs wide / Butterfly / Split
+## 4. Doggy style / Rear entry (all fours or bent over)
 
-**Criteria:** Female supine with legs **very wide** or in split; male often holding or supporting legs.
-
-| Position | Notes |
-|----------|--------|
-| 3 | Legs wide, male kneeling holding her legs (butterfly-style) |
-| 7 | Female on back, legs elevated and spread; male standing straddling |
-
----
-
-## 5. Doggy style / Rear entry (all fours or bent over)
-
-**Criteria:** One partner **facing away**, other **behind**; receptive partner on hands-and-knees, or bent over, or prone.
+**Criteria:** One partner **facing away**, other **behind**; receptive partner on hands-and-knees, or bent over, or prone. Includes mutual stimulation variations.
 
 | Position | Notes |
 |----------|--------|
@@ -136,9 +130,10 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 | 40 | Doggy, female arched back, male hands on hips |
 | 42 | Doggy on forearms, male kneeling |
 | 46 | Standing doggy, hands on ground, deep bend |
+| 55 | Standing with kneeling partner behind (rear embrace) |
 | 65 | Doggy, both squatting/kneeling, female upright |
 | 66 | Prone with male over her back, intimate |
-| 69 | Doggy kneeling, close embrace from behind |
+| 69 | Doggy kneeling, close embrace from behind (mutual stimulation) |
 | 70 | Doggy, male with one leg raised |
 | 74 | Low doggy, female head near ground, male standing |
 | 75 | Prone, male kneeling over her |
@@ -160,22 +155,10 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 | 147 | Doggy with one leg lifted by male |
 | 151 | Doggy on forearms |
 | 153 | Doggy, hands clasped at her waist |
-| 55 | Standing with kneeling partner behind (rear embrace) |
 
 ---
 
-## 6. Side / Side-saddle / Side entry
-
-**Criteria:** **Side** access; one supine with leg raised or open, partner kneeling or positioned to the **side**.
-
-| Position | Notes |
-|----------|--------|
-| 2 | Female supine, one leg raised; male kneeling at her side (side-entry) |
-| 34 | Female on back rotated to side, male kneeling rear entry |
-
----
-
-## 7. Standing (carry / leg lift / wall)
+## 5. Standing (carry / leg lift / wall)
 
 **Criteria:** Both **standing** (or one standing, one lifted); face-to-face or rear; may use wall/surface.
 
@@ -194,60 +177,32 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 ---
 
-## 8. Elevated legs / Legs up (supine, legs high)
+## 6. Elevated legs / Legs up / Arch / Bridge
 
-**Criteria:** Female supine with legs **elevated** (vertical or high); male kneeling/standing **over** her hips/legs.
+**Criteria:** Female supine with legs **elevated** (vertical or high); male kneeling/standing **over** her hips/legs. Includes bridge poses and leg-over-shoulder variations.
 
 | Position | Notes |
 |----------|--------|
+| 17 | Male kneeling; female arched back, one leg over his shoulder |
 | 27 | Supine, legs vertical; male standing/kneeling over her elevated hips |
 | 39 | Male kneeling facing her feet, her legs wrapped around him |
 | 60 | Supine, legs wrapped high around male; male kneeling between her legs |
 | 83 | Rear entry, bottom on back with legs raised (top facing her legs) |
 | 98 | Supine legs bent and open, partner kneeling from feet direction |
+| 104 | Female in bridge (hands and feet on ground, hips elevated), male kneeling beneath |
 | 121 | Legs up, male kneeling, supporting her legs |
 
 ---
 
-## 9. Male on top, top facing away (on supine)
+## 7. Spooning / Side-lying
 
-**Criteria:** Top partner **facing away** from bottom's head; bottom supine (e.g. reverse orientation from above).
-
-| Position | Notes |
-|----------|--------|
-| 4 | Top figure kneeling/straddling, facing away; bottom on back, legs splayed |
-| 99 | Male seated/squatting facing her feet, her hips elevated, legs extended |
-
----
-
-## 10. Kneeling + arch / Leg over shoulder / Bridge
-
-**Criteria:** One partner **kneeling**; other with strong **back arch** and/or **leg over shoulder**; or bridge pose.
+**Criteria:** Both **on their sides**; facing same direction (spooning) or face-to-face side-lying. Includes side-entry positions.
 
 | Position | Notes |
 |----------|--------|
-| 17 | Male kneeling; female arched back, one leg over his shoulder |
-| 104 | Female in bridge (hands and feet on ground, hips elevated), male kneeling beneath |
-
----
-
-## 11. Intertwined / Asymmetric legs (missionary variant)
-
-**Criteria:** Female supine, male kneeling or over her; **one leg elevated or intertwined** (not standard missionary).
-
-| Position | Notes |
-|----------|--------|
-| 13 | Female supine, legs spread; male kneeling with one leg raised between hers |
-
----
-
-## 12. Spooning / Side-lying
-
-**Criteria:** Both **on their sides**; facing same direction (spooning) or face-to-face side-lying.
-
-| Position | Notes |
-|----------|--------|
+| 2 | Female supine, one leg raised; male kneeling at her side (side-entry) |
 | 31 | Side-lying face-to-face, intertwined legs, kissing |
+| 34 | Female on back rotated to side, male kneeling rear entry |
 | 100 | Spooning: side-lying, female behind male, embracing |
 | 119 | Side-lying, male behind, holding her leg up |
 | 122 | Side-lying face-to-face, intertwined legs |
@@ -260,7 +215,7 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 ---
 
-## 13. Oral
+## 8. Oral
 
 **Criteria:** Oral activity (cunnilingus, fellatio) rather than intercourse.
 
@@ -268,16 +223,7 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 |----------|--------|
 | 101 | Cunnilingus, female on back legs up, male kneeling between |
 | 124 | Fellatio, male standing, female kneeling |
-
----
-
-## 14. Seated reverse (reclined, same direction)
-
-**Criteria:** Both reclined or seated; top partner facing **same direction** as bottom (back to his face), often leaning back.
-
-| Position | Notes |
-|----------|--------|
-| 33 | Both reclined, she leaning back against him, facing same direction |
+| 62 | Strong back-arch mutual stimulation (oral-focused) |
 
 ---
 
@@ -285,20 +231,14 @@ This document groups the Phase 3 position images by **visual similarity** (pose 
 
 | Group | Category | Count |
 |-------|----------|--------|
-| 1 | Cowgirl (facing partner) | 19 |
-| 2 | Reverse cowgirl | 21 |
-| 3 | Missionary | 32 |
-| 4 | Legs wide / Butterfly | 2 |
-| 5 | Doggy / Rear entry | 39 |
-| 6 | Side / Side-saddle | 2 |
-| 7 | Standing | 10 |
-| 8 | Elevated legs | 6 |
-| 9 | Top facing away (on supine) | 2 |
-| 10 | Kneeling + arch / Bridge | 2 |
-| 11 | Intertwined legs (missionary variant) | 1 |
-| 12 | Spooning / Side-lying | 9 |
-| 13 | Oral | 2 |
-| 14 | Seated reverse (reclined) | 1 |
+| 1 | Straddle / Cowgirl (facing partner) | 12 |
+| 2 | Reverse cowgirl / Reverse straddle | 28 |
+| 3 | Missionary | 36 |
+| 4 | Doggy / Rear entry | 42 |
+| 5 | Standing | 10 |
+| 6 | Elevated legs / Arch / Bridge | 8 |
+| 7 | Spooning / Side-lying | 12 |
+| 8 | Oral | 2 |
 
 **Total positions assigned:** 148 (positions 1–155 minus 24, 26, 64, 127). Some positions may fit more than one group; they are listed under the primary match.
 

@@ -1,0 +1,28 @@
+{
+  "name": "discover-between-us",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/copy-public-assets.js && node scripts/list-music.js && vite build",
+    "preview": "vite preview",
+    "download-onnx-wasm": "node scripts/download-onnx-wasm.js",
+    "download-kokoro-model": "node scripts/download-kokoro-model.js",
+    "list-music": "node scripts/list-music.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.5.1",
+    "@mintplex-labs/piper-tts-web": "^1.0.4",
+    "edge-tts-client": "^1.0.2",
+    "kokoro-js": "^1.2.1",
+    "onnxruntime-web": "^1.24.2",
+    "pinia": "^2.1.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}

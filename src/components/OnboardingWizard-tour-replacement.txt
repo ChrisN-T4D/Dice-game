@@ -1,0 +1,59 @@
+                <div class="tour-mock-play-mode-row">
+                  <label class="play-mode-label">Play Mode</label>
+                  <div class="row">
+                    <button type="button" class="secondary preset-selected">Dice game</button>
+                    <button type="button" class="secondary">Guided Mode</button>
+                  </div>
+                </div>
+                <div class="tour-mock-body">
+                  <div class="tour-highlight-wrap tour-highlight-phase">
+                    <span class="phase-display">Phase 1</span>
+                    <span class="roll-count">Rolls this phase: 0</span>
+                  </div>
+                  <div class="tour-highlight-wrap tour-highlight-rolls">
+                    <div class="roll-grid">
+                      <div class="roll-col"><label>Location</label><input type="number" value="7" readonly /></div>
+                      <div class="roll-col"><label>Action</label><input type="number" value="12" readonly /></div>
+                    </div>
+                    <div class="row action-row">
+                      <button type="button" class="primary big">Roll for me</button>
+                      <button type="button" class="secondary big">Use numbers</button>
+                    </div>
+                  </div>
+                  <div class="tour-highlight-wrap tour-highlight-output">
+                    <div class="output"><strong>Where:</strong> Bedroom · <strong>What:</strong> Touch and explore</div>
+                    <button type="button" class="secondary small read-aloud-btn">Read aloud</button>
+                  </div>
+                </div>
+              </div>
+              <div v-show="tourSlide === 1" class="onboarding-tour-ui-mock onboarding-tour-ui-guided">
+                <div class="tour-mock-play-mode-row">
+                  <label class="play-mode-label">Play Mode</label>
+                  <div class="row">
+                    <button type="button" class="secondary">Dice game</button>
+                    <button type="button" class="secondary preset-selected">Guided Mode</button>
+                  </div>
+                </div>
+                <div class="tour-mock-body">
+                  <div class="tour-highlight-wrap tour-highlight-time">
+                    <span class="phase-display">Phase 1</span>
+                    <span class="time-display">Total: 15:00</span>
+                    <span class="time-display">Phase: 5:00</span>
+                  </div>
+                  <div class="tour-highlight-wrap tour-highlight-prompt">
+                    <div class="guided-block guided-output">
+                      <div class="output-line"><strong>Where:</strong> Bedroom</div>
+                      <div class="output-line"><strong>What:</strong> Touch and explore</div>
+                    </div>
+                  </div>
+                  <div class="tour-highlight-wrap tour-highlight-controls">
+                    <div class="row guided-controls center">
+                      <button type="button" class="secondary">Pause</button>
+                      <button type="button" class="secondary">Skip to next turn</button>
+                      <button type="button" class="secondary danger">Stop session</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="onboarding-tour-next-hint">You'll choose a mode on the next screen after picking a voice.</p>

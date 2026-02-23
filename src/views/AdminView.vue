@@ -54,11 +54,14 @@
           </div>
         </div>
         <div class="compare-block compare-desc">
-          <h3 class="compare-heading">Description</h3>
+          <h3 class="compare-heading">Description (editable)</h3>
           <div class="description-block">
-            <p class="desc-name">{{ entry?.name || '—' }}</p>
-            <p class="desc-help">{{ entry?.help || '—' }}</p>
-            <p class="desc-full">{{ entry?.description || '—' }}</p>
+            <label class="desc-label">Name</label>
+            <textarea v-model="phase3Edit.name" class="desc-input desc-name-input" rows="1" placeholder="Position name" @blur="savePhase3Fields" />
+            <label class="desc-label">Help</label>
+            <textarea v-model="phase3Edit.help" class="desc-input desc-help-input" rows="2" placeholder="Short help text" @blur="savePhase3Fields" />
+            <label class="desc-label">Full description</label>
+            <textarea v-model="phase3Edit.description" class="desc-input desc-full-input" rows="5" placeholder="Full description" @blur="savePhase3Fields" />
             <p class="desc-meta">
               <span v-if="entry?.groupDisplay || entry?.group">Group: {{ entry?.groupDisplay || entry?.group }}</span>
               <span v-if="entry?.variationLabel"> · {{ entry.variationLabel }}</span>
@@ -69,31 +72,80 @@
       </div>
     </section>
 
-    <!-- Phase 1 & 2 tables -->
+    <!-- Phase 1 & 2 tables (editable text + optional image per location) -->
     <section v-show="activeTab === 'phase12'" class="admin-section admin-section-scroll" role="tabpanel">
+      <p class="admin-hint">Edit text to match your images. Add an image path for a location to show it later when you have assets.</p>
       <div class="phase12-grid">
         <div class="phase12-block">
           <h3>Phase 1 – Locations</h3>
-          <ul class="ref-list">
-            <li v-for="(text, key) in phase1And2Tables[1].locations" :key="key"><strong>{{ key }}.</strong> {{ text }}</li>
+          <ul class="ref-list ref-list-editable">
+            <li v-for="key in phase12LocationKeys" :key="'p1-l-' + key" class="ref-list-row">
+              <span class="ref-key"><strong>{{ key }}.</strong></span>
+              <input
+                :value="phase12Merged(1).locations[key]"
+                class="ref-input"
+                @input="onPhase12Text(1, 'locations', key, ($event.target).value)"
+              />
+              <div class="ref-image-row">
+                <label class="ref-image-label">Image</label>
+                <input
+                  :value="phase12ImagePath(1, key)"
+                  type="text"
+                  class="ref-image-input"
+                  placeholder="e.g. /Position References/p1-loc-5.png"
+                  @input="onPhase12Image(1, key, ($event.target).value)"
+                />
+              </div>
+            </li>
           </ul>
         </div>
         <div class="phase12-block">
           <h3>Phase 1 – Actions</h3>
-          <ul class="ref-list">
-            <li v-for="(text, key) in phase1And2Tables[1].actions" :key="key"><strong>{{ key }}.</strong> {{ text }}</li>
+          <ul class="ref-list ref-list-editable">
+            <li v-for="key in phase12ActionKeys" :key="'p1-a-' + key" class="ref-list-row">
+              <span class="ref-key"><strong>{{ key }}.</strong></span>
+              <input
+                :value="phase12Merged(1).actions[key]"
+                class="ref-input"
+                @input="onPhase12Text(1, 'actions', key, ($event.target).value)"
+              />
+            </li>
           </ul>
         </div>
         <div class="phase12-block">
           <h3>Phase 2 – Locations</h3>
-          <ul class="ref-list">
-            <li v-for="(text, key) in phase1And2Tables[2].locations" :key="key"><strong>{{ key }}.</strong> {{ text }}</li>
+          <ul class="ref-list ref-list-editable">
+            <li v-for="key in phase12LocationKeys" :key="'p2-l-' + key" class="ref-list-row">
+              <span class="ref-key"><strong>{{ key }}.</strong></span>
+              <input
+                :value="phase12Merged(2).locations[key]"
+                class="ref-input"
+                @input="onPhase12Text(2, 'locations', key, ($event.target).value)"
+              />
+              <div class="ref-image-row">
+                <label class="ref-image-label">Image</label>
+                <input
+                  :value="phase12ImagePath(2, key)"
+                  type="text"
+                  class="ref-image-input"
+                  placeholder="e.g. /Position References/p2-loc-3.png"
+                  @input="onPhase12Image(2, key, ($event.target).value)"
+                />
+              </div>
+            </li>
           </ul>
         </div>
         <div class="phase12-block">
           <h3>Phase 2 – Actions</h3>
-          <ul class="ref-list">
-            <li v-for="(text, key) in phase1And2Tables[2].actions" :key="key"><strong>{{ key }}.</strong> {{ text }}</li>
+          <ul class="ref-list ref-list-editable">
+            <li v-for="key in phase12ActionKeys" :key="'p2-a-' + key" class="ref-list-row">
+              <span class="ref-key"><strong>{{ key }}.</strong></span>
+              <input
+                :value="phase12Merged(2).actions[key]"
+                class="ref-input"
+                @input="onPhase12Text(2, 'actions', key, ($event.target).value)"
+              />
+            </li>
           </ul>
         </div>
       </div>
@@ -117,6 +169,14 @@ import {
   PHASE3_NO_IMAGE_POSITION_NUMBERS,
   getPhase3PositionImagePath,
 } from 'phase3-data'
+import {
+  mergePhase3Entry,
+  savePhase3Entry,
+  mergePhase12Table,
+  savePhase12Cell,
+  getPhase12ImagePath,
+  savePhase12Image,
+} from '@/utils/adminEdits'
 
 const ADMIN_VALIDATION_KEY = 'adminPhase3Validation'
 
@@ -135,7 +195,27 @@ const currentPosition = computed(() => {
   return n
 })
 
-const entry = computed(() => PHASE3_POSITIONS_LIST[currentPosition.value] || null)
+const baseEntry = computed(() => PHASE3_POSITIONS_LIST[currentPosition.value] || null)
+const entry = computed(() =>
+  baseEntry.value ? mergePhase3Entry(baseEntry.value, currentPosition.value) : null
+)
+
+const phase3Edit = ref({ name: '', help: '', description: '' })
+function syncPhase3Edit() {
+  const e = entry.value
+  phase3Edit.value = {
+    name: e?.name ?? '',
+    help: e?.help ?? '',
+    description: e?.description ?? '',
+  }
+}
+function savePhase3Fields() {
+  savePhase3Entry(currentPosition.value, {
+    name: phase3Edit.value.name || undefined,
+    help: phase3Edit.value.help || undefined,
+    description: phase3Edit.value.description || undefined,
+  })
+}
 
 const imagePath = computed(() => {
   if (PHASE3_NO_IMAGE_POSITION_NUMBERS.includes(currentPosition.value)) return ''
@@ -162,10 +242,15 @@ function saveValidation() {
   } catch (_) {}
 }
 
-watch(currentPosition, () => {
-  imageError.value = false
-  loadValidation()
-})
+watch(
+  [currentPosition, entry],
+  () => {
+    imageError.value = false
+    loadValidation()
+    syncPhase3Edit()
+  },
+  { immediate: true }
+)
 watch(validationStatus, saveValidation)
 
 function clampPosition() {
@@ -180,6 +265,32 @@ function nextPosition() {
 
 function goBack() {
   window.location.hash = ''
+}
+
+// Phase 1 & 2: keys 1–20 for locations and actions
+const phase12LocationKeys = Array.from({ length: 20 }, (_, i) => i + 1)
+const phase12ActionKeys = Array.from({ length: 20 }, (_, i) => i + 1)
+const phase12EditsVersion = ref(0)
+
+function phase12Merged(phase) {
+  phase12EditsVersion.value
+  const base = phase1And2Tables[phase]
+  return base ? mergePhase12Table(base, phase) : { locations: {}, actions: {} }
+}
+
+function phase12ImagePath(phase, locationKey) {
+  phase12EditsVersion.value
+  return getPhase12ImagePath(phase, locationKey) || ''
+}
+
+function onPhase12Text(phase, type, key, value) {
+  savePhase12Cell(phase, type, key, value)
+  phase12EditsVersion.value++
+}
+
+function onPhase12Image(phase, locationKey, path) {
+  savePhase12Image(phase, locationKey, path.trim() || null)
+  phase12EditsVersion.value++
 }
 
 loadValidation()
@@ -373,26 +484,32 @@ loadValidation()
   border: 1px solid #334155;
   border-radius: 0.5rem;
 }
-.desc-name {
-  margin: 0 0 0.5rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #e2e8f0;
-}
-.desc-help {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: #cbd5e1;
-}
-.desc-full {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  line-height: 1.45;
+.desc-label {
+  display: block;
+  margin: 0.5rem 0 0.2rem;
+  font-size: 0.75rem;
   color: #94a3b8;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+.desc-label:first-child { margin-top: 0; }
+.desc-input {
+  width: 100%;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.desc-input::placeholder { color: #64748b; }
+.desc-name-input { font-size: 1rem; font-weight: 600; }
+.desc-help-input { font-size: 0.9rem; }
+.desc-full-input { font-size: 0.85rem; min-height: 4rem; }
 .desc-meta {
   margin: 0;
   font-size: 0.8rem;
@@ -417,6 +534,54 @@ loadValidation()
   color: #cbd5e1;
 }
 .ref-list li { margin-bottom: 0.25rem; }
+.ref-list-editable { padding-left: 0; list-style: none; }
+.ref-list-row {
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.ref-key {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+.ref-input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.ref-image-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.ref-image-label {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+.ref-image-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.ref-image-input::placeholder { color: #475569; }
 .modifiers-list {
   margin: 0;
   padding-left: 1.1rem;

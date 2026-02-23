@@ -1,9 +1,11 @@
 /**
  * Build prompt text (where, what, instruction) for a given phase and rolls.
  * Instruction is a single fluid phrase with partner names and anatomy-aware wording.
+ * Uses admin edits (merged) when present so in-app edits apply in play.
  */
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
-import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST } from 'phase3-data'
+import { PHASE3_POSITIONS_LIST } from 'phase3-data'
+import { mergePhase3Entry, mergePhase12Table } from '@/utils/adminEdits'
 
 /** Substitute "the giver" / "the receiver" (and variants) with partner names in text. */
 function withPartnerNames(text, giverName, receiverName) {
@@ -55,7 +57,8 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
   const receiverAnatomy = partnerAnatomy[receiver] === 'vulva' ? 'vulva' : 'penis'
 
   if (phase === 1 || phase === 2) {
-    const t = phase1And2Tables[phase]
+    const base = phase1And2Tables[phase]
+    const t = base ? mergePhase12Table(base, phase) : null
     if (!t) return { where: '', what: '', instruction: '' }
     const loc = Math.max(1, Math.min(20, locationRoll || 1))
     const act = Math.max(1, Math.min(20, actionRoll || 1))
@@ -80,10 +83,11 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
   if (phase === 3) {
     const pos = Math.max(1, Math.min(155, locationRoll || 1))
     const mod = Math.max(1, Math.min(20, actionRoll || 1))
-    const entry = PHASE3_POSITIONS_LIST[pos]
-    const where = entry ? getPhase3PositionName(pos) : `Position ${pos}`
+    const baseEntry = PHASE3_POSITIONS_LIST[pos]
+    const entry = baseEntry ? mergePhase3Entry(baseEntry, pos) : null
+    const where = entry ? (entry.name || `Position ${pos}`) : `Position ${pos}`
     const what = phase3Modifiers[mod] || ''
-    const help = entry ? getPhase3PositionHelp(pos) : ''
+    const help = entry ? (entry.help || '') : ''
     const whatWithAnatomy = withAnatomy(what, giverAnatomy, receiverAnatomy)
     const helpWithAnatomy = withAnatomy(help, giverAnatomy, receiverAnatomy)
     const whatWithNames = withPartnerNames(whatWithAnatomy, giverName, receiverName)

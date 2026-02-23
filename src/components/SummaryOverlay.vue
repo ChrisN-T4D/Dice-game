@@ -42,6 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
+import { mergePhase12Table } from '@/utils/adminEdits'
 
 const props = defineProps({ open: Boolean })
 const emit = defineEmits(['close'])
@@ -50,7 +51,8 @@ const selectedPhase = ref(1)
 
 const phaseTable = computed(() => {
   if (selectedPhase.value === 1 || selectedPhase.value === 2) {
-    return phase1And2Tables[selectedPhase.value] || { locations: {}, actions: {} }
+    const base = phase1And2Tables[selectedPhase.value]
+    return base ? mergePhase12Table(base, selectedPhase.value) : { locations: {}, actions: {} }
   }
   return { locations: {}, actions: {} }
 })

@@ -48,6 +48,16 @@ export function savePhase3Entry(position, fields) {
   writeJson(KEY_PHASE3, data)
 }
 
+/** Clear saved Phase 3 edits for a position so base data from phase3-positions-data.js is used. */
+export function clearPhase3Entry(position) {
+  const data = readJson(KEY_PHASE3)
+  const key = String(position)
+  if (data[key]) {
+    delete data[key]
+    writeJson(KEY_PHASE3, data)
+  }
+}
+
 /** Get merged Phase 3 entry (base + edits). Pass base list entry for the position. */
 export function mergePhase3Entry(baseEntry, position) {
   const edits = getPhase3Edits(position)

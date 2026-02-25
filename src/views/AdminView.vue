@@ -63,6 +63,7 @@
           <option value="reviewed">Reviewed</option>
         </select>
         <button type="button" class="admin-save-edits secondary" @click="savePhase3Fields" aria-label="Save edits">Save edits</button>
+        <button type="button" class="secondary small" @click="resetPhase3ToBase" aria-label="Reset to base">Reset to base</button>
       </div>
       <div class="phase3-compare">
         <div class="compare-block compare-image">
@@ -217,6 +218,7 @@ import {
 import {
   mergePhase3Entry,
   savePhase3Entry,
+  clearPhase3Entry,
   mergePhase12Table,
   savePhase12Cell,
   getPhase12ImagePath,
@@ -322,9 +324,11 @@ watch(currentPosition, (val) => {
 })
 
 const baseEntry = computed(() => PHASE3_POSITIONS_LIST[currentPosition.value] || null)
-const entry = computed(() =>
-  baseEntry.value ? mergePhase3Entry(baseEntry.value, currentPosition.value) : null
-)
+const phase3EditsVersion = ref(0)
+const entry = computed(() => {
+  phase3EditsVersion.value
+  return baseEntry.value ? mergePhase3Entry(baseEntry.value, currentPosition.value) : null
+})
 
 const focusAnatomy = computed(() => {
   const e = entry.value
@@ -350,6 +354,18 @@ function savePhase3Fields() {
     help: phase3Edit.value.help,
     description: phase3Edit.value.description,
   })
+}
+function resetPhase3ToBase() {
+  clearPhase3Entry(currentPosition.value)
+  phase3EditsVersion.value++
+  const base = baseEntry.value
+  if (base) {
+    phase3Edit.value = {
+      name: base.name ?? '',
+      help: base.help ?? '',
+      description: base.description ?? '',
+    }
+  }
 }
 const imagePath = computed(() => {
   if (PHASE3_NO_IMAGE_POSITION_NUMBERS.includes(currentPosition.value)) return ''

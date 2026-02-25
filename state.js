@@ -42,7 +42,7 @@ let guidedPhase3FocusPartner = 1; // Current focus partner for alternating (1 or
 let guidedPhase3LastFocusPartner = 0; // Last turn's focus partner (0 = none yet) for alternating
 let guidedFirstTurnOfPhase3 = false; // True when Phase 3 just started so we say first-turn phrase instead of "Turn over"
 
-// Free Play specific clothing state
+// Dice game specific clothing state
 let freePlayClothingEnabled = false;
 let freePlayClothingItemsP1 = [];
 let freePlayClothingItemsP2 = [];
@@ -307,7 +307,7 @@ function loadState() {
     guidedPhase3LastFocusPartner = state.guidedPhase3LastFocusPartner || 0;
     guidedFirstTurnOfPhase3 = state.guidedFirstTurnOfPhase3 || false;
     
-    // Restore free play state
+    // Restore Dice game state
     freePlayClothingEnabled = state.freePlayClothingEnabled || false;
     freePlayClothingItemsP1 = state.freePlayClothingItemsP1 || [];
     freePlayClothingItemsP2 = state.freePlayClothingItemsP2 || [];

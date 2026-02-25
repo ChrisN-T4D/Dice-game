@@ -29,7 +29,7 @@ function updatePartnerNameDisplays() {
   if (listL2) listL2.textContent = n2 + ':';
 }
 
-// Screen wake lock: keep screen on during guided or free play (prevents device from sleeping)
+// Screen wake lock: keep screen on during guided or Dice game (prevents device from sleeping)
 let _wakeLockSentinel = null;
 async function requestWakeLock() {
   if (!navigator.wakeLock) return;
@@ -125,7 +125,7 @@ window.addEventListener('DOMContentLoaded', () => {
         updateRollLabels(phase);
         if (typeof updateOutputLabels === 'function') updateOutputLabels(phase);
 
-        // Update Free Play clothing display when entering phase 3
+        // Update Dice game clothing display when entering phase 3
         if (phase === 3) {
           updateFreePlayClothingDisplay();
         }
@@ -144,7 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ----- Free Play event handlers -----
+  // ----- Dice game event handlers -----
 
   if (submitRollBtn) {
     submitRollBtn.addEventListener('click', handleUserRoll);
@@ -1148,7 +1148,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (stopGuidedBtn) stopGuidedBtn.addEventListener('click', () => {
     stopGuidedMode();
     releaseWakeLock();
-    // Set layout to guided-setup so when modal is dismissed (Guided or Free Play), correct view shows
+    // Set layout to guided-setup so when modal is dismissed (Guided or Dice game), correct view shows
     showMode('guided-setup');
     if (landingModal) {
       landingModal.style.display = 'flex';
@@ -1177,16 +1177,16 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ----- Free Play clothing event listeners -----
+  // ----- Dice game clothing event listeners -----
 
   const freePlayClothingEnabledBtn = document.getElementById('freePlayClothingEnabled');
   const freePlayClothingDisabledBtn = document.getElementById('freePlayClothingDisabled');
   const startReceiverP1Btn = document.getElementById('startReceiverP1');
   const startReceiverP2Btn = document.getElementById('startReceiverP2');
 
-  // Free Play preset buttons are wired dynamically below
+  // Dice game preset buttons are wired dynamically below
 
-  // Free Play clothing enabled/disabled toggle
+  // Dice game clothing enabled/disabled toggle
   let freePlayClothingMode = 'disabled';
 
   function updateFreePlayClothingModeButtons() {
@@ -1299,7 +1299,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Free Play Clothing preset buttons - wire both partners via data
+  // Dice game Clothing preset buttons - wire both partners via data
   [1, 2].forEach(partner => {
     const containerId = `freePlayClothingCheckboxContainerP${partner}`;
     presetNames.forEach((name, idx) => {
@@ -1326,7 +1326,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Initialize Free Play clothing checkboxes and mode
+  // Initialize Dice game clothing checkboxes and mode
   updateFreePlayClothingModeButtons();
   updateReceiverButtons();
   populateFreePlayClothingCheckboxes(1);
@@ -1433,7 +1433,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (whatOutput) whatOutput.textContent = 'Session restored. Enter rolls to continue.';
       if (instructionOutput) instructionOutput.textContent = 'Session restored. Enter rolls to continue.';
 
-      showToast('✓ Free Play session restored');
+      showToast('✓ Dice game session restored');
     }
   } else {
     // No saved state (or only default state) - show launch modal

@@ -1,5 +1,5 @@
 'use strict';
-// ----- Free Play mode functions -----
+// ----- Dice game mode functions -----
 
 function rollD20() {
   return Math.floor(Math.random() * 20) + 1;
@@ -182,7 +182,7 @@ function resetSession() {
   awaitingPartnerTurn = false;
   clothingPromptsEnabled = true;
 
-  // Reset Free Play clothing state
+  // Reset Dice game clothing state
   freePlayClothingItemsP1 = [];
   freePlayClothingItemsP2 = [];
 
@@ -233,7 +233,7 @@ function resetSession() {
 function handleUserRoll() {
   clearMessages();
 
-  // Initialize Free Play clothing items on first roll if enabled
+  // Initialize Dice game clothing items on first roll if enabled
   if (freePlayClothingEnabled && freePlayClothingItemsP1.length === 0 && freePlayClothingItemsP2.length === 0 && phase === 1 && rollCount === 0) {
     freePlayClothingItemsP1 = getFreePlaySelectedClothingItems(1);
     freePlayClothingItemsP2 = getFreePlaySelectedClothingItems(2);
@@ -352,7 +352,7 @@ function handleUserRoll() {
       }
       const clothingEntry = clothingTable[effectiveClothingRoll];
 
-      // If Free Play clothing system is enabled, combine with specific item
+      // If Dice game clothing system is enabled, combine with specific item
       if (freePlayClothingEnabled && phase < 3) {
         const currentGiver = freePlayCurrentReceiver === 1 ? 2 : 1;
         const currentReceiver = freePlayCurrentReceiver;
@@ -412,7 +412,7 @@ function handleUserRoll() {
   } else {
     awaitingPartnerTurn = false;
 
-    // Swap receiver after each round in Free Play
+    // Swap receiver after each round in Dice game
     if (freePlayClothingEnabled) {
       freePlayCurrentReceiver = freePlayCurrentReceiver === 1 ? 2 : 1;
       if (typeof updateReceiverButtons === 'function') updateReceiverButtons();
@@ -431,7 +431,7 @@ function handleUserRoll() {
       usedWhatThisPhase  = new Set();
       flashMessage('flash');
 
-      // Update Free Play clothing display when entering phase 3
+      // Update Dice game clothing display when entering phase 3
       if (phase === 3) {
         updateFreePlayClothingDisplay();
       }

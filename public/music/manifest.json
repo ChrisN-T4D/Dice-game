@@ -1,0 +1,63 @@
+{
+  "tracks": [
+    {
+      "id": "djovan-sapphire-sax-serenade-439285",
+      "title": "Djovan Sapphire Sax Serenade"
+    },
+    {
+      "id": "grand_project-sensual-jazz-130483",
+      "title": "Grand Project Sensual Jazz"
+    },
+    {
+      "id": "saavane-sensual-night-423856",
+      "title": "Saavane Sensual Night"
+    },
+    {
+      "id": "saavane-sexy-background-music-138494",
+      "title": "Saavane Sexy Background Mus…"
+    },
+    {
+      "id": "saavane-tuesday-sexy-music-background-321650",
+      "title": "Saavane Tuesday Sexy Music…"
+    },
+    {
+      "id": "senormusica81-smooth-jazz-2025-1-458715",
+      "title": "Senormusica81 Smooth Jazz 2…"
+    },
+    {
+      "id": "senormusica81-smooth-jazz-2025-2-458713",
+      "title": "Senormusica81 Smooth Jazz 2…"
+    },
+    {
+      "id": "senormusica81-smooth-jazz-2025-3-458714",
+      "title": "Senormusica81 Smooth Jazz 2…"
+    },
+    {
+      "id": "tokyorifft-slow-kiss-on-a-hot-night-466265",
+      "title": "Tokyorifft Slow Kiss On A H…"
+    }
+  ],
+  "playlists": [
+    {
+      "id": "smoothJazz",
+      "title": "Smooth Jazz",
+      "trackIds": [
+        "djovan-sapphire-sax-serenade-439285",
+        "grand_project-sensual-jazz-130483",
+        "saavane-sensual-night-423856",
+        "saavane-sexy-background-music-138494",
+        "saavane-tuesday-sexy-music-background-321650"
+      ]
+    },
+    {
+      "id": "rnb",
+      "title": "R&B",
+      "trackIds": [
+        "senormusica81-smooth-jazz-2025-1-458715",
+        "senormusica81-smooth-jazz-2025-2-458713",
+        "senormusica81-smooth-jazz-2025-3-458714",
+        "tokyorifft-slow-kiss-on-a-hot-night-466265"
+      ]
+    }
+  ]
+}

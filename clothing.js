@@ -353,7 +353,7 @@ function updateClothingDisplay() {
   }
 }
 
-// ----- Free Play clothing functions -----
+// ----- Dice game clothing functions -----
 
 function populateFreePlayClothingCheckboxes(partner, itemsToCheck = []) {
   const containerId = partner === 1 ? 'freePlayClothingCheckboxContainerP1' : 'freePlayClothingCheckboxContainerP2';

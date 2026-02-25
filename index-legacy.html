@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Between Us</title>
+  <meta name="description" content="Between Us: discovering intimacy together—guided sessions with timed turns, voice prompts, and structured phases. Set your duration and let the app guide you, or use Dice game to roll your own." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+
+  <style>
+    html {
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background-color: #020617;
+      color: #e5e7eb;
+      overflow-x: hidden;
+      background-size: cover;
+      background-position: center;
+      max-width: 100vw;
+    }
+
+    /* Strong phase color themes (gradient only when no background image) */
+
+    body.phase-1 {
+      background-image: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+    }
+
+    body.phase-2 {
+      background-image: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
+    }
+
+    body.phase-3 {
+      background-image: radial-gradient(circle at top, #4a044e 0, #020617 55%, #000 100%);
+    }
+
+    /* Phase colors faded over background image (image shows through gradient) */
+    body.phase-1.bg-image-1,
+    body.phase-1.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(15, 23, 42, 0.72) 0%, rgba(2, 6, 23, 0.88) 50%, rgba(0, 0, 0, 0.94) 100%),
+        var(--bg-image-url);
+    }
+    body.phase-2.bg-image-1,
+    body.phase-2.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(30, 27, 75, 0.68) 0%, rgba(2, 6, 23, 0.86) 50%, rgba(0, 0, 0, 0.93) 100%),
+        var(--bg-image-url);
+    }
+    body.phase-3.bg-image-1,
+    body.phase-3.bg-image-2 {
+      background-image: radial-gradient(circle at top, rgba(74, 4, 78, 0.65) 0%, rgba(2, 6, 23, 0.85) 50%, rgba(0, 0, 0, 0.92) 100%),
+        var(--bg-image-url);
+    }
+    body.bg-image-1 { --bg-image-url: url('Background/aristal-ai-generated-8629462.jpg'); }
+    body.bg-image-2 { --bg-image-url: url('Background/davidrockdesign-triangles-1430105.svg'); }
+
+    body.phase-1 .card {
+      border-color: #3b82f6;
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.45);
+    }
+
+    body.phase-2 .card {
+      border-color: #a855f7;
+      box-shadow: 0 18px 40px rgba(168, 85, 247, 0.45);
+    }
+
+    body.phase-3 .card {
+      border-color: #ec4899;
+      box-shadow: 0 18px 40px rgba(236, 72, 153, 0.5);
+    }
+
+    body.phase-1 .primary {
+      background: linear-gradient(to right, #3b82f6, #22c55e);
+    }
+
+    body.phase-2 .primary {
+      background: linear-gradient(to right, #a855f7, #22c55e);
+    }
+
+    body.phase-3 .primary {
+      background: linear-gradient(to right, #ec4899, #22c55e);
+    }
+
+    .page {
+      max-width: min(900px, 100%);
+      width: 100%;
+      margin: 0 auto;
+      padding: 1rem;
+      overflow-x: hidden;
+    }
+
+    .phase-flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 9999;
+    }
+
+    .phase-flash.run {
+      animation: phaseFlash 700ms ease-out;
+    }
+
+    @keyframes phaseFlash {
+      0%   { opacity: 0; }
+      25%  { opacity: 0.65; }
+      100% { opacity: 0; }
+    }
+
+    body.phase-1 .phase-flash { background: rgba(59, 130, 246, 0.35); }
+    body.phase-2 .phase-flash { background: rgba(168, 85, 247, 0.35); }
+    body.phase-3 .phase-flash { background: rgba(236, 72, 153, 0.35); }
+
+    .card {
+      background: rgba(2, 6, 23, 0.42);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(31, 41, 55, 0.5);
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .card + .card {
+      margin-top: 1rem;
+    }
+
+    .card-header {
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .card-header h1 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-header p {
+      margin: 0.25rem 0 0;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+
+    /* Preferences: all rows left-justified, compact vertical spacing */
+    .preferences-body .row {
+      justify-content: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .preferences-body {
+      padding-bottom: 0.5rem;
+    }
+
+    /* Small icon before preference option labels (body parts, effort level) */
+    .pref-icon {
+      font-size: 1.05em;
+      line-height: 1;
+    }
+    .pref-icon-svg {
+      width: 1.15em;
+      height: 1.15em;
+      vertical-align: -0.2em;
+      color: inherit;
+    }
+    .pref-icon-img {
+      width: 1.15em;
+      height: 1.15em;
+      object-fit: contain;
+      vertical-align: -0.2em;
+    }
+
+    /* Preference section separator (line between groups) */
+    .preferences-body .pref-sep {
+      border-top: 1px solid #475569;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    /* Compact preference blocks */
+    .preferences-body .pref-block {
+      margin-bottom: 0.5rem;
+    }
+    .preferences-body .pref-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .pref-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1rem;
+      align-items: start;
+    }
+    @media (max-width: 380px) {
+      .pref-two-col { grid-template-columns: 1fr; }
+    }
+
+    /* Hamburger menu inline with title in card header */
+    .hamburger-menu-btn {
+      flex-shrink: 0;
+      background: rgba(2, 6, 23, 0.95);
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.65rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      color: #ffffff;
+      line-height: 1;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hamburger-menu-btn:hover {
+      background: rgba(2, 6, 23, 1);
+    }
+    
+    .preferences-sidebar {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: min(90vw, 400px);
+      height: 100vh;
+      background: rgba(2, 6, 23, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 1001;
+      overflow-y: auto;
+      transition: right 0.3s ease-in-out;
+      border-left: 1px solid #475569;
+      padding: 1rem;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .preferences-sidebar.open {
+      right: 0;
+    }
+    
+    .preferences-sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+    
+    .preferences-sidebar-overlay.open {
+      display: block;
+    }
+    
+    .preferences-sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #475569;
+    }
+    
+    .preferences-sidebar-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .close-preferences-btn {
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      line-height: 1;
+    }
+    
+    /* Wizard-style setup */
+    .wizard-container {
+      position: relative;
+      min-height: 400px;
+    }
+    
+    .wizard-step {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .wizard-step.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .wizard-progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem;
+      background: rgba(2, 6, 23, 0.6);
+      border-radius: 0.5rem;
+      border: 1px solid #334155;
+    }
+    
+    .wizard-progress-text {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+    
+    .wizard-progress-bar {
+      flex: 1;
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+      margin: 0 1rem;
+      overflow: hidden;
+    }
+    
+    .wizard-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #a855f7, #22c55e);
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+    
+    .wizard-step-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .wizard-step-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+    
+    .wizard-step-description {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    
+    .wizard-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #334155;
+      gap: 1rem;
+    }
+    
+    .wizard-nav-btn {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+    }
+    
+    .wizard-nav-btn.back {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid #475569;
+      color: #e5e7eb;
+    }
+    
+    .wizard-nav-btn.next {
+      background: linear-gradient(to right, #a855f7, #22c55e);
+      color: #020617;
+      border: none;
+    }
+    
+    .wizard-nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .wizard-step-content {
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Keep form controls and selects within viewport on mobile */
+    select, input[type="text"], input[type="number"] {
+      max-width: 100%;
+    }
+
+    label {
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+
+    
+    input[type="number"] {
+      width: 4rem;
+      padding: 0.25rem 0.4rem;
+      border-radius: 0.375rem;
+      border: 1px solid #4b5563;
+      background-color: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+
+    button {
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    button.big {
+      padding: 0.55rem 1.1rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    button.small {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      min-height: 44px; /* Touch-friendly minimum height */
+      min-width: 60px; /* Touch-friendly minimum width */
+      touch-action: manipulation; /* Prevent double-tap zoom */
+    }
+
+    .primary {
+      color: #020617;
+      font-weight: 600;
+    }
+
+    .secondary {
+      background-color: #020617;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+      transition: all 0.2s ease;
+    }
+    
+    .secondary:hover {
+      background-color: rgba(2, 6, 23, 0.8);
+      border-color: #64748b;
+    }
+    
+    /* Selected preset button styling */
+    .secondary.preset-selected {
+      background-color: rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    
+    .secondary.preset-selected:hover {
+      background-color: rgba(59, 130, 246, 0.3);
+      border-color: #60a5fa;
+    }
+
+    .pepper {
+      background-color: #ec4899; /* pink */
+      color: #020617;
+      border: 1px solid #f472b6;
+      font-weight: 700;
+    }
+    .pepper:hover {
+      filter: brightness(1.15);
+    }
+
+    .sub {
+      font-size: 0.78em;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+
+    .danger {
+      background-color: #7f1d1d;
+      color: #fee2e2;
+    }
+
+    /* Touch-friendly checkboxes (mobile-primary); smaller size for preferences */
+    input[type="checkbox"].touch-checkbox {
+      width: 1.5rem;
+      height: 1.5rem;
+      min-width: 1.5rem;
+      min-height: 1.5rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .output {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      background-color: #020617;
+      border: 1px solid #111827;
+      min-height: 3rem;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .message {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #a7f3d0;
+      border-radius: 0.5rem;
+      padding: 0.25rem 0.4rem;
+    }
+
+    .error {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #fecaca;
+    }
+
+    select {
+      background-color: #020617;
+      color: #e5e7eb;
+      border-radius: 0.375rem;
+      border: 1px solid #4b5563;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .roll-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
+      gap: 0.9rem;
+      align-items: start;
+    }
+
+    @media (max-width: 480px) {
+      .roll-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Partner color picker dots */
+    .color-presets {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .color-dot {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .color-dot:hover {
+      transform: scale(1.2);
+    }
+    .color-dot.selected {
+      border-color: #fff;
+      box-shadow: 0 0 8px currentColor;
+      transform: scale(1.15);
+    }
+
+    /* Voice toggle buttons */
+    .voice-toggle-btn {
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .voice-toggle-btn.voice-on {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: #22c55e !important;
+      color: #22c55e !important;
+    }
+
+    /* Dice game controls: receiver-based coloring */
+    #freePlayControls {
+      border-width: 1px;
+      border-style: solid;
+    }
+    #freePlayControls.receiver-p1 {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    #freePlayControls.receiver-p2 {
+      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.1);
+    }
+
+    /* Clothing item: visual card style (emoji + label) */
+    .clothing-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid #4b5563;
+      background: rgba(2, 6, 23, 0.5);
+      color: #9ca3af;
+      user-select: none;
+    }
+
+    /* Visual card layout: emoji on top, label below */
+    .clothing-item.clothing-card {
+      flex-direction: column;
+      padding: 0.6rem 0.5rem;
+      min-width: 4rem;
+      border-radius: 0.5rem;
+      gap: 0.25rem;
+    }
+
+    .clothing-item.clothing-card .clothing-emoji {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .clothing-item.clothing-card .clothing-label {
+      font-size: 0.7rem;
+      text-align: center;
+      line-height: 1.15;
+      max-width: 4.5rem;
+      word-break: break-word;
+    }
+
+    .clothing-item.clothing-card .checkmark {
+      position: absolute;
+      top: 0.2rem;
+      right: 0.2rem;
+      font-size: 0.75rem;
+      background: rgba(34, 197, 94, 0.9);
+      color: #020617;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clothing-item.clothing-card {
+      position: relative;
+    }
+
+    .clothing-item.clothing-card.selected .checkmark {
+      display: flex;
+    }
+
+    .clothing-item:hover {
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .clothing-item.selected {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.2);
+      color: #a7f3d0;
+      font-weight: 600;
+    }
+
+    .clothing-item input[type="checkbox"] {
+      display: none;
+    }
+
+    .clothing-item:not(.clothing-card) .checkmark {
+      display: none;
+      margin-right: 0.35rem;
+      font-size: 1rem;
+    }
+
+    .clothing-item:not(.clothing-card).selected .checkmark {
+      display: inline;
+    }
+
+    /* Clothing button animations */
+    @keyframes preset-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(0.92); }
+      70%  { transform: scale(1.08); box-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    @keyframes clear-shake {
+      0%, 100% { transform: translateX(0); }
+      15%  { transform: translateX(-4px); }
+      30%  { transform: translateX(4px); }
+      45%  { transform: translateX(-3px); }
+      60%  { transform: translateX(3px); }
+      75%  { transform: translateX(-1px); }
+      90%  { transform: translateX(1px); }
+    }
+    @keyframes item-pop-in {
+      0%   { opacity: 0; transform: scale(0.7); }
+      60%  { opacity: 1; transform: scale(1.06); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes item-fade-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.8); }
+    }
+    .anim-preset-pop {
+      animation: preset-pop 0.35s ease;
+    }
+    .anim-clear-shake {
+      animation: clear-shake 0.4s ease;
+    }
+    .clothing-item.anim-pop-in {
+      animation: item-pop-in 0.3s ease both;
+    }
+    .clothing-item.anim-fade-out {
+      animation: item-fade-out 0.2s ease both;
+    }
+
+    /* Body-region rows: group clothing by where on body */
+    .clothing-body-row {
+      margin-bottom: 0.75rem;
+    }
+    .clothing-body-row:last-child {
+      margin-bottom: 0;
+    }
+    .clothing-region-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .clothing-body-row-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .roll-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;   /* centers label + input */
+      gap: 0.35rem;
+    }
+
+    .roll-col label {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: rgba(2, 6, 23, 0.65);
+    }
+
+    .roll-col input[type="number"] {
+      text-align: center;   /* centers the digits inside the box */
+    }
+
+
+    .section-subtitle {
+      margin: 0.75rem 0 0.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .summary-list {
+      margin: 0;
+      padding-left: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: #d1d5db;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .summary-list li + li {
+      margin-top: 0.18rem;
+    }
+
+    #summaryCard .card-body {
+      border-top: 1px solid #111827;
+      padding-top: 0.75rem;
+    }
+
+    .summary-section {
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background-color: #020617;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .summary-section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .summary-section .section-subtitle {
+      margin: 0 0 0.25rem;
+    }
+
+    /* Achievement flashes */
+
+    .message.flash {
+      animation: flash-ring 0.6s ease-out;
+    }
+
+    @keyframes flash-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.8);
+      }
+      100% {
+        box-shadow: 0 0 0 14px rgba(34, 197, 94, 0);
+      }
+    }
+
+    .message.repeat-flash {
+      animation: repeat-ring 0.6s ease-out;
+    }
+
+    @keyframes repeat-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.8);
+      }
+      100% {
+        box-shadow: 0 0 0 14px rgba(56, 189, 248, 0);
+      }
+    }
+
+    /* Phase number pulse  */
+    #phaseDisplay.pulse {
+      display: inline-block; /* makes transform work reliably */
+      animation: phasePulse 650ms ease-out;
+    }
+
+    @keyframes phasePulse {
+      0%   { transform: scale(1); text-shadow: none; }
+      40%  { transform: scale(1.35); text-shadow: 0 0 18px rgba(34, 197, 94, 0.6); }
+      100% { transform: scale(1); text-shadow: none; }
+    }
+
+    /* Base pulse animation (keeps transform) */
+    #phaseDisplay.pulse {
+        display: inline-block;
+        animation: phasePulse 650ms ease-out;
+    }
+
+    /* Phase-specific pulse color + glow */
+    body.phase-1 #phaseDisplay.pulse {
+        color: #60a5fa; /* light blue */
+        text-shadow: 0 0 18px rgba(59, 130, 246, 0.85);
+    }
+
+    body.phase-2 #phaseDisplay.pulse {
+        color: #c084fc; /* light purple */
+        text-shadow: 0 0 18px rgba(168, 85, 247, 0.85);
+    }
+
+    body.phase-3 #phaseDisplay.pulse {
+        color: #f472b6; /* light pink */
+        text-shadow: 0 0 18px rgba(236, 72, 153, 0.85);
+    }
+
+    @keyframes phasePulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35); }
+      100% { transform: scale(1); }  
+    }
+
+
+    /* Landing modal overlay */
+    #landingModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #landingModal.hidden {
+      display: none;
+    }
+
+    .landing-content {
+      background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      max-width: 600px;
+      width: 100%;
+      border: 2px solid #334155;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .landing-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .landing-subtitle {
+      text-align: center;
+      font-size: 1rem;
+      color: #9ca3af;
+      margin-bottom: 3rem;
+    }
+
+    .mode-buttons {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .mode-button {
+      background: rgba(2, 6, 23, 0.5);
+      border: 2px solid #334155;
+      border-radius: 0.75rem;
+      padding: 2rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+    }
+
+    .mode-button:hover {
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .mode-button.guided:hover {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.1);
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.2);
+    }
+
+    .mode-button-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
+    .mode-button-desc {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+      .landing-content {
+        padding: 2rem 1.5rem;
+      }
+      
+      .landing-title {
+        font-size: 1.5rem;
+      }
+      
+      .mode-button {
+        padding: 1.5rem 1rem;
+      }
+      
+      .mode-button-title {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* Wizard stepper styles */
+    .wizard-step {
+      display: none;
+    }
+
+    .wizard-step.active {
+      display: block;
+    }
+
+    .step-progress {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #334155;
+    }
+
+    .step-indicator {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      padding-bottom: 2rem;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 1.5rem;
+      left: 50%;
+      right: -50%;
+      height: 2px;
+      background: #334155;
+      z-index: 0;
+    }
+
+    .step-indicator:last-child::before {
+      display: none;
+    }
+
+    .step-number {
+      display: inline-block;
+      width: 3rem;
+      height: 3rem;
+      line-height: 3rem;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid #334155;
+      color: #64748b;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-indicator.completed .step-number {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #020617;
+    }
+
+    .step-indicator.active .step-number {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+    }
+
+    .step-indicator.active .step-label {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .step-indicator.completed .step-label {
+      color: #9ca3af;
+    }
+
+    .wizard-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
+    .wizard-subtitle {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin-bottom: 2rem;
+    }
+
+    .wizard-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #334155;
+    }
+
+    .summary-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(2, 6, 23, 0.5);
+      border-radius: 0.5rem;
+      border: 1px solid #334155;
+    }
+
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: #93c5fd;
+    }
+
+    .summary-pill-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* Collapsible sections */
+    .collapsible-section {
+      margin-bottom: 0.75rem;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: rgba(2, 6, 23, 0.5);
+      overflow: hidden;
+    }
+
+    .collapsible-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      gap: 1rem;
+    }
+
+    .collapsible-header:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .collapsible-header.active {
+      background: rgba(59, 130, 246, 0.1);
+      border-bottom: 1px solid #334155;
+    }
+
+    .collapsible-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .collapsible-number {
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
+      text-align: center;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid #334155;
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header.completed .collapsible-number {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #020617;
+    }
+
+    .collapsible-header.active .collapsible-number {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .collapsible-title {
+      font-weight: 600;
+      color: #e5e7eb;
+      font-size: 1rem;
+    }
+
+    .collapsible-selection {
+      font-size: 0.85rem;
+      color: #60a5fa;
+      font-weight: 500;
+    }
+    
+    /* Toast notification for session restore */
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(59, 130, 246, 0.95);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      z-index: 10000;
+      animation: slideInRight 0.3s ease-out;
+      max-width: 350px;
+    }
+    
+    .toast-notification.fadeOut {
+      animation: fadeOut 0.3s ease-out forwards;
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(400px);
+      }
+    }
+
+    .collapsible-icon {
+      color: #64748b;
+      font-size: 1.25rem;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header.active .collapsible-icon {
+      transform: rotate(180deg);
+    }
+    .collapsible-icon.collapsible-icon-static {
+      transform: none !important;
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-content.open {
+      max-height: 2000px;
+    }
+
+    .collapsible-body {
+      padding: 1.25rem;
+      padding-top: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Landing Modal -->
+  <div id="landingModal">
+    <div class="landing-content">
+      <h1 class="landing-title">Between Us</h1>
+      <p class="landing-subtitle">Guided intimate sessions with timed turns and voice prompts, or roll your own in Dice game</p>
+      
+      <div class="mode-buttons">
+        <div class="mode-button guided" id="landingGuided">
+          <div class="mode-button-title">⏱️ Guided Mode</div>
+          <div class="mode-button-desc">
+            The main experience: set your session length and turn time, then follow timed prompts through warm-up, heating up, and deep intimacy. Voice reads aloud; optional clothing removal and phase check-ins.
+          </div>
+        </div>
+        
+        <div class="mode-button freeplay" id="landingFreePlay">
+          <div class="mode-button-title">🎲 Dice game</div>
+          <div class="mode-button-desc">
+            Roll manually and enter your numbers. Full control over timing and when to advance. No timer. Good when you prefer to set your own pace.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="phaseFlash" class="phase-flash" aria-hidden="true"></div>
+  <div class="page" style="display: block;">
+    <!-- Main card -->
+    <div class="card">
+      <div class="card-header">
+        <h1>Between Us</h1>
+        <button class="hamburger-menu-btn" id="hamburgerMenuBtn" title="Open preferences">☰</button>
+      </div>
+
+     <!-- Partner names & colors moved to wizard steps -->
+
+     <!-- Preferences sidebar (slide-out panel) -->
+     <div class="preferences-sidebar-overlay" id="preferencesOverlay"></div>
+     <div class="preferences-sidebar" id="preferencesSidebar">
+       <div class="preferences-sidebar-header">
+         <h2>Preferences</h2>
+         <button class="close-preferences-btn" id="closePreferencesBtn" title="Close preferences">✕</button>
+       </div>
+       <div class="preferences-body">
+          <!-- Prompt & play style -->
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label">Prompt detail:</label>
+            <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
+              <button type="button" class="secondary prompt-detail-btn" data-mode="beginner" title="Full descriptions, longer pause before next prompt, slower speech">Beginner</button>
+              <button type="button" class="secondary prompt-detail-btn" data-mode="regular" title="Some descriptions removed, medium pace">Regular</button>
+              <button type="button" class="secondary prompt-detail-btn" data-mode="expert" title="Short prompts; more variety and variation options can unlock later">Expert</button>
+            </div>
+            <span id="promptDetailSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
+          </div>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label">Penetration:</label>
+            <div class="row" style="gap: 0.35rem; flex-wrap: wrap;">
+              <button type="button" class="secondary penetration-pref-btn" data-pref="prefer" title="Penetration is an option when the prompt allows it">Prefer penetration</button>
+              <button type="button" class="secondary penetration-pref-btn" data-pref="minimal" title="Focus on external play; penetration only if you both want">Minimal penetration</button>
+            </div>
+            <span id="penetrationPrefSelection" style="font-size: 0.8rem; color: #9ca3af;"></span>
+          </div>
+          <!-- Display (background, music) -->
+          <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <label class="pref-label">Background:</label>
+            <select id="backgroundImageSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
+              <option value="none">None</option>
+              <option value="1">Fiery hearts</option>
+              <option value="2">Triangles</option>
+            </select>
+          </div>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <label class="pref-label">Background music:</label>
+            <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <select id="backgroundMusicSelect" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;">
+                <option value="none">None</option>
+                <option value="1">Sensual night</option>
+                <option value="2">Sexy background music</option>
+                <option value="3">Tuesday sexy music</option>
+                <option value="4">Smooth jazz</option>
+                <option value="5">Sapphire sax serenade</option>
+                <option value="6">Sensual jazz</option>
+                <option value="7">Smooth jazz 1</option>
+                <option value="8">Smooth jazz 3</option>
+                <option value="9">Slow kiss on a hot night</option>
+                <option value="playlist-jazz">Playlist: Jazz</option>
+                <option value="playlist-rb">Playlist: R&amp;B</option>
+              </select>
+              <label for="backgroundMusicVolume" style="font-size: 0.85rem; color: #9ca3af;">Volume</label>
+              <input type="range" id="backgroundMusicVolume" min="0" max="100" value="50" style="width: 6rem; accent-color: #22c55e;" title="Music volume" />
+              <span id="backgroundMusicVolumeLabel" style="font-size: 0.85rem; color: #9ca3af; min-width: 2.5rem;">50%</span>
+            </div>
+          </div>
+          <!-- Exclude body parts: when touching vs when being touched -->
+           <div class="pref-sep pref-block">
+             <div class="pref-label" style="margin-bottom: 0.35rem;">Exclude body parts from prompts</div>
+             <div class="pref-two-col">
+               <div>
+                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">When giving:</div>
+                 <div class="row" style="flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: center;">
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
+                 </div>
+               </div>
+               <div>
+                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">When receiving:</div>
+                 <div class="row" style="flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: center;">
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedFeet" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🦶</span> Feet</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedLicking" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">👅</span> Licking</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedNipples" style="accent-color: #22c55e;" /><img src="icons/nipples-breasts.png" alt="" class="pref-icon-img" aria-hidden="true"> Nipples/breasts</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedGenitals" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true">🍆</span> Genitals</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedButtocks" style="accent-color: #22c55e;" /><img src="icons/buttocks.png" alt="" class="pref-icon-img" aria-hidden="true"> Buttocks</label>
+                   <label class="row" style="align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #9ca3af;"><input type="checkbox" class="touch-checkbox" id="excludeTouchedPerineum" style="accent-color: #22c55e;" /><span class="pref-icon" aria-hidden="true" title="Area between genitals and anus">▬</span> Perineum</label>
+                 </div>
+               </div>
+             </div>
+           </div>
+<!-- Phase 3: include anal positions -->
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+<input type="checkbox" class="touch-checkbox" id="analPositionsEnabled" style="accent-color: #22c55e;" title="When off, positions that are mainly anal-oriented (e.g. reverse missionary, rear entry on back) are rerolled." />
+              <span>Include anal positions</span>
+            </label>
+          </div>
+          <!-- Phase 3: include positions by physical effort level (bed/lying, standing, heavy) -->
+          <div class="row pref-block" style="flex-direction: column; gap: 0.35rem; align-items: flex-start;">
+            <label class="pref-label">Phase 3 effort level</label>
+            <div id="phase3GroupCheckboxes" style="display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; max-height: 8rem; overflow-y: auto; padding: 0.25rem 0; justify-content: flex-start;"></div>
+          </div>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+              <input type="checkbox" class="touch-checkbox" id="phase3DoubleTime" style="accent-color: #22c55e;" title="In guided mode, each Phase 3 turn gets twice as long so it doesn't feel hurried." />
+              <span>Double Phase 3 turn length (guided)</span>
+            </label>
+          </div>
+          <div class="row pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="pref-label"><svg class="pref-icon-svg" viewBox="0 0 24 10" aria-hidden="true" focusable="false"><path d="M6 2 L18 2 Q22 5 18 8 L6 8 Q2 5 6 2 Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Vibrators:</label>
+            <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #9ca3af; cursor: pointer;">
+              <input type="checkbox" class="touch-checkbox" id="vibratorsPresent" style="accent-color: #22c55e;" title="When off, Phase 3 vibrator/toy modifiers are rerolled." />
+              <span>Include vibrator/toy modifiers in Phase 3</span>
+            </label>
+          </div>
+          <!-- Guided mode -->
+          <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <label class="row" style="align-items: center; gap: 0.35rem; font-size: 0.85rem; cursor: pointer;">
+              <input type="checkbox" class="touch-checkbox" id="guidedPhaseCheckInEnabled" style="accent-color: #22c55e;" title="When on, Guided mode pauses at the end of each phase so you can check in before continuing." />
+              <span>Pause for check-in between phases</span>
+            </label>
+          </div>
+          <!-- Voice for reading aloud -->
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <label class="pref-label">Voice:</label>
+             <div class="row" style="align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary small voice-toggle-btn" id="voiceToggleMain" style="font-size: 0.9rem; padding: 0.35rem 0.65rem;" title="Toggle voice on/off">🔇 Voice Off</button>
+               <select id="voiceSelect" class="voice-select" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 10rem;" title="Choose voice for reading aloud">
+                 <option value="">Default (Zira if available)</option>
+               </select>
+              <span style="font-size: 0.75rem; color: #64748b;" title="Voices come from your device. Add more in system settings.">ℹ️</span>
+              <button class="secondary small" id="readAloudBtn" style="font-size: 0.85rem; padding: 0.35rem 0.6rem;" title="Read current instructions aloud">🔊 Read aloud</button>
+             </div>
+           </div>
+           <!-- Voice speed -->
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <label class="pref-label">Voice speed:</label>
+             <div class="row" style="align-items: center; gap: 0.75rem; flex: 1; min-width: 200px;">
+               <span style="font-size: 0.8rem; color: #9ca3af;">Slower</span>
+               <input type="range" id="voiceSpeedSlider" min="0.5" max="2" step="0.1" value="1" style="flex: 1; min-width: 120px; height: 8px; accent-color: #3b82f6; cursor: pointer;" title="Adjust how fast the voice reads aloud">
+               <span style="font-size: 0.8rem; color: #9ca3af;">Faster</span>
+               <span id="voiceSpeedDisplay" style="font-size: 0.9rem; font-weight: 600; min-width: 3rem; color: #e5e7eb;">1.0×</span>
+             </div>
+           </div>
+           <!-- View favorite positions (Phase 3) -->
+           <div class="row pref-sep pref-block" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+             <button type="button" class="secondary small" id="viewFavoritesPrefBtn" style="font-size: 0.8rem; padding: 0.3rem 0.5rem;" title="View your saved favorite Phase 3 positions">♥ Favorites</button>
+           </div>
+       </div>
+     </div>
+     
+     <!-- Mode selection -->
+     <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5); justify-content: center; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+       <div class="row" style="gap: 0.5rem; align-items: center;">
+         <label style="font-weight: 600; margin-right: 0.75rem;">Play Mode:</label>
+         <div class="row" style="gap: 0.5rem;">
+           <button class="secondary" id="freePlayMode" style="font-weight: 600;">Dice game</button>
+           <button class="secondary" id="guidedMode" style="font-weight: 600;">Guided Mode</button>
+         </div>
+       </div>
+     </div>
+
+     <!-- Guided mode session setup - Wizard style (hidden by default) -->
+     <div id="guidedSetup" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #a855f7; background: rgba(168, 85, 247, 0.1);">
+       <div class="wizard-container">
+         <!-- Progress indicator -->
+         <div class="wizard-progress">
+           <span class="wizard-progress-text" id="wizardProgressText">Step 1 of 9</span>
+           <div class="wizard-progress-bar">
+             <div class="wizard-progress-fill" id="wizardProgressFill" style="width: 11.1%;"></div>
+           </div>
+         </div>
+         
+         <!-- Step 1: Partner 1 Setup -->
+         <div class="wizard-step active" data-step="1">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Partner 1 Setup</div>
+             <div class="wizard-step-description">Set name, color, and anatomy for Partner 1</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+               <!-- Name -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.5rem;">Name</label>
+                 <input type="text" id="wizardPartnerName1" placeholder="Partner 1" maxlength="30" 
+                   style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 1rem;" />
+               </div>
+               
+               <!-- Color -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Color</label>
+                 <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#3b82f6" style="background: #3b82f6; color: #3b82f6;" title="Blue"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="1" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+                 </div>
+               </div>
+               
+               <!-- Anatomy -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Anatomy</label>
+                 <div class="row" style="justify-content: center; gap: 0.75rem;">
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="1" data-value="penis" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Penis & scrotum</button>
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="1" data-value="vulva" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Vulva</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" disabled>← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext1">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 2: Partner 2 Setup -->
+         <div class="wizard-step" data-step="2">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Partner 2 Setup</div>
+             <div class="wizard-step-description">Set name, color, and anatomy for Partner 2</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+               <!-- Name -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.5rem;">Name</label>
+                 <input type="text" id="wizardPartnerName2" placeholder="Partner 2" maxlength="30" 
+                   style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; font-size: 1rem;" />
+               </div>
+               
+               <!-- Color -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Color</label>
+                 <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#ec4899" style="background: #ec4899; color: #ec4899;" title="Pink"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#22d3ee" style="background: #22d3ee; color: #22d3ee;" title="Cyan"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#22c55e" style="background: #22c55e; color: #22c55e;" title="Green"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#a855f7" style="background: #a855f7; color: #a855f7;" title="Purple"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#f59e0b" style="background: #f59e0b; color: #f59e0b;" title="Gold"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#ef4444" style="background: #ef4444; color: #ef4444;" title="Red"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#f97316" style="background: #f97316; color: #f97316;" title="Orange"></span>
+                   <span class="color-dot wizard-color-dot" data-partner="2" data-color="#e5e7eb" style="background: #e5e7eb; color: #e5e7eb;" title="White"></span>
+                 </div>
+               </div>
+               
+               <!-- Anatomy -->
+               <div>
+                 <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb; display: block; margin-bottom: 0.75rem;">Anatomy</label>
+                 <div class="row" style="justify-content: center; gap: 0.75rem;">
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="2" data-value="penis" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Penis & scrotum</button>
+                   <button type="button" class="secondary wizard-anatomy-btn" data-partner="2" data-value="vulva" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Vulva</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack2">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext2">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 3: Phase Time Distribution -->
+         <div class="wizard-step" data-step="3">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Phase Time Distribution</div>
+             <div class="wizard-step-description">How would you like to allocate time across the three phases?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="3" data-value="equal" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Equal<br><span style="font-size: 0.8rem; color: #9ca3af;">33/33/34%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase1" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Sensate-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">50/30/20%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase2" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">A Little Spicy<br><span style="font-size: 0.8rem; color: #9ca3af;">30/40/30%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase3" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Intimacy-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">20/30/50%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="quickie" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Quickie<br><span style="font-size: 0.8rem; color: #9ca3af;">10/30/60% · 15 min · 1 min</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="custom" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Custom<br><span style="font-size: 0.8rem; color: #9ca3af;">Set your own</span></button>
+             </div>
+             <!-- Custom phase inputs (shown when custom selected) - Mobile-friendly sliders -->
+             <div id="wizardCustomPhaseInputs" style="display: none; margin-top: 1.5rem;">
+               <div style="text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: #9ca3af;">
+                 Adjust sliders to set percentages (must total 100%)
+               </div>
+               
+               <!-- Phase 1 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 1</label>
+                   <span id="wizardPhase1PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #22c55e; min-width: 3rem; text-align: right;">33%</span>
+                 </div>
+                 <input type="range" id="wizardPhase1Percent" min="0" max="100" value="33" 
+                   style="width: 100%; height: 8px; accent-color: #3b82f6; cursor: pointer;" />
+               </div>
+               
+               <!-- Phase 2 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 2</label>
+                   <span id="wizardPhase2PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #a855f7; min-width: 3rem; text-align: right;">33%</span>
+                 </div>
+                 <input type="range" id="wizardPhase2Percent" min="0" max="100" value="33" 
+                   style="width: 100%; height: 8px; accent-color: #a855f7; cursor: pointer;" />
+               </div>
+               
+               <!-- Phase 3 Slider -->
+               <div style="margin-bottom: 1.5rem;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                   <label style="font-size: 0.9rem; font-weight: 600; color: #e5e7eb;">Phase 3</label>
+                   <span id="wizardPhase3PercentDisplay" style="font-size: 1.1rem; font-weight: 700; color: #ec4899; min-width: 3rem; text-align: right;">34%</span>
+                 </div>
+                 <input type="range" id="wizardPhase3Percent" min="0" max="100" value="34" 
+                   style="width: 100%; height: 8px; accent-color: #ec4899; cursor: pointer;" />
+               </div>
+               
+               <!-- Total display -->
+               <div style="text-align: center; padding: 0.75rem; background: rgba(2, 6, 23, 0.6); border-radius: 0.5rem; border: 1px solid #334155; margin-bottom: 1rem;">
+                 <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.25rem;">Total</div>
+                 <div id="wizardPhaseTotalDisplay" style="font-size: 1.5rem; font-weight: 700; color: #e5e7eb;">100%</div>
+               </div>
+               
+               <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.8rem; color: #9ca3af;">Quick presets:</div>
+               <div class="row" style="justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                 <button class="secondary small" id="wizardPreset20-20-60">20/20/60</button>
+                 <button class="secondary small" id="wizardPreset25-25-50">25/25/50</button>
+                 <button class="secondary small" id="wizardPreset30-30-40">30/30/40</button>
+               </div>
+               <div id="wizardPercentError" style="color: #fecaca; font-size: 0.85rem; text-align: center; margin-top: 0.5rem; display: none;">
+                 Percentages must total 100%
+               </div>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack3">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext3">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 3: Phase Time Distribution -->
+         <div class="wizard-step" data-step="3">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Phase Time Distribution</div>
+             <div class="wizard-step-description">How would you like to allocate time across the three phases?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="3" data-value="equal" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Equal<br><span style="font-size: 0.8rem; color: #9ca3af;">33/33/34%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase1" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Sensate-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">50/30/20%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase2" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">A Little Spicy<br><span style="font-size: 0.8rem; color: #9ca3af;">30/40/30%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="phase3" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Intimacy-Focused<br><span style="font-size: 0.8rem; color: #9ca3af;">20/30/50%</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="quickie" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Quickie<br><span style="font-size: 0.8rem; color: #9ca3af;">10/30/60% · 15 min · 1 min</span></button>
+               <button class="secondary wizard-option-btn" data-step="3" data-value="custom" style="min-width: 140px; padding: 1rem; font-size: 0.95rem;">Custom<br><span style="font-size: 0.8rem; color: #9ca3af;">Set your own</span></button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack3">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext3">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 4: Total Session Time -->
+         <div class="wizard-step" data-step="4">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Total Session Time</div>
+             <div class="wizard-step-description">How long should the entire session be?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="4" data-value="15" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">15 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="30" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">30 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="45" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">45 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="60" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">60 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="90" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">90 min</button>
+               <button class="secondary wizard-option-btn" data-step="4" data-value="120" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">120 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack4">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext4">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 5: Turn Duration -->
+         <div class="wizard-step" data-step="5">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Turn Duration</div>
+             <div class="wizard-step-description">How long should each turn be?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="5" data-value="1" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="2" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">2 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="3" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">3 min</button>
+               <button class="secondary wizard-option-btn" data-step="5" data-value="5" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">5 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack5">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext5">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 6: Pause Between Turns -->
+         <div class="wizard-step" data-step="6">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Pause Between Turns</div>
+             <div class="wizard-step-description">How long should the pause be between turns?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="6" data-value="0" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">None</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="10" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">10 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="15" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">15 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="20" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">20 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="30" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">30 sec</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="60" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="90" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">1.5 min</button>
+               <button class="secondary wizard-option-btn" data-step="6" data-value="120" style="min-width: 90px; padding: 1rem; font-size: 1rem; font-weight: 600;">2 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack6">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext6">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 7: Clothing Enabled/Disabled -->
+         <div class="wizard-step" data-step="7">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Clothing Removal</div>
+             <div class="wizard-step-description">Would you like clothing removal prompts during the session?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 1rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="7" data-value="enabled" style="min-width: 150px; padding: 1.5rem; font-size: 1.1rem; font-weight: 600;">Enabled</button>
+               <button class="secondary wizard-option-btn" data-step="7" data-value="disabled" style="min-width: 150px; padding: 1.5rem; font-size: 1.1rem; font-weight: 600;">Disabled</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack7">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext7">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 8: Partner 1 Clothing (conditional) -->
+         <div class="wizard-step" data-step="8" id="wizardStepClothingP1">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title" id="wizardClothingP1Title">Partner 1 Clothing</div>
+             <div class="wizard-step-description">Select what Partner 1 is wearing. Use presets or select individually.</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="text-align: center; margin-bottom: 1rem;">
+               <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                 <button class="secondary small" id="wizardP1PresetCasual">Casual</button>
+                 <button class="secondary small" id="wizardP1PresetDressCasual">Dress Casual</button>
+                 <button class="secondary small" id="wizardP1PresetLingerie">Lingerie</button>
+                 <button class="secondary small" id="wizardP1PresetMinimal">Minimal</button>
+                 <button class="secondary small" id="wizardP1PresetFullOutfit">Full Outfit</button>
+                 <button class="secondary small" id="wizardP1PresetDateNight">Date Night</button>
+                 <button class="secondary small" id="wizardP1PresetLoungeWear">Lounge Wear</button>
+                 <button class="secondary small" id="wizardP1PresetLingerieLace">Lingerie Lace</button>
+                 <button class="secondary small" id="wizardP1PresetLingerieClassic">Lingerie Classic</button>
+                 <button class="secondary small" id="wizardP1PresetAthletic">Athletic</button>
+                 <button class="secondary small" id="wizardP1PresetCozy">Cozy</button>
+                 <button class="secondary small" id="wizardP1PresetLayered">Layered</button>
+                 <button class="secondary small" id="wizardP1PresetUndergarmentsMale">Undergarments - Male</button>
+                 <button class="secondary small" id="wizardP1PresetUndergarmentsFemale">Undergarments - Female</button>
+               </div>
+               <button class="secondary small" id="wizardP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2; margin-bottom: 0.75rem;">Clear All</button>
+             </div>
+             <div id="wizardClothingCheckboxContainerP1" style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 400px; overflow-y: auto;">
+               <!-- Partner 1 checkboxes populated by JS -->
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack8">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext8">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 9: Partner 2 Clothing (conditional) -->
+         <div class="wizard-step" data-step="9" id="wizardStepClothingP2">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title" id="wizardClothingP2Title">Partner 2 Clothing</div>
+             <div class="wizard-step-description">Select what Partner 2 is wearing. Use presets or select individually.</div>
+           </div>
+           <div class="wizard-step-content">
+             <div style="text-align: center; margin-bottom: 1rem;">
+               <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                 <button class="secondary small" id="wizardP2PresetCasual">Casual</button>
+                 <button class="secondary small" id="wizardP2PresetDressCasual">Dress Casual</button>
+                 <button class="secondary small" id="wizardP2PresetLingerie">Lingerie</button>
+                 <button class="secondary small" id="wizardP2PresetMinimal">Minimal</button>
+                 <button class="secondary small" id="wizardP2PresetFullOutfit">Full Outfit</button>
+                 <button class="secondary small" id="wizardP2PresetDateNight">Date Night</button>
+                 <button class="secondary small" id="wizardP2PresetLoungeWear">Lounge Wear</button>
+                 <button class="secondary small" id="wizardP2PresetLingerieLace">Lingerie Lace</button>
+                 <button class="secondary small" id="wizardP2PresetLingerieClassic">Lingerie Classic</button>
+                 <button class="secondary small" id="wizardP2PresetAthletic">Athletic</button>
+                 <button class="secondary small" id="wizardP2PresetCozy">Cozy</button>
+                 <button class="secondary small" id="wizardP2PresetLayered">Layered</button>
+                 <button class="secondary small" id="wizardP2PresetUndergarmentsMale">Undergarments - Male</button>
+                 <button class="secondary small" id="wizardP2PresetUndergarmentsFemale">Undergarments - Female</button>
+               </div>
+               <button class="secondary small" id="wizardP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2; margin-bottom: 0.75rem;">Clear All</button>
+             </div>
+             <div id="wizardClothingCheckboxContainerP2" style="padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 400px; overflow-y: auto;">
+               <!-- Partner 2 checkboxes populated by JS -->
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack9">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext9">Next →</button>
+           </div>
+         </div>
+         
+         <!-- Step 10: Extra Time for Clothing Removal -->
+         <div class="wizard-step" data-step="10" id="wizardStepClothingTime">
+           <div class="wizard-step-header">
+             <div class="wizard-step-title">Extra Time for Clothing Removal</div>
+             <div class="wizard-step-description">Add extra time to a turn when clothing is removed?</div>
+           </div>
+           <div class="wizard-step-content">
+             <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+               <button class="secondary wizard-option-btn" data-step="10" data-value="0" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">None</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="30" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">30 sec</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="60" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1 min</button>
+               <button class="secondary wizard-option-btn" data-step="10" data-value="90" style="min-width: 100px; padding: 1rem; font-size: 1.1rem; font-weight: 600;">1.5 min</button>
+             </div>
+           </div>
+           <div class="wizard-navigation">
+             <button class="wizard-nav-btn back" id="wizardBack10">← Back</button>
+             <button class="wizard-nav-btn next" id="wizardNext10">Start Session</button>
+           </div>
+         </div>
+       </div>
+       
+       <!-- Legacy collapsible sections (hidden, kept for compatibility) -->
+       <div style="display: none;">
+
+       <!-- Voice for reading aloud (setup option) -->
+       <div class="row" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #7c3aed; background: rgba(124, 58, 237, 0.12); flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+         <label for="voiceSelectGuided" style="font-weight: 600; font-size: 0.9rem;">Voice for reading aloud:</label>
+         <select id="voiceSelectGuided" class="voice-select" style="font-size: 0.9rem; padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; min-width: 11rem;">
+           <option value="">Default (Zira if available)</option>
+         </select>
+         <span style="font-size: 0.75rem; color: #64748b;">Voices come from your device. Add more in system settings (Windows: Settings &gt; Time &amp; language &gt; Speech. Mac: Accessibility &gt; Spoken Content).</span>
+       </div>
+
+       <!-- Section 1: Phase Time Distribution -->
+       <div class="collapsible-section">
+         <div class="collapsible-header active" data-section="phaseDistribution">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">1</span>
+             <div>
+               <div class="collapsible-title">Phase Time Distribution</div>
+               <div class="collapsible-selection" id="phaseDistSelection">Select distribution</div>
+               <div id="phaseDistDescription" style="display: none; font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; line-height: 1.3;"></div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content open">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.35rem; flex-wrap: wrap;">
+               <button class="secondary" id="phaseDistEqual" style="min-width: 100px; font-size: 0.85rem;">Equal</button>
+               <button class="secondary" id="phaseDistPhase1" style="min-width: 100px; font-size: 0.85rem;">Sensate-Focused</button>
+               <button class="secondary" id="phaseDistPhase2" style="min-width: 100px; font-size: 0.85rem;">A Little Spicy</button>
+               <button class="secondary" id="phaseDistPhase3" style="min-width: 100px; font-size: 0.85rem;">Intimacy-Focused</button>
+               <button class="secondary" id="phaseDistQuickie" style="min-width: 100px; font-size: 0.85rem;" title="Short session: 15 min, 1 min turns, double clothing removal. No critical rolls (no extended time).">Quickie</button>
+               <button class="secondary" id="phaseDistCustom" style="min-width: 100px; font-size: 0.85rem;">Custom</button>
+             </div>
+
+         <!-- Custom phase distribution (hidden by default) -->
+         <div id="customPhaseInputs" style="display: none; margin-top: 0.5rem;">
+           <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+             Enter percentages (must total 100%; phases can be 0%)
+           </div>
+           <div class="row" style="justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 1 %</label>
+               <input type="number" id="phase1Percent" min="0" max="100" value="33" style="width: 4.5rem; text-align: center;" />
+             </div>
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 2 %</label>
+               <input type="number" id="phase2Percent" min="0" max="100" value="33" style="width: 4.5rem; text-align: center;" />
+             </div>
+             <div style="display: flex; flex-direction: column; align-items: center;">
+               <label style="font-size: 0.85rem; margin-bottom: 0.25rem;">Phase 3 %</label>
+               <input type="number" id="phase3Percent" min="0" max="100" value="34" style="width: 4.5rem; text-align: center;" />
+             </div>
+           </div>
+           <div style="text-align: center; margin-bottom: 0.25rem; font-size: 0.8rem; color: #9ca3af;">
+             Quick presets:
+           </div>
+           <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap;">
+             <button class="secondary small" id="preset20-20-60">20/20/60</button>
+             <button class="secondary small" id="preset25-25-50">25/25/50</button>
+             <button class="secondary small" id="preset30-30-40">30/30/40</button>
+           </div>
+               <div id="percentError" style="color: #fecaca; font-size: 0.8rem; text-align: center; margin-top: 0.25rem; display: none;">
+                 Percentages must total 100%
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 2: Total Session Time -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="sessionTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">2</span>
+             <div>
+               <div class="collapsible-title">Total Session Time</div>
+               <div class="collapsible-selection" id="sessionTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="time15">15 min</button>
+               <button class="secondary" id="time30">30 min</button>
+               <button class="secondary" id="time45">45 min</button>
+               <button class="secondary" id="time60">60 min</button>
+               <button class="secondary" id="time90">90 min</button>
+               <button class="secondary" id="time120">120 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 3: Turn Duration -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="turnTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">3</span>
+             <div>
+               <div class="collapsible-title">Turn Duration</div>
+               <div class="collapsible-selection" id="turnTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="turn1">1 min</button>
+               <button class="secondary" id="turn2">2 min</button>
+               <button class="secondary" id="turn3">3 min</button>
+               <button class="secondary" id="turn5">5 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 4: Pause Between Turns -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="pauseTime">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">4</span>
+             <div>
+               <div class="collapsible-title">Pause Between Turns</div>
+               <div class="collapsible-selection" id="pauseTimeSelection">Select duration</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+               <button class="secondary" id="pause0">None</button>
+               <button class="secondary" id="pause10">10 sec</button>
+               <button class="secondary" id="pause15">15 sec</button>
+               <button class="secondary" id="pause20">20 sec</button>
+               <button class="secondary" id="pause30">30 sec</button>
+               <button class="secondary" id="pause60">1 min</button>
+               <button class="secondary" id="pause90">1.5 min</button>
+               <button class="secondary" id="pause120">2 min</button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Section 5: Clothing Setup -->
+       <div class="collapsible-section">
+         <div class="collapsible-header" data-section="clothing">
+           <div class="collapsible-header-left">
+             <span class="collapsible-number">5</span>
+             <div>
+               <div class="collapsible-title">Clothing Setup</div>
+               <div class="collapsible-selection" id="clothingSelection">Select option</div>
+             </div>
+           </div>
+           <span class="collapsible-icon">▼</span>
+         </div>
+         <div class="collapsible-content">
+           <div class="collapsible-body">
+             <div class="row" style="justify-content: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+               <button class="secondary" id="clothingEnabled" style="min-width: 120px;">Enabled</button>
+               <button class="secondary" id="clothingDisabled" style="min-width: 120px;">Disabled</button>
+             </div>
+
+         <div id="clothingSetupInputs" style="margin-top: 0.5rem;">
+           <!-- Partner 1 Clothing -->
+           <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+             <div id="guidedPartner1Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
+               Partner 1 Clothing:
+             </div>
+
+             <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+               Quick presets:
+             </div>
+             <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP1PresetCasual">Casual</button>
+               <button class="secondary small" id="guidedP1PresetDressCasual">Dress Casual</button>
+               <button class="secondary small" id="guidedP1PresetLingerie">Lingerie</button>
+               <button class="secondary small" id="guidedP1PresetMinimal">Minimal</button>
+               <button class="secondary small" id="guidedP1PresetFullOutfit">Full Outfit</button>
+               <button class="secondary small" id="guidedP1PresetDateNight">Date Night</button>
+               <button class="secondary small" id="guidedP1PresetLoungeWear">Lounge Wear</button>
+               <button class="secondary small" id="guidedP1PresetLingerieLace">Lingerie Lace</button>
+               <button class="secondary small" id="guidedP1PresetLingerieClassic">Lingerie Classic</button>
+               <button class="secondary small" id="guidedP1PresetAthletic">Athletic</button>
+               <button class="secondary small" id="guidedP1PresetCozy">Cozy</button>
+               <button class="secondary small" id="guidedP1PresetLayered">Layered</button>
+               <button class="secondary small" id="guidedP1PresetUndergarmentsMale">Undergarments - Male</button>
+               <button class="secondary small" id="guidedP1PresetUndergarmentsFemale">Undergarments - Female</button>
+             </div>
+
+             <div style="text-align: center; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+             </div>
+
+             <div id="guidedClothingCheckboxContainerP1" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
+               <!-- Partner 1 checkboxes -->
+             </div>
+           </div>
+
+           <!-- Partner 2 Clothing -->
+           <div style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
+             <div id="guidedPartner2Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
+               Partner 2 Clothing:
+             </div>
+
+             <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+               Quick presets:
+             </div>
+             <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP2PresetCasual">Casual</button>
+               <button class="secondary small" id="guidedP2PresetDressCasual">Dress Casual</button>
+               <button class="secondary small" id="guidedP2PresetLingerie">Lingerie</button>
+               <button class="secondary small" id="guidedP2PresetMinimal">Minimal</button>
+               <button class="secondary small" id="guidedP2PresetFullOutfit">Full Outfit</button>
+               <button class="secondary small" id="guidedP2PresetDateNight">Date Night</button>
+               <button class="secondary small" id="guidedP2PresetLoungeWear">Lounge Wear</button>
+               <button class="secondary small" id="guidedP2PresetLingerieLace">Lingerie Lace</button>
+               <button class="secondary small" id="guidedP2PresetLingerieClassic">Lingerie Classic</button>
+               <button class="secondary small" id="guidedP2PresetAthletic">Athletic</button>
+               <button class="secondary small" id="guidedP2PresetCozy">Cozy</button>
+               <button class="secondary small" id="guidedP2PresetLayered">Layered</button>
+               <button class="secondary small" id="guidedP2PresetUndergarmentsMale">Undergarments - Male</button>
+               <button class="secondary small" id="guidedP2PresetUndergarmentsFemale">Undergarments - Female</button>
+             </div>
+
+             <div style="text-align: center; margin-bottom: 0.5rem;">
+               <button class="secondary small" id="guidedP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+             </div>
+
+             <div id="guidedClothingCheckboxContainerP2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
+               <!-- Partner 2 checkboxes -->
+             </div>
+           </div>
+
+          <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.75rem; color: #9ca3af;">
+            Tip: Click a preset to load items, then uncheck what they're not wearing
+          </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Section 6: Extra Time for Clothing Removal -->
+      <div class="collapsible-section">
+        <div class="collapsible-header" data-section="clothingExtraTime">
+          <div class="collapsible-header-left">
+            <span class="collapsible-number">7</span>
+            <div>
+              <div class="collapsible-title">Extra Time for Clothing Removal</div>
+              <div class="collapsible-selection" id="clothingExtraTimeSelection">30 seconds</div>
+            </div>
+          </div>
+          <span class="collapsible-icon">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-body">
+            <div style="text-align: center; margin-bottom: 0.75rem; font-size: 0.85rem; color: #9ca3af;">
+              Add extra time to a turn when clothing is removed
+            </div>
+            <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap;">
+              <button class="secondary small" id="clothingTime0">None</button>
+              <button class="secondary small" id="clothingTime30">30 sec</button>
+              <button class="secondary small" id="clothingTime60">1 min</button>
+              <button class="secondary small" id="clothingTime90">1.5 min</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button class="primary big" id="startGuided">Start Guided Session</button>
+      </div>
+       </div>
+     </div>
+
+     <!-- Guided mode status - Clean mobile-focused UI (hidden by default) -->
+     <div id="guidedStatus" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 0.75rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.5);">
+       <!-- Phase indicator - prominent at top -->
+       <div style="text-align: center; margin-bottom: 1rem;">
+         <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.25rem;">Current Phase</div>
+         <div id="phaseIndicator" style="font-weight: 700; font-size: 2rem; letter-spacing: 0.05em;">Phase 1</div>
+       </div>
+       
+       <!-- Current event timer - full row, big and prominent -->
+       <div style="width: 100%; text-align: center; padding: 1.25rem; margin-bottom: 1rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+         <div id="turnTimeLeftLabel" style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.35rem;">Current Action</div>
+         <div id="turnTimeLeft" style="font-weight: 700; font-size: 3rem; letter-spacing: 0.08em; line-height: 1.2;">—</div>
+       </div>
+       
+       <!-- Other timers - compact row -->
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+         <div style="text-align: center; padding: 0.75rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+           <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.25rem;">Total Time</div>
+           <div id="totalTimeLeft" style="font-weight: 700; font-size: 1.75rem; letter-spacing: 0.05em;">00:00</div>
+         </div>
+         <div style="text-align: center; padding: 0.75rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.6); border: 1px solid #334155;">
+           <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.25rem;">Est. Turns</div>
+           <div id="phaseTimeLeft" style="font-weight: 700; font-size: 1.75rem;">—</div>
+         </div>
+       </div>
+       
+       <!-- Current partner/turn info -->
+       <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.4);">
+         <span id="currentPartner" style="font-weight: 600; font-size: 1.1rem;">Partner 1</span>
+       </div>
+       
+       <!-- Control buttons - compact row -->
+       <div class="row" style="justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+         <button class="secondary primary" id="continueAfterPhaseCheckInBtn" style="display: none;">Continue</button>
+         <button class="secondary" id="nextTurnGuided" style="background-color: #22c55e; color: #020617; font-weight: 600;">✓ Next</button>
+         <button class="secondary" id="rerollGuidedPrompt">Reroll</button>
+         <button class="secondary" id="pauseGuided">Pause</button>
+         <button class="secondary" id="resumeGuided" style="display: none;">Resume</button>
+         <button class="secondary danger" id="stopGuided">Stop</button>
+         <div id="sessionCompleteButtons" style="display: none; width: 100%; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+           <button class="secondary primary" id="continueInFreePlayBtn">Continue in Dice game</button>
+           <button class="secondary" id="endSessionBtn">End session</button>
+         </div>
+       </div>
+     </div>
+
+     <!-- Status row (New Session moved up here) -->
+<div class="row" style="margin-bottom: 0.5rem; justify-content: space-between;">
+  <div class="row" style="gap: 0.6rem;">
+    <label>Phase</label>
+    <span id="phaseDisplay">1</span>
+
+    <span style="margin-left: 1rem;">Rounds this phase</span>
+    <span id="rollCountDisplay">0</span>
+  </div>
+
+  <button class="secondary danger" id="newSession">New Session</button>
+</div>
+
+     <!-- Free play controls (hidden by default until mode is selected) -->
+     <div id="freePlayControls" class="receiver-p1" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; display: none;">
+  <!-- Starting Receiver Selection (always visible) -->
+  <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; background: rgba(2, 6, 23, 0.3);">
+    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; font-size: 0.85rem;">Who starts as follow?</label>
+    <div class="row" style="justify-content: center; gap: 0.5rem;">
+      <button class="secondary" id="startReceiverP1" style="min-width: 100px;">Partner 1</button>
+      <button class="secondary" id="startReceiverP2" style="min-width: 100px;">Partner 2</button>
+    </div>
+  </div>
+
+  <!-- Dice game Clothing Setup -->
+  <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2, 6, 23, 0.65);">
+    <label style="font-weight: 600; width: 100%; text-align: center; margin-bottom: 0.5rem; display: block;">Clothing Setup:</label>
+
+    <div class="row" style="justify-content: center; margin-bottom: 0.5rem;">
+      <button class="secondary" id="freePlayClothingEnabled" style="min-width: 120px;">Enabled</button>
+      <button class="secondary" id="freePlayClothingDisabled" style="min-width: 120px;">Disabled</button>
+    </div>
+
+    <div id="freePlayClothingSetupInputs" style="margin-top: 0.5rem;">
+
+      <!-- Partner 1 Clothing -->
+      <div id="freePlayP1ClothingBox" style="margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+        <div id="freePlayPartner1Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #60a5fa;">
+          Partner 1 Clothing:
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+          Quick presets:
+        </div>
+        <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP1PresetCasual">Casual</button>
+          <button class="secondary small" id="freePlayP1PresetDressCasual">Dress Casual</button>
+          <button class="secondary small" id="freePlayP1PresetLingerie">Lingerie</button>
+          <button class="secondary small" id="freePlayP1PresetMinimal">Minimal</button>
+          <button class="secondary small" id="freePlayP1PresetFullOutfit">Full Outfit</button>
+          <button class="secondary small" id="freePlayP1PresetDateNight">Date Night</button>
+          <button class="secondary small" id="freePlayP1PresetLoungeWear">Lounge Wear</button>
+          <button class="secondary small" id="freePlayP1PresetLingerieLace">Lingerie Lace</button>
+          <button class="secondary small" id="freePlayP1PresetLingerieClassic">Lingerie Classic</button>
+          <button class="secondary small" id="freePlayP1PresetAthletic">Athletic</button>
+          <button class="secondary small" id="freePlayP1PresetCozy">Cozy</button>
+          <button class="secondary small" id="freePlayP1PresetLayered">Layered</button>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP1ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP1" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
+          <!-- Partner 1 checkboxes -->
+        </div>
+      </div>
+
+      <!-- Partner 2 Clothing -->
+      <div id="freePlayP2ClothingBox" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);">
+        <div id="freePlayPartner2Label" style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #f472b6;">
+          Partner 2 Clothing:
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+          Quick presets:
+        </div>
+        <div class="row" style="justify-content: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP2PresetCasual">Casual</button>
+          <button class="secondary small" id="freePlayP2PresetDressCasual">Dress Casual</button>
+          <button class="secondary small" id="freePlayP2PresetLingerie">Lingerie</button>
+          <button class="secondary small" id="freePlayP2PresetMinimal">Minimal</button>
+          <button class="secondary small" id="freePlayP2PresetFullOutfit">Full Outfit</button>
+          <button class="secondary small" id="freePlayP2PresetDateNight">Date Night</button>
+          <button class="secondary small" id="freePlayP2PresetLoungeWear">Lounge Wear</button>
+          <button class="secondary small" id="freePlayP2PresetLingerieLace">Lingerie Lace</button>
+          <button class="secondary small" id="freePlayP2PresetLingerieClassic">Lingerie Classic</button>
+          <button class="secondary small" id="freePlayP2PresetAthletic">Athletic</button>
+          <button class="secondary small" id="freePlayP2PresetCozy">Cozy</button>
+          <button class="secondary small" id="freePlayP2PresetLayered">Layered</button>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 0.5rem;">
+          <button class="secondary small" id="freePlayP2ClearAll" style="background-color: #7f1d1d; color: #fee2e2;">Clear All</button>
+        </div>
+
+        <div id="freePlayClothingCheckboxContainerP2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #4b5563; background-color: rgba(2, 6, 23, 0.5); max-height: 300px; overflow-y: auto;">
+          <!-- Partner 2 checkboxes -->
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af;">
+        Tip: Click a preset to load items, then uncheck what they're not wearing
+      </div>
+    </div>
+
+    <!-- Clothing Status Display (shown during gameplay) -->
+    <div id="freePlayClothingStatus" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #334155; font-size: 0.8rem;">
+      <div style="margin-bottom: 0.75rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);" id="p1ClothingStatusCard">
+        <div id="freePlayPartner1ListLabel" style="color: #60a5fa; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 1:</div>
+        <div id="freePlayClothingItemsListP1" style="color: #e5e7eb; text-align: center;"></div>
+      </div>
+
+      <div style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #ec4899; background: rgba(236, 72, 153, 0.1);" id="p2ClothingStatusCard">
+        <div id="freePlayPartner2ListLabel" style="color: #f472b6; margin-bottom: 0.25rem; font-weight: 600; text-align: center;">Partner 2:</div>
+        <div id="freePlayClothingItemsListP2" style="color: #e5e7eb; text-align: center;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+     <div class="roll-grid" style="margin-bottom: 0.75rem;">
+       <div class="roll-col label">
+         <label id="locationLabel" for="locationRoll">Location roll (1–20)</label>
+         <input id="locationRoll" type="number" min="1" max="20" inputmode="numeric" />
+       </div>
+
+       <div class="roll-col label" id="positionRoll2Col" style="display: none;">
+         <label id="positionRoll2Label" for="positionRoll2">Position die 2 (1–20)</label>
+         <input id="positionRoll2" type="number" min="1" max="20" inputmode="numeric" />
+       </div>
+
+       <div class="roll-col label">
+         <label id="actionLabel" for="actionRoll">Action roll (1–20)</label>
+         <input id="actionRoll" type="number" min="1" max="20" inputmode="numeric" />
+       </div>
+
+       <div class="roll-col label">
+         <label for="clothingRoll">Clothing roll (1–12)</label>
+         <input id="clothingRoll" type="number" min="1" max="12" inputmode="numeric" />
+       </div>
+     </div>
+
+
+     <!-- Action buttons row (Submit + Reroll on its own line) -->
+     <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+       <button class="primary big" id="submitRoll">Submit rolls</button>
+       <button class="secondary" id="rerollPrompt">Reroll prompt</button>
+     </div>
+
+     <!-- Phase & Clothing control row -->
+     <div class="row" style="justify-content: center; margin-bottom: 0.75rem; gap: 0.5rem;">
+       <button class="secondary" id="goToNextPhase">Go to Next Phase</button>
+       <button class="secondary pepper small" id="noClothingPrompts">
+         🌶️ All clothing removed <br>
+         <span class="sub">(disable clothing prompts)</span>
+       </button>
+     </div>
+
+
+      <!-- Timer controls -->
+      <div id="actionTimerSection" style="margin-bottom: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1); display: none;">
+        <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+          <label style="font-size: 1.0rem; color: #9ca3af;">⏱️ Action timer</label>
+        </div>
+
+        <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+          <button class="secondary" id="timer30">30 sec</button>
+          <button class="secondary" id="timer1">1 min</button>
+          <button class="secondary" id="timer2">2 min</button>
+          <button class="secondary" id="timer5">5 min</button>
+        </div>
+
+        <div class="row" style="justify-content: center; margin-bottom: 0.75rem;">
+          <span
+            id="timerDisplay"
+            style="font-size: 2.0rem;"
+          >
+            00:00
+          </span>
+        </div>
+
+        <div class="row" style="margin-bottom: 0;">
+          <button class="secondary" id="testSound">🔊 Play timer sound</button>
+        </div>
+      </div>
+
+      <!-- Placeholder for layout (voice controls moved to Preferences); kept hidden -->
+      <div id="voiceToggleRow" class="row" style="display: none !important;"></div>
+      <div id="outputDisplayBox" style="padding: 1rem; border-radius: 0.5rem; border: 1px solid #22d3ee; background: rgba(34, 211, 238, 0.1); width: 100%; min-width: 0; max-width: 100%; overflow-wrap: break-word; word-break: break-word; box-sizing: border-box; overflow-x: auto;">
+        <div class="output" style="min-width: 0;"><strong>Instruction:</strong> <span id="instructionOutput">—</span></div>
+        <div class="output output-detail" style="display: none;"><strong id="whereLabel">Where:</strong> <span id="whereOutput">—</span></div>
+        <div class="output output-detail" style="display: none;"><strong id="whatLabel">What to do:</strong> <span id="whatOutput">—</span></div>
+        <div class="output"><strong>Clothing action:</strong> <span id="clothingOutput">—</span></div>
+        <div class="row" style="margin-top: 0.5rem; justify-content: flex-end; gap: 0.5rem;">
+          <button type="button" class="secondary small" id="favoritePositionBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; display: none;" title="Save this position to Favorites (stored on this device)">♡ Add to favorites</button>
+          <button type="button" class="secondary small" id="viewFavoritesBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; display: none;" title="View your saved favorite positions">View favorites</button>
+          <button type="button" class="secondary small" id="viewPositionRefBtn" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; display: none;">View position reference</button>
+        </div>
+      </div>
+
+      <!-- Position reference image modal (Phase 3: show position .png) - Auto-shown for Phase 3 prompts -->
+      <div id="positionRefModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1003; padding: 2rem; align-items: center; justify-content: center; flex-direction: column;" >
+        <div style="max-width: 90vw; max-height: 90vh; position: relative;">
+          <button type="button" class="secondary small" id="closePositionRefModal" style="position: absolute; top: -2rem; right: 0; padding: 0.25rem 0.5rem;">✕</button>
+          <img id="positionRefImage" src="" alt="Position reference" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 0.5rem;" />
+          <p id="positionRefCaption" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; text-align: center;"></p>
+          <div id="positionRefAlternateViews" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.5rem;"></div>
+          <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem; text-align: center; max-width: 420px;">Reference images show one common arrangement; many positions can be reversed or adapted to your bodies.</p>
+        </div>
+      </div>
+
+      <!-- Favorites modal (Phase 3 positions list) -->
+      <div id="favoritesModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1002; padding: 2rem; overflow-y: auto; align-items: flex-start; justify-content: center;">
+        <div class="card" style="max-width: 480px; width: 100%; margin: auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 1.25rem;">Favorite positions</h2>
+            <button type="button" class="secondary small" id="closeFavoritesModal" style="padding: 0.25rem 0.5rem;">✕</button>
+          </div>
+          <div class="card-body" id="favoritesModalBody" style="max-height: 50vh; overflow-y: auto;">
+            <p id="favoritesEmptyMsg" style="font-size: 0.9rem; color: #94a3b8; margin: 0;">No favorites yet. In Phase 3, use “♡ Add to favorites” on a position to save it here.</p>
+            <ul id="favoritesList" style="list-style: none; padding: 0; margin: 0;"></ul>
+          </div>
+          <div class="card-body" style="padding-top: 0; border-top: 1px solid #334155;">
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">All preferences and favorites are saved locally on this device and are not transmitted anywhere else.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help modal (extended descriptions for current prompt) -->
+      <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1001; padding: 2rem; overflow-y: auto; align-items: center; justify-content: center; flex-wrap: wrap;">
+        <div class="card" style="max-width: 560px; width: 100%; margin: auto; max-height: calc(100vh - 4rem); overflow-y: auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 1.25rem;">Extended description</h2>
+            <button type="button" class="secondary small" id="closeHelpModal" style="padding: 0.25rem 0.5rem;">✕</button>
+          </div>
+          <div class="card-body" id="helpModalBody" style="white-space: pre-wrap; line-height: 1.5;"></div>
+        </div>
+      </div>
+
+      <!-- First-turn instructions popup (shown for duration of TTS on first guided turn) -->
+      <div id="firstTurnPopup" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1002; padding: 2rem; align-items: center; justify-content: center;" >
+        <div class="card" style="max-width: 480px; width: 100%; margin: auto;">
+          <div class="card-body" id="firstTurnPopupBody" style="text-align: center; font-size: 1.1rem; line-height: 1.5;"></div>
+        </div>
+      </div>
+
+      <div id="message" class="message"></div>
+      <div id="error" class="error"></div>
+
+      <audio id="timerSound">
+        <source src="timer-beep.wav" type="audio/mpeg" />
+      </audio>
+      <!-- Background music tracks (loop); volume ducked when voice reads -->
+      <audio id="bgMusic1" loop><source src="music/saavane-sensual-night-423856.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic2" loop><source src="music/saavane-sexy-background-music-138494.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic3" loop><source src="music/saavane-tuesday-sexy-music-background-321650.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic4" loop><source src="music/senormusica81-smooth-jazz-2025-2-458713.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic5" loop><source src="music/djovan-sapphire-sax-serenade-439285.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic6" loop><source src="music/grand_project-sensual-jazz-130483.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic7" loop><source src="music/senormusica81-smooth-jazz-2025-1-458715.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic8" loop><source src="music/senormusica81-smooth-jazz-2025-3-458714.mp3" type="audio/mpeg" /></audio>
+      <audio id="bgMusic9" loop><source src="music/tokyorifft-slow-kiss-on-a-hot-night-466265.mp3" type="audio/mpeg" /></audio>
+    </div>
+
+    <!-- Summary overlay (hidden by default) -->
+    <div id="summaryOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 1000; padding: 2rem; overflow-y: auto;">
+      <div class="card" id="summaryCard" style="max-width: 900px; margin: 0 auto; position: relative;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h1>Current selections</h1>
+          <button class="secondary small" id="closeSummary" style="padding: 0.25rem 0.5rem;">✕</button>
+        </div>
+
+        <div class="card-body">
+          <!-- Phase selector -->
+          <div class="row" style="margin-bottom: 0.75rem;">
+            <label for="phaseSelect" style="font-size: 0.9rem; margin-right: 0.5rem;">
+              Phase:
+            </label>
+            <select id="phaseSelect">
+              <option value="1">Phase 1</option>
+              <option value="2">Phase 2</option>
+              <option value="3">Phase 3</option>
+            </select>
+          </div>
+
+          <!-- Locations list -->
+<div class="summary-section">
+  <h4 id="locationsHeader" class="section-subtitle">Locations</h4>
+  <ul id="currentLocationsList" class="summary-list"></ul>
+</div>
+
+<!-- Actions list -->
+<div class="summary-section">
+  <h4 id="actionsHeader" class="section-subtitle">Actions</h4>
+  <ul id="currentActionsList" class="summary-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load scripts in dependency order (cache-bust with version param) -->
+  <script src="phase3-positions-data.js?v=1"></script>
+  <script src="tables.js?v=8"></script>
+  <script src="prompt-help.js?v=1"></script>
+  <script src="state.js?v=6"></script>
+  <script src="phase3-anatomy.js?v=12"></script>
+  <script src="speech.js?v=7"></script>
+  <script src="clothing.js?v=6"></script>
+  <script src="ui-helpers.js?v=6"></script>
+  <script src="guided-mode.js?v=8"></script>
+  <script src="free-play.js?v=6"></script>
+  <script src="main.js?v=6"></script>
+</body>
+</html>
+
+

@@ -12,7 +12,7 @@ let guidedCompletedPhase = 0;
 let guidedReceiverOnceP1 = false;
 let guidedReceiverOnceP2 = false;
 
-/** Session just completed: show "Continue in free play" / "End session" instead of stopping immediately. */
+/** Session just completed: show "Continue in Dice game" / "End session" instead of stopping immediately. */
 let guidedSessionComplete = false;
 
 /** Current action: "Removing clothes" window countdown (so UI and total time run continuously). */
@@ -1015,11 +1015,11 @@ function advanceGuidedPhase() {
       performGuidedTurn();
     }, 3000);
   } else {
-    // Session complete: offer "Continue in free play" or "End session"
+    // Session complete: offer "Continue in Dice game" or "End session"
     guidedSessionComplete = true;
     guidedPaused = true;
     if (messageBox) {
-      messageBox.textContent = 'Guided session complete! Check in with each other. Continue in free play or end session.';
+      messageBox.textContent = 'Guided session complete! Check in with each other. Continue in Dice game or end session.';
     }
     const sessionCompletePhraseOptions = [
       'Session complete. Check in with each other.',
@@ -1130,7 +1130,7 @@ function updateGuidedModeUI() {
 
   if (isGuidedMode) {
     // === GUIDED MODE ACTIVE ===
-    // Hide setup, free play controls, and free-play-only inputs
+    // Hide setup, Dice game controls, and dice-game-only inputs
     if (guidedSetup) guidedSetup.style.display = 'none';
     if (freePlayControls) freePlayControls.style.display = 'none';
     if (actionTimerSection) actionTimerSection.style.display = 'none';
@@ -1259,7 +1259,7 @@ function updateGuidedModeUI() {
       resumeBtn.style.display = showResume ? 'inline-block' : 'none';
     }
   } else {
-    // === GUIDED MODE STOPPED - only show free play UI if user chose free play (don't overwrite guided-setup) ===
+    // === GUIDED MODE STOPPED - only show Dice game UI if user chose Dice game (don't overwrite guided-setup) ===
     if (continuePhaseBtn) continuePhaseBtn.style.display = 'none';
     // Reset box colors to default cyan
     if (guidedStatus) { guidedStatus.style.borderColor = ''; guidedStatus.style.background = ''; }

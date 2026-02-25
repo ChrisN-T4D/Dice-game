@@ -1,3 +1,7 @@
+/**
+ * Guided mode store: session flow, turns, prompts, TTS, breaks, clothing.
+ * Drives the guided experience (intro, countdown, performGuidedTurn, break timers).
+ */
 import { defineStore } from 'pinia'
 import { useSessionStore } from '@/stores/session'
 import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
@@ -9,15 +13,18 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 
+// -----------------------------------------------------------------------------
+// Helpers and constants (rolls, timed-step parsing, fixed phrases)
+// -----------------------------------------------------------------------------
 function rollD20() {
   return Math.floor(Math.random() * 20) + 1
 }
 
-/** Phase 3: two d20s → position 1–156 */
+/** Phase 3: two d20s → position 1–156; clamped to 1–155 to match PHASE3_POSITIONS_LIST. */
 function rollPhase3Position() {
   const a = rollD20()
   const b = rollD20()
-  return ((a - 1) * 20 + b - 1) % 156 + 1
+  return Math.min(155, ((a - 1) * 20 + b - 1) % 156 + 1)
 }
 
 /**
@@ -107,6 +114,9 @@ function prepAll(prep, phrases) {
   })
 }
 
+// -----------------------------------------------------------------------------
+// Store definition
+// -----------------------------------------------------------------------------
 export const useGuidedStore = defineStore('guided', {
   state: () => ({
     // Config (set by startGuidedMode)

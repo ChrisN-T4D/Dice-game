@@ -3,10 +3,16 @@
  * Merged data is used by promptHelper and the game so edits apply in play.
  */
 
+// -----------------------------------------------------------------------------
+// Storage keys
+// -----------------------------------------------------------------------------
 const KEY_PHASE3 = 'adminPhase3Edits'
 const KEY_PHASE12 = 'adminPhase12Edits'
 const KEY_PHASE12_IMAGES = 'adminPhase12Images'
 
+// -----------------------------------------------------------------------------
+// Helpers (localStorage read/write)
+// -----------------------------------------------------------------------------
 function readJson(key, fallback = {}) {
   try {
     const raw = localStorage.getItem(key)
@@ -22,6 +28,9 @@ function writeJson(key, data) {
   } catch (_) {}
 }
 
+// -----------------------------------------------------------------------------
+// Phase 3: position edits (name, help, description)
+// -----------------------------------------------------------------------------
 /** Get saved Phase 3 edits for a position. */
 export function getPhase3Edits(position) {
   const data = readJson(KEY_PHASE3)
@@ -43,12 +52,12 @@ export function savePhase3Entry(position, fields) {
 export function mergePhase3Entry(baseEntry, position) {
   const edits = getPhase3Edits(position)
   if (!edits || !baseEntry) return baseEntry
-  return {
-    ...baseEntry,
-    ...edits,
-  }
+  return { ...baseEntry, ...edits }
 }
 
+// -----------------------------------------------------------------------------
+// Phase 1 & 2: table text edits (locations, actions)
+// -----------------------------------------------------------------------------
 /** Get saved Phase 1/2 text edits. { "1": { locations: { "1": "text", ... }, actions: { ... } }, "2": { ... } } */
 export function getPhase12Edits() {
   return readJson(KEY_PHASE12)
@@ -75,6 +84,9 @@ export function mergePhase12Table(baseTable, phase) {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Phase 1 & 2: location images (optional paths per location)
+// -----------------------------------------------------------------------------
 /** Get saved Phase 1/2 location images. { "1": { "5": "/path/to.png", ... }, "2": { ... } } */
 export function getPhase12Images() {
   return readJson(KEY_PHASE12_IMAGES)

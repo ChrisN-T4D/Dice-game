@@ -4,6 +4,9 @@
  */
 const STORAGE_KEY = 'intimacyGameState'
 
+// -----------------------------------------------------------------------------
+// Load state (called on app mount)
+// -----------------------------------------------------------------------------
 export function loadState(sessionStore, preferencesStore, guidedStore) {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -72,6 +75,9 @@ export function loadState(sessionStore, preferencesStore, guidedStore) {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Save state (debounced on store changes)
+// -----------------------------------------------------------------------------
 export function saveState(sessionStore, preferencesStore, guidedStore) {
   try {
     const state = {

@@ -7,6 +7,9 @@ import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
 import { PHASE3_POSITIONS_LIST } from 'phase3-data'
 import { mergePhase3Entry, mergePhase12Table } from '@/utils/adminEdits'
 
+// -----------------------------------------------------------------------------
+// Text helpers (partner names, anatomy substitution)
+// -----------------------------------------------------------------------------
 /** Substitute "the giver" / "the receiver" (and variants) with partner names in text. */
 function withPartnerNames(text, giverName, receiverName) {
   if (!text || (!giverName && !receiverName)) return text
@@ -39,6 +42,9 @@ function withAnatomy(text, giverAnatomy, receiverAnatomy) {
   return out
 }
 
+// -----------------------------------------------------------------------------
+// getPromptText (main export)
+// -----------------------------------------------------------------------------
 /**
  * @param {number} phase - 1, 2, or 3
  * @param {number} locationRoll - for phase 1/2: location table index; for phase 3: position number (1–155)

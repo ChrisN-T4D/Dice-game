@@ -328,7 +328,7 @@ onUnmounted(() => {
   font-size: 0.7rem;
   color: #64748b;
   padding: 0.2rem 0.5rem;
-  z-index: 9999;
+  z-index: 10001;
   pointer-events: none;
 }
 </style>

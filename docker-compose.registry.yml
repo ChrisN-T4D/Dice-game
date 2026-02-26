@@ -11,22 +11,22 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.routers.nmt.entrypoints=websecure"
-      - "traefik.http.routers.nmt.rule=Host(`${HOST}`)"
-      - "traefik.http.routers.nmt.tls.certresolver=le"
-      - "traefik.http.routers.nmt.service=nmt"
-      - "traefik.http.services.nmt.loadbalancer.server.port=80"
-      - "traefik.http.routers.nmt.middlewares=limit@docker"
+      - "traefik.http.routers.betwenus.entrypoints=websecure"
+      - "traefik.http.routers.betwenus.rule=Host(`${HOST}`)"
+      - "traefik.http.routers.betwenus.tls.certresolver=le"
+      - "traefik.http.routers.betwenus.service=betwenus"
+      - "traefik.http.services.betwenus.loadbalancer.server.port=80"
+      - "traefik.http.routers.betwenus.middlewares=limit@docker"
       - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=10737418240"
       - "traefik.http.middlewares.limit.buffering.memRequestBodyBytes=200000000"
       - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=10737418240"
       - "traefik.http.middlewares.limit.buffering.memResponseBodyBytes=200000000"
     networks:
-      - nmt_internal
+      - betwenus_internal
       - traefik_proxy
 
 networks:
-  nmt_internal:
+  betwenus_internal:
     name: betweenus
   traefik_proxy:
     external: true

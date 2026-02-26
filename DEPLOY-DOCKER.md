@@ -33,6 +33,13 @@ Then open **http://localhost:3000** (admin: **http://localhost:3000/#admin**).
 - Set the **HOST** environment variable in the stack (Traefik hostname); the compose file uses only `HOST` (no default).
 - First deploy builds the image (can take several minutes); redeploy to rebuild after code changes.
 
+### "Pull access denied for dice-game"
+
+If Portainer tries to **pull** `dice-game:latest` from Docker Hub, it will fail (that image isn’t on Docker Hub). Either:
+
+- **Build from Git:** Use **Build from Git** with Compose path `docker-compose.yml` so the stack **builds** the image from the repo (don’t rely on “Pull and redeploy” alone).
+- **Pull from registry:** Use Compose path `docker-compose.registry.yml` (default image `ghcr.io/chrisn-t4d/dice-game:latest`). Add GHCR as a registry in Portainer if the package is private, then “Pull and redeploy” will pull from GHCR.
+
 ### Why "Pull and redeploy" doesn’t update the app
 
 For stacks that use **Build from Git** with `build: .` in the compose file, **Pull and redeploy** only re-fetches the compose file and redeploys. It does **not** rebuild the image, so the stack keeps using the existing `dice-game:latest` image and your new code never runs.
@@ -45,16 +52,23 @@ For stacks that use **Build from Git** with `build: .` in the compose file, **Pu
 2. **Use a registry image (recommended for updates)**  
    Build the image in CI (e.g. GitHub Actions), push it to a registry (e.g. GHCR), and deploy from that image so “Pull and redeploy” pulls a new image instead of reusing a local one. See [Deploy from registry](#deploy-from-registry) below.
 
-## Deploy from registry
+## Deploy from registry (GitHub builds image, Portainer pulls it)
 
-If you build and push the image in CI (e.g. GitHub Actions to GHCR), use a compose file that only references the image (no `build:`). Then **Pull and redeploy** in Portainer will pull the new image and actually update the app.
+**Flow:** Push to `main` → GitHub Actions builds the Docker image and pushes it to GitHub Container Registry (GHCR). Portainer uses the registry compose file and pulls that image; “Pull and redeploy” then updates the app.
 
-- Use **Compose path** `docker-compose.registry.yml` when adding/editing the stack, **or** switch the stack to use that file.
-- Ensure the stack’s **Re-pull image** (or “Pull latest image”) option is enabled so each redeploy pulls the latest tag from the registry.
+1. **GitHub (already set up)**  
+   `.github/workflows/docker-publish.yml` runs on every push to `main`, builds the image, and pushes to **ghcr.io/chrisn-t4d/dice-game:latest** (GHCR uses lowercase owner/repo).
 
-- **Image name:** `ghcr.io/<GitHub-owner>/<repo-name>:latest` (e.g. `ghcr.io/couga/Dice-game:latest`). Set stack env var `DICE_GAME_IMAGE` to this (or edit `docker-compose.registry.yml` default).
-- **First time:** In GitHub, go to the repo → **Packages** → open the new package → **Package settings** → set visibility to **Public** if the server cannot log in to GHCR. Or add GHCR credentials in Portainer (Registries) for private images.
-- See `.github/workflows/docker-publish.yml` for the workflow; it runs on push to `update-to-vue` (edit the `branches` list if needed).
+2. **Portainer**
+   - **Add/Edit stack** → **Repository** (or Web editor).
+   - **Compose path:** `docker-compose.registry.yml` (or paste its contents). The default image is `ghcr.io/chrisn-t4d/dice-game:latest`.
+   - **Environment:** Set **HOST** = your Traefik hostname. Optionally set **DICE_GAME_IMAGE** if you use a different tag.
+   - Enable **Re-pull image** so “Pull and redeploy” pulls the latest image from GHCR.
+   - Deploy. Portainer will pull the image from GitHub; no build on the server.
+
+3. **First time / private package**
+   - In GitHub: **Packages** → open the `dice-game` package → **Package settings** → set visibility to **Public** if the server doesn’t log in to GHCR.
+   - If the package is private: in Portainer add **Registries** → GHCR, and use a GitHub PAT with `read:packages`.
 
 ## Notes
 

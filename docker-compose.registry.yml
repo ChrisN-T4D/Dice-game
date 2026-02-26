@@ -1,11 +1,11 @@
-# Use this compose file when the image is built in CI and pushed to a registry.
-# Set DICE_GAME_IMAGE in the stack (e.g. ghcr.io/YOUR_ORG/dice-game:latest).
-# Then "Pull and redeploy" in Portainer will pull the new image and update the app.
-version: "3.8"
+# Use this compose file when the image is built by GitHub Actions and pushed to GHCR.
+# GitHub builds on push to main and pushes to ghcr.io/chrisn-t4d/dice-game:latest.
+# In Portainer: Compose path = docker-compose.registry.yml, env HOST = your hostname.
+# Optionally set DICE_GAME_IMAGE (default below). Enable "Re-pull image" so Pull and redeploy works.
 
 services:
   app:
-    image: ${DICE_GAME_IMAGE:-ghcr.io/owner/dice-game:latest}
+    image: ${DICE_GAME_IMAGE:-ghcr.io/chrisn-t4d/dice-game:latest}
     container_name: dice-game
     restart: unless-stopped
     labels:

@@ -1,0 +1,32 @@
+# Use this compose file when the image is built in CI and pushed to a registry.
+# Set DICE_GAME_IMAGE in the stack (e.g. ghcr.io/YOUR_ORG/dice-game:latest).
+# Then "Pull and redeploy" in Portainer will pull the new image and update the app.
+version: "3.8"
+
+services:
+  app:
+    image: ${DICE_GAME_IMAGE:-ghcr.io/owner/dice-game:latest}
+    container_name: dice-game
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.nmt.entrypoints=websecure"
+      - "traefik.http.routers.nmt.rule=Host(`${HOST:-your-host.example.com}`)"
+      - "traefik.http.routers.nmt.tls.certresolver=le"
+      - "traefik.http.routers.nmt.service=nmt"
+      - "traefik.http.services.nmt.loadbalancer.server.port=80"
+      - "traefik.http.routers.nmt.middlewares=limit@docker"
+      - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=10737418240"
+      - "traefik.http.middlewares.limit.buffering.memRequestBodyBytes=200000000"
+      - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=10737418240"
+      - "traefik.http.middlewares.limit.buffering.memResponseBodyBytes=200000000"
+    networks:
+      - nmt_internal
+      - traefik_proxy
+
+networks:
+  nmt_internal:
+    name: betweenus
+  traefik_proxy:
+    external: true

@@ -30,6 +30,7 @@ Then open **http://localhost:3000** (admin: **http://localhost:3000/#admin**).
 ## Portainer
 
 - **Stacks** → **Add stack** → use **Build from Git** with repo + branch, Compose path `docker-compose.yml`, or paste the stack YAML.
+- Set the **HOST** environment variable in the stack (Traefik hostname); the compose file uses only `HOST` (no default).
 - First deploy builds the image (can take several minutes); redeploy to rebuild after code changes.
 
 ### Why "Pull and redeploy" doesn’t update the app

@@ -26,8 +26,9 @@
             <div class="fullscreen-welcome-card">
               <h2 class="fullscreen-welcome-title"><span class="fullscreen-welcome-title-line1">Welcome to</span><span class="fullscreen-welcome-title-line2">Between Us</span></h2>
               <p class="fullscreen-welcome-desc">We're glad you're here. Let's show you around.</p>
+              <p class="fullscreen-welcome-privacy">Everything stays on your device.</p>
               <div class="fullscreen-welcome-actions">
-                <button type="button" class="primary fullscreen-welcome-btn" @click="step = 2">First time</button>
+                <button type="button" class="primary fullscreen-welcome-btn" @click="step = 2">Take the tour</button>
                 <button type="button" class="secondary fullscreen-welcome-btn" @click="skipTour">Skip tour</button>
               </div>
             </div>
@@ -992,15 +993,17 @@ function finish() {
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-title {
   font-family: var(--font-handwritten-title);
   margin: 0 0 0.5rem;
-  font-size: 1.35rem;
-  font-weight: 400;
+  font-size: 1.85rem;
+  font-weight: 500;
   color: #f8fafc;
+  letter-spacing: 0.02em;
 }
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-title-line2 {
   display: block;
-  font-size: 2rem;
-  margin-top: 0.15rem;
+  font-size: 2.85rem;
+  margin-top: 0.2rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1013,6 +1016,12 @@ function finish() {
   font-size: 1rem;
   color: #e2e8f0;
   line-height: 1.5;
+}
+.onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-privacy {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
 }
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-actions {
   display: flex;
@@ -1403,7 +1412,7 @@ function finish() {
 }
 .tour-caption-title {
   font-family: var(--font-handwritten-title);
-  font-size: 1.05rem;
+  font-size: clamp(1rem, 2.8vmin, 1.35rem);
   font-weight: 400;
   color: #f1f5f9;
   display: block;
@@ -1413,7 +1422,7 @@ function finish() {
 }
 .tour-caption-desc {
   font-family: var(--font-handwritten-body);
-  font-size: 0.8rem;
+  font-size: clamp(0.85rem, 2.2vmin, 1.05rem);
   color: #e2e8f0;
   line-height: 1.3;
   display: block;
@@ -1422,14 +1431,14 @@ function finish() {
 }
 .tour-caption-next {
   font-family: var(--font-handwritten-body);
-  font-size: 0.85rem;
+  font-size: clamp(0.9rem, 2.2vmin, 1.05rem);
   color: #94a3b8;
   margin: 0;
   line-height: 1.3;
 }
 .tour-mock-fill.onboarding-tour-modes-overview .tour-mode-card {
   padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
+  font-size: clamp(0.95rem, 2.5vmin, 1.15rem);
   flex-shrink: 0;
 }
 .tour-mock-fill.onboarding-tour-ui-mock {
@@ -1481,7 +1490,7 @@ function finish() {
   border: 2px solid rgba(148, 163, 184, 0.4);
   border-radius: 0.85rem;
   padding: 0.85rem 1rem;
-  font-size: 0.95rem;
+  font-size: clamp(0.95rem, 2.5vmin, 1.15rem);
   color: #e2e8f0;
   line-height: 1.5;
   letter-spacing: 0.01em;
@@ -1502,7 +1511,7 @@ function finish() {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.tour-landing-subtitle { margin: 0 0 1rem; font-size: 0.9rem; color: #9ca3af; }
+.tour-landing-subtitle { margin: 0 0 1rem; font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; }
 .tour-landing-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
 .tour-landing-buttons .mode-button {
   display: block;

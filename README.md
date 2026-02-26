@@ -123,3 +123,32 @@ Dice-game/
 
 - Admin is available when the URL hash is `#admin` (e.g. triple-click app title to set hash).
 - Phase 3 images are served from the **Position References** folder at project root; Vite dev server serves it at `/Position%20References`. Admin shows “Image — N” for position N and expects files like `position 1.png` in that folder.
+
+---
+
+## Deploy with Docker / Portainer
+
+The app is containerized with a multi-stage Dockerfile (Node build + nginx serve).
+
+### Build and run locally
+
+```bash
+docker build -t dice-game:latest .
+docker run -p 3000:80 dice-game:latest
+```
+
+Then open **http://localhost:3000**.
+
+### Deploy in Portainer
+
+1. **Add the stack** – In Portainer: **Stacks** → **Add stack**. Name: e.g. `dice-game`.
+2. **Build from Git** – **Build method**: Git repository. **Repository URL**: your repo (e.g. `https://github.com/ChrisN-T4D/Dice-game.git`). **Repository reference**: branch (e.g. `update-to-vue`). **Compose path**: `docker-compose.yml`.
+3. **Or paste the stack** – **Web editor** → paste the contents of `docker-compose.yml` (build, image, ports, restart). If using Git, set Build method to Git so Portainer runs `docker build` from the Dockerfile.
+4. **Deploy** – Click **Deploy the stack**. First build can take a few minutes.
+5. **Access** – Open **http://&lt;your-server&gt;:3000**. Admin: **http://&lt;your-server&gt;:3000/#admin**.
+
+### Notes
+
+- The image builds the Vue app and serves it with nginx on port 80; map to any host port (e.g. 3000).
+- `nginx.conf` sets SPA fallback, COOP/COEP headers, and MIME types for WASM.
+- To update: pull latest in the stack and **Redeploy**.

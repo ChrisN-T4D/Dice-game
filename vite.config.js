@@ -5,8 +5,12 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version || '0.0.0'),
+  },
   plugins: [
     vue(),
     // Serve /onnxe-wasm/* from public/onnxruntime-wasm/ (fix 404 when something requests the wrong path)

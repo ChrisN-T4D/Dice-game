@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.cursor
+.vscode
+__main_*.tmp
+*.log
+.env
+.env.*

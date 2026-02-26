@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    image: dice-game:latest
+    container_name: dice-game
+    restart: unless-stopped
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      # HTTP Routers & Services (HOST from stack env, e.g. your-host.example.com)
+      - "traefik.http.routers.nmt.entrypoints=websecure"
+      - "traefik.http.routers.nmt.rule=Host(`${HOST:-your-host.example.com}`)"
+      - "traefik.http.routers.nmt.tls.certresolver=le"
+      - "traefik.http.routers.nmt.service=nmt"
+      - "traefik.http.services.nmt.loadbalancer.server.port=80"
+      # 10GB request/response body limit for this app's router
+      - "traefik.http.routers.nmt.middlewares=limit@docker"
+      - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=10737418240"
+      - "traefik.http.middlewares.limit.buffering.memRequestBodyBytes=200000000"
+      - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=10737418240"
+      - "traefik.http.middlewares.limit.buffering.memResponseBodyBytes=200000000"
+    networks:
+      - nmt_internal
+      - traefik_proxy
+
+networks:
+  nmt_internal:
+    name: betweenus
+  traefik_proxy:
+    external: true

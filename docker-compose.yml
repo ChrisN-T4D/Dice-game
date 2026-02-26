@@ -10,9 +10,9 @@ services:
       # Enable Traefik
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
-      # HTTP Routers & Services (HOST from stack env, e.g. your-host.example.com)
+      # HTTP Routers & Services (HOST from stack env)
       - "traefik.http.routers.nmt.entrypoints=websecure"
-      - "traefik.http.routers.nmt.rule=Host(`${HOST:-your-host.example.com}`)"
+      - "traefik.http.routers.nmt.rule=Host(`${HOST}`)"
       - "traefik.http.routers.nmt.tls.certresolver=le"
       - "traefik.http.routers.nmt.service=nmt"
       - "traefik.http.services.nmt.loadbalancer.server.port=80"

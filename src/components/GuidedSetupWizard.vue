@@ -493,8 +493,8 @@ function onStart() {
   margin-bottom: 1rem;
   text-align: center;
 }
-.wizard-step-title { font-size: 1.25rem; font-weight: 700; color: #e5e7eb; margin: 0; }
-.wizard-step-description { font-size: 1rem; color: #9ca3af; margin-top: 0.35rem; }
+.wizard-step-title { font-family: var(--font-handwritten-title); font-size: clamp(1.25rem, 3vmin, 1.65rem); font-weight: 700; color: #e5e7eb; margin: 0; }
+.wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(0.9rem, 2.2vmin, 1.05rem); font-weight: 400; color: #9ca3af; margin-top: 0.35rem; line-height: 1.5; }
 .wizard-step-content {
   padding: 0.5rem 0;
   width: 100%;

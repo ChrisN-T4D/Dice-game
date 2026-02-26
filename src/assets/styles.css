@@ -33,11 +33,22 @@ body {
   background-position: center;
   max-width: 100vw;
 }
-/* Handwritten titles (Reenie Beanie) – headings; body (Patrick Hand) – smaller text */
+/* Typography: headers = Reenie Beanie (bold, bigger); content = Patrick Hand (normal) */
 .landing-title,
 .card-header h1,
-.font-handwritten-title { font-family: var(--font-handwritten-title); }
-.font-handwritten-body { font-family: var(--font-handwritten-body); }
+.card-header-title,
+.wizard-step-title,
+.mode-button-title,
+.section-title,
+.guided-ready-title,
+.admin-title,
+.admin-login-title,
+.font-handwritten-title { font-family: var(--font-handwritten-title); font-weight: 700; }
+.landing-subtitle,
+.wizard-step-description,
+.mode-button-desc,
+.admin-login-hint,
+.font-handwritten-body { font-family: var(--font-handwritten-body); font-weight: 400; }
 body.admin-open { overflow: hidden; max-height: 100dvh; }
 body.app-main-visible { overflow: hidden; max-height: 100dvh; }
 
@@ -382,10 +393,10 @@ input[type="number"] {
 .card.card-bg-fiery-heart .play-mode-row { margin-top: 0.5rem; }
 .card.card-bg-fiery-heart .main-content { flex: 1; min-height: 0; margin-bottom: 0; }
 .landing-title {
-  text-align: center; font-size: 2rem; font-weight: 700; margin-bottom: 1rem;
+  text-align: center; font-size: clamp(1.75rem, 5vmin, 2.25rem); margin-bottom: 1rem;
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.landing-subtitle { text-align: center; font-size: 1rem; color: #9ca3af; margin-bottom: 3rem; }
+.landing-subtitle { text-align: center; font-size: clamp(0.95rem, 2.2vmin, 1.1rem); color: #9ca3af; margin-bottom: 3rem; line-height: 1.5; }
 .mode-buttons { display: grid; gap: 1.5rem; margin-bottom: 2rem; }
 .mode-button {
   background: rgba(2,6,23,0.5); border: 2px solid #334155; border-radius: 0.75rem; padding: 2rem 1.5rem;
@@ -393,14 +404,14 @@ input[type="number"] {
 }
 .mode-button:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(59,130,246,0.2); }
 .mode-button.guided:hover { border-color: #a855f7; background: rgba(168,85,247,0.1); box-shadow: 0 10px 25px rgba(168,85,247,0.2); }
-.mode-button-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #e5e7eb; }
-.mode-button-desc { font-size: 0.95rem; color: #9ca3af; line-height: 1.5; }
+.mode-button-title { font-size: clamp(1.25rem, 3.2vmin, 1.6rem); margin-bottom: 0.5rem; color: #e5e7eb; }
+.mode-button-desc { font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; line-height: 1.5; }
 @media (max-width: 480px) {
   .landing-content { padding: 2rem 1.5rem; }
   .landing-title,
-  .card-header h1 { font-size: 1.75rem; }
+  .card-header h1 { font-size: clamp(1.5rem, 5vmin, 1.85rem); }
   .mode-button { padding: 1.5rem 1rem; }
-  .mode-button-title { font-size: 1.25rem; }
+  .mode-button-title { font-size: clamp(1.1rem, 3.2vmin, 1.35rem); }
 }
 
 /* Wizard */
@@ -413,8 +424,8 @@ input[type="number"] {
 .wizard-progress-bar { flex: 1; height: 4px; background: #334155; border-radius: 2px; margin: 0 1rem; overflow: hidden; }
 .wizard-progress-fill { height: 100%; background: linear-gradient(to right, #a855f7, #22c55e); transition: width 0.3s ease; border-radius: 2px; }
 .wizard-step-header { text-align: center; margin-bottom: 1.5rem; }
-.wizard-step-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #e5e7eb; }
-.wizard-step-description { font-size: 0.9rem; color: #9ca3af; line-height: 1.5; }
+.wizard-step-title { font-size: clamp(1.25rem, 3vmin, 1.65rem); margin-bottom: 0.5rem; color: #e5e7eb; }
+.wizard-step-description { font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; line-height: 1.5; }
 .wizard-navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #334155; gap: 1rem; }
 .wizard-nav-btn { flex: 1; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; border-radius: 0.5rem; }
 .wizard-nav-btn.back { background: rgba(2,6,23,0.8); border: 1px solid #475569; color: #e5e7eb; }

@@ -26,7 +26,6 @@
             <div class="fullscreen-welcome-card">
               <h2 class="fullscreen-welcome-title"><span class="fullscreen-welcome-title-line1">Welcome to</span><span class="fullscreen-welcome-title-line2">Between Us</span></h2>
               <p class="fullscreen-welcome-desc">We're glad you're here. Let's show you around.</p>
-              <p class="fullscreen-welcome-privacy">Everything stays on your device.</p>
               <div class="fullscreen-welcome-actions">
                 <button type="button" class="primary fullscreen-welcome-btn" @click="step = 2">Take the tour</button>
                 <button type="button" class="secondary fullscreen-welcome-btn" @click="skipTour">Skip tour</button>
@@ -993,14 +992,14 @@ function finish() {
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-title {
   font-family: var(--font-handwritten-title);
   margin: 0 0 0.5rem;
-  font-size: 1.85rem;
-  font-weight: 500;
+  font-size: clamp(1.85rem, 5vmin, 2.25rem);
+  font-weight: 700;
   color: #f8fafc;
   letter-spacing: 0.02em;
 }
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-title-line2 {
   display: block;
-  font-size: 2.85rem;
+  font-size: clamp(2.85rem, 8vmin, 3.5rem);
   margin-top: 0.2rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1012,16 +1011,11 @@ function finish() {
 }
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-desc {
   font-family: var(--font-handwritten-body);
+  font-weight: 400;
   margin: 0;
-  font-size: 1rem;
+  font-size: clamp(1rem, 2.2vmin, 1.1rem);
   color: #e2e8f0;
   line-height: 1.5;
-}
-.onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-privacy {
-  margin: 0.5rem 0 0;
-  font-size: 0.85rem;
-  color: #94a3b8;
-  font-style: italic;
 }
 .onboarding-modal .wizard-step-fullscreen-welcome .fullscreen-welcome-actions {
   display: flex;
@@ -1298,7 +1292,8 @@ function finish() {
 }
 .tour-setup-mock .wizard-step-title {
   display: block;
-  font-size: 1.2rem;
+  font-family: var(--font-handwritten-title);
+  font-size: clamp(1.1rem, 2.8vmin, 1.35rem);
   font-weight: 700;
   color: #e5e7eb;
   margin: 0 0 0.35rem;
@@ -1306,7 +1301,9 @@ function finish() {
 }
 .tour-setup-mock .wizard-step-description {
   display: block;
-  font-size: 0.9rem;
+  font-family: var(--font-handwritten-body);
+  font-weight: 400;
+  font-size: clamp(0.85rem, 2.2vmin, 1rem);
   color: #9ca3af;
   margin: 0;
   line-height: 1.4;
@@ -1412,8 +1409,8 @@ function finish() {
 }
 .tour-caption-title {
   font-family: var(--font-handwritten-title);
-  font-size: clamp(1rem, 2.8vmin, 1.35rem);
-  font-weight: 400;
+  font-size: clamp(1.15rem, 3vmin, 1.5rem);
+  font-weight: 700;
   color: #f1f5f9;
   display: block;
   margin-bottom: 0.1rem;
@@ -1423,6 +1420,7 @@ function finish() {
 .tour-caption-desc {
   font-family: var(--font-handwritten-body);
   font-size: clamp(0.85rem, 2.2vmin, 1.05rem);
+  font-weight: 400;
   color: #e2e8f0;
   line-height: 1.3;
   display: block;
@@ -1431,6 +1429,7 @@ function finish() {
 }
 .tour-caption-next {
   font-family: var(--font-handwritten-body);
+  font-weight: 400;
   font-size: clamp(0.9rem, 2.2vmin, 1.05rem);
   color: #94a3b8;
   margin: 0;
@@ -1486,6 +1485,7 @@ function finish() {
 }
 .tour-mode-card {
   font-family: var(--font-handwritten-body);
+  font-weight: 400;
   background: rgba(15, 23, 42, 0.85);
   border: 2px solid rgba(148, 163, 184, 0.4);
   border-radius: 0.85rem;
@@ -1503,7 +1503,7 @@ function finish() {
 }
 .tour-landing-title {
   margin: 0 0 0.35rem;
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vmin, 2rem);
   font-weight: 700;
   font-family: var(--font-handwritten-title);
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899);
@@ -1511,7 +1511,7 @@ function finish() {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.tour-landing-subtitle { margin: 0 0 1rem; font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; }
+.tour-landing-subtitle { margin: 0 0 1rem; font-family: var(--font-handwritten-body); font-weight: 400; font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; }
 .tour-landing-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
 .tour-landing-buttons .mode-button {
   display: block;

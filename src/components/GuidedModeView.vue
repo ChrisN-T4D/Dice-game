@@ -5,8 +5,18 @@
       <div class="guided-ready-screen">
         <div class="guided-ready-inner">
           <h2 class="guided-ready-title">Are you ready to start?</h2>
+          <p v-if="!isVoiceReadyForGuided" class="guided-ready-loading">
+            Loading voice engine…
+          </p>
           <div class="guided-ready-actions">
-            <button type="button" class="primary guided-ready-btn" @click.stop="onReadyYes">Yes, let's go</button>
+            <button
+              type="button"
+              class="primary guided-ready-btn"
+              :disabled="!isVoiceReadyForGuided"
+              @click.stop="onReadyYes"
+            >
+              Yes, let's go
+            </button>
             <button type="button" class="secondary guided-ready-btn" @click.stop="onReadyNo">No, I need to change some settings</button>
           </div>
         </div>
@@ -113,7 +123,7 @@ import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
-const { speak, preparePhrase, warmupWorker, stop: stopSpeech } = useSpeech()
+const { speak, preparePhrase, warmupWorker, stop: stopSpeech, isVoiceReadyForGuided } = useSpeech()
 
 const pendingConfig = ref(null)
 const countdownValue = ref(null)
@@ -169,6 +179,8 @@ function onReadyNo() {
 
 function onReadyYes() {
   if (!pendingConfig.value) return
+  // Prevent double-click: if countdown already running, ignore
+  if (countdownTimer != null) return
   guided.setSpeak((text, opts) => speak(text, opts))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
@@ -255,6 +267,12 @@ onUnmounted(() => {
   margin: 0;
   line-height: 1.3;
 }
+.guided-ready-loading {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0.75rem 0 0;
+  line-height: 1.4;
+}
 .guided-ready-actions {
   display: flex;
   flex-direction: column;
@@ -273,6 +291,10 @@ onUnmounted(() => {
   position: relative;
   z-index: 2;
   -webkit-tap-highlight-color: transparent;
+}
+.guided-ready-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Countdown screen */

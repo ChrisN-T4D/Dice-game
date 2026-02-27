@@ -114,6 +114,10 @@ function prepAll(prep, phrases) {
   })
 }
 
+// Guard against rapid double-click on Skip turn
+let skipToNextTurnGuardUntil = 0
+const SKIP_TURN_GUARD_MS = 600
+
 // -----------------------------------------------------------------------------
 // Store definition
 // -----------------------------------------------------------------------------
@@ -939,8 +943,8 @@ export const useGuidedStore = defineStore('guided', {
       if (pending) {
         const { phrase, onEnd } = pending
         this.speakRef?.(phrase, { force: true, onEnd: () => { if (onEnd) onEnd() } })
-        return
       }
+      // Always re-establish timers so countdown continues (with or without pending speech)
       if (this.breakPhase !== 'none' && this.breakCountdown > 0) {
         this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
       } else if (this.inClothingWindow && this.clothingWindowRemaining > 0) {
@@ -967,6 +971,9 @@ export const useGuidedStore = defineStore('guided', {
 
     skipToNextTurn() {
       if (this.paused) return
+      const now = Date.now()
+      if (now < skipToNextTurnGuardUntil) return
+      skipToNextTurnGuardUntil = now + SKIP_TURN_GUARD_MS
       this.clearTurnTimer()
       this.clearBreakTimer()
       this.clearClothingWindowTimer()

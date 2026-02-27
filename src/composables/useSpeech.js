@@ -10,7 +10,7 @@ const voiceEnabled = ref(readLS('voiceEnabled', 'true') === 'true')
 const voiceRate = ref((() => { const r = parseFloat(readLS('voiceRate', '1')); return !isNaN(r) && r >= 0.5 && r <= 2 ? r : 1.0 })())
 const selectedVoiceURI = ref(readLS('selectedVoiceURI', ''))
 const ttsProvider = ref((() => { const p = readLS('ttsProvider', 'kokoro'); return ['browser', 'kokoro'].includes(p) ? p : 'kokoro' })())
-const kokoroVoiceId = ref(readLS('kokoroVoiceId', ''))
+const kokoroVoiceId = ref(readLS('kokoroVoiceId', 'af_nicole'))
 
 const kokoroModelLoading = ref(false)
 const kokoroReady = ref(false)
@@ -231,7 +231,7 @@ export function useSpeech() {
       if (onReady) onReady()
       return
     }
-    const voiceId = kokoroVoiceId.value?.trim() || 'af_heart'
+    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
     const cacheKey = `${provider}:${voiceId}:${cleaned}`
     if (testReplayCache[cacheKey]) {
       if (onReady) onReady()
@@ -360,7 +360,7 @@ export function useSpeech() {
       return
     }
     const provider = ttsProvider.value
-    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_heart') : ''
+    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : ''
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()
@@ -397,6 +397,12 @@ export function useSpeech() {
       currentExternalAudio = null
     }
     if (isSupported()) window.speechSynthesis.cancel()
+    // Clear pending Kokoro requests so late-arriving blobs don't play and UI (e.g. testVoicePlaying) gets onEnd
+    ttsPending.forEach((p) => {
+      if (p.loadingRef) p.loadingRef.value = false
+      if (p.onEnd) p.onEnd()
+    })
+    ttsPending.clear()
   }
 
   async function getEdgeVoices() {
@@ -479,6 +485,11 @@ export function useSpeech() {
     return uri ? `browser:${uri}` : ''
   })
 
+  const isVoiceReadyForGuided = computed(() => {
+    if (ttsProvider.value === 'kokoro' && kokoroAvailable) return kokoroReady.value
+    return true
+  })
+
   function setVoiceByKey(key) {
     if (!key || typeof key !== 'string') return
     if (key.startsWith('kokoro:')) {
@@ -492,6 +503,13 @@ export function useSpeech() {
       ttsProvider.value = 'browser'
       selectedVoiceURI.value = uri
     }
+  }
+
+  /** Sync voice refs from localStorage after persistence load so "Enable voice No" and other prefs match saved state. */
+  function syncVoiceFromStorage() {
+    voiceEnabled.value = readLS('voiceEnabled', 'true') === 'true'
+    const r = parseFloat(readLS('voiceRate', '1'))
+    if (!isNaN(r) && r >= 0.5 && r <= 2) voiceRate.value = r
   }
 
   return {
@@ -524,5 +542,7 @@ export function useSpeech() {
     getRecommendedVoices,
     selectedVoiceKey,
     setVoiceByKey,
+    isVoiceReadyForGuided,
+    syncVoiceFromStorage,
   }
 }

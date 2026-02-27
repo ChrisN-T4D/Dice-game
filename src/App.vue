@@ -124,7 +124,9 @@ import { useProfileStore } from '@/stores/profile'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { loadState, saveState } from '@/utils/persistence'
+import { whenIdle } from '@/utils/whenIdle'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
+import { useSpeech } from '@/composables/useSpeech'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
@@ -146,6 +148,7 @@ const favoritesStore = useFavoritesStore()
 const { play: playBackgroundMusic, stop: stopBackgroundMusic } = useBackgroundMusic(prefs)
 prefs.setPlayBackgroundMusic(playBackgroundMusic)
 prefs.setStopBackgroundMusic(stopBackgroundMusic)
+const { warmupWorker, syncVoiceFromStorage } = useSpeech()
 
 const showAdmin = ref(false)
 const showOnboardingAgain = ref(false)
@@ -272,6 +275,8 @@ onMounted(() => {
   updateBodyClass()
   profile.load()
   loadState(session, prefs, guided)
+  syncVoiceFromStorage()
+  whenIdle(() => warmupWorker(), { timeout: 3000 })
 })
 onUnmounted(() => {
   window.removeEventListener('hashchange', updateShowAdmin)

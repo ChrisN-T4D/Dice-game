@@ -37,10 +37,10 @@ export function useBackgroundMusic(prefs) {
     const encoded = encodeURIComponent(String(filename))
     const src = `${base.replace(/\/$/, '')}/music/${encoded}.mp3`
     audio = new Audio(src)
-    audio.addEventListener('error', () => { audio = null })
+    audio.addEventListener('error', () => { audio = null; if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(false) })
     applyVolume()
-    audio.play().catch(() => {})
-    if (prefs && typeof prefs.setBackgroundMusicPlaying === 'function') prefs.setBackgroundMusicPlaying(true)
+    audio.play().catch(() => { if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(false); audio = null })
+    audio.addEventListener('playing', () => { if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(true) }, { once: true })
   }
 
   function playNextInPlaylist() {
@@ -70,7 +70,7 @@ export function useBackgroundMusic(prefs) {
     if (audio && currentSelection === selection) return
     stop()
     currentSelection = selection
-    if (prefs && typeof prefs.setBackgroundMusicPlaying === 'function') prefs.setBackgroundMusicPlaying(true)
+    // setBackgroundMusicPlaying(true) is set in playTrack when 'playing' fires so rapid Play/Pause stays in sync
 
     const playlist = getPlaylistById(selection)
     if (playlist) {

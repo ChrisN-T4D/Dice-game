@@ -511,7 +511,7 @@ function goNext() {
     tourExplainedGuided.value = false
     emit('tour-preview', null)
   }
-  step.value++
+  step.value = Math.min(totalSteps, step.value + 1)
 }
 
 watch(step, (s) => {

@@ -51,7 +51,7 @@ function ensureKokoroLoaded() {
 
 async function runKokoro(text, voiceId) {
   await ensureKokoroLoaded()
-  const voice = voiceId || 'af_heart'
+  const voice = voiceId || 'af_nicole'
   const audio = await kokoroTTS.generate(text, { voice })
   if (audio && typeof audio.toBlob === 'function') return audio.toBlob()
   return null
@@ -60,7 +60,7 @@ async function runKokoro(text, voiceId) {
 async function processOne(msg) {
   const { id, text, voiceId } = msg
   try {
-    const blob = await runKokoro(text, voiceId || 'af_heart')
+    const blob = await runKokoro(text, voiceId || 'af_nicole')
     if (blob) self.postMessage({ type: 'blob', id, blob })
     else self.postMessage({ type: 'error', id, message: 'No audio generated' })
   } catch (e) {

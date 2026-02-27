@@ -19,7 +19,7 @@
         </div>
         <div class="row action-row">
           <button type="button" class="primary big" @click="rollPhase12">Roll for me</button>
-          <button type="button" class="secondary big" @click="submitPhase12">Submit numbers</button>
+          <button type="button" class="secondary big" @click="submitPhase12" :disabled="submitCooldown">Submit numbers</button>
         </div>
       </div>
 
@@ -33,7 +33,7 @@
         </div>
         <div class="row action-row">
           <button type="button" class="primary big" @click="rollClothing">Roll for me</button>
-          <button type="button" class="secondary big" @click="submitClothing">Submit numbers</button>
+          <button type="button" class="secondary big" @click="submitClothing" :disabled="submitCooldown">Submit numbers</button>
         </div>
       </div>
     </template>
@@ -52,7 +52,7 @@
         </div>
         <div class="row action-row">
           <button type="button" class="primary big" @click="rollPhase3">Roll for me</button>
-          <button type="button" class="secondary big" @click="submitPhase3">Submit numbers</button>
+          <button type="button" class="secondary big" @click="submitPhase3" :disabled="submitCooldown">Submit numbers</button>
         </div>
       </div>
     </template>
@@ -102,6 +102,13 @@ const readAloudLoading = computed(() => {
   return provider === 'kokoro' && !!kokoro
 })
 
+const submitCooldown = ref(false)
+const SUBMIT_COOLDOWN_MS = 400
+function startSubmitCooldown() {
+  submitCooldown.value = true
+  setTimeout(() => { submitCooldown.value = false }, SUBMIT_COOLDOWN_MS)
+}
+
 const locationRoll = ref(1)
 const actionRoll = ref(1)
 const positionRoll = ref(1)
@@ -121,6 +128,8 @@ function rollPhase12() {
 }
 
 function submitPhase12() {
+  if (submitCooldown.value) return
+  startSubmitCooldown()
   const phase = session.phase
   const t = phase1And2Tables[phase]
   if (!t) return
@@ -139,6 +148,8 @@ function rollPhase3() {
 }
 
 function submitPhase3() {
+  if (submitCooldown.value) return
+  startSubmitCooldown()
   const pos = Math.max(1, Math.min(155, positionRoll.value || 1))
   const mod = Math.max(1, Math.min(20, modifierRoll.value || 1))
   const entry = PHASE3_POSITIONS_LIST[pos]
@@ -180,6 +191,8 @@ function rollClothing() {
 }
 
 function submitClothing() {
+  if (submitCooldown.value) return
+  startSubmitCooldown()
   lastClothing.value = buildClothingText(clothingHowRoll.value)
 }
 

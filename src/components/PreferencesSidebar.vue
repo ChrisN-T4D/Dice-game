@@ -159,7 +159,7 @@
           </div>
           <div v-if="speech.canSpeak()" class="pref-test-voice-wrap">
             <p v-if="kokoroSupported && modelDownloading" class="pref-downloading-notice">
-              Downloading Kokoro model (~80MB)… May take 1–2 min. Test will play when ready.
+              Loading voice model from server (~80MB). First load may take 1–2 min; then voice is ready.
             </p>
             <button
               type="button"
@@ -167,7 +167,7 @@
               :disabled="testVoicePlaying || modelDownloading"
               @click="playTestVoice"
             >
-              {{ testVoicePlaying ? (modelDownloading ? 'Preparing…' : 'Playing…') : modelDownloading ? 'Downloading model…' : 'Hear voice test' }}
+              {{ testVoicePlaying ? (modelDownloading ? 'Preparing…' : 'Playing…') : modelDownloading ? 'Loading model…' : 'Hear voice test' }}
             </button>
             <button
               v-if="testVoicePlaying"

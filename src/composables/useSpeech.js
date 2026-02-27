@@ -1,111 +1,105 @@
-import { ref, onMounted, watch } from 'vue'
-import { env as transformersEnv } from '@huggingface/transformers'
+import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
+import { isWebKit } from '@/utils/platform'
 
 function readLS(key, fallback) {
   try { const v = localStorage.getItem(key); return v != null ? v : fallback } catch (_) { return fallback }
 }
 
-const voiceEnabled = ref(readLS('voiceEnabled', 'false') === 'true')
+const voiceEnabled = ref(readLS('voiceEnabled', 'true') === 'true')
 const voiceRate = ref((() => { const r = parseFloat(readLS('voiceRate', '1')); return !isNaN(r) && r >= 0.5 && r <= 2 ? r : 1.0 })())
 const selectedVoiceURI = ref(readLS('selectedVoiceURI', ''))
 const ttsProvider = ref((() => { const p = readLS('ttsProvider', 'kokoro'); return ['browser', 'kokoro'].includes(p) ? p : 'kokoro' })())
 const kokoroVoiceId = ref(readLS('kokoroVoiceId', ''))
 
-const kokoroVoicesList = ref([])
 const kokoroModelLoading = ref(false)
+const kokoroReady = ref(false)
 
 let settingsInitialized = false
 let currentExternalAudio = null
-let kokoroTTS = null
-let preloadAllEnginesPromise = null
 let testReplayCache = {}
 
 /** Web Worker for TTS generation (Kokoro) so the main thread stays responsive. */
 let ttsWorker = null
 const ttsPending = new Map()
 let ttsNextId = 0
-/** Pending getVoices requests: id -> { resolve, reject }. Worker is the single place that loads Kokoro (one download for all voices). */
-const getVoicesPending = new Map()
-let getVoicesNextId = 0
 
 /** Observed max generation time (ms); used to refine estimates. */
 let maxObservedTtsMs = 0
 
-/** Conservative max TTS generation time (ms) for a phrase. Used to preload in time. */
 const TTS_MS_PER_CHAR = 55
 const TTS_ESTIMATE_MIN_MS = 800
 const TTS_ESTIMATE_MAX_MS = 14_000
 
-const KOKORO_MODEL_ID_REMOTE = 'onnx-community/Kokoro-82M-v1.0-ONNX'
-/** Local model id when packaged under public/models/ (see scripts/download-kokoro-model.js). */
 const KOKORO_MODEL_ID_LOCAL = 'Kokoro-82M-v1.0-ONNX'
-/** Timeout for Kokoro model load (82MB). If it takes longer, we clear loading so the UI doesn't stay stuck. */
-const KOKORO_LOAD_TIMEOUT_MS = 5 * 60 * 1000
 
-/** Hugging Face base URL and file list for Kokoro; prefetching these on the main thread warms the browser cache so the worker gets fast cache reads. Includes all voice .bin files so changing Kokoro voice never triggers a new download (one model + all voices cached up front). */
-const KOKORO_HF_BASE = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/'
-const KOKORO_HF_FILES = [
-  'config.json',
-  'tokenizer.json',
-  'tokenizer_config.json',
-  'onnx/model_quantized.onnx',
-  'voices/af.bin',
-  'voices/af_alloy.bin',
-  'voices/af_aoede.bin',
-  'voices/af_bella.bin',
-  'voices/af_heart.bin',
-  'voices/af_jessica.bin',
-  'voices/af_kore.bin',
-  'voices/af_nicole.bin',
-  'voices/af_nova.bin',
-  'voices/af_river.bin',
-  'voices/af_sarah.bin',
-  'voices/af_sky.bin',
-  'voices/am_adam.bin',
-  'voices/am_echo.bin',
-  'voices/am_eric.bin',
-  'voices/am_fenrir.bin',
-  'voices/am_liam.bin',
-  'voices/am_michael.bin',
-  'voices/am_onyx.bin',
-  'voices/am_puck.bin',
-  'voices/am_santa.bin',
-  'voices/bf_alice.bin',
-  'voices/bf_emma.bin',
-  'voices/bf_isabella.bin',
-  'voices/bf_lily.bin',
-  'voices/bm_daniel.bin',
-  'voices/bm_fable.bin',
-  'voices/bm_george.bin',
-  'voices/bm_lewis.bin',
-  'voices/ef_dora.bin',
-  'voices/em_alex.bin',
-  'voices/em_santa.bin',
-  'voices/ff_siwis.bin',
-  'voices/hf_alpha.bin',
-  'voices/hf_beta.bin',
-  'voices/hm_omega.bin',
-  'voices/hm_psi.bin',
-  'voices/if_sara.bin',
-  'voices/im_nicola.bin',
-  'voices/jf_alpha.bin',
-  'voices/jf_gongitsune.bin',
-  'voices/jf_nezumi.bin',
-  'voices/jf_tebukuro.bin',
-  'voices/jm_kumo.bin',
-  'voices/pf_dora.bin',
-  'voices/pm_alex.bin',
-  'voices/pm_santa.bin',
-  'voices/zf_xiaobei.bin',
-  'voices/zf_xiaoni.bin',
-  'voices/zf_xiaoxiao.bin',
-  'voices/zf_xiaoyi.bin',
-  'voices/zm_yunjian.bin',
-  'voices/zm_yunxi.bin',
-  'voices/zm_yunxia.bin',
-  'voices/zm_yunyang.bin',
+/**
+ * Full Kokoro voice list (hardcoded from the model config).
+ * English voices (am_/af_/bm_/bf_) sorted first since this is an English app.
+ */
+const ALL_KOKORO_VOICES = [
+  { id: 'af', name: 'Default (F)', lang: 'en' },
+  { id: 'af_alloy', name: 'Alloy', lang: 'en' },
+  { id: 'af_aoede', name: 'Aoede', lang: 'en' },
+  { id: 'af_bella', name: 'Bella', lang: 'en' },
+  { id: 'af_heart', name: 'Heart', lang: 'en' },
+  { id: 'af_jessica', name: 'Jessica', lang: 'en' },
+  { id: 'af_kore', name: 'Kore', lang: 'en' },
+  { id: 'af_nicole', name: 'Nicole', lang: 'en' },
+  { id: 'af_nova', name: 'Nova', lang: 'en' },
+  { id: 'af_river', name: 'River', lang: 'en' },
+  { id: 'af_sarah', name: 'Sarah', lang: 'en' },
+  { id: 'af_sky', name: 'Sky', lang: 'en' },
+  { id: 'am_adam', name: 'Adam', lang: 'en' },
+  { id: 'am_echo', name: 'Echo', lang: 'en' },
+  { id: 'am_eric', name: 'Eric', lang: 'en' },
+  { id: 'am_fenrir', name: 'Fenrir', lang: 'en' },
+  { id: 'am_liam', name: 'Liam', lang: 'en' },
+  { id: 'am_michael', name: 'Michael', lang: 'en' },
+  { id: 'am_onyx', name: 'Onyx', lang: 'en' },
+  { id: 'am_puck', name: 'Puck', lang: 'en' },
+  { id: 'am_santa', name: 'Santa', lang: 'en' },
+  { id: 'bf_alice', name: 'Alice (British)', lang: 'en-GB' },
+  { id: 'bf_emma', name: 'Emma (British)', lang: 'en-GB' },
+  { id: 'bf_isabella', name: 'Isabella (British)', lang: 'en-GB' },
+  { id: 'bf_lily', name: 'Lily (British)', lang: 'en-GB' },
+  { id: 'bm_daniel', name: 'Daniel (British)', lang: 'en-GB' },
+  { id: 'bm_fable', name: 'Fable (British)', lang: 'en-GB' },
+  { id: 'bm_george', name: 'George (British)', lang: 'en-GB' },
+  { id: 'bm_lewis', name: 'Lewis (British)', lang: 'en-GB' },
+  { id: 'ef_dora', name: 'Dora (Spanish)', lang: 'es' },
+  { id: 'em_alex', name: 'Alex (Spanish)', lang: 'es' },
+  { id: 'em_santa', name: 'Santa (Spanish)', lang: 'es' },
+  { id: 'ff_siwis', name: 'Siwis (French)', lang: 'fr' },
+  { id: 'hf_alpha', name: 'Alpha (Hindi)', lang: 'hi' },
+  { id: 'hf_beta', name: 'Beta (Hindi)', lang: 'hi' },
+  { id: 'hm_omega', name: 'Omega (Hindi)', lang: 'hi' },
+  { id: 'hm_psi', name: 'Psi (Hindi)', lang: 'hi' },
+  { id: 'if_sara', name: 'Sara (Italian)', lang: 'it' },
+  { id: 'im_nicola', name: 'Nicola (Italian)', lang: 'it' },
+  { id: 'jf_alpha', name: 'Alpha (Japanese)', lang: 'ja' },
+  { id: 'jf_gongitsune', name: 'Gongitsune (Japanese)', lang: 'ja' },
+  { id: 'jf_nezumi', name: 'Nezumi (Japanese)', lang: 'ja' },
+  { id: 'jf_tebukuro', name: 'Tebukuro (Japanese)', lang: 'ja' },
+  { id: 'jm_kumo', name: 'Kumo (Japanese)', lang: 'ja' },
+  { id: 'pf_dora', name: 'Dora (Portuguese)', lang: 'pt' },
+  { id: 'pm_alex', name: 'Alex (Portuguese)', lang: 'pt' },
+  { id: 'pm_santa', name: 'Santa (Portuguese)', lang: 'pt' },
+  { id: 'zf_xiaobei', name: 'Xiaobei (Chinese)', lang: 'zh' },
+  { id: 'zf_xiaoni', name: 'Xiaoni (Chinese)', lang: 'zh' },
+  { id: 'zf_xiaoxiao', name: 'Xiaoxiao (Chinese)', lang: 'zh' },
+  { id: 'zf_xiaoyi', name: 'Xiaoyi (Chinese)', lang: 'zh' },
+  { id: 'zm_yunjian', name: 'Yunjian (Chinese)', lang: 'zh' },
+  { id: 'zm_yunxi', name: 'Yunxi (Chinese)', lang: 'zh' },
+  { id: 'zm_yunxia', name: 'Yunxia (Chinese)', lang: 'zh' },
+  { id: 'zm_yunyang', name: 'Yunyang (Chinese)', lang: 'zh' },
 ]
+
+/** Voices exposed to the UI dropdown (populated immediately, no model load). */
+const kokoroVoicesList = ref(ALL_KOKORO_VOICES)
+
+/** Whether Kokoro is available on this browser (not Safari/WebKit). */
+const kokoroAvailable = !isWebKit()
 
 function withTimeout(promise, ms, label) {
   return Promise.race([
@@ -122,7 +116,7 @@ export function useSpeech() {
   }
 
   function canSpeak() {
-    return isSupported() || ttsProvider.value === 'kokoro'
+    return isSupported() || (kokoroAvailable && ttsProvider.value === 'kokoro')
   }
 
   function cleanTextForSpeech(text) {
@@ -142,6 +136,8 @@ export function useSpeech() {
       .trim()
   }
 
+  const VOICE_CURRENT_LANG = 'en'
+
   function getVoicesList() {
     if (!isSupported()) return []
     const voices = window.speechSynthesis.getVoices()
@@ -150,9 +146,18 @@ export function useSpeech() {
     return [...en, ...rest]
   }
 
+  function getBrowserVoicesCurrentLang() {
+    if (!isSupported()) return []
+    const voices = window.speechSynthesis.getVoices()
+    const lang = (VOICE_CURRENT_LANG || 'en').toLowerCase()
+    return voices.filter((v) => v.lang && String(v.lang).toLowerCase().startsWith(lang))
+  }
+
   const voices = ref([])
+  const browserVoicesCurrentLang = ref([])
   function refreshVoices() {
     voices.value = getVoicesList()
+    browserVoicesCurrentLang.value = getBrowserVoicesCurrentLang()
   }
 
   function pickVoice() {
@@ -202,10 +207,6 @@ export function useSpeech() {
     audio.play()
   }
 
-  /**
-   * Estimate max time (ms) needed for TTS generation. Uses length-based heuristic and
-   * observed max from past generations. Call this to decide how far in advance to preload.
-   */
   function estimateTtsMs(text) {
     if (!text || typeof text !== 'string') return TTS_ESTIMATE_MAX_MS
     const len = text.length
@@ -218,8 +219,6 @@ export function useSpeech() {
 
   /**
    * Pre-generate and cache audio in the TTS worker so speak() can play immediately later.
-   * Non-blocking. If onReady is provided, it is called when the phrase is cached or after
-   * estimateTtsMs(text) ms (so you can preload and wait at most that long before proceeding).
    */
   function preparePhrase(text, onReady) {
     const cleaned = cleanTextForSpeech(text)
@@ -228,7 +227,7 @@ export function useSpeech() {
       return
     }
     const provider = ttsProvider.value
-    if (provider !== 'kokoro') {
+    if (provider !== 'kokoro' || !kokoroAvailable) {
       if (onReady) onReady()
       return
     }
@@ -256,134 +255,44 @@ export function useSpeech() {
     }
     timeoutId = setTimeout(done, maxMs)
     ttsPending.set(id, { cacheKey, onReady: done, sentAt: Date.now() })
-    w.postMessage({
-      type: 'generate',
-      id,
-      text: cleaned,
-      provider,
-      voiceId,
-      origin: typeof window !== 'undefined' && window.location ? window.location.origin : '',
-    })
+    w.postMessage({ type: 'generate', id, text: cleaned, voiceId })
   }
 
-  /** Load Kokoro TTS instance: try local packaged model first, then remote. */
-  async function loadKokoroTTS() {
-    const { KokoroTTS } = await import('kokoro-js')
-    const opts = { dtype: 'q8', device: 'wasm' }
-    // Prefer local model under public/models/ (see npm run download-kokoro-model)
-    const wasRemote = transformersEnv.allowRemoteModels
-    const wasLocal = transformersEnv.allowLocalModels
-    const wasPath = transformersEnv.localModelPath
-    try {
-      transformersEnv.allowLocalModels = true
-      transformersEnv.allowRemoteModels = false
-      transformersEnv.localModelPath = '/models/'
-      return await withTimeout(
-        KokoroTTS.from_pretrained(KOKORO_MODEL_ID_LOCAL, opts),
-        KOKORO_LOAD_TIMEOUT_MS,
-        'Kokoro model'
-      )
-    } catch (e) {
-      // Fallback to Hugging Face Hub if local model not packaged
-      transformersEnv.allowRemoteModels = true
-      return await withTimeout(
-        KokoroTTS.from_pretrained(KOKORO_MODEL_ID_REMOTE, opts),
-        KOKORO_LOAD_TIMEOUT_MS,
-        'Kokoro model'
-      )
-    } finally {
-      transformersEnv.allowRemoteModels = wasRemote
-      transformersEnv.allowLocalModels = wasLocal
-      transformersEnv.localModelPath = wasPath
-    }
-  }
-
-  /** Prefetch Kokoro model files on the main thread (parallel requests) so the browser cache is warm and the worker gets fast cache reads instead of a slow sequential download. */
-  async function prefetchKokoroToBrowserCache() {
-    if (typeof fetch === 'undefined' || typeof window === 'undefined') return
-    const timeoutMs = 6 * 60 * 1000
-    const controller = new AbortController()
-    const t = setTimeout(() => controller.abort(), timeoutMs)
-    try {
-      await Promise.all(
-        KOKORO_HF_FILES.map((path) =>
-          fetch(KOKORO_HF_BASE + path, {
-            signal: controller.signal,
-            cache: 'force-cache',
-            mode: 'cors',
-          }).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${path}: ${r.status}`))))
-        )
-      )
-    } finally {
-      clearTimeout(t)
-    }
-  }
-
-  /** Preload Kokoro in the worker (single load for all voices). Prefetch on main thread first so the worker reads from cache (faster). */
-  async function preloadKokoroModel() {
-    try {
-      kokoroModelLoading.value = true
-      await prefetchKokoroToBrowserCache()
-      await getKokoroVoices()
-    } catch (e) {
-      if (import.meta.env?.DEV) console.warn('[Kokoro preload]', e?.message || e)
-    } finally {
-      kokoroModelLoading.value = false
-    }
-  }
-
-  async function speakKokoro(text, onEnd, cacheKey) {
-    try {
-      if (!kokoroTTS) {
-        kokoroModelLoading.value = true
-        try {
-          kokoroTTS = await loadKokoroTTS()
-        } finally {
-          kokoroModelLoading.value = false
-        }
-      }
-      if (!kokoroTTS) {
-        if (onEnd) onEnd()
-        return
-      }
-      const voice = kokoroVoiceId.value?.trim() || 'af_heart'
-      const audio = await kokoroTTS.generate(text, { voice })
-      if (audio && typeof audio.toBlob === 'function') {
-        const blob = audio.toBlob()
-        if (cacheKey) testReplayCache[cacheKey] = blob
-        playBlob(blob, onEnd)
-      } else if (onEnd) onEnd()
-    } catch (_) {
+  /**
+   * Speak text using browser speechSynthesis (used as fallback when Kokoro fails).
+   */
+  function speakWithBrowser(cleaned, onEnd) {
+    if (!isSupported()) {
       if (onEnd) onEnd()
+      return
     }
+    window.speechSynthesis.cancel()
+    const baseSlower = 0.7
+    const effectiveRate = (typeof voiceRate.value === 'number' ? voiceRate.value : 1.0) * baseSlower
+    const rate = Math.max(0.5, Math.min(2, effectiveRate))
+    const utterance = new SpeechSynthesisUtterance(cleaned)
+    utterance.rate = rate
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+    const voice = getSelectedVoice()
+    if (voice) utterance.voice = voice
+    const done = () => { if (onEnd) onEnd() }
+    utterance.onend = done
+    utterance.onerror = done
+    window.speechSynthesis.speak(utterance)
   }
 
-  /** Lazy-init TTS worker; handle blob/error and fallback to main-thread on error. */
+  /** Lazy-init TTS worker; handle blob/error responses. */
   function getTtsWorker() {
+    if (!kokoroAvailable) return null
     if (ttsWorker) return ttsWorker
     try {
       ttsWorker = new Worker(new URL('../workers/tts.worker.js', import.meta.url), { type: 'module' })
       ttsWorker.onmessage = (ev) => {
         const d = ev.data
-        // Worker getVoices response (single Kokoro load lives in worker; no main-thread load for voices)
-        if (d?.type === 'voices' && d?.id != null) {
-          const p = getVoicesPending.get(d.id)
-          if (p) {
-            getVoicesPending.delete(d.id)
-            if (p.timeoutId != null) clearTimeout(p.timeoutId)
-            kokoroVoicesList.value = Array.isArray(d.voices) ? d.voices : []
-            p.resolve(kokoroVoicesList.value)
-          }
-          return
-        }
-        if (d?.type === 'error' && d?.id != null && getVoicesPending.has(d.id)) {
-          const p = getVoicesPending.get(d.id)
-          if (p) {
-            getVoicesPending.delete(d.id)
-            if (p.timeoutId != null) clearTimeout(p.timeoutId)
-            kokoroVoicesList.value = []
-            p.reject(new Error(d.message || 'Failed to load voices'))
-          }
+        if (d.type === 'ready') {
+          kokoroReady.value = true
+          kokoroModelLoading.value = false
           return
         }
         const pending = d?.id != null ? ttsPending.get(d.id) : null
@@ -397,10 +306,12 @@ export function useSpeech() {
           if (pending.cacheKey) testReplayCache[pending.cacheKey] = d.blob
           if (pending.onEnd) playBlob(d.blob, pending.onEnd)
           if (pending.onReady) pending.onReady()
-        } else if (d.type === 'error' && pending.fallback) {
-          const { text, onEnd, cacheKey, provider } = pending.fallback
-          if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
-          else if (onEnd) onEnd()
+        } else if (d.type === 'error') {
+          if (pending.text && pending.onEnd) {
+            speakWithBrowser(pending.text, pending.onEnd)
+          } else {
+            if (pending.onEnd) pending.onEnd()
+          }
           if (pending.onReady) pending.onReady()
         }
         if (pending.loadingRef) pending.loadingRef.value = false
@@ -408,10 +319,10 @@ export function useSpeech() {
       ttsWorker.onerror = () => {
         kokoroModelLoading.value = false
         ttsPending.forEach((p) => {
-          if (p.fallback) {
-            const { text, onEnd, cacheKey, provider } = p.fallback
-            if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
-            else if (onEnd) onEnd()
+          if (p.text && p.onEnd) {
+            speakWithBrowser(p.text, p.onEnd)
+          } else if (p.onEnd) {
+            p.onEnd()
           }
         })
         ttsPending.clear()
@@ -421,6 +332,20 @@ export function useSpeech() {
       return null
     }
     return ttsWorker
+  }
+
+  /**
+   * Start loading the Kokoro model in the worker without generating speech.
+   * Call this early (e.g. when the user enters guided setup) so the model
+   * is ready by the time the first speak() call happens.
+   */
+  function warmupWorker() {
+    if (!kokoroAvailable || kokoroReady.value) return
+    const w = getTtsWorker()
+    if (w) {
+      kokoroModelLoading.value = true
+      w.postMessage({ type: 'warmup' })
+    }
   }
 
   function speak(text, options = {}) {
@@ -442,7 +367,7 @@ export function useSpeech() {
       playBlob(testReplayCache[cacheKey], onEnd)
       return
     }
-    if (provider === 'kokoro') {
+    if (provider === 'kokoro' && kokoroAvailable) {
       const w = getTtsWorker()
       if (w) {
         window.speechSynthesis?.cancel?.()
@@ -451,47 +376,16 @@ export function useSpeech() {
         kokoroModelLoading.value = true
         ttsPending.set(id, {
           cacheKey,
+          text: cleaned,
           onEnd,
           sentAt,
           loadingRef: kokoroModelLoading,
-          fallback: { text: cleaned, onEnd, cacheKey, provider },
         })
-        w.postMessage({
-          type: 'generate',
-          id,
-          text: cleaned,
-          provider,
-          voiceId,
-          origin: typeof window !== 'undefined' && window.location ? window.location.origin : '',
-        })
+        w.postMessage({ type: 'generate', id, text: cleaned, voiceId })
         return
       }
     }
-    if (provider === 'kokoro') {
-      window.speechSynthesis?.cancel?.()
-      speakKokoro(cleaned, onEnd, cacheKey)
-      return
-    }
-    if (!isSupported()) {
-      if (onEnd) onEnd()
-      return
-    }
-    window.speechSynthesis.cancel()
-    const baseSlower = 0.7
-    const effectiveRate = (typeof voiceRate.value === 'number' ? voiceRate.value : 1.0) * baseSlower
-    const rate = Math.max(0.5, Math.min(2, effectiveRate))
-    const utterance = new SpeechSynthesisUtterance(cleaned)
-    utterance.rate = rate
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    const voice = getSelectedVoice()
-    if (voice) utterance.voice = voice
-    const done = () => {
-      if (onEnd) onEnd()
-    }
-    utterance.onend = done
-    utterance.onerror = done
-    window.speechSynthesis.speak(utterance)
+    speakWithBrowser(cleaned, onEnd)
   }
 
   function stop() {
@@ -505,66 +399,17 @@ export function useSpeech() {
     if (isSupported()) window.speechSynthesis.cancel()
   }
 
-  /** No-op stub: Edge TTS was removed; kept so callers (e.g. cached HMR) do not throw. */
   async function getEdgeVoices() {
     return []
   }
 
-  /** Get Kokoro voice list from the worker (worker loads the model once; one download for all voices). */
-  async function getKokoroVoices() {
-    const w = getTtsWorker()
-    if (!w) {
-      kokoroVoicesList.value = []
-      return kokoroVoicesList.value
-    }
-    const id = `getVoices-${++getVoicesNextId}-${Date.now()}`
-    const p = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        const pending = getVoicesPending.get(id)
-        if (pending) {
-          getVoicesPending.delete(id)
-          kokoroVoicesList.value = []
-          pending.reject(new Error('Kokoro voices load timed out'))
-        }
-      }, KOKORO_LOAD_TIMEOUT_MS)
-      getVoicesPending.set(id, { resolve, reject, timeoutId })
-    })
-    w.postMessage({ type: 'getVoices', id })
-    try {
-      const list = await p
-      return list
-    } catch (_) {
-      return kokoroVoicesList.value
-    }
+  /** Voice list is hardcoded -- no model load needed. */
+  function getKokoroVoices() {
+    return Promise.resolve(kokoroVoicesList.value)
   }
 
-  /** Curated default voices only (no network fetch). Kokoro: Nicole, Heart, Echo, Eric. */
-  const CURATED_KOKORO = [
-    { id: 'af_heart', name: 'Heart', gender: 'female' },
-    { id: 'af_nicole', name: 'Nicole', gender: 'female' },
-    { id: 'am_echo', name: 'Echo', gender: 'male' },
-    { id: 'am_eric', name: 'Eric', gender: 'male' },
-  ]
-  /**
-   * Preload Kokoro model so first speak / "Hear voice test" is fast.
-   */
-  function preloadAllEngines(options = {}) {
-    if (preloadAllEnginesPromise) return preloadAllEnginesPromise
-    preloadAllEnginesPromise = (async () => {
-      refreshVoices()
-      await preloadKokoroModel()
-      await getKokoroVoices()
-    })()
-    return preloadAllEnginesPromise
-  }
-
-  /**
-   * Return recommended voices: Kokoro (curated) + Browser as backup. Filtered by gender.
-   */
   function getRecommendedVoices(languagePreference = 'en-US', genderPreference = 'any') {
     const recs = []
-    const genderOk = (g) => genderPreference === 'any' || g === genderPreference
-
     if (isSupported()) {
       const list = getVoicesList()
       const en = list.filter((v) => v.lang && (v.lang.startsWith('en-US') || v.lang.startsWith('en-GB') || v.lang.startsWith('en_US')))
@@ -581,8 +426,8 @@ export function useSpeech() {
         if (uri) recs.push({ provider: 'browser', voiceId: uri, name: `${pick.name} (Browser)`, engine: 'Browser' })
       }
     }
-    for (const v of CURATED_KOKORO) {
-      if (!genderOk(v.gender)) continue
+    const enKokoro = ALL_KOKORO_VOICES.filter((v) => v.lang === 'en' || v.lang === 'en-GB')
+    for (const v of enKokoro.slice(0, 4)) {
       recs.push({ provider: 'kokoro', voiceId: v.id, name: `${v.name} (Kokoro)`, engine: 'Kokoro' })
     }
     return recs
@@ -625,6 +470,30 @@ export function useSpeech() {
     } catch (_) {}
   })
 
+  const selectedVoiceKey = computed(() => {
+    if (ttsProvider.value === 'kokoro') {
+      const id = kokoroVoiceId.value?.trim() || ''
+      return id ? `kokoro:${id}` : ''
+    }
+    const uri = selectedVoiceURI.value || ''
+    return uri ? `browser:${uri}` : ''
+  })
+
+  function setVoiceByKey(key) {
+    if (!key || typeof key !== 'string') return
+    if (key.startsWith('kokoro:')) {
+      const id = key.slice(7).trim()
+      ttsProvider.value = 'kokoro'
+      kokoroVoiceId.value = id
+      return
+    }
+    if (key.startsWith('browser:')) {
+      const uri = key.slice(8).trim()
+      ttsProvider.value = 'browser'
+      selectedVoiceURI.value = uri
+    }
+  }
+
   return {
     voiceEnabled,
     voiceRate,
@@ -634,10 +503,14 @@ export function useSpeech() {
     kokoroVoiceId,
     kokoroVoicesList,
     kokoroModelLoading,
+    kokoroReady,
+    kokoroAvailable,
     isSupported,
     canSpeak,
     cleanTextForSpeech,
     getVoicesList,
+    getBrowserVoicesCurrentLang,
+    browserVoicesCurrentLang,
     getSelectedVoice,
     pickVoice,
     speak,
@@ -645,10 +518,11 @@ export function useSpeech() {
     refreshVoices,
     getKokoroVoices,
     getEdgeVoices,
-    preloadAllEngines,
-    preloadKokoroModel,
     preparePhrase,
+    warmupWorker,
     estimateTtsMs,
     getRecommendedVoices,
+    selectedVoiceKey,
+    setVoiceByKey,
   }
 }

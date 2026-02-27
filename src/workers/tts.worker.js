@@ -1,16 +1,21 @@
 /**
  * TTS Web Worker: runs Kokoro generation off the main thread.
- * Single model load here so Kokoro is only downloaded once for all voices.
+ * Model loads lazily on first generate from /models/ (your server).
+ *
  * Message protocol:
- *   In:  { type: 'generate', id, text, provider, voiceId } | { type: 'getVoices', id }
- *   Out: { type: 'blob', id, blob } | { type: 'error', id, message } | { type: 'voices', id, voices }
+ *   In:  { type: 'warmup' }              – pre-load model, no generation
+ *         { type: 'generate', id, text, voiceId }
+ *   Out: { type: 'ready' }               – model loaded (response to warmup)
+ *         { type: 'blob', id, blob }
+ *         { type: 'error', id, message }
  */
 
 const KOKORO_LOAD_TIMEOUT_MS = 5 * 60 * 1000
-const KOKORO_MODEL_ID_LOCAL = 'Kokoro-82M-v1.0-ONNX'
-const KOKORO_MODEL_ID_REMOTE = 'onnx-community/Kokoro-82M-v1.0-ONNX'
+const KOKORO_MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
 
 let kokoroTTS = null
+let loadPromise = null
+let loadFailed = false
 
 const queue = []
 let processing = false
@@ -24,54 +29,24 @@ function withTimeout(promise, ms, label) {
   ])
 }
 
-/** Load Kokoro model once; reused for all voices and for getVoices. */
-async function ensureKokoroLoaded() {
-  if (kokoroTTS) return
-  const { env } = await import('@huggingface/transformers')
-  const wasRemote = env.allowRemoteModels
-  const wasLocal = env.allowLocalModels
-  const wasPath = env.localModelPath
-  try {
+function ensureKokoroLoaded() {
+  if (kokoroTTS) return Promise.resolve()
+  if (loadFailed) return Promise.reject(new Error('Kokoro model failed to load'))
+  if (loadPromise) return loadPromise
+  loadPromise = (async () => {
+    const { env } = await import('@huggingface/transformers')
     env.allowLocalModels = true
     env.allowRemoteModels = false
     env.localModelPath = '/models/'
     const { KokoroTTS } = await import('kokoro-js')
     kokoroTTS = await withTimeout(
-      KokoroTTS.from_pretrained(KOKORO_MODEL_ID_LOCAL, { dtype: 'q8', device: 'wasm' }),
+      KokoroTTS.from_pretrained(KOKORO_MODEL_ID, { dtype: 'q8', device: 'wasm' }),
       KOKORO_LOAD_TIMEOUT_MS,
       'Kokoro model'
     )
-  } catch (e) {
-    env.allowRemoteModels = true
-    const { KokoroTTS } = await import('kokoro-js')
-    kokoroTTS = await withTimeout(
-      KokoroTTS.from_pretrained(KOKORO_MODEL_ID_REMOTE, { dtype: 'q8', device: 'wasm' }),
-      KOKORO_LOAD_TIMEOUT_MS,
-      'Kokoro model'
-    )
-  } finally {
-    env.allowRemoteModels = wasRemote
-    env.allowLocalModels = wasLocal
-    env.localModelPath = wasPath
-  }
-}
-
-function buildVoicesList() {
-  if (!kokoroTTS || !kokoroTTS.voices) return []
-  const voicesObj = kokoroTTS.voices
-  const ids = Object.keys(voicesObj)
-  const withNames = ids.map((id) => ({
-    id,
-    name: (voicesObj[id] && voicesObj[id].name) || id,
-  }))
-  const enPrefix = (id) => (id || '').startsWith('am_') || (id || '').startsWith('af_') || (id || '').startsWith('bm_') || (id || '').startsWith('bf_')
-  withNames.sort((a, b) => {
-    const aEn = enPrefix(a.id) ? 0 : 1
-    const bEn = enPrefix(b.id) ? 0 : 1
-    if (aEn !== bEn) return aEn - bEn
-    return String(a.id).localeCompare(String(b.id))
-  })
-  return withNames
+  })()
+  loadPromise.catch(() => { loadFailed = true })
+  return loadPromise
 }
 
 async function runKokoro(text, voiceId) {
@@ -83,12 +58,9 @@ async function runKokoro(text, voiceId) {
 }
 
 async function processOne(msg) {
-  const { id, text, provider, voiceId } = msg
+  const { id, text, voiceId } = msg
   try {
-    let blob = null
-    if (provider === 'kokoro') {
-      blob = await runKokoro(text, voiceId || 'af_heart')
-    }
+    const blob = await runKokoro(text, voiceId || 'af_heart')
     if (blob) self.postMessage({ type: 'blob', id, blob })
     else self.postMessage({ type: 'error', id, message: 'No audio generated' })
   } catch (e) {
@@ -106,17 +78,12 @@ function drain() {
   })
 }
 
-self.onmessage = async (ev) => {
+self.onmessage = (ev) => {
   const data = ev.data
-  if (data?.type === 'getVoices') {
-    const reqId = data.id
-    try {
-      await ensureKokoroLoaded()
-      const voices = buildVoicesList()
-      self.postMessage({ type: 'voices', id: reqId, voices })
-    } catch (e) {
-      self.postMessage({ type: 'error', id: reqId, message: e?.message || String(e) })
-    }
+  if (data?.type === 'warmup') {
+    ensureKokoroLoaded()
+      .then(() => self.postMessage({ type: 'ready' }))
+      .catch((e) => self.postMessage({ type: 'error', id: null, message: e?.message || String(e) }))
     return
   }
   if (data?.type === 'generate') {
@@ -124,3 +91,15 @@ self.onmessage = async (ev) => {
     drain()
   }
 }
+
+self.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault()
+  const err = event.reason
+  const message = (err && typeof err === 'object' && err.message) ? String(err.message) : String(err)
+  if (queue.length > 0) {
+    const msg = queue.shift()
+    if (msg && msg.id != null) self.postMessage({ type: 'error', id: msg.id, message })
+  }
+  processing = false
+  drain()
+})

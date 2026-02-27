@@ -443,7 +443,7 @@ export const useGuidedStore = defineStore('guided', {
         this.performGuidedTurn()
       }
       if (this.speakRef) {
-        this._introTimeoutId = setTimeout(onIntroEnd, 90000)
+        this._introTimeoutId = setTimeout(onIntroEnd, 30000)
         this.safeSpeak(intro, onIntroEnd)
       } else {
         this.performGuidedTurn()

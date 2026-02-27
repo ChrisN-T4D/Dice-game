@@ -113,7 +113,7 @@ import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
-const { speak, preparePhrase, stop: stopSpeech } = useSpeech()
+const { speak, preparePhrase, warmupWorker, stop: stopSpeech } = useSpeech()
 
 const pendingConfig = ref(null)
 const countdownValue = ref(null)
@@ -174,6 +174,8 @@ function onReadyYes() {
   guided.setPreparePhrase(preparePhrase)
 
   const prebuiltIntro = buildIntroText(pendingConfig.value.clothingEnabled)
+  warmupWorker()
+  preparePhrase(prebuiltIntro)
 
   countdownValue.value = 3
   countdownTimer = setInterval(() => {
@@ -206,6 +208,7 @@ onMounted(() => {
   guided.setSpeak((text, opts) => speak(text, opts))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
+  warmupWorker()
 })
 
 onUnmounted(() => {

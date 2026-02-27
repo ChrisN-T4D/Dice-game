@@ -1,14 +1,14 @@
 <template>
   <div
     class="landing-modal onboarding-modal"
-    :class="{ hidden: !show }"
+    :class="{ hidden: !show, 'tour-showing-main': step === 3 && !!tourLastClicked }"
     role="dialog"
     aria-labelledby="onboardingTitle"
     aria-modal="true"
   >
     <div class="landing-content onboarding-content" :class="{ 'card-bg-fiery-heart': prefs.backgroundImage === '1' }">
       <div class="wizard-container">
-        <div class="wizard-steps-scroll" :class="{ 'step-2-scroll': step === 2, 'step-3-scroll': step === 3, 'step-content-fill-scroll': step >= 4 && step <= 7 }">
+        <div class="wizard-steps-scroll" :class="{ 'step-2-scroll': step === 2, 'step-3-scroll': step === 3, 'step-content-fill-scroll': step >= 4 && step <= 6 }">
           <div v-show="step !== 1 && step !== 2 && step !== 3" class="wizard-sticky-header">
             <h1 id="onboardingTitle" class="landing-title">Welcome to Between Us</h1>
             <div class="wizard-progress">
@@ -18,7 +18,7 @@
               </div>
             </div>
           </div>
-          <div ref="wizardStepsBodyRef" class="wizard-steps-body" :class="{ 'step-1-fullscreen': step === 1, 'step-2-fullscreen': step === 2, 'step-3-tour': step === 3, 'step-content-fill': step >= 4 && step <= 7 }" :style="stepsBodyStyle">
+          <div ref="wizardStepsBodyRef" class="wizard-steps-body" :class="{ 'step-1-fullscreen': step === 1, 'step-2-fullscreen': step === 2, 'step-3-tour': step === 3, 'step-content-fill': step >= 4 && step <= 6 }" :style="stepsBodyStyle">
         <!-- Step 1: Full-screen "We're glad you're here" (then transitions to Welcome to Between Us) -->
         <div class="wizard-step wizard-step-fullscreen-welcome" :class="{ active: step === 1 }">
           <div class="wizard-step-content fullscreen-welcome-content">
@@ -88,8 +88,9 @@
                     </button>
                   </div>
                 </template>
-                <!-- Dice game UI preview (same structure as real app, with highlights) -->
-                <template v-else-if="tourLastClicked === 'freeplay'">
+                <!-- When a mode is selected, real main UI shows behind (tour preview); no mock so overlay sits over live app -->
+                <!-- Dice game UI preview (mock only when not in tour preview – fallback) -->
+                <template v-else-if="tourLastClicked === 'freeplay' && !tourShowingMain">
                   <div class="tour-mock-fill onboarding-tour-ui-freeplay">
                     <div class="play-mode-row tour-highlight-active">
                       <button type="button" class="secondary">Dice game</button>
@@ -123,35 +124,52 @@
                     </div>
                   </div>
                 </template>
-                <!-- Guided mode UI preview -->
-                <template v-else-if="tourLastClicked === 'guided'">
+                <!-- Guided mode UI preview – matches real GuidedModeView (center, circle, timers, instruction, controls) -->
+                <template v-else-if="tourLastClicked === 'guided' && !tourShowingMain">
                   <div class="tour-mock-fill onboarding-tour-ui-guided">
                     <div class="play-mode-row tour-highlight-active">
                       <button type="button" class="secondary">Dice game</button>
                       <button type="button" class="secondary preset-selected">Guided Mode</button>
                     </div>
-                    <div class="guided-header tour-highlight-active">
-                      <span class="phase-display">Phase 1 – Where</span>
-                      <span class="time-display">2:00 remaining</span>
-                    </div>
-                    <div class="guided-block tour-highlight-active">
-                      <p class="partner-label">Partner 1’s turn</p>
-                      <p class="output-line"><strong>Location:</strong> Bedroom</p>
-                      <div class="guided-controls">
-                        <button type="button" class="primary">Next</button>
+                    <div class="tour-guided-center">
+                      <div class="tour-guided-action-timer">
+                        <span class="tour-guided-action-label">Where</span>
+                        <span class="tour-guided-action-value">0:45</span>
                       </div>
+                      <div class="tour-guided-circle-wrap">
+                        <div class="tour-guided-sparkle-circle" aria-hidden="true" />
+                      </div>
+                      <div class="tour-guided-timers-row">
+                        <div class="tour-guided-phase-cell">
+                          <span class="tour-guided-phase-label">Phase 1</span>
+                          <span class="tour-guided-phase-timer">2:00</span>
+                        </div>
+                        <span class="tour-guided-total-timer">Total 8:00</span>
+                      </div>
+                    </div>
+                    <div class="tour-guided-block tour-guided-instruction-box tour-highlight-active">
+                      <div class="tour-guided-instruction-output">Bedroom</div>
+                      <div class="output-line"><strong>Clothing:</strong> Optional</div>
+                    </div>
+                    <p class="tour-guided-partner-label">Partner 1 → Partner 2</p>
+                    <div class="tour-guided-controls tour-highlight-active">
+                      <button type="button" class="secondary small">Pause</button>
+                      <button type="button" class="secondary small">Skip turn</button>
+                      <button type="button" class="secondary small danger">Stop session</button>
                     </div>
                   </div>
                 </template>
+                <!-- When tour preview: real app is visible behind; just need spacer so overlay bar lays out -->
+                <div v-else-if="tourLastClicked" class="tour-preview-spacer" aria-hidden="true" />
               </div>
-              <div class="tour-overlay-wrap" aria-hidden="true">
+              <!-- Only show overlay bar when a mode is selected (so mode buttons stay fully clickable) -->
+              <div v-show="tourLastClicked" class="tour-overlay-wrap" aria-hidden="true">
                 <div class="tour-overlay-backdrop" />
                 <div class="tour-overlay-caption">
                   <p class="tour-overlay-title">{{ tourOverlayTitle }}</p>
                   <p class="tour-overlay-desc">{{ tourOverlayDesc }}</p>
                   <div class="tour-overlay-actions">
                     <button
-                      v-if="tourLastClicked"
                       type="button"
                       class="secondary small tour-overlay-back-mode"
                       @click="backToTourModeChoice"
@@ -174,7 +192,7 @@
             <div class="wizard-step-header wizard-step-header-compact">
               <h2 class="wizard-step-title">Where to change settings</h2>
               <p class="wizard-step-description">
-                Use the <strong>☰ menu</strong> in the top-left corner of the app to open <strong>Preferences</strong>. There you can change voice (read aloud), music, prompt detail, and more.
+                Use the <strong>☰ menu</strong> in the top-left corner of the app to open <strong>Preferences</strong>. There you can change music, prompt detail, and other settings.
               </p>
             </div>
             <div class="onboarding-preferences-mock">
@@ -214,7 +232,7 @@
           </div>
         </div>
 
-        <!-- Step 6: Profile -->
+        <!-- Step 6: Profile + You're all set (single final step) -->
         <div class="wizard-step" :class="{ active: step === 6 }">
           <div class="wizard-step-content">
             <div class="wizard-step-header">
@@ -234,13 +252,7 @@
                 class="onboarding-input"
               />
             </div>
-          </div>
-        </div>
-
-        <!-- Step 7: All set -->
-        <div class="wizard-step" :class="{ active: step === 7 }">
-          <div class="wizard-step-content">
-            <div class="wizard-step-header">
+            <div class="wizard-step-header wizard-step-header-compact onboarding-all-set-block">
               <h2 class="wizard-step-title">You're all set</h2>
               <p class="wizard-step-description">
                 Choose Dice game or Guided Mode on the next screen to start. You can reopen this intro from the menu later.
@@ -292,27 +304,30 @@
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useSessionStore } from '@/stores/session'
 import { useSpeech } from '@/composables/useSpeech'
 
 const props = defineProps({
   show: { type: Boolean, default: true },
 })
 
-const emit = defineEmits(['complete'])
+const emit = defineEmits(['complete', 'tour-preview'])
 
 const profile = useProfileStore()
 const prefs = usePreferencesStore()
+const session = useSessionStore()
 const speech = useSpeech()
-const totalSteps = 7
+const totalSteps = 6
 const step = ref(1)
 const wizardStepsBodyRef = ref(null)
 const step2Ref = ref(null)
 const stepsBodyStyle = ref({})
 
-/** Step 3 overlay tour: user clicks landing buttons, we show explanation */
+/** Step 3 overlay tour: user clicks landing buttons, we show real main UI + overlay */
 const tourExplainedFreeplay = ref(false)
 const tourExplainedGuided = ref(false)
 const tourLastClicked = ref(null) // 'freeplay' | 'guided' | null
+const tourShowingMain = computed(() => step.value === 3 && !!tourLastClicked.value)
 const tourOverlayTitle = computed(() => {
   if (tourLastClicked.value === 'guided') return '⏱️ Guided Mode'
   if (tourLastClicked.value === 'freeplay') return '🎲 Dice game'
@@ -327,6 +342,8 @@ function onTourModeClick(mode) {
   tourLastClicked.value = mode
   if (mode === 'freeplay') tourExplainedFreeplay.value = true
   else tourExplainedGuided.value = true
+  session.$patch({ uiMode: mode, isGuidedMode: mode === 'guided' })
+  emit('tour-preview', mode)
 }
 function continueTourToSetup() {
   if (navInCooldown.value) return
@@ -334,12 +351,14 @@ function continueTourToSetup() {
   tourLastClicked.value = null
   tourExplainedFreeplay.value = false
   tourExplainedGuided.value = false
+  emit('tour-preview', null)
   step.value = 4
 }
 function backToTourModeChoice() {
   tourLastClicked.value = null
   tourExplainedFreeplay.value = false
   tourExplainedGuided.value = false
+  emit('tour-preview', null)
 }
 const displayName = ref(profile.displayName || '')
 
@@ -422,16 +441,8 @@ watch(displayName, (v) => {
   profile.setDisplayName(v)
 })
 
-function startVoicePreload() {
-  speech.preloadAllEngines({
-    language: profile.voiceLanguagePreference,
-    gender: profile.voiceGenderPreference,
-  })
-}
-
 watch(step, (newStep, oldStep) => {
   if (newStep === 6 && oldStep === 5) applyQuestionnaire()
-  if (newStep === 1) startVoicePreload()
   nextTick(updateStep2BodyHeight)
 })
 
@@ -482,7 +493,12 @@ function skipTour() {
 function goBack() {
   if (navInCooldown.value) return
   startNavCooldown()
-  if (step.value === 4) backToTourModeChoice()
+  if (step.value === 4) {
+    backToTourModeChoice()
+  }
+  if (step.value === 3) {
+    emit('tour-preview', null)
+  }
   step.value = Math.max(1, step.value - 1)
 }
 
@@ -493,9 +509,14 @@ function goNext() {
     tourLastClicked.value = null
     tourExplainedFreeplay.value = false
     tourExplainedGuided.value = false
+    emit('tour-preview', null)
   }
   step.value++
 }
+
+watch(step, (s) => {
+  if (s !== 3) emit('tour-preview', null)
+})
 
 onMounted(() => {
   questionnaire.experience = prefs.promptDetailMode
@@ -503,7 +524,6 @@ onMounted(() => {
   questionnaire.anal = prefs.analPositionsEnabled
   questionnaire.toys = prefs.vibratorsPresent
   questionnaire.connectionWalls = profile.connectionWalls ? [...profile.connectionWalls] : []
-  if (step.value === 1) startVoicePreload()
 })
 
 function finish() {
@@ -525,6 +545,33 @@ function finish() {
   background-image: linear-gradient(to bottom, rgba(2,6,23,0.4) 0%, rgba(2,6,23,0.65) 50%, rgba(2,6,23,0.85) 100%), url('/Background/fiery-heart.jpg');
   background-size: cover;
   background-position: center;
+}
+/* Step 3 tour preview: show real main UI behind; modal becomes a bottom bar */
+.onboarding-modal.tour-showing-main {
+  background: rgba(2, 6, 23, 0.4);
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.onboarding-modal.tour-showing-main .onboarding-content {
+  max-height: 50%;
+  height: auto;
+  min-height: auto;
+  border-radius: 1rem 1rem 0 0;
+  border-bottom: none;
+}
+.onboarding-modal.tour-showing-main .wizard-steps-scroll {
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+.onboarding-modal.tour-showing-main .tour-preview-spacer {
+  display: none;
+}
+.onboarding-modal.tour-showing-main .wizard-navigation {
+  flex-shrink: 0;
+}
+.tour-preview-spacer {
+  flex: 1;
+  min-height: 2rem;
 }
 @media (max-width: 600px) {
   .onboarding-modal {
@@ -604,6 +651,7 @@ function finish() {
   font-size: 1.1rem;
   margin-bottom: 0.15rem;
 }
+.onboarding-all-set-block { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #334155; }
 .onboarding-modal .wizard-step-header-compact .wizard-step-description {
   font-size: 0.85rem;
   margin: 0;
@@ -1288,8 +1336,79 @@ function finish() {
 .tour-mock-fill.onboarding-tour-ui-freeplay .roll-block,
 .tour-mock-fill.onboarding-tour-ui-freeplay .output-block { padding: 0.5rem; }
 .tour-mock-fill.onboarding-tour-ui-freeplay .free-play-header { margin-bottom: 0.25rem; }
-.tour-mock-fill.onboarding-tour-ui-guided .guided-header { margin-bottom: 0.25rem; }
-.tour-mock-fill.onboarding-tour-ui-guided .guided-block { padding: 0.5rem; }
+/* Guided mock: match real GuidedModeView (center, circle, timers, instruction, controls) */
+.tour-guided-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.tour-guided-action-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.tour-guided-action-label { font-size: 0.95rem; font-weight: 600; color: #a855f7; }
+.tour-guided-action-value { font-size: 2.5rem; font-weight: 700; color: #e5e7eb; line-height: 1; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.tour-guided-circle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+.tour-guided-sparkle-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 70% 70% at 35% 35%, rgba(168, 85, 247, 0.45), rgba(34, 197, 94, 0.2) 45%, rgba(15, 23, 42, 0.6) 100%);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.25), 0 0 24px rgba(168, 85, 247, 0.2);
+}
+.tour-guided-timers-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 280px;
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+.tour-guided-phase-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+.tour-guided-phase-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; }
+.tour-guided-phase-timer { font-weight: 600; }
+.tour-guided-total-timer { font-weight: 600; }
+.tour-guided-block {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  background: rgba(2,6,23,0.5);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.tour-guided-instruction-output { white-space: pre-wrap; margin: 0 0 0.25rem; }
+.tour-guided-instruction-box .output-line { margin-bottom: 0.35rem; }
+.tour-guided-instruction-box .output-line:last-of-type { margin-bottom: 0; }
+.tour-guided-partner-label { font-size: 1rem; color: #a855f7; margin: 0; text-align: center; }
+.tour-guided-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  width: 100%;
+}
+.tour-guided-controls .danger { background: rgba(127,29,29,0.5); color: #fecaca; }
+.tour-mock-fill.onboarding-tour-ui-guided .play-mode-row { margin-bottom: 0.5rem; }
 .onboarding-tour-ui-mock {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid #334155;
@@ -1389,26 +1508,13 @@ function finish() {
 .onboarding-tour-ui-freeplay .read-aloud-btn { margin-top: 0.5rem; min-height: 44px; }
 .onboarding-tour-ui-freeplay .clothing-roller .roll-grid { margin-left: auto; margin-right: auto; }
 
-/* Exact copy of Guided Mode UI (same structure/classes as App + GuidedModeView) */
-.onboarding-tour-ui-guided .guided-mode-view { padding: 0; width: 100%; max-width: 100%; }
-.onboarding-tour-ui-guided .guided-header { gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
-.onboarding-tour-ui-guided .guided-header .phase-display { font-size: 1.25rem; font-weight: 700; }
-.onboarding-tour-ui-guided .time-display { font-size: 0.9rem; color: #9ca3af; }
-.onboarding-tour-ui-guided .action-label { font-size: 0.9rem; color: #a855f7; }
-.onboarding-tour-ui-guided .guided-block { padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #334155; background: rgba(2,6,23,0.5); }
-.onboarding-tour-ui-guided .output-line { margin-bottom: 0.35rem; }
-.onboarding-tour-ui-guided .output-line:last-of-type { margin-bottom: 0; }
-.onboarding-tour-ui-guided .partner-label { font-size: 1rem; color: #a855f7; margin: 0; text-align: center; }
-.onboarding-tour-ui-guided .guided-controls { gap: 0.5rem; margin: 0; min-height: 44px; }
-.onboarding-tour-ui-guided .guided-controls button { min-height: 44px; }
-
 button.tour-highlight-active { border-radius: 0.5rem; }
 .play-mode-row.tour-highlight-active,
 .timer-bar.tour-timer-mock.tour-highlight-active,
 .roll-block.tour-highlight-active,
 .output-block.tour-highlight-active,
-.guided-header.tour-highlight-active,
-.guided-block.tour-highlight-active,
+.tour-guided-block.tour-highlight-active,
+.tour-guided-controls.tour-highlight-active,
 .partner-label.tour-highlight-active,
 button.tour-highlight-active,
 .output-block .read-aloud-btn.tour-highlight-active {
@@ -1519,26 +1625,6 @@ button.primary.tour-highlight-active { --tour-glow: rgba(251, 191, 36, 0.55); }
   text-align: center;
 }
 
-.onboarding-preload-status { margin-top: 1rem; text-align: center; }
-.onboarding-preload-text { color: #9ca3af; font-size: 0.95rem; margin-bottom: 0.5rem; }
-.onboarding-preload-hint { color: #6b7280; font-size: 0.85rem; margin-bottom: 1rem; max-width: 320px; margin-left: auto; margin-right: auto; }
-.onboarding-voice-try-all-hint { color: #6b7280; font-size: 0.85rem; margin-bottom: 0.75rem; }
-.onboarding-skip-preload { margin-top: 1rem; }
-.onboarding-spinner {
-  width: 2.5rem; height: 2.5rem; margin: 0 auto; border: 3px solid #334155; border-top-color: #60a5fa;
-  border-radius: 50%; animation: onboarding-spin 0.8s linear infinite;
-}
-@keyframes onboarding-spin { to { transform: rotate(360deg); } }
-
-.onboarding-recommended-voices { margin-top: 1rem; text-align: left; }
-.onboarding-voice-row {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
-  padding: 0.6rem 0; border-bottom: 1px solid #334155;
-}
-.onboarding-voice-row:last-child { border-bottom: none; }
-.onboarding-voice-name { font-size: 0.95rem; color: #e5e7eb; flex: 1 1 140px; }
-.onboarding-voice-actions { display: flex; gap: 0.5rem; align-items: center; }
-.onboarding-use-voice-btn { flex: 0 0 auto; padding: 0.5rem 1rem; font-size: 0.9rem; }
 
 .onboarding-modal .onboarding-q-cards { gap: 0.75rem; margin-top: 0.75rem; }
 .onboarding-modal .onboarding-q-card {

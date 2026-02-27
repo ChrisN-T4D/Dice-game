@@ -6,6 +6,7 @@
     <OnboardingWizard
       :show="showOnboarding"
       @complete="onOnboardingComplete"
+      @tour-preview="onTourPreview"
     />
     <LandingModal
       :show="showLandingAfterOnboarding"
@@ -117,18 +118,12 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 
-function isMobileOrTouch() {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 768px)').matches
-}
 import { useSessionStore } from '@/stores/session'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useProfileStore } from '@/stores/profile'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
-import { useSpeech } from '@/composables/useSpeech'
 import { loadState, saveState } from '@/utils/persistence'
-import { whenIdle } from '@/utils/whenIdle'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
@@ -159,11 +154,19 @@ const showOnboarding = computed(() => !profile.onboardingComplete || showOnboard
 const showLandingAfterOnboarding = computed(
   () => profile.onboardingComplete && !showOnboardingAgain.value && session.showLanding
 )
+const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | null – when set, show main UI during tour step 3
 const showMainContent = computed(
-  () => profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding
+  () => (profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding) || tourPreviewMode.value !== null
 )
+function onTourPreview(mode) {
+  tourPreviewMode.value = mode
+  if (mode) {
+    session.$patch({ uiMode: mode, isGuidedMode: mode === 'guided' })
+  }
+}
 
 function onOnboardingComplete() {
+  tourPreviewMode.value = null
   profile.completeOnboarding()
   showOnboardingAgain.value = false
   session.showLandingModal() // Show landing page so user can choose Dice game or Guided Mode
@@ -269,19 +272,6 @@ onMounted(() => {
   updateBodyClass()
   profile.load()
   loadState(session, prefs, guided)
-  // Preload Kokoro once when they enter the app (worker downloads and caches; no second download later).
-  const speech = useSpeech()
-  const runPreload = () => {
-    speech.preloadAllEngines({
-      language: profile.voiceLanguagePreference,
-      gender: profile.voiceGenderPreference,
-    })
-  }
-  if (isMobileOrTouch()) {
-    whenIdle(runPreload, { timeout: 4000 })
-  } else {
-    runPreload()
-  }
 })
 onUnmounted(() => {
   window.removeEventListener('hashchange', updateShowAdmin)

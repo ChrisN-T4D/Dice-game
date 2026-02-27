@@ -52,94 +52,137 @@
           </div>
         </div>
 
-        <!-- Step 3: Tour overlay on real landing screen – user clicks buttons, things get explained -->
+        <!-- Step 3: Tour – click a mode to see its UI, then continue to setup -->
         <div class="wizard-step wizard-step-tour" :class="{ active: step === 3 }">
           <div class="wizard-step-content tour-landing-step-content">
             <div class="tour-landing-wrap">
-              <!-- Real landing screen (same as after onboarding); clicks show explanation, don't start session -->
               <div class="landing-content tour-landing-inner" :class="{ 'card-bg-fiery-heart': prefs.backgroundImage === '1' }">
-                <h1 class="landing-title">Between Us</h1>
-                <p class="landing-subtitle">
-                  Discovering intimacy together. Guided sessions with timed turns and voice prompts, or roll your own in Dice game
-                </p>
-                <div class="mode-buttons">
-                  <button
-                    type="button"
-                    class="mode-button guided"
-                    :class="{ 'tour-explained': tourExplainedGuided }"
-                    @click="onTourModeClick('guided')"
-                  >
-                    <div class="mode-button-title">⏱️ Guided Mode</div>
-                    <div class="mode-button-desc">
-                      Inspired by sensate focus therapy: set a total time and move through phased, timed turns (where, what, then position) with optional voice prompts.
+                <!-- Initial: choose mode -->
+                <template v-if="!tourLastClicked">
+                  <h1 class="landing-title">Between Us</h1>
+                  <p class="landing-subtitle">
+                    Discovering intimacy together. Click a mode below to see its interface, then continue.
+                  </p>
+                  <div class="mode-buttons">
+                    <button
+                      type="button"
+                      class="mode-button guided"
+                      :class="{ 'tour-explained': tourExplainedGuided }"
+                      @click="onTourModeClick('guided')"
+                    >
+                      <div class="mode-button-title">⏱️ Guided Mode</div>
+                      <div class="mode-button-desc">
+                        Inspired by sensate focus therapy: set a total time and move through phased, timed turns (where, what, then position) with optional voice prompts.
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      class="mode-button freeplay"
+                      :class="{ 'tour-explained': tourExplainedFreeplay }"
+                      @click="onTourModeClick('freeplay')"
+                    >
+                      <div class="mode-button-title">🎲 Dice game</div>
+                      <div class="mode-button-desc">
+                        Roll dice for location, action, and (in Phase 3) position. No timer; you set the pace.
+                      </div>
+                    </button>
+                  </div>
+                </template>
+                <!-- Dice game UI preview (same structure as real app, with highlights) -->
+                <template v-else-if="tourLastClicked === 'freeplay'">
+                  <div class="tour-mock-fill onboarding-tour-ui-freeplay">
+                    <div class="play-mode-row tour-highlight-active">
+                      <button type="button" class="secondary">Dice game</button>
+                      <button type="button" class="secondary">Guided Mode</button>
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    class="mode-button freeplay"
-                    :class="{ 'tour-explained': tourExplainedFreeplay }"
-                    @click="onTourModeClick('freeplay')"
-                  >
-                    <div class="mode-button-title">🎲 Dice game</div>
-                    <div class="mode-button-desc">
-                      Roll dice for location, action, and (in Phase 3) position. No timer; you set the pace.
+                    <div class="toolbar-row">
+                      <button type="button" class="secondary small">Next phase</button>
+                      <button type="button" class="secondary small">New session</button>
+                      <button type="button" class="secondary small">Summary</button>
                     </div>
-                  </button>
-                </div>
+                    <div class="free-play-view">
+                      <div class="free-play-header row center">
+                        <span class="phase-display">Phase 1</span>
+                        <span class="roll-count">Rolls this phase: 0</span>
+                      </div>
+                      <div class="roll-block tour-highlight-active">
+                        <div class="roll-grid">
+                          <div class="roll-col"><label>Location</label><input type="number" value="1" min="1" max="20" readonly /></div>
+                          <div class="roll-col"><label>Action</label><input type="number" value="1" min="1" max="20" readonly /></div>
+                        </div>
+                        <div class="row action-row">
+                          <button type="button" class="primary big">Roll for me</button>
+                          <button type="button" class="secondary big">Submit numbers</button>
+                        </div>
+                      </div>
+                      <div class="output-block tour-highlight-active">
+                        <div class="output-line"><strong>Where:</strong> Bedroom</div>
+                        <div class="output-line"><strong>What:</strong> Caress</div>
+                        <button type="button" class="secondary small read-aloud-btn">Read aloud</button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <!-- Guided mode UI preview -->
+                <template v-else-if="tourLastClicked === 'guided'">
+                  <div class="tour-mock-fill onboarding-tour-ui-guided">
+                    <div class="play-mode-row tour-highlight-active">
+                      <button type="button" class="secondary">Dice game</button>
+                      <button type="button" class="secondary preset-selected">Guided Mode</button>
+                    </div>
+                    <div class="guided-header tour-highlight-active">
+                      <span class="phase-display">Phase 1 – Where</span>
+                      <span class="time-display">2:00 remaining</span>
+                    </div>
+                    <div class="guided-block tour-highlight-active">
+                      <p class="partner-label">Partner 1’s turn</p>
+                      <p class="output-line"><strong>Location:</strong> Bedroom</p>
+                      <div class="guided-controls">
+                        <button type="button" class="primary">Next</button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
               </div>
-              <!-- Overlay: caption + Continue; pointer-events none on overlay so buttons are clickable; caption has auto -->
               <div class="tour-overlay-wrap" aria-hidden="true">
                 <div class="tour-overlay-backdrop" />
                 <div class="tour-overlay-caption">
                   <p class="tour-overlay-title">{{ tourOverlayTitle }}</p>
                   <p class="tour-overlay-desc">{{ tourOverlayDesc }}</p>
-                  <button type="button" class="primary tour-overlay-continue" @click="continueTourToSetup">
-                    Continue to setup
-                  </button>
+                  <div class="tour-overlay-actions">
+                    <button
+                      v-if="tourLastClicked"
+                      type="button"
+                      class="secondary small tour-overlay-back-mode"
+                      @click="backToTourModeChoice"
+                    >
+                      See other mode
+                    </button>
+                    <button type="button" class="primary tour-overlay-continue" @click="continueTourToSetup">
+                      Continue to setup
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 4: Text-to-speech voice preferences -->
-        <div class="wizard-step wizard-step-voice" :class="{ active: step === 4 }">
+        <!-- Step 4: Where to change settings (Preferences) -->
+        <div class="wizard-step wizard-step-preferences-tour" :class="{ active: step === 4 }">
           <div class="wizard-step-content">
             <div class="wizard-step-header wizard-step-header-compact">
-              <h2 class="wizard-step-title">Voice preferences</h2>
-              <p class="wizard-step-description">For read-aloud and voice prompts. We'll preload matching voices first.</p>
+              <h2 class="wizard-step-title">Where to change settings</h2>
+              <p class="wizard-step-description">
+                Use the <strong>☰ menu</strong> in the top-left corner of the app to open <strong>Preferences</strong>. There you can change voice (read aloud), music, prompt detail, and more.
+              </p>
             </div>
-            <div class="onboarding-q-cards">
-              <div class="onboarding-q-card">
-                <label class="onboarding-pref-label">Preferred language for text-to-speech</label>
-                <div class="onboarding-pref-buttons">
-                  <button
-                    v-for="opt in voiceLanguageOptions"
-                    :key="opt.value"
-                    type="button"
-                    class="secondary onboarding-pref-btn"
-                    :class="{ 'preset-selected': profile.voiceLanguagePreference === opt.value }"
-                    @click="profile.setVoicePreferences({ language: opt.value, gender: profile.voiceGenderPreference })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </div>
+            <div class="onboarding-preferences-mock">
+              <div class="preferences-mock-header">
+                <span class="preferences-mock-hamburger" aria-hidden="true">☰</span>
+                <span class="preferences-mock-title">Between Us</span>
               </div>
-              <div class="onboarding-q-card">
-                <label class="onboarding-pref-label">Voice style you prefer (e.g. female or male)</label>
-                <div class="onboarding-pref-buttons">
-                  <button
-                    v-for="opt in voiceGenderOptions"
-                    :key="opt.value"
-                    type="button"
-                    class="secondary onboarding-pref-btn"
-                    :class="{ 'preset-selected': profile.voiceGenderPreference === opt.value }"
-                    @click="profile.setVoicePreferences({ language: profile.voiceLanguagePreference, gender: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </div>
-              </div>
+              <p class="onboarding-preferences-hint">Click the menu icon anytime to open Preferences.</p>
             </div>
           </div>
         </div>
@@ -194,62 +237,8 @@
           </div>
         </div>
 
-        <!-- Step 7: Voice setup (preload when leaving tour; recommendations) -->
+        <!-- Step 7: All set -->
         <div class="wizard-step" :class="{ active: step === 7 }">
-          <div class="wizard-step-content">
-            <div class="wizard-step-header">
-              <h2 class="wizard-step-title">Voice setup</h2>
-              <p v-if="!preloadDone" class="wizard-step-description">
-                Preloading Kokoro so it's ready when you start…
-              </p>
-              <p v-else class="wizard-step-description">
-                We use Kokoro for voice (Browser as backup). Options below match your female or male preference. Try one and choose it.
-              </p>
-            </div>
-            <div v-if="!preloadDone" class="onboarding-preload-status">
-              <p class="onboarding-preload-text">Loading Kokoro…</p>
-              <p class="onboarding-preload-hint">Kokoro loads on first use. You can continue without waiting.</p>
-              <div class="onboarding-spinner" aria-hidden="true" />
-              <button
-                type="button"
-                class="secondary small onboarding-skip-preload"
-                @click="skipPreload"
-              >
-                Continue without waiting
-              </button>
-            </div>
-            <div v-else class="onboarding-recommended-voices">
-              <p class="onboarding-voice-try-all-hint">To try more voices, open ☰ menu → Preferences → Voice (read aloud).</p>
-              <div
-                v-for="rec in recommendedVoices"
-                :key="rec.provider + '-' + rec.voiceId"
-                class="onboarding-voice-row"
-              >
-                <span class="onboarding-voice-name">{{ rec.name }}</span>
-                <div class="onboarding-voice-actions">
-                  <button
-                    type="button"
-                    class="secondary small"
-                    :disabled="samplePlaying"
-                    @click="playSample(rec)"
-                  >
-                    {{ samplePlaying ? 'Playing…' : 'Play' }}
-                  </button>
-                  <button
-                    type="button"
-                    class="wizard-nav-btn next onboarding-use-voice-btn"
-                    @click="useVoice(rec)"
-                  >
-                    Use this
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 8: All set -->
-        <div class="wizard-step" :class="{ active: step === 8 }">
           <div class="wizard-step-content">
             <div class="wizard-step-header">
               <h2 class="wizard-step-title">You're all set</h2>
@@ -314,7 +303,7 @@ const emit = defineEmits(['complete'])
 const profile = useProfileStore()
 const prefs = usePreferencesStore()
 const speech = useSpeech()
-const totalSteps = 8
+const totalSteps = 7
 const step = ref(1)
 const wizardStepsBodyRef = ref(null)
 const step2Ref = ref(null)
@@ -347,10 +336,12 @@ function continueTourToSetup() {
   tourExplainedGuided.value = false
   step.value = 4
 }
+function backToTourModeChoice() {
+  tourLastClicked.value = null
+  tourExplainedFreeplay.value = false
+  tourExplainedGuided.value = false
+}
 const displayName = ref(profile.displayName || '')
-const preloadDone = ref(false)
-const samplePlaying = ref(false)
-const recommendedVoices = ref([])
 
 const questionnaire = reactive({
   experience: 'beginner',
@@ -384,17 +375,6 @@ const connectionWallsOptions = [
   { value: 'none', label: 'None of these' },
   { value: 'prefer_not', label: 'Prefer not to say' },
 ]
-const voiceLanguageOptions = [
-  { value: 'en-US', label: 'English (US)' },
-  { value: 'en-GB', label: 'English (UK)' },
-  { value: 'any', label: 'Any' },
-]
-const voiceGenderOptions = [
-  { value: 'female', label: 'Female' },
-  { value: 'male', label: 'Male' },
-  { value: 'any', label: 'Any' },
-]
-
 const preferencesSummary = computed(() => {
   const q = questionnaire
   if (!q) return { promptDetail: '', penetration: '', anal: 'No', toys: 'No', connectionWallsSummary: '' }
@@ -451,17 +431,7 @@ function startVoicePreload() {
 
 watch(step, (newStep, oldStep) => {
   if (newStep === 6 && oldStep === 5) applyQuestionnaire()
-  // Start preloading voices from step 1 (first page) so they load during the tour
   if (newStep === 1) startVoicePreload()
-  // When landing on voice setup (step 7), wait for preload (started at step 1) then show recommendations
-  if (newStep === 7 && !preloadDone.value) {
-    const opts = { language: profile.voiceLanguagePreference, gender: profile.voiceGenderPreference }
-    const promise = speech.preloadAllEngines(opts)
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, PRELOAD_TIMEOUT_MS))
-    Promise.race([promise, timeoutPromise]).then(showRecommendations)
-    promise.catch(showRecommendations)
-  }
-  // Size steps body to active step content so it doesn't scroll when content fits (step 2, etc.)
   nextTick(updateStep2BodyHeight)
 })
 
@@ -512,11 +482,7 @@ function skipTour() {
 function goBack() {
   if (navInCooldown.value) return
   startNavCooldown()
-  if (step.value === 4) {
-    tourLastClicked.value = null
-    tourExplainedFreeplay.value = false
-    tourExplainedGuided.value = false
-  }
+  if (step.value === 4) backToTourModeChoice()
   step.value = Math.max(1, step.value - 1)
 }
 
@@ -531,70 +497,14 @@ function goNext() {
   step.value++
 }
 
-const PRELOAD_TIMEOUT_MS = 45_000 // stop waiting after 45s and show recommendations anyway
-
-function showRecommendations() {
-  preloadDone.value = true
-  recommendedVoices.value = speech.getRecommendedVoices(
-    profile.voiceLanguagePreference,
-    profile.voiceGenderPreference
-  )
-}
-
 onMounted(() => {
   questionnaire.experience = prefs.promptDetailMode
   questionnaire.penetration = prefs.penetrationPreference
   questionnaire.anal = prefs.analPositionsEnabled
   questionnaire.toys = prefs.vibratorsPresent
   questionnaire.connectionWalls = profile.connectionWalls ? [...profile.connectionWalls] : []
-  // Start voice preload as soon as the first page (step 1) is shown
   if (step.value === 1) startVoicePreload()
 })
-
-function skipPreload() {
-  preloadDone.value = true
-  recommendedVoices.value = speech.getRecommendedVoices(
-    profile.voiceLanguagePreference,
-    profile.voiceGenderPreference
-  )
-}
-
-watch([() => step.value, preloadDone], () => {
-  if ((step.value === 7 || step.value === 8) && preloadDone.value) {
-    recommendedVoices.value = speech.getRecommendedVoices(
-      profile.voiceLanguagePreference,
-      profile.voiceGenderPreference
-    )
-  }
-})
-
-function playSample(rec) {
-  if (samplePlaying.value) return
-  const prevProvider = speech.ttsProvider.value
-  const prevKokoro = speech.kokoroVoiceId.value
-  const prevUri = speech.selectedVoiceURI.value
-  speech.ttsProvider.value = rec.provider
-  if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
-  else if (rec.provider === 'browser') speech.selectedVoiceURI.value = rec.voiceId
-  samplePlaying.value = true
-  const sample = 'You can use this voice for prompts and read aloud.'
-  speech.speak(sample, {
-    force: true,
-    onEnd: () => {
-      samplePlaying.value = false
-      speech.ttsProvider.value = prevProvider
-      speech.kokoroVoiceId.value = prevKokoro
-      speech.selectedVoiceURI.value = prevUri
-    },
-  })
-}
-
-function useVoice(rec) {
-  speech.ttsProvider.value = rec.provider
-  if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
-  else if (rec.provider === 'browser') speech.selectedVoiceURI.value = rec.voiceId
-  speech.voiceEnabled.value = true
-}
 
 function finish() {
   profile.completeOnboarding()
@@ -945,7 +855,7 @@ function finish() {
   flex-shrink: 0;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  padding-bottom: 0;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 3.5rem));
   background: transparent;
   border: none;
   border-top: 1px solid #334155;
@@ -1089,16 +999,37 @@ function finish() {
   line-height: 1.4;
   margin: 0 0 1rem;
 }
+.tour-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.5rem;
+}
 .tour-overlay-continue {
   min-height: 48px;
   padding: 0.65rem 1.5rem;
   font-weight: 600;
   font-size: 1rem;
 }
+.tour-overlay-back-mode {
+  min-height: 40px;
+}
 .mode-button.tour-explained {
   border-color: rgba(96, 165, 250, 0.6);
   background: rgba(59, 130, 246, 0.08);
   box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25);
+}
+.mode-button.freeplay.tour-explained {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+}
+.mode-button.guided.tour-explained {
+  border-color: rgba(168, 85, 247, 0.7);
+  background: rgba(168, 85, 247, 0.1);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.3);
 }
 /* Mock UI fills the area above the caption bar; scrollable so highlighted portion can be centered */
 .tour-mock-fill {
@@ -1511,6 +1442,47 @@ button.primary.tour-highlight-active { --tour-glow: rgba(251, 191, 36, 0.55); }
   }
 }
 
+.onboarding-preferences-mock {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: 1rem;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.preferences-mock-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 0.75rem;
+}
+.preferences-mock-hamburger {
+  font-size: 1.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(51, 65, 85, 0.5);
+  border-radius: 0.35rem;
+  color: #e2e8f0;
+}
+.preferences-mock-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #e5e7eb;
+}
+.onboarding-preferences-hint {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 0;
+  text-align: center;
+}
+.onboarding-modal .wizard-step-preferences-tour .wizard-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 .onboarding-profile-form { margin-top: 1rem; text-align: left; }
 .onboarding-profile-form label {
   display: block;

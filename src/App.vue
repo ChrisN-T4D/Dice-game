@@ -128,6 +128,7 @@ import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { useSpeech } from '@/composables/useSpeech'
 import { loadState, saveState } from '@/utils/persistence'
+import { whenIdle } from '@/utils/whenIdle'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
@@ -270,18 +271,16 @@ onMounted(() => {
   loadState(session, prefs, guided)
   // Preload Kokoro once when they enter the app (worker downloads and caches; no second download later).
   const speech = useSpeech()
-  if (isMobileOrTouch()) {
-    requestIdleCallback(() => {
-      speech.preloadAllEngines({
-        language: profile.voiceLanguagePreference,
-        gender: profile.voiceGenderPreference,
-      })
-    }, { timeout: 4000 })
-  } else {
+  const runPreload = () => {
     speech.preloadAllEngines({
       language: profile.voiceLanguagePreference,
       gender: profile.voiceGenderPreference,
     })
+  }
+  if (isMobileOrTouch()) {
+    whenIdle(runPreload, { timeout: 4000 })
+  } else {
+    runPreload()
   }
 })
 onUnmounted(() => {

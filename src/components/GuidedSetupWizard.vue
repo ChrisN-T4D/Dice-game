@@ -446,14 +446,14 @@ function onStart() {
 .wizard-body::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.75);
 }
-/* Full-width block behind Back/Next: solid at bottom, fading to transparent about halfway up */
+/* Full-width block behind Back/Next: solid at bottom, fading to transparent. Min clearance matches nav (Android nav bar). */
 .wizard-solid-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
-  height: calc(4.25rem + 5rem + env(safe-area-inset-bottom, 0px));
+  height: calc(4.25rem + 5rem + max(env(safe-area-inset-bottom, 3.5rem), 3.5rem));
   background: linear-gradient(to top, rgb(15, 23, 42) 0%, rgb(15, 23, 42) 45%, transparent 100%);
   pointer-events: none;
   z-index: 18;
@@ -461,7 +461,7 @@ function onStart() {
 /* Gradient overlay on top of solid footer for fade effect; nav sits above this */
 .wizard-fade-overlay {
   position: fixed;
-  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(4.25rem + max(env(safe-area-inset-bottom, 3.5rem), 3.5rem));
   left: 0;
   right: 0;
   height: 5rem;
@@ -604,6 +604,7 @@ function onStart() {
 .custom-sliders input[type="range"] { flex: 1; min-width: 80px; accent-color: #a855f7; }
 .pct { min-width: 3rem; text-align: right; font-weight: 700; }
 .align-center { align-items: center; gap: 0.5rem; }
+/* Minimum bottom clearance so Back/Next sit above Android nav bar when safe-area-inset-bottom is 0 */
 .wizard-navigation {
   position: fixed;
   bottom: 0;
@@ -611,7 +612,7 @@ function onStart() {
   right: 0;
   width: 100%;
   padding: 0.75rem 1rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 3.5rem));
   background: rgb(15, 23, 42);
   border-top: 1px solid #334155;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.2);

@@ -134,54 +134,20 @@
             </div>
           </div>
           <div class="pref-voice-select-wrap">
-            <label class="pref-sublabel">Voice engine</label>
+            <label class="pref-sublabel">Voice</label>
+            <p class="pref-engine-notice">Kokoro (browser used as backup if needed).</p>
             <select
-              :value="currentTtsProvider"
-              @change="onTtsProviderChange($event)"
+              :value="(speech.kokoroVoiceId && speech.kokoroVoiceId.value) ?? speech.kokoroVoiceId"
+              @change="onKokoroVoiceChange($event)"
               class="pref-select pref-voice-select"
-              aria-label="Select voice engine"
+              aria-label="Select Kokoro voice"
+              :disabled="kokoroLoading"
             >
-              <option value="browser">Browser (backup)</option>
-              <option value="kokoro">Kokoro</option>
+              <option value="">— Choose voice —</option>
+              <option v-for="v in (speech.kokoroVoicesList && speech.kokoroVoicesList.value) || speech.kokoroVoicesList || []" :key="v.id" :value="v.id">{{ v.name }}</option>
             </select>
-            <p class="pref-engine-notice">{{ engineNotice }}</p>
+            <button v-if="!kokoroLoading" type="button" class="secondary small pref-refresh-voices" @click="loadKokoroVoices">Refresh voices</button>
           </div>
-          <template v-if="currentTtsProvider === 'browser'">
-            <div v-if="speech.isSupported()" class="pref-voice-select-wrap">
-              <label class="pref-sublabel">Browser voice</label>
-              <select
-                :value="(speech.selectedVoiceURI && speech.selectedVoiceURI.value) ?? speech.selectedVoiceURI"
-                @change="onVoiceChange($event)"
-                class="pref-select pref-voice-select"
-                aria-label="Select browser voice"
-              >
-                <option value="">Default (browser choice)</option>
-                <option
-                  v-for="v in voiceList"
-                  :key="voiceOptionValue(v)"
-                  :value="voiceOptionValue(v)"
-                >
-                  {{ v.name }} ({{ v.lang }})
-                </option>
-              </select>
-            </div>
-          </template>
-          <template v-else-if="currentTtsProvider === 'kokoro'">
-            <div class="pref-voice-select-wrap">
-              <label class="pref-sublabel">Kokoro voice</label>
-              <select
-                :value="(speech.kokoroVoiceId && speech.kokoroVoiceId.value) ?? speech.kokoroVoiceId"
-                @change="onKokoroVoiceChange($event)"
-                class="pref-select pref-voice-select"
-                aria-label="Select Kokoro voice"
-                :disabled="kokoroLoading"
-              >
-                <option value="">— Choose voice —</option>
-                <option v-for="v in (speech.kokoroVoicesList && speech.kokoroVoicesList.value) || speech.kokoroVoicesList || []" :key="v.id" :value="v.id">{{ v.name }}</option>
-              </select>
-              <button v-if="!kokoroLoading" type="button" class="secondary small pref-refresh-voices" @click="loadKokoroVoices">Refresh voices</button>
-            </div>
-          </template>
           <div v-if="speech.canSpeak()" class="row pref-speed-row">
             <span class="pref-label">Speed</span>
             <input v-model.number="speech.voiceRate" type="range" min="0.5" max="2" step="0.1" class="pref-speed-slider" />
@@ -198,6 +164,14 @@
               @click="playTestVoice"
             >
               {{ testVoicePlaying ? (modelDownloading ? 'Preparing…' : 'Playing…') : modelDownloading ? 'Downloading model…' : 'Hear voice test' }}
+            </button>
+            <button
+              v-if="testVoicePlaying"
+              type="button"
+              class="secondary small pref-stop-voice-btn"
+              @click="stopTestVoice"
+            >
+              Stop
             </button>
           </div>
         </div>
@@ -230,39 +204,26 @@ function onMusicChange(value) {
   prefs.playBackgroundMusicNow(normalized)
 }
 
-const voiceList = computed(() => speech.getVoicesList())
 /** Unwrap ref so template reacts when voice enabled is toggled (Yes/No). */
 const voiceEnabled = computed(() => (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) ? speech.voiceEnabled.value : !!speech.voiceEnabled)
 const kokoroLoading = ref(false)
 const testVoicePlaying = ref(false)
 
-const currentTtsProvider = computed(() => {
-  const p = (speech.ttsProvider && typeof speech.ttsProvider === 'object' && 'value' in speech.ttsProvider ? speech.ttsProvider.value : speech.ttsProvider)
-  return ['browser', 'kokoro'].includes(p) ? p : 'kokoro'
-})
-
 const modelDownloading = computed(() => {
-  if (currentTtsProvider.value !== 'kokoro') return false
   const k = speech.kokoroModelLoading
   const kVal = k && typeof k === 'object' && 'value' in k ? k.value : k
   return !!kVal
 })
 
-const engineNotices = {
-  browser: 'Built-in backup (no download).',
-  kokoro: 'Downloads model once (~82MB), then runs locally.',
-}
-const engineNotice = computed(() => engineNotices[currentTtsProvider.value] || '')
-
 watch(() => props.open, (isOpen) => {
   if (!isOpen) return
-  if (speech.isSupported()) speech.refreshVoices()
-  const p = currentTtsProvider.value
-  const kokoroList = speech.kokoroVoicesList?.value ?? speech.kokoroVoicesList ?? []
-  if (p === 'kokoro' && kokoroList.length === 0) loadKokoroVoices()
-  if (p === 'kokoro' && speech.preloadKokoroModel) {
-    speech.preloadKokoroModel()
+  if (speech.ttsProvider && typeof speech.ttsProvider === 'object' && 'value' in speech.ttsProvider) {
+    speech.ttsProvider.value = 'kokoro'
   }
+  if (speech.isSupported()) speech.refreshVoices()
+  const kokoroList = speech.kokoroVoicesList?.value ?? speech.kokoroVoicesList ?? []
+  if (kokoroList.length === 0) loadKokoroVoices()
+  if (speech.preloadKokoroModel) speech.preloadKokoroModel()
 })
 
 async function loadKokoroVoices() {
@@ -272,21 +233,6 @@ async function loadKokoroVoices() {
   } finally {
     kokoroLoading.value = false
   }
-}
-
-function voiceOptionValue(v) {
-  if (v.voiceURI) return v.voiceURI
-  return 'name:' + (v.name || '')
-}
-
-function onVoiceChange(e) {
-  const value = (e.target && e.target.value) || ''
-  speech.selectedVoiceURI.value = value
-}
-
-function onTtsProviderChange(e) {
-  const value = (e.target && e.target.value) || 'kokoro'
-  speech.ttsProvider.value = value
 }
 
 function onKokoroVoiceChange(e) {
@@ -305,6 +251,11 @@ function playTestVoice() {
       testVoicePlaying.value = false
     },
   })
+}
+
+function stopTestVoice() {
+  speech.stop()
+  testVoicePlaying.value = false
 }
 
 function setVoiceEnabled(v) {
@@ -368,7 +319,7 @@ function close() {
 .pref-speed-row { align-items: center; gap: 0.5rem; }
 .pref-music-volume { align-items: center; gap: 0.5rem; margin-top: 0.35rem; }
 .pref-slider { width: 100%; max-width: 140px; accent-color: #3b82f6; }
-.pref-test-voice-wrap { margin-top: 0.5rem; }
+.pref-test-voice-wrap { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
 .pref-downloading-notice {
   font-size: 0.8rem;
   color: #94a3b8;
@@ -376,6 +327,7 @@ function close() {
   text-align: center;
 }
 .pref-test-voice-btn { min-width: 8rem; }
+.pref-stop-voice-btn { min-width: 8rem; }
 .pref-speed-slider { width: 100%; max-width: 140px; accent-color: #3b82f6; }
 .pref-speed-value { font-size: 0.9rem; font-weight: 600; min-width: 2.5rem; }
 .pref-sep { padding-top: 0.75rem; border-top: 1px solid #334155; margin-top: 0.25rem; }

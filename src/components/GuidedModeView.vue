@@ -70,6 +70,20 @@
         {{ guided.partnerName(guided.currentPartner) }} leads
       </div>
 
+      <div v-if="session.phase === 3 && guided.currentPrompt?.locationRoll != null" class="guided-favorites-row">
+        <button
+          type="button"
+          class="secondary guided-fav-btn"
+          :class="{ 'favorited': favorites.isFavorite(guided.currentPrompt.locationRoll) }"
+          @click="favorites.toggle(guided.currentPrompt.locationRoll)"
+        >
+          {{ favorites.isFavorite(guided.currentPrompt.locationRoll) ? '♥ Favorited' : '♡ Add to favorites' }}
+        </button>
+        <button type="button" class="secondary guided-fav-btn" @click="favorites.openModal()">
+          View favorites
+        </button>
+      </div>
+
       <div v-if="guided.inPhaseCheckIn" class="guided-block phase-check-in">
         <p class="guided-block-text">Phase {{ guided.completedPhase }} complete. Ready to continue to the next phase?</p>
         <div class="row guided-block-actions center">
@@ -92,11 +106,13 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
+import { useFavoritesStore } from '@/stores/favorites'
 import { useSpeech } from '@/composables/useSpeech'
 import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 
 const session = useSessionStore()
 const guided = useGuidedStore()
+const favorites = useFavoritesStore()
 const { speak, preparePhrase, stop: stopSpeech } = useSpeech()
 
 const pendingConfig = ref(null)
@@ -358,12 +374,26 @@ onUnmounted(() => {
 .guided-sparkle-circle.breathing::before {
   animation: sparkle-rotate 6s linear infinite;
 }
+/* Animate only transform to avoid expensive repaints on mobile (box-shadow animation heats devices) */
 @keyframes breathe {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.25), 0 0 24px rgba(168, 85, 247, 0.2), inset 0 0 40px rgba(255, 255, 255, 0.06), inset 8px -8px 16px rgba(255, 255, 255, 0.04), -4px 4px 12px rgba(0, 0, 0, 0.2); }
-  50% { transform: scale(1.12); box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4), 0 0 36px rgba(168, 85, 247, 0.35), inset 0 0 50px rgba(255, 255, 255, 0.1), inset 8px -8px 20px rgba(255, 255, 255, 0.06), -4px 4px 16px rgba(0, 0, 0, 0.25); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
 }
 @keyframes sparkle-rotate {
   to { transform: rotate(360deg); }
+}
+/* Pause animations when tab is hidden to reduce CPU/heat in background */
+:global(.app-root.page-hidden) .guided-sparkle-circle,
+:global(.app-root.page-hidden) .guided-sparkle-circle::before,
+:global(.app-root.page-hidden) .guided-sparkle-circle::after {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .guided-sparkle-circle,
+  .guided-sparkle-circle::before,
+  .guided-sparkle-circle::after {
+    animation: none;
+  }
 }
 
 /* Phase (left: label + time) and Total (right) below the circle */
@@ -404,6 +434,16 @@ onUnmounted(() => {
 .instruction-fluid { margin-top: 0; }
 .instruction-fluid + .clothing-line { margin-top: 0.75rem; }
 .partner-label { font-size: 1rem; color: #a855f7; margin: 0; text-align: center; }
+.guided-favorites-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+}
+.guided-fav-btn { font-size: 0.9rem; padding: 0.4rem 0.75rem; }
+.guided-fav-btn.favorited { color: #f472b6; border-color: #f472b6; }
 .guided-controls {
   display: flex;
   flex-wrap: nowrap;

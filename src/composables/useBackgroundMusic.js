@@ -9,6 +9,8 @@ export function useBackgroundMusic(prefs) {
   let audio = null
   let playlistTrackIndex = 0
   let currentPlaylistId = null
+  /** Currently playing selection (track id or playlist id); used to avoid restarting when Play is clicked again. */
+  let currentSelection = null
 
   function applyVolume() {
     if (!audio) return
@@ -18,6 +20,7 @@ export function useBackgroundMusic(prefs) {
   }
 
   function stop() {
+    if (prefs && typeof prefs.setBackgroundMusicPlaying === 'function') prefs.setBackgroundMusicPlaying(false)
     if (audio) {
       audio.pause()
       audio.removeEventListener('ended', onTrackEnded)
@@ -25,6 +28,7 @@ export function useBackgroundMusic(prefs) {
       audio = null
     }
     currentPlaylistId = null
+    currentSelection = null
   }
 
   function playTrack(filename) {
@@ -36,6 +40,7 @@ export function useBackgroundMusic(prefs) {
     audio.addEventListener('error', () => { audio = null })
     applyVolume()
     audio.play().catch(() => {})
+    if (prefs && typeof prefs.setBackgroundMusicPlaying === 'function') prefs.setBackgroundMusicPlaying(true)
   }
 
   function playNextInPlaylist() {
@@ -58,8 +63,14 @@ export function useBackgroundMusic(prefs) {
   }
 
   function play(selection) {
+    if (!selection || selection === 'none') {
+      stop()
+      return
+    }
+    if (audio && currentSelection === selection) return
     stop()
-    if (!selection || selection === 'none') return
+    currentSelection = selection
+    if (prefs && typeof prefs.setBackgroundMusicPlaying === 'function') prefs.setBackgroundMusicPlaying(true)
 
     const playlist = getPlaylistById(selection)
     if (playlist) {

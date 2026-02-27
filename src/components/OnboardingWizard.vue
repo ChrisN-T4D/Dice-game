@@ -52,173 +52,51 @@
           </div>
         </div>
 
-        <!-- Step 3: Quick tour (modes, landing, Dice game, Guided) -->
+        <!-- Step 3: Tour overlay on real landing screen – user clicks buttons, things get explained -->
         <div class="wizard-step wizard-step-tour" :class="{ active: step === 3 }">
-          <div class="wizard-step-content">
-            <div class="onboarding-tour-preview">
-              <div ref="tourPreviewMockAreaRef" class="tour-preview-mock-area">
-                <div class="tour-overlay" aria-hidden="true" />
-                <!-- Mock UI fills the mock area above the caption bar -->
-                <div v-show="currentTourView === 'modes'" class="onboarding-tour-modes-overview tour-mock-fill">
-                <div class="tour-modes-cards" data-tour-focus>
-                <div class="tour-mode-card">
-                  <span class="tour-mode-icon">🎲</span>
-                  <strong>Dice game</strong> — Roll dice for location, action, position. No timer; optional Read aloud.
-                </div>
-                <div class="tour-mode-card">
-                  <span class="tour-mode-icon">⏱️</span>
-                  <strong>Guided Mode</strong> — Set time; app guides phases (where → what → position) with timed turns.
-                </div>
-                <div class="tour-mode-card tour-mode-card-future">
-                  <span class="tour-mode-icon">🌡️</span>
-                  <strong>Preset Guided Sensate</strong> — Ready-made sessions for your barriers. (Coming later.)
-                </div>
+          <div class="wizard-step-content tour-landing-step-content">
+            <div class="tour-landing-wrap">
+              <!-- Real landing screen (same as after onboarding); clicks show explanation, don't start session -->
+              <div class="landing-content tour-landing-inner" :class="{ 'card-bg-fiery-heart': prefs.backgroundImage === '1' }">
+                <h1 class="landing-title">Between Us</h1>
+                <p class="landing-subtitle">
+                  Discovering intimacy together. Guided sessions with timed turns and voice prompts, or roll your own in Dice game
+                </p>
+                <div class="mode-buttons">
+                  <button
+                    type="button"
+                    class="mode-button guided"
+                    :class="{ 'tour-explained': tourExplainedGuided }"
+                    @click="onTourModeClick('guided')"
+                  >
+                    <div class="mode-button-title">⏱️ Guided Mode</div>
+                    <div class="mode-button-desc">
+                      Inspired by sensate focus therapy: set a total time and move through phased, timed turns (where, what, then position) with optional voice prompts.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="mode-button freeplay"
+                    :class="{ 'tour-explained': tourExplainedFreeplay }"
+                    @click="onTourModeClick('freeplay')"
+                  >
+                    <div class="mode-button-title">🎲 Dice game</div>
+                    <div class="mode-button-desc">
+                      Roll dice for location, action, and (in Phase 3) position. No timer; you set the pace.
+                    </div>
+                  </button>
                 </div>
               </div>
-              <div v-show="currentTourView === 'landing'" class="onboarding-tour-ui-mock onboarding-tour-landing tour-mock-fill">
-                <div class="tour-landing-content" data-tour-focus>
-                <h3 class="tour-landing-title">Between Us</h3>
-                <p class="tour-landing-subtitle">Discovering intimacy together guided sessions or roll your own in Dice game</p>
-                <div class="tour-landing-buttons">
-                  <button type="button" class="mode-button freeplay" :class="{ 'tour-highlight-active': currentLandingHighlight === 'freeplay' }">🎲 Dice game — Roll dice, no timer</button>
-                  <button type="button" class="mode-button guided" :class="{ 'tour-highlight-active': currentLandingHighlight === 'guided' }">⏱️ Guided Mode — Timed, phased turns</button>
+              <!-- Overlay: caption + Continue; pointer-events none on overlay so buttons are clickable; caption has auto -->
+              <div class="tour-overlay-wrap" aria-hidden="true">
+                <div class="tour-overlay-backdrop" />
+                <div class="tour-overlay-caption">
+                  <p class="tour-overlay-title">{{ tourOverlayTitle }}</p>
+                  <p class="tour-overlay-desc">{{ tourOverlayDesc }}</p>
+                  <button type="button" class="primary tour-overlay-continue" @click="continueTourToSetup">
+                    Continue to setup
+                  </button>
                 </div>
-                </div>
-              </div>
-              <div v-show="currentTourView === 'guidedSetup'" class="onboarding-tour-ui-mock onboarding-tour-guided-setup tour-mock-fill">
-                <div class="tour-guided-setup-content" data-tour-focus>
-                  <div class="guided-setup-wizard tour-setup-mock">
-                    <div class="wizard-progress">
-                      <span class="wizard-progress-text">Step 1 of 7</span>
-                      <div class="wizard-progress-bar">
-                        <div class="wizard-progress-fill" style="width: 14%" />
-                      </div>
-                    </div>
-                    <div class="wizard-step active">
-                      <div class="wizard-step-header">
-                        <div class="wizard-step-title">Partner 1</div>
-                        <div class="wizard-step-description">Name, color, and anatomy</div>
-                      </div>
-                      <div class="wizard-step-content">
-                        <label>Name</label>
-                        <input type="text" placeholder="Partner 1" class="wizard-input" readonly />
-                        <label class="mt">Color</label>
-                        <div class="row color-dots">
-                          <span class="color-dot selected" style="background: #3b82f6" />
-                          <span class="color-dot" style="background: #22d3ee" />
-                          <span class="color-dot" style="background: #22c55e" />
-                          <span class="color-dot" style="background: #a855f7" />
-                          <span class="color-dot" style="background: #f59e0b" />
-                          <span class="color-dot" style="background: #ef4444" />
-                          <span class="color-dot" style="background: #f97316" />
-                          <span class="color-dot" style="background: #ec4899" />
-                          <span class="color-dot" style="background: #e5e7eb" />
-                        </div>
-                        <label class="mt">Anatomy</label>
-                        <div class="row">
-                          <button type="button" class="secondary preset-selected">Penis & scrotum</button>
-                          <button type="button" class="secondary">Vulva</button>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- No nav inside mock: main tour Back/Next at bottom of modal (matches real wizard feel) -->
-                  </div>
-                </div>
-              </div>
-              <div v-show="currentTourView === 'freeplay'" class="onboarding-tour-ui-mock onboarding-tour-ui-freeplay tour-mock-fill">
-                <div class="play-mode-row" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'mode' }">
-                  <label class="play-mode-label">Play Mode</label>
-                  <div class="row">
-                    <button type="button" class="secondary preset-selected">Dice game</button>
-                    <button type="button" class="secondary">Guided Mode</button>
-                  </div>
-                </div>
-                <div class="toolbar-row">
-                  <button type="button" class="secondary small">Next phase</button>
-                  <button type="button" class="secondary small">New session</button>
-                  <button type="button" class="secondary small">Summary</button>
-                  <div class="timer-bar tour-timer-mock" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'timer' }">
-                    <div class="timer-label-row">
-                      <span class="timer-label">Timer</span>
-                    </div>
-                    <div class="timer-buttons-row row">
-                      <button type="button" class="secondary small">30s</button>
-                      <button type="button" class="secondary small">1 min</button>
-                      <button type="button" class="secondary small">2 min</button>
-                      <button type="button" class="secondary small">5 min</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="free-play-view spacing-stack tour-freeplay-copy">
-                  <div class="free-play-header row center">
-                    <span class="phase-display">Phase 1</span>
-                    <span class="roll-count">Rolls this phase: 0</span>
-                  </div>
-                  <div class="roll-block" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'rolls' }">
-                    <div class="roll-grid">
-                      <div class="roll-col">
-                        <label>Location</label>
-                        <input type="number" value="7" min="1" max="20" readonly aria-label="Location roll 1–20" />
-                      </div>
-                      <div class="roll-col">
-                        <label>Action</label>
-                        <input type="number" value="12" min="1" max="20" readonly aria-label="Action roll 1–20" />
-                      </div>
-                    </div>
-                    <div class="row action-row">
-                      <button type="button" class="primary big" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'roll-for-me' }">Roll for me</button>
-                      <button type="button" class="secondary big" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'submit-numbers' }">Submit numbers</button>
-                    </div>
-                  </div>
-                  <div class="roll-block clothing-roller" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'clothing' }">
-                    <h3 class="section-title">Clothing</h3>
-                    <div class="roll-grid roll-grid-single">
-                      <div class="roll-col">
-                        <label>How (1–12)</label>
-                        <input type="number" value="3" min="1" max="12" readonly aria-label="Clothing method 1–12" />
-                      </div>
-                    </div>
-                    <div class="row action-row">
-                      <button type="button" class="primary big">Roll for me</button>
-                      <button type="button" class="secondary big">Submit numbers</button>
-                    </div>
-                  </div>
-                  <div class="output-block" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'output' }">
-                    <div class="output-line"><strong>Where:</strong> Bedroom</div>
-                    <div class="output-line"><strong>What:</strong> Touch and explore</div>
-                    <button type="button" class="secondary small read-aloud-btn" :class="{ 'tour-highlight-active': currentFreeplayHighlight === 'read-aloud' }">Read aloud</button>
-                  </div>
-                </div>
-              </div>
-              <div v-show="currentTourView === 'guided'" class="onboarding-tour-ui-mock onboarding-tour-ui-guided tour-mock-fill">
-                <div class="tour-guided-content" data-tour-focus>
-                <div class="play-mode-row" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'mode' }">
-                  <label class="play-mode-label">Play Mode</label>
-                  <div class="row">
-                    <button type="button" class="secondary">Dice game</button>
-                    <button type="button" class="secondary preset-selected">Guided Mode</button>
-                  </div>
-                </div>
-                <div class="guided-mode-view spacing-stack tour-guided-copy">
-                  <div class="guided-header row center" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'header' }">
-                    <span class="phase-display">Phase 1</span>
-                    <span class="time-display">Total: 15:00</span>
-                    <span class="time-display">Phase: 5:00</span>
-                    <span class="action-label">Turn: 0:45</span>
-                  </div>
-                  <div class="guided-block guided-output" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'output' }">
-                    <div class="output-line"><strong>Where:</strong> Bedroom</div>
-                    <div class="output-line"><strong>What:</strong> Touch and explore</div>
-                  </div>
-                  <div class="partner-label" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'partner' }">Partner 1 → Partner 2</div>
-                  <div class="row guided-controls center">
-                    <button type="button" class="secondary" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'pause' }">Pause</button>
-                    <button type="button" class="secondary" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'skip' }">Skip to next turn</button>
-                    <button type="button" class="secondary danger" :class="{ 'tour-highlight-active': currentGuidedHighlight === 'stop' }">Stop session</button>
-                  </div>
-                </div>
-                </div>
-              </div>
               </div>
             </div>
           </div>
@@ -322,14 +200,14 @@
             <div class="wizard-step-header">
               <h2 class="wizard-step-title">Voice setup</h2>
               <p v-if="!preloadDone" class="wizard-step-description">
-                Preloading Piper so it's ready when you start…
+                Preloading Kokoro so it's ready when you start…
               </p>
               <p v-else class="wizard-step-description">
-                We use Piper and Kokoro (Browser as backup). Options below match your female or male preference. Try one and choose it.
+                We use Kokoro for voice (Browser as backup). Options below match your female or male preference. Try one and choose it.
               </p>
             </div>
             <div v-if="!preloadDone" class="onboarding-preload-status">
-              <p class="onboarding-preload-text">Loading Piper…</p>
+              <p class="onboarding-preload-text">Loading Kokoro…</p>
               <p class="onboarding-preload-hint">Kokoro loads on first use. You can continue without waiting.</p>
               <div class="onboarding-spinner" aria-hidden="true" />
               <button
@@ -384,19 +262,13 @@
           </div>
         </div>
 
-        <!-- Tour instructions bar: static right above Next/Back when on step 3 -->
-        <div v-show="step === 3" class="tour-caption-bar">
-          <span class="tour-caption-title">{{ tourSteps[tourSlide]?.title }}</span>
-          <span class="tour-caption-desc">{{ tourSteps[tourSlide]?.description }}</span>
-          <p v-if="tourSlide < tourSteps.length - 1" class="tour-caption-next">Next: {{ tourSteps[tourSlide + 1]?.title }}</p>
-          <p v-else class="tour-caption-next">You'll choose a voice next, then you're all set.</p>
-        </div>
-
         <div v-show="step > 1" class="wizard-navigation" :class="{ 'step-3-nav': step === 3 }">
           <button
             v-show="step > 1"
             type="button"
             class="wizard-nav-btn back"
+            :disabled="navInCooldown"
+            :aria-busy="navInCooldown"
             @click="goBack"
           >
             Back
@@ -405,14 +277,18 @@
             v-if="step < totalSteps"
             type="button"
             class="wizard-nav-btn next"
+            :disabled="navInCooldown"
+            :aria-busy="navInCooldown"
             @click="goNext"
           >
-            {{ step === 3 && tourSlide < lastTourSlide ? 'Next' : step === 3 && tourSlide === lastTourSlide ? 'Continue' : 'Next' }}
+            {{ step === 3 ? 'Continue' : 'Next' }}
           </button>
           <button
             v-else
             type="button"
             class="wizard-nav-btn next"
+            :disabled="navInCooldown"
+            :aria-busy="navInCooldown"
             @click="finish"
           >
             Get started
@@ -440,47 +316,37 @@ const prefs = usePreferencesStore()
 const speech = useSpeech()
 const totalSteps = 8
 const step = ref(1)
-const tourSlide = ref(0)
 const wizardStepsBodyRef = ref(null)
 const step2Ref = ref(null)
-const tourPreviewMockAreaRef = ref(null)
 const stepsBodyStyle = ref({})
-const tourSteps = [
-  { view: 'modes', title: 'Three modes', description: 'Between Us offers Dice game, Guided Mode, and (for some preferences) a preset guided sensate option.' },
-  { view: 'landing', title: 'Main screen', description: "After setup you'll see this screen. Choose a mode to start." },
-  { view: 'landing', landingHighlight: 'freeplay', title: 'Main screen', description: 'Choose Dice game to try roll-the-dice mode first.' },
-  { view: 'freeplay', freeplayHighlight: 'mode', title: 'Dice game', description: "Clicking Dice game takes you here. Roll dice for a random experience—no time limit, no guided flow, just randomness." },
-  { view: 'freeplay', freeplayHighlight: 'timer', title: 'Timer', description: 'Optional countdown: 30s, 1 min, 2 min, or 5 min. Use it to pace turns or phases.' },
-  { view: 'freeplay', freeplayHighlight: 'rolls', title: 'Your rolls', description: 'Enter your dice numbers here: Location (1–20) and Action (1–20). In Phase 3 you\'ll also have Position and Modifier.' },
-  { view: 'freeplay', freeplayHighlight: 'roll-for-me', title: 'Roll for me', description: 'Want the app to roll for you? Tap this and it will pick random numbers and show the result.' },
-  { view: 'freeplay', freeplayHighlight: 'submit-numbers', title: 'Submit numbers', description: "When you've entered numbers (from dice or Roll for me), tap here to get your outcome." },
-  { view: 'freeplay', freeplayHighlight: 'clothing', title: 'Clothing', description: 'Optional: roll for a clothing-removal prompt (how to undress) in the same phase.' },
-  { view: 'freeplay', freeplayHighlight: 'output', title: 'Your result', description: 'The instructions for your roll appear here—where to go, what to do, and any clothing prompt.' },
-  { view: 'freeplay', freeplayHighlight: 'read-aloud', title: 'Read aloud', description: 'Tap to hear the instructions read out loud with your chosen voice.' },
-  { view: 'landing', landingHighlight: 'guided', title: 'Main screen', description: 'From the main screen, choose Guided Mode for timed, phased sessions.' },
-  { view: 'guidedSetup', title: 'Guided setup (first screen)', description: 'Choosing Guided Mode opens this wizard first. Set partner names, phase distribution, total time, turn length, and options—then start your session.' },
-  { view: 'guided', guidedHighlight: 'mode', title: 'After setup: session screen', description: 'Once you finish the wizard, your session looks like this. You can switch back to Dice game or start a new guided session from here.' },
-  { view: 'guided', guidedHighlight: 'header', title: 'Phase and time', description: 'See the current phase (1–3), total time remaining, phase time remaining, and the current turn or action countdown.' },
-  { view: 'guided', guidedHighlight: 'output', title: 'Current prompt', description: 'The instructions for this turn appear here—where to go, what to do, and any clothing or position prompt.' },
-  { view: 'guided', guidedHighlight: 'partner', title: 'Turn order', description: 'Shows who is giving and who is receiving this turn (Partner 1 → Partner 2), or who leads in Phase 3.' },
-  { view: 'guided', guidedHighlight: 'pause', title: 'Pause', description: 'Pause the timer anytime. Tap Resume to continue.' },
-  { view: 'guided', guidedHighlight: 'skip', title: 'Skip to next turn', description: 'Skip the current turn and move to the next prompt without waiting for the timer.' },
-  { view: 'guided', guidedHighlight: 'stop', title: 'Stop session', description: 'End the guided session. You can start a new one later or switch to Dice game.' },
-]
-const currentTourView = computed(() => tourSteps[tourSlide.value]?.view ?? 'modes')
-const currentFreeplayHighlight = computed(() => tourSteps[tourSlide.value]?.freeplayHighlight ?? null)
-const currentLandingHighlight = computed(() => tourSteps[tourSlide.value]?.landingHighlight ?? null)
-const currentGuidedHighlight = computed(() => tourSteps[tourSlide.value]?.guidedHighlight ?? null)
-const tourPopupPositionClass = computed(() => {
-  const v = currentTourView.value
-  const h = currentFreeplayHighlight.value
-  const g = currentGuidedHighlight.value
-  if (v === 'modes') return 'tour-popup--modes'
-  if (v === 'landing') return 'tour-popup--landing'
-  if (v === 'guidedSetup') return 'tour-popup--guided-setup'
-  if (v === 'guided') return 'tour-popup--guided-' + (g || 'mode')
-  return 'tour-popup--fp-' + (h || 'mode')
+
+/** Step 3 overlay tour: user clicks landing buttons, we show explanation */
+const tourExplainedFreeplay = ref(false)
+const tourExplainedGuided = ref(false)
+const tourLastClicked = ref(null) // 'freeplay' | 'guided' | null
+const tourOverlayTitle = computed(() => {
+  if (tourLastClicked.value === 'guided') return '⏱️ Guided Mode'
+  if (tourLastClicked.value === 'freeplay') return '🎲 Dice game'
+  return 'Try the modes'
 })
+const tourOverlayDesc = computed(() => {
+  if (tourLastClicked.value === 'guided') return 'Timed, phased turns with optional voice prompts. You\'ll set partner names, total time, and turn length, then the app guides you through where → what → position.'
+  if (tourLastClicked.value === 'freeplay') return 'Roll dice for location, action, and (in Phase 3) position. No timer—you set the pace. Optional Read aloud and clothing prompts.'
+  return 'Click either button above to see what it does. Then continue to finish setup.'
+})
+function onTourModeClick(mode) {
+  tourLastClicked.value = mode
+  if (mode === 'freeplay') tourExplainedFreeplay.value = true
+  else tourExplainedGuided.value = true
+}
+function continueTourToSetup() {
+  if (navInCooldown.value) return
+  startNavCooldown()
+  tourLastClicked.value = null
+  tourExplainedFreeplay.value = false
+  tourExplainedGuided.value = false
+  step.value = 4
+}
 const displayName = ref(profile.displayName || '')
 const preloadDone = ref(false)
 const samplePlaying = ref(false)
@@ -625,48 +491,45 @@ function applyQuestionnaire() {
 
 const progressPercent = computed(() => (step.value / totalSteps) * 100)
 
-const lastTourSlide = tourSteps.length - 1
+/** Cooldown so fast Back/Next doesn't cause lag or crash */
+const NAV_COOLDOWN_MS = 420
+const navInCooldown = ref(false)
+let navCooldownTimer = null
+
+function startNavCooldown() {
+  navInCooldown.value = true
+  if (navCooldownTimer) clearTimeout(navCooldownTimer)
+  navCooldownTimer = setTimeout(() => {
+    navCooldownTimer = null
+    navInCooldown.value = false
+  }, NAV_COOLDOWN_MS)
+}
 
 function skipTour() {
   step.value = 4
 }
 
 function goBack() {
-  if (step.value === 3 && tourSlide.value > 0) {
-    tourSlide.value--
-  } else {
-    step.value = Math.max(1, step.value - 1)
+  if (navInCooldown.value) return
+  startNavCooldown()
+  if (step.value === 4) {
+    tourLastClicked.value = null
+    tourExplainedFreeplay.value = false
+    tourExplainedGuided.value = false
   }
+  step.value = Math.max(1, step.value - 1)
 }
 
 function goNext() {
-  if (step.value === 3 && tourSlide.value < lastTourSlide) {
-    tourSlide.value++
-  } else {
-    if (step.value === 3) tourSlide.value = 0
-    step.value++
+  if (navInCooldown.value) return
+  startNavCooldown()
+  if (step.value === 3) {
+    tourLastClicked.value = null
+    tourExplainedFreeplay.value = false
+    tourExplainedGuided.value = false
   }
+  step.value++
 }
-
-function scrollTourHighlightToCenter() {
-  nextTick(() => {
-    const area = tourPreviewMockAreaRef.value
-    if (!area || step.value !== 3) return
-    const candidates = area.querySelectorAll('.tour-mock-fill')
-    const scrollContainer = [...candidates].find((el) => getComputedStyle(el).display !== 'none')
-    if (!scrollContainer) return
-    const highlight = scrollContainer.querySelector('.tour-highlight-active')
-    const focusEl = scrollContainer.querySelector('[data-tour-focus]')
-    const target = highlight || focusEl
-    if (target) {
-      target.scrollIntoView({ block: 'center', behavior: 'smooth', inline: 'nearest' })
-    }
-  })
-}
-
-watch([tourSlide, step], () => {
-  if (step.value === 3) scrollTourHighlightToCenter()
-})
 
 const PRELOAD_TIMEOUT_MS = 45_000 // stop waiting after 45s and show recommendations anyway
 
@@ -708,12 +571,10 @@ watch([() => step.value, preloadDone], () => {
 function playSample(rec) {
   if (samplePlaying.value) return
   const prevProvider = speech.ttsProvider.value
-  const prevPiper = speech.piperVoiceId.value
   const prevKokoro = speech.kokoroVoiceId.value
   const prevUri = speech.selectedVoiceURI.value
   speech.ttsProvider.value = rec.provider
-  if (rec.provider === 'piper') speech.piperVoiceId.value = rec.voiceId
-  else if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
+  if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
   else if (rec.provider === 'browser') speech.selectedVoiceURI.value = rec.voiceId
   samplePlaying.value = true
   const sample = 'You can use this voice for prompts and read aloud.'
@@ -722,7 +583,6 @@ function playSample(rec) {
     onEnd: () => {
       samplePlaying.value = false
       speech.ttsProvider.value = prevProvider
-      speech.piperVoiceId.value = prevPiper
       speech.kokoroVoiceId.value = prevKokoro
       speech.selectedVoiceURI.value = prevUri
     },
@@ -731,8 +591,7 @@ function playSample(rec) {
 
 function useVoice(rec) {
   speech.ttsProvider.value = rec.provider
-  if (rec.provider === 'piper') speech.piperVoiceId.value = rec.voiceId
-  else if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
+  if (rec.provider === 'kokoro') speech.kokoroVoiceId.value = rec.voiceId
   else if (rec.provider === 'browser') speech.selectedVoiceURI.value = rec.voiceId
   speech.voiceEnabled.value = true
 }
@@ -1099,6 +958,7 @@ function finish() {
   border-top: none;
 }
 .onboarding-modal .wizard-nav-btn { padding: 0.6rem 1.25rem; font-size: 0.95rem; }
+.onboarding-modal .wizard-nav-btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 .onboarding-intro-image {
   display: block;
   width: 100%;
@@ -1167,29 +1027,78 @@ function finish() {
 }
 .tour-highlight-active { z-index: 15; position: relative; }
 
-/* Tour step: fill step area so preview and content are visible */
-.onboarding-modal .wizard-step-tour .wizard-step-content {
+/* Step 3: overlay tour on real landing screen */
+.onboarding-modal .wizard-step-tour .wizard-step-content.tour-landing-step-content {
   display: flex;
   flex-direction: column;
   padding: 0;
   min-height: 0;
   height: 100%;
 }
-/* Tour: full-screen; flex column so caption bar is in-flow and does not overlap mock */
-.onboarding-tour-preview {
+.tour-landing-wrap {
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-.tour-preview-mock-area {
-  flex: 1;
-  min-height: 0;
+.tour-landing-inner {
+  padding: 1.5rem 1.25rem 8rem;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.tour-landing-inner .mode-buttons { margin-bottom: 0; }
+.tour-overlay-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.tour-overlay-wrap .tour-overlay-caption {
+  pointer-events: auto;
+}
+.tour-overlay-backdrop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12rem;
+  background: linear-gradient(to top, rgba(2, 6, 23, 0.97) 0%, rgba(2, 6, 23, 0.7) 50%, transparent 100%);
+  pointer-events: none;
+}
+.tour-overlay-caption {
   position: relative;
-  overflow: hidden;
+  padding: 1rem 1.25rem 1.25rem;
+  text-align: center;
+}
+.tour-overlay-title {
+  font-family: var(--font-handwritten-title);
+  font-size: clamp(1.15rem, 3vmin, 1.5rem);
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 0.25rem;
+  line-height: 1.25;
+}
+.tour-overlay-desc {
+  font-family: var(--font-handwritten-body);
+  font-size: clamp(0.9rem, 2.2vmin, 1.05rem);
+  color: #e2e8f0;
+  line-height: 1.4;
+  margin: 0 0 1rem;
+}
+.tour-overlay-continue {
+  min-height: 48px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.mode-button.tour-explained {
+  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25);
 }
 /* Mock UI fills the area above the caption bar; scrollable so highlighted portion can be centered */
 .tour-mock-fill {
@@ -1583,6 +1492,23 @@ button.primary.tour-highlight-active { --tour-glow: rgba(251, 191, 36, 0.55); }
 @keyframes tour-highlight-pulse {
   0%, 100% { box-shadow: 0 0 0 0 var(--tour-glow, rgba(59, 130, 246, 0.3)); border-color: transparent; }
   50% { box-shadow: 0 0 12px 2px var(--tour-glow, rgba(59, 130, 246, 0.3)); border-color: rgba(255, 255, 255, 0.15); }
+}
+/* Pause tour/onboarding animations when tab hidden to reduce mobile CPU/heat */
+:global(.app-root.page-hidden) .tour-highlight-active,
+:global(.app-root.page-hidden) .onboarding-spinner {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-highlight-active {
+    animation: none;
+    box-shadow: 0 0 8px 1px var(--tour-glow, rgba(59, 130, 246, 0.35));
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .onboarding-spinner {
+    animation: none;
+    border-top-color: #60a5fa;
+    opacity: 0.9;
+  }
 }
 
 .onboarding-profile-form { margin-top: 1rem; text-align: left; }

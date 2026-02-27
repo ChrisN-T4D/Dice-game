@@ -62,15 +62,25 @@
       <div v-if="lastWhat" class="output-line"><strong>What:</strong> {{ lastWhat }}</div>
       <div v-if="lastClothing" class="output-line"><strong>Clothing:</strong> {{ lastClothing }}</div>
       <div v-if="lastInstruction" class="instruction-output">{{ lastInstruction }}</div>
-      <button
-        v-if="(lastInstruction || lastClothing) && speech.canSpeak()"
-        type="button"
-        class="secondary small read-aloud-btn"
-        :disabled="readAloudLoading"
-        @click="readAloud"
-      >
-        {{ readAloudLoading ? 'Loading voice…' : 'Read aloud' }}
-      </button>
+      <template v-if="(lastInstruction || lastClothing) && speech.canSpeak()">
+        <button
+          v-if="!readAloudPlaying"
+          type="button"
+          class="secondary small read-aloud-btn"
+          :disabled="readAloudLoading"
+          @click="readAloud"
+        >
+          {{ readAloudLoading ? 'Loading voice…' : 'Read aloud' }}
+        </button>
+        <button
+          v-else
+          type="button"
+          class="secondary small read-aloud-btn"
+          @click="pauseReadAloud"
+        >
+          Pause
+        </button>
+      </template>
     </div>
   </div>
 </template>
@@ -89,8 +99,7 @@ const speech = useSpeech()
 const readAloudLoading = computed(() => {
   const provider = (speech.ttsProvider && speech.ttsProvider.value) ?? speech.ttsProvider
   const kokoro = (speech.kokoroModelLoading && speech.kokoroModelLoading.value) ?? speech.kokoroModelLoading
-  const piper = (speech.piperModelLoading && speech.piperModelLoading.value) ?? speech.piperModelLoading
-  return (provider === 'kokoro' && !!kokoro) || (provider === 'piper' && !!piper)
+  return provider === 'kokoro' && !!kokoro
 })
 
 const locationRoll = ref(1)
@@ -176,7 +185,16 @@ function submitClothing() {
 
 function readAloud() {
   const parts = [lastInstruction.value, lastClothing.value].filter(Boolean)
-  if (parts.length) speech.speak(parts.join('\n\n'), { force: true })
+  if (!parts.length) return
+  readAloudPlaying.value = true
+  speech.speak(parts.join('\n\n'), {
+    force: true,
+    onEnd: () => { readAloudPlaying.value = false },
+  })
+}
+function pauseReadAloud() {
+  speech.stop()
+  readAloudPlaying.value = false
 }
 </script>
 

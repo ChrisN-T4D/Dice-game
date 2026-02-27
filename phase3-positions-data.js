@@ -369,6 +369,24 @@ function getPhase3PositionFocusPartner(positionNumber, anatomy1, anatomy2) {
   return 1; // neutral: default to partner 1
 }
 
+/**
+ * Position numbers (1–155) suitable for a given receiver anatomy in Phase 3.
+ * Includes positions where focusAnatomy matches the receiver OR is neutral (both / unspecified).
+ * Used so that as turns alternate (partner 1 vs 2 as receiver), positions focus on that partner's genital stimulation.
+ * @param {string} anatomy - 'vulva' or 'penis' (receiver's anatomy)
+ * @returns {number[]} position numbers to choose from
+ */
+function getPhase3PositionNumbersForReceiverAnatomy(anatomy) {
+  const target = (anatomy || '').toLowerCase();
+  if (target !== 'vulva' && target !== 'penis') return Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+  const out = [];
+  for (let n = 1; n <= PHASE3_POSITION_COUNT; n++) {
+    const focus = getPhase3PositionFocusAnatomy(n);
+    if (focus === target || focus === 'neutral') out.push(n);
+  }
+  return out.length > 0 ? out : Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+}
+
 // ESM export for Vue/Vite (Node scripts read this file as text, so no change for them)
 export {
   PHASE3_POSITION_COUNT,
@@ -390,6 +408,7 @@ export {
   isPhase3AnalPosition,
   getPhase3PositionFocusAnatomy,
   getPhase3PositionFocusPartner,
+  getPhase3PositionNumbersForReceiverAnatomy,
   scrubHeteroPositionName,
   getPhase3PositionsForTable,
 };

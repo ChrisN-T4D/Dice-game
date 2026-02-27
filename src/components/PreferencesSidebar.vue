@@ -16,6 +16,9 @@
         <button type="button" class="secondary pref-intro-btn" @click="emit('showOnboarding')">
           Show intro again
         </button>
+        <button type="button" class="secondary pref-favorites-btn" @click="emit('showFavorites')">
+          ♥ Favorites
+        </button>
       </div>
       <div class="pref-block pref-block-stack">
         <label class="pref-label">Prompt detail</label>
@@ -81,10 +84,10 @@
             v-if="prefs.backgroundMusic !== 'none'"
             type="button"
             class="secondary pref-play-music-btn"
-            title="Start playback (browser may require a click to allow audio)"
-            @click="prefs.playBackgroundMusicNow(prefs.backgroundMusic)"
+            :title="prefs.backgroundMusicPlaying ? 'Pause playback' : 'Start playback (browser may require a click to allow audio)'"
+            @click="prefs.backgroundMusicPlaying ? prefs.stopBackgroundMusic() : prefs.playBackgroundMusicNow(prefs.backgroundMusic)"
           >
-            ▶ Play
+            {{ prefs.backgroundMusicPlaying ? '⏸ Pause' : '▶ Play' }}
           </button>
         </div>
         <div v-if="prefs.backgroundMusic !== 'none'" class="row pref-music-volume">
@@ -126,8 +129,8 @@
           <div class="pref-toggle pref-voice-enable">
             <span class="pref-toggle-label">Enable voice</span>
             <div class="row">
-              <button type="button" class="secondary small" :class="{ 'preset-selected': speech.voiceEnabled }" @click="setVoiceEnabled(true)">Yes</button>
-              <button type="button" class="secondary small" :class="{ 'preset-selected': !speech.voiceEnabled }" @click="setVoiceEnabled(false)">No</button>
+              <button type="button" class="secondary small" :class="{ 'preset-selected': voiceEnabled }" @click="setVoiceEnabled(true)">Yes</button>
+              <button type="button" class="secondary small" :class="{ 'preset-selected': !voiceEnabled }" @click="setVoiceEnabled(false)">No</button>
             </div>
           </div>
           <div class="pref-voice-select-wrap">
@@ -139,7 +142,6 @@
               aria-label="Select voice engine"
             >
               <option value="browser">Browser (backup)</option>
-              <option value="piper">Piper</option>
               <option value="kokoro">Kokoro</option>
             </select>
             <p class="pref-engine-notice">{{ engineNotice }}</p>
@@ -162,25 +164,6 @@
                   {{ v.name }} ({{ v.lang }})
                 </option>
               </select>
-            </div>
-          </template>
-          <template v-else-if="currentTtsProvider === 'piper'">
-            <div class="pref-voice-select-wrap">
-              <label class="pref-sublabel">Piper voice</label>
-              <select
-                :value="(speech.piperVoiceId && speech.piperVoiceId.value) ?? speech.piperVoiceId"
-                @change="onPiperVoiceChange($event)"
-                class="pref-select pref-voice-select"
-                aria-label="Select Piper voice"
-                :disabled="piperLoading"
-              >
-                <option value="">— Choose voice —</option>
-                <option v-for="v in (speech.piperVoicesList && speech.piperVoicesList.value) || speech.piperVoicesList || []" :key="v.id" :value="v.id">{{ v.name }}</option>
-              </select>
-              <div class="pref-piper-actions">
-                <button v-if="!piperLoading" type="button" class="secondary small pref-refresh-voices" @click="loadPiperVoices">Refresh voices</button>
-                <button v-if="!piperLoading" type="button" class="secondary small pref-reset-piper" @click="resetPiperThenReload" title="Clear Piper cache and re-init (use if voice fails or after fixing WASM)">Reset Piper</button>
-              </div>
             </div>
           </template>
           <template v-else-if="currentTtsProvider === 'kokoro'">
@@ -206,7 +189,7 @@
           </div>
           <div v-if="speech.canSpeak()" class="pref-test-voice-wrap">
             <p v-if="modelDownloading" class="pref-downloading-notice">
-              {{ currentTtsProvider === 'kokoro' ? 'Downloading Kokoro model (~80MB)… May take 1–2 min. Test will play when ready.' : 'Downloading model… Once ready, the test will play.' }}
+              Downloading Kokoro model (~80MB)… May take 1–2 min. Test will play when ready.
             </p>
             <button
               type="button"
@@ -233,7 +216,7 @@ const props = defineProps({
   open: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['close', 'showOnboarding'])
+const emit = defineEmits(['close', 'showOnboarding', 'showFavorites'])
 const prefs = usePreferencesStore()
 const speech = useSpeech()
 const musicOptions = ref(getMusicOptions())
@@ -248,28 +231,25 @@ function onMusicChange(value) {
 }
 
 const voiceList = computed(() => speech.getVoicesList())
-const piperLoading = ref(false)
+/** Unwrap ref so template reacts when voice enabled is toggled (Yes/No). */
+const voiceEnabled = computed(() => (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) ? speech.voiceEnabled.value : !!speech.voiceEnabled)
 const kokoroLoading = ref(false)
 const testVoicePlaying = ref(false)
 
 const currentTtsProvider = computed(() => {
   const p = (speech.ttsProvider && typeof speech.ttsProvider === 'object' && 'value' in speech.ttsProvider ? speech.ttsProvider.value : speech.ttsProvider)
-  return ['browser', 'piper', 'kokoro'].includes(p) ? p : 'piper'
+  return ['browser', 'kokoro'].includes(p) ? p : 'kokoro'
 })
 
 const modelDownloading = computed(() => {
-  const provider = currentTtsProvider.value
-  if (provider === 'browser') return false
+  if (currentTtsProvider.value !== 'kokoro') return false
   const k = speech.kokoroModelLoading
-  const p = speech.piperModelLoading
   const kVal = k && typeof k === 'object' && 'value' in k ? k.value : k
-  const pVal = p && typeof p === 'object' && 'value' in p ? p.value : p
-  return (provider === 'piper' && !!pVal) || (provider === 'kokoro' && !!kVal)
+  return !!kVal
 })
 
 const engineNotices = {
   browser: 'Built-in backup (no download).',
-  piper: 'Downloads model once, then runs locally.',
   kokoro: 'Downloads model once (~82MB), then runs locally.',
 }
 const engineNotice = computed(() => engineNotices[currentTtsProvider.value] || '')
@@ -278,33 +258,13 @@ watch(() => props.open, (isOpen) => {
   if (!isOpen) return
   if (speech.isSupported()) speech.refreshVoices()
   const p = currentTtsProvider.value
-  const piperList = speech.piperVoicesList?.value ?? speech.piperVoicesList ?? []
   const kokoroList = speech.kokoroVoicesList?.value ?? speech.kokoroVoicesList ?? []
-  if (p === 'piper' && piperList.length === 0) loadPiperVoices()
-  else if (p === 'kokoro' && kokoroList.length === 0) loadKokoroVoices()
-  // Preload Piper voice so "Hear voice test" is fast
-  if (p === 'piper' && speech.preloadPiperModel) {
-    const voiceId = (speech.piperVoiceId?.value ?? speech.piperVoiceId)?.trim() || 'en_US-hfc_female-medium'
-    speech.preloadPiperModel(voiceId)
-  }
-  // Preload Kokoro model (~82MB) in background so "Hear voice test" (e.g. Nicole) only pays inference time
+  if (p === 'kokoro' && kokoroList.length === 0) loadKokoroVoices()
   if (p === 'kokoro' && speech.preloadKokoroModel) {
     speech.preloadKokoroModel()
   }
 })
 
-async function loadPiperVoices() {
-  piperLoading.value = true
-  try {
-    await speech.getPiperVoices()
-  } finally {
-    piperLoading.value = false
-  }
-}
-async function resetPiperThenReload() {
-  if (speech.resetPiper) speech.resetPiper()
-  await loadPiperVoices()
-}
 async function loadKokoroVoices() {
   kokoroLoading.value = true
   try {
@@ -325,12 +285,8 @@ function onVoiceChange(e) {
 }
 
 function onTtsProviderChange(e) {
-  const value = (e.target && e.target.value) || 'piper'
+  const value = (e.target && e.target.value) || 'kokoro'
   speech.ttsProvider.value = value
-}
-
-function onPiperVoiceChange(e) {
-  speech.piperVoiceId.value = (e.target && e.target.value) || ''
 }
 
 function onKokoroVoiceChange(e) {
@@ -409,7 +365,6 @@ function close() {
 }
 .pref-voice-select { width: 100%; max-width: 100%; }
 .pref-refresh-voices { margin-top: 0.35rem; }
-.pref-piper-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
 .pref-speed-row { align-items: center; gap: 0.5rem; }
 .pref-music-volume { align-items: center; gap: 0.5rem; margin-top: 0.35rem; }
 .pref-slider { width: 100%; max-width: 140px; accent-color: #3b82f6; }

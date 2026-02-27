@@ -1,5 +1,5 @@
 <template>
-  <div class="app-root">
+  <div class="app-root" :class="{ 'page-hidden': !pageVisible }">
     <!-- Admin page (hash #admin) -->
     <AdminView v-if="showAdmin" />
     <template v-else>
@@ -52,7 +52,9 @@
           :open="preferencesOpen"
           @close="preferencesOpen = false"
           @show-onboarding="openOnboardingAgain"
+          @show-favorites="openFavoritesModal"
         />
+        <FavoritesModal />
 
         <div
           v-show="playModeExpanded"
@@ -114,10 +116,16 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+
+function isMobileOrTouch() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 768px)').matches
+}
 import { useSessionStore } from '@/stores/session'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useProfileStore } from '@/stores/profile'
 import { useGuidedStore } from '@/stores/guided'
+import { useFavoritesStore } from '@/stores/favorites'
 import { useSpeech } from '@/composables/useSpeech'
 import { loadState, saveState } from '@/utils/persistence'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
@@ -125,6 +133,7 @@ import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
 import GuidedModeView from '@/components/GuidedModeView.vue'
+import FavoritesModal from '@/components/FavoritesModal.vue'
 import TimerBar from '@/components/TimerBar.vue'
 import SummaryOverlay from '@/components/SummaryOverlay.vue'
 const AdminView = defineAsyncComponent(() => import('@/views/AdminView.vue'))
@@ -137,6 +146,7 @@ const session = useSessionStore()
 const profile = useProfileStore()
 const prefs = usePreferencesStore()
 const guided = useGuidedStore()
+const favoritesStore = useFavoritesStore()
 const { play: playBackgroundMusic, stop: stopBackgroundMusic } = useBackgroundMusic(prefs)
 prefs.setPlayBackgroundMusic(playBackgroundMusic)
 prefs.setStopBackgroundMusic(stopBackgroundMusic)
@@ -163,6 +173,11 @@ function openOnboardingAgain() {
   showOnboardingAgain.value = true
 }
 
+function openFavoritesModal() {
+  preferencesOpen.value = false
+  favoritesStore.openModal()
+}
+
 function updateShowAdmin() {
   showAdmin.value = window.location.hash === '#admin'
 }
@@ -181,6 +196,7 @@ function onTitleClick() {
   }
 }
 const summaryOpen = ref(false)
+const pageVisible = ref(typeof document !== 'undefined' ? !document.hidden : true)
 
 function onChooseMode(mode) {
   session.startSession(mode)
@@ -241,21 +257,36 @@ watch(
   { deep: true }
 )
 
+function onVisibility() {
+  pageVisible.value = !document.hidden
+}
 onMounted(() => {
   updateShowAdmin()
   window.addEventListener('hashchange', updateShowAdmin)
+  document.addEventListener('visibilitychange', onVisibility)
+  pageVisible.value = !document.hidden
   updateBodyClass()
   profile.load()
   loadState(session, prefs, guided)
-  // Start voice preload with saved preferences (or defaults) so recommended voices load first
+  // Preload Kokoro once when they enter the app (worker downloads and caches; no second download later).
   const speech = useSpeech()
-  speech.preloadAllEngines({
-    language: profile.voiceLanguagePreference,
-    gender: profile.voiceGenderPreference,
-  })
+  if (isMobileOrTouch()) {
+    requestIdleCallback(() => {
+      speech.preloadAllEngines({
+        language: profile.voiceLanguagePreference,
+        gender: profile.voiceGenderPreference,
+      })
+    }, { timeout: 4000 })
+  } else {
+    speech.preloadAllEngines({
+      language: profile.voiceLanguagePreference,
+      gender: profile.voiceGenderPreference,
+    })
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('hashchange', updateShowAdmin)
+  document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>
 

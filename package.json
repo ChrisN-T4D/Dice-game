@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.5.1",
-    "@mintplex-labs/piper-tts-web": "^1.0.4",
     "edge-tts-client": "^1.0.2",
     "kokoro-js": "^1.2.1",
     "onnxruntime-web": "^1.24.2",

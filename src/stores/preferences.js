@@ -13,6 +13,7 @@ export const usePreferencesStore = defineStore('preferences', {
     backgroundImage: '1', // 'none' | '1' (Fiery hearts) | '2' (Triangles)
     backgroundMusic: 'none',
     backgroundMusicVolume: 50,
+    backgroundMusicPlaying: false,
     excludeWhenTouching: defaultExclude(),
     excludeWhenTouched: defaultExclude(),
     analPositionsEnabled: true,
@@ -62,13 +63,21 @@ export const usePreferencesStore = defineStore('preferences', {
     setStopBackgroundMusic(fn) {
       this._stopBackgroundMusic = typeof fn === 'function' ? fn : null
     },
-    /** Call from preferences UI when user selects music; stops when selection is "none". */
+    setBackgroundMusicPlaying(playing) {
+      this.backgroundMusicPlaying = !!playing
+    },
+    /** Call from preferences UI to stop/pause background music. */
+    stopBackgroundMusic() {
+      if (typeof this._stopBackgroundMusic === 'function') this._stopBackgroundMusic()
+    },
+    /** Call from preferences UI when user selects music; stops when selection is "none". Idempotent: does nothing if already playing this selection. */
     playBackgroundMusicNow(selection) {
       const isNone = !selection || String(selection).toLowerCase().trim() === 'none'
       if (isNone) {
         if (typeof this._stopBackgroundMusic === 'function') this._stopBackgroundMusic()
         return
       }
+      if (this.backgroundMusicPlaying && this.backgroundMusic === selection) return
       this._playingFromUI = true
       try {
         if (typeof this._playBackgroundMusic === 'function') this._playBackgroundMusic(selection)

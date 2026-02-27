@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia'
 import { useSessionStore } from '@/stores/session'
 import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
-import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST } from 'phase3-data'
+import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST, getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
 import { getPromptText } from '@/utils/promptHelper'
 import {
   clothingTable,
@@ -460,7 +460,9 @@ export const useGuidedStore = defineStore('guided', {
       const sessionStore = useSessionStore()
       const phase = sessionStore.phase
       if (phase === 3) {
-        loc = rollPhase3Position()
+        const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+        const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy)
+        loc = pool[Math.floor(Math.random() * pool.length)]
         actRoll = rollD20()
         if (actRoll === 20 && this.distributionMode !== 'quickie') {
           extendedTime = true

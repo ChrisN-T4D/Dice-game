@@ -8,28 +8,25 @@ function readLS(key, fallback) {
 const voiceEnabled = ref(readLS('voiceEnabled', 'false') === 'true')
 const voiceRate = ref((() => { const r = parseFloat(readLS('voiceRate', '1')); return !isNaN(r) && r >= 0.5 && r <= 2 ? r : 1.0 })())
 const selectedVoiceURI = ref(readLS('selectedVoiceURI', ''))
-const ttsProvider = ref((() => { const p = readLS('ttsProvider', 'piper'); return ['browser', 'piper', 'kokoro'].includes(p) ? p : 'piper' })())
-const piperVoiceId = ref(readLS('piperVoiceId', ''))
+const ttsProvider = ref((() => { const p = readLS('ttsProvider', 'kokoro'); return ['browser', 'kokoro'].includes(p) ? p : 'kokoro' })())
 const kokoroVoiceId = ref(readLS('kokoroVoiceId', ''))
 
-const piperVoicesList = ref([])
 const kokoroVoicesList = ref([])
 const kokoroModelLoading = ref(false)
-const piperModelLoading = ref(false)
 
 let settingsInitialized = false
 let currentExternalAudio = null
-let piperModule = null
-let piperSession = null
-let piperSessionVoiceId = null
 let kokoroTTS = null
 let preloadAllEnginesPromise = null
 let testReplayCache = {}
 
-/** Web Worker for TTS generation (Piper/Kokoro) so the main thread stays responsive. */
+/** Web Worker for TTS generation (Kokoro) so the main thread stays responsive. */
 let ttsWorker = null
 const ttsPending = new Map()
 let ttsNextId = 0
+/** Pending getVoices requests: id -> { resolve, reject }. Worker is the single place that loads Kokoro (one download for all voices). */
+const getVoicesPending = new Map()
+let getVoicesNextId = 0
 
 /** Observed max generation time (ms); used to refine estimates. */
 let maxObservedTtsMs = 0
@@ -39,25 +36,24 @@ const TTS_MS_PER_CHAR = 55
 const TTS_ESTIMATE_MIN_MS = 800
 const TTS_ESTIMATE_MAX_MS = 14_000
 
-/** Clear Piper singleton and module so next use creates a fresh session (e.g. after WASM 404 fix). */
-function clearPiperSession() {
-  try {
-    if (piperModule && piperModule.TtsSession && typeof piperModule.TtsSession._instance !== 'undefined') {
-      piperModule.TtsSession._instance = null
-    }
-  } catch (_) {}
-  piperModule = null
-  piperSession = null
-  piperSessionVoiceId = null
-}
-
 const KOKORO_MODEL_ID_REMOTE = 'onnx-community/Kokoro-82M-v1.0-ONNX'
 /** Local model id when packaged under public/models/ (see scripts/download-kokoro-model.js). */
 const KOKORO_MODEL_ID_LOCAL = 'Kokoro-82M-v1.0-ONNX'
 /** Timeout for Kokoro model load (82MB). If it takes longer, we clear loading so the UI doesn't stay stuck. */
 const KOKORO_LOAD_TIMEOUT_MS = 5 * 60 * 1000
-/** Timeout for Piper session (WASM + voice data). */
-const PIPER_LOAD_TIMEOUT_MS = 2 * 60 * 1000
+
+/** Hugging Face base URL and file list for Kokoro; prefetching these on the main thread warms the browser cache so the worker gets fast cache reads instead of a slow sequential download. */
+const KOKORO_HF_BASE = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/'
+const KOKORO_HF_FILES = [
+  'config.json',
+  'tokenizer.json',
+  'tokenizer_config.json',
+  'onnx/model_quantized.onnx',
+  'voices/af_nicole.bin',
+  'voices/af_heart.bin',
+  'voices/am_echo.bin',
+  'voices/am_eric.bin',
+]
 
 function withTimeout(promise, ms, label) {
   return Promise.race([
@@ -74,7 +70,7 @@ export function useSpeech() {
   }
 
   function canSpeak() {
-    return isSupported() || ['piper', 'kokoro'].includes(ttsProvider.value)
+    return isSupported() || ttsProvider.value === 'kokoro'
   }
 
   function cleanTextForSpeech(text) {
@@ -154,47 +150,6 @@ export function useSpeech() {
     audio.play()
   }
 
-  // Piper TTS: engine from https://github.com/OHF-Voice/piper1-gpl; we use @mintplex-labs/piper-tts-web for browser.
-  async function speakPiper(text, onEnd, cacheKey) {
-    try {
-      piperModelLoading.value = true
-      if (!piperModule) piperModule = await import('@mintplex-labs/piper-tts-web')
-      const voiceId = piperVoiceId.value?.trim() || 'en_US-hfc_female-medium'
-      let session = piperSession && piperSessionVoiceId === voiceId ? piperSession : null
-      if (!session) {
-        const onnxBase = typeof window !== 'undefined' && window.location
-          ? window.location.origin + '/onnxruntime-wasm/'
-          : 'https://unpkg.com/onnxruntime-web@1.24.2/dist/'
-        const wasmPaths = {
-          onnxWasm: onnxBase,
-          piperWasm: `${piperModule.WASM_BASE}.wasm`,
-          piperData: `${piperModule.WASM_BASE}.data`,
-        }
-        session = await withTimeout(
-          piperModule.TtsSession.create({ voiceId, wasmPaths }),
-          PIPER_LOAD_TIMEOUT_MS,
-          'Piper model'
-        )
-        piperSession = session
-        piperSessionVoiceId = voiceId
-      }
-      const wav = await session.predict(text)
-      if (wav) {
-        const blob = wav instanceof Blob ? wav : new Blob([wav])
-        if (cacheKey) testReplayCache[cacheKey] = blob
-        playBlob(blob, onEnd)
-      } else if (onEnd) onEnd()
-    } catch (e) {
-      clearPiperSession()
-      const msg = e?.message || String(e)
-      const isWebGpuOrOrt = /WebGPU|Context Provider|onnxruntime/i.test(msg)
-      if (import.meta.env?.DEV && !isWebGpuOrOrt) console.error('[Piper TTS]', e)
-      if (onEnd) onEnd()
-    } finally {
-      piperModelLoading.value = false
-    }
-  }
-
   /**
    * Estimate max time (ms) needed for TTS generation. Uses length-based heuristic and
    * observed max from past generations. Call this to decide how far in advance to preload.
@@ -221,13 +176,11 @@ export function useSpeech() {
       return
     }
     const provider = ttsProvider.value
-    if (provider !== 'piper' && provider !== 'kokoro') {
+    if (provider !== 'kokoro') {
       if (onReady) onReady()
       return
     }
-    const voiceId = provider === 'piper'
-      ? (piperVoiceId.value?.trim() || 'en_US-hfc_female-medium')
-      : (kokoroVoiceId.value?.trim() || 'af_heart')
+    const voiceId = kokoroVoiceId.value?.trim() || 'af_heart'
     const cacheKey = `${provider}:${voiceId}:${cleaned}`
     if (testReplayCache[cacheKey]) {
       if (onReady) onReady()
@@ -293,12 +246,33 @@ export function useSpeech() {
     }
   }
 
-  /** Preload Kokoro model in background so first speak / "Hear voice test" only pays inference time. */
+  /** Prefetch Kokoro model files on the main thread (parallel requests) so the browser cache is warm and the worker gets fast cache reads instead of a slow sequential download. */
+  async function prefetchKokoroToBrowserCache() {
+    if (typeof fetch === 'undefined' || typeof window === 'undefined') return
+    const timeoutMs = 6 * 60 * 1000
+    const controller = new AbortController()
+    const t = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      await Promise.all(
+        KOKORO_HF_FILES.map((path) =>
+          fetch(KOKORO_HF_BASE + path, {
+            signal: controller.signal,
+            cache: 'force-cache',
+            mode: 'cors',
+          }).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${path}: ${r.status}`))))
+        )
+      )
+    } finally {
+      clearTimeout(t)
+    }
+  }
+
+  /** Preload Kokoro in the worker (single load for all voices). Prefetch on main thread first so the worker reads from cache (faster). */
   async function preloadKokoroModel() {
-    if (kokoroTTS) return
     try {
       kokoroModelLoading.value = true
-      kokoroTTS = await loadKokoroTTS()
+      await prefetchKokoroToBrowserCache()
+      await getKokoroVoices()
     } catch (e) {
       if (import.meta.env?.DEV) console.warn('[Kokoro preload]', e?.message || e)
     } finally {
@@ -339,6 +313,27 @@ export function useSpeech() {
       ttsWorker = new Worker(new URL('../workers/tts.worker.js', import.meta.url), { type: 'module' })
       ttsWorker.onmessage = (ev) => {
         const d = ev.data
+        // Worker getVoices response (single Kokoro load lives in worker; no main-thread load for voices)
+        if (d?.type === 'voices' && d?.id != null) {
+          const p = getVoicesPending.get(d.id)
+          if (p) {
+            getVoicesPending.delete(d.id)
+            if (p.timeoutId != null) clearTimeout(p.timeoutId)
+            kokoroVoicesList.value = Array.isArray(d.voices) ? d.voices : []
+            p.resolve(kokoroVoicesList.value)
+          }
+          return
+        }
+        if (d?.type === 'error' && d?.id != null && getVoicesPending.has(d.id)) {
+          const p = getVoicesPending.get(d.id)
+          if (p) {
+            getVoicesPending.delete(d.id)
+            if (p.timeoutId != null) clearTimeout(p.timeoutId)
+            kokoroVoicesList.value = []
+            p.reject(new Error(d.message || 'Failed to load voices'))
+          }
+          return
+        }
         const pending = d?.id != null ? ttsPending.get(d.id) : null
         if (!pending) return
         ttsPending.delete(d.id)
@@ -352,21 +347,18 @@ export function useSpeech() {
           if (pending.onReady) pending.onReady()
         } else if (d.type === 'error' && pending.fallback) {
           const { text, onEnd, cacheKey, provider } = pending.fallback
-          if (provider === 'piper') speakPiper(text, onEnd, cacheKey)
-          else if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
+          if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
           else if (onEnd) onEnd()
           if (pending.onReady) pending.onReady()
         }
         if (pending.loadingRef) pending.loadingRef.value = false
       }
       ttsWorker.onerror = () => {
-        piperModelLoading.value = false
         kokoroModelLoading.value = false
         ttsPending.forEach((p) => {
           if (p.fallback) {
             const { text, onEnd, cacheKey, provider } = p.fallback
-            if (provider === 'piper') speakPiper(text, onEnd, cacheKey)
-            else if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
+            if (provider === 'kokoro') speakKokoro(text, onEnd, cacheKey)
             else if (onEnd) onEnd()
           }
         })
@@ -391,30 +383,25 @@ export function useSpeech() {
       return
     }
     const provider = ttsProvider.value
-    const voiceId = provider === 'piper'
-      ? (piperVoiceId.value?.trim() || 'en_US-hfc_female-medium')
-      : provider === 'kokoro'
-        ? (kokoroVoiceId.value?.trim() || 'af_heart')
-        : ''
+    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_heart') : ''
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()
       playBlob(testReplayCache[cacheKey], onEnd)
       return
     }
-    if (provider === 'piper' || provider === 'kokoro') {
+    if (provider === 'kokoro') {
       const w = getTtsWorker()
       if (w) {
         window.speechSynthesis?.cancel?.()
         const id = `tts-${++ttsNextId}-${Date.now()}`
         const sentAt = Date.now()
-        if (provider === 'piper') piperModelLoading.value = true
-        else kokoroModelLoading.value = true
+        kokoroModelLoading.value = true
         ttsPending.set(id, {
           cacheKey,
           onEnd,
           sentAt,
-          loadingRef: provider === 'piper' ? piperModelLoading : kokoroModelLoading,
+          loadingRef: kokoroModelLoading,
           fallback: { text: cleaned, onEnd, cacheKey, provider },
         })
         w.postMessage({
@@ -427,11 +414,6 @@ export function useSpeech() {
         })
         return
       }
-    }
-    if (provider === 'piper') {
-      window.speechSynthesis?.cancel?.()
-      speakPiper(cleaned, onEnd, cacheKey)
-      return
     }
     if (provider === 'kokoro') {
       window.speechSynthesis?.cancel?.()
@@ -471,164 +453,66 @@ export function useSpeech() {
     if (isSupported()) window.speechSynthesis.cancel()
   }
 
-  /** Reset Piper engine (clears cached session). Call after fixing WASM or to force re-init. */
-  function resetPiper() {
-    clearPiperSession()
-  }
-
   /** No-op stub: Edge TTS was removed; kept so callers (e.g. cached HMR) do not throw. */
   async function getEdgeVoices() {
     return []
   }
 
-  async function getPiperVoices() {
-    try {
-      if (!piperModule) piperModule = await import('@mintplex-labs/piper-tts-web')
-      const v = await piperModule.voices()
-      const list = Array.isArray(v)
-        ? v.map((x) => {
-            const voiceName = x.name || x.key || x.id || 'Voice'
-            const lang = x.language || {}
-            const langEnglish = lang.name_english || lang.code || ''
-            const country = lang.country_english || ''
-            const langLabel = langEnglish ? (country ? `${langEnglish} (${country})` : langEnglish) : ''
-            const displayName = langLabel ? `${voiceName} (${langLabel})` : voiceName
-            return {
-              id: x.key || x.id,
-              name: displayName,
-              langCode: lang.code || '',
-              langName: langEnglish,
-            }
-          })
-        : []
-      // Prioritize English (en_US, en_GB) first, then other languages
-      const enPrefix = (id) => (id || '').startsWith('en_US') || (id || '').startsWith('en_GB')
-      list.sort((a, b) => {
-        const aEn = enPrefix(a.id) ? 0 : 1
-        const bEn = enPrefix(b.id) ? 0 : 1
-        if (aEn !== bEn) return aEn - bEn
-        const langCmp = String(a.langName || a.langCode).localeCompare(String(b.langName || b.langCode))
-        if (langCmp !== 0) return langCmp
-        return String(a.name || a.id).localeCompare(String(b.name || b.id))
-      })
-      piperVoicesList.value = list.length
-        ? list.map(({ id, name }) => ({ id, name }))
-        : [{ id: 'en_US-hfc_female-medium', name: 'English (US) Female' }]
-      return piperVoicesList.value
-    } catch (e) {
-      clearPiperSession()
-      if (import.meta.env?.DEV) console.error('[Piper voices]', e)
-      piperVoicesList.value = [{ id: 'en_US-hfc_female-medium', name: 'English (US) Female' }]
-      return piperVoicesList.value
-    }
-  }
-
-  /** Load Kokoro model if needed, then return full voice list (model includes all voices). */
+  /** Get Kokoro voice list from the worker (worker loads the model once; one download for all voices). */
   async function getKokoroVoices() {
-    if (!kokoroTTS) await preloadKokoroModel()
-    if (kokoroTTS) {
-      const voicesObj = kokoroTTS.voices || {}
-      const ids = Object.keys(voicesObj)
-      const withNames = ids.map((id) => ({
-        id,
-        name: (voicesObj[id] && voicesObj[id].name) || id,
-      }))
-      const enPrefix = (id) => (id || '').startsWith('am_') || (id || '').startsWith('af_') || (id || '').startsWith('bm_') || (id || '').startsWith('bf_')
-      withNames.sort((a, b) => {
-        const aEn = enPrefix(a.id) ? 0 : 1
-        const bEn = enPrefix(b.id) ? 0 : 1
-        if (aEn !== bEn) return aEn - bEn
-        return String(a.id).localeCompare(String(b.id))
-      })
-      kokoroVoicesList.value = withNames
+    const w = getTtsWorker()
+    if (!w) {
+      kokoroVoicesList.value = []
       return kokoroVoicesList.value
     }
-    kokoroVoicesList.value = []
-    return kokoroVoicesList.value
-  }
-
-  /** Preload one Piper model so first speak is fast. Uses first en_US/en_GB voice from list. */
-  async function preloadPiperModel(voiceId) {
-    if (!voiceId) return
+    const id = `getVoices-${++getVoicesNextId}-${Date.now()}`
+    const p = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        const pending = getVoicesPending.get(id)
+        if (pending) {
+          getVoicesPending.delete(id)
+          kokoroVoicesList.value = []
+          pending.reject(new Error('Kokoro voices load timed out'))
+        }
+      }, KOKORO_LOAD_TIMEOUT_MS)
+      getVoicesPending.set(id, { resolve, reject, timeoutId })
+    })
+    w.postMessage({ type: 'getVoices', id })
     try {
-      piperModelLoading.value = true
-      if (!piperModule) piperModule = await import('@mintplex-labs/piper-tts-web')
-      const onnxBase = typeof window !== 'undefined' && window.location
-        ? window.location.origin + '/onnxruntime-wasm/'
-        : 'https://unpkg.com/onnxruntime-web@1.24.2/dist/'
-      const wasmPaths = {
-        onnxWasm: onnxBase,
-        piperWasm: `${piperModule.WASM_BASE}.wasm`,
-        piperData: `${piperModule.WASM_BASE}.data`,
-      }
-      const session = await withTimeout(
-        piperModule.TtsSession.create({ voiceId, wasmPaths }),
-        PIPER_LOAD_TIMEOUT_MS,
-        'Piper model'
-      )
-      await session.predict(' ')
-      piperSession = session
-      piperSessionVoiceId = voiceId
-    } catch (e) {
-      clearPiperSession()
-      const msg = e?.message || String(e)
-      const isTimeout = /timed out/i.test(msg)
-      const isWebGpuOrOrt = /WebGPU|Context Provider|onnxruntime/i.test(msg)
-      if (import.meta.env?.DEV && isTimeout) console.warn('[Piper preload]', msg)
-      else if (import.meta.env?.DEV && !isWebGpuOrOrt) console.error('[Piper preload]', e)
-      else if (import.meta.env?.DEV && isWebGpuOrOrt) console.warn('[Piper] WebGPU unavailable; Piper will use other voices or try again later.')
-    } finally {
-      piperModelLoading.value = false
+      const list = await p
+      return list
+    } catch (_) {
+      return kokoroVoicesList.value
     }
   }
 
-  /** Curated default voices only (no network fetch). Kokoro: Nicole, Heart, Echo, Eric. Piper: hfc_female, lessac, Kristin, ryan, libritts_r. */
+  /** Curated default voices only (no network fetch). Kokoro: Nicole, Heart, Echo, Eric. */
   const CURATED_KOKORO = [
     { id: 'af_heart', name: 'Heart', gender: 'female' },
     { id: 'af_nicole', name: 'Nicole', gender: 'female' },
     { id: 'am_echo', name: 'Echo', gender: 'male' },
     { id: 'am_eric', name: 'Eric', gender: 'male' },
   ]
-  const CURATED_PIPER = [
-    { id: 'en_US-hfc_female-medium', name: 'HFC Female', gender: 'female' },
-    { id: 'en_US-lessac-medium', name: 'Lessac', gender: 'female' },
-    { id: 'en_US-kristin-medium', name: 'Kristin', gender: 'female' },
-    { id: 'en_US-ryan-medium', name: 'Ryan', gender: 'male' },
-    { id: 'en_US-libritts_r-medium', name: 'Libritts R', gender: 'any' },
-  ]
-
   /**
-   * Preload voice engines: set curated lists, preload one Piper model, and preload Kokoro (Nicole etc.) from the start.
-   * Options { language, gender } used to pick which Piper model to preload first.
+   * Preload Kokoro model so first speak / "Hear voice test" is fast.
    */
   function preloadAllEngines(options = {}) {
-    const { gender } = options
     if (preloadAllEnginesPromise) return preloadAllEnginesPromise
     preloadAllEnginesPromise = (async () => {
       refreshVoices()
-      // Use curated list for Piper only; Kokoro will show full list after model load
-      if (!piperVoicesList.value?.length) piperVoicesList.value = CURATED_PIPER.map(({ id, name }) => ({ id, name }))
-      const gen = gender ?? 'any'
-      const firstPiper = CURATED_PIPER.find((v) => gen === 'any' || v.gender === gen) || CURATED_PIPER[0]
-      // Load Piper and Kokoro in parallel; Kokoro model includes all voices so we fill the full list after load
-      await Promise.all([
-        preloadPiperModel(firstPiper.id),
-        preloadKokoroModel(),
-      ])
+      await preloadKokoroModel()
       await getKokoroVoices()
     })()
     return preloadAllEnginesPromise
   }
 
   /**
-   * Return recommended voices from curated Piper + Kokoro only, filtered by gender. Browser as backup if supported.
-   * genderPreference: 'female' | 'male' | 'any'.
+   * Return recommended voices: Kokoro (curated) + Browser as backup. Filtered by gender.
    */
   function getRecommendedVoices(languagePreference = 'en-US', genderPreference = 'any') {
     const recs = []
     const genderOk = (g) => genderPreference === 'any' || g === genderPreference
 
-    // Browser (backup): one English voice matching gender
     if (isSupported()) {
       const list = getVoicesList()
       const en = list.filter((v) => v.lang && (v.lang.startsWith('en-US') || v.lang.startsWith('en-GB') || v.lang.startsWith('en_US')))
@@ -645,13 +529,6 @@ export function useSpeech() {
         if (uri) recs.push({ provider: 'browser', voiceId: uri, name: `${pick.name} (Browser)`, engine: 'Browser' })
       }
     }
-
-    // Curated Piper (filter by gender)
-    for (const v of CURATED_PIPER) {
-      if (!genderOk(v.gender)) continue
-      recs.push({ provider: 'piper', voiceId: v.id, name: `${v.name} (Piper)`, engine: 'Piper' })
-    }
-    // Curated Kokoro (filter by gender)
     for (const v of CURATED_KOKORO) {
       if (!genderOk(v.gender)) continue
       recs.push({ provider: 'kokoro', voiceId: v.id, name: `${v.name} (Kokoro)`, engine: 'Kokoro' })
@@ -662,8 +539,6 @@ export function useSpeech() {
   onMounted(() => {
     if (!settingsInitialized) {
       settingsInitialized = true
-      if (!piperVoicesList.value?.length) piperVoicesList.value = CURATED_PIPER.map(({ id, name }) => ({ id, name }))
-      // Kokoro list is filled when user selects Kokoro (getKokoroVoices loads model and returns all voices)
     }
     const loadVoicesLater = () => {
       refreshVoices()
@@ -695,12 +570,6 @@ export function useSpeech() {
       localStorage.setItem('ttsProvider', v)
     } catch (_) {}
   })
-  watch(piperVoiceId, (v) => {
-    try {
-      if (v) localStorage.setItem('piperVoiceId', v)
-      else localStorage.removeItem('piperVoiceId')
-    } catch (_) {}
-  })
   watch(kokoroVoiceId, (v) => {
     try {
       if (v) localStorage.setItem('kokoroVoiceId', v)
@@ -714,12 +583,9 @@ export function useSpeech() {
     selectedVoiceURI,
     voices,
     ttsProvider,
-    piperVoiceId,
     kokoroVoiceId,
-    piperVoicesList,
     kokoroVoicesList,
     kokoroModelLoading,
-    piperModelLoading,
     isSupported,
     canSpeak,
     cleanTextForSpeech,
@@ -729,12 +595,9 @@ export function useSpeech() {
     speak,
     stop,
     refreshVoices,
-    getPiperVoices,
-    resetPiper,
     getKokoroVoices,
     getEdgeVoices,
     preloadAllEngines,
-    preloadPiperModel,
     preloadKokoroModel,
     preparePhrase,
     estimateTtsMs,

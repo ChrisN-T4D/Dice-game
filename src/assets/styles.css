@@ -50,7 +50,6 @@ body {
 .admin-login-hint,
 .font-handwritten-body { font-family: var(--font-handwritten-body); font-weight: 400; }
 body.admin-open { overflow: hidden; max-height: 100dvh; }
-body.app-main-visible { overflow: hidden; max-height: 100dvh; }
 
 body.phase-1 { background-image: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%); }
 body.phase-2 { background-image: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%); }
@@ -86,7 +85,13 @@ body.phase-1 .phase-flash { background: rgba(59,130,246,0.35); }
 body.phase-2 .phase-flash { background: rgba(168,85,247,0.35); }
 body.phase-3 .phase-flash { background: rgba(236,72,153,0.35); }
 
+/* Mobile-first: viewport locked, scroll inside main content (default for narrow screens) */
 .app-root { min-height: 100vh; }
+body.app-main-visible {
+  overflow: hidden;
+  max-height: 100dvh;
+  height: 100dvh;
+}
 body.app-main-visible .app-root {
   height: 100dvh;
   max-height: 100dvh;
@@ -114,6 +119,45 @@ body.app-main-visible .app-root .card > .main-content {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop (768px+): page scrolls with content for different monitor/browser sizes */
+@media (min-width: 768px) {
+  body.app-main-visible {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: none;
+    height: auto;
+    min-height: 100vh;
+  }
+  body.app-main-visible .app-root {
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+    overflow: visible;
+    display: block;
+  }
+  body.app-main-visible .app-root .page {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    display: block;
+  }
+  body.app-main-visible .app-root .card {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    display: block;
+  }
+  body.app-main-visible .app-root .card > .main-content {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+  .page {
+    max-width: min(480px, 100%);
+    padding-bottom: 2rem;
+  }
 }
 .card {
   background: rgba(15,23,42,0.95);

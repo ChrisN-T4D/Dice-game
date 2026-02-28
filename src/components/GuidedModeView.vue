@@ -1,64 +1,18 @@
 <template>
   <div class="guided-mode-view" :class="{ 'spacing-stack': !pendingConfig }">
-    <!-- Ready screen: full-screen prompt before session starts -->
-    <template v-if="pendingConfig && countdownValue === null">
-      <div class="guided-ready-screen">
-        <div class="guided-ready-inner">
-          <h2 class="guided-ready-title">Are you ready to start?</h2>
-          <p v-if="!isVoiceReadyForGuided" class="guided-ready-loading">
-            Loading voice engine…
-          </p>
-          <div class="guided-ready-actions">
-            <button
-              type="button"
-              class="primary guided-ready-btn"
-              :disabled="!isVoiceReadyForGuided"
-              @click.stop="onReadyYes"
-            >
-              Yes, let's go
-            </button>
-            <button type="button" class="secondary guided-ready-btn" @click.stop="onReadyNo">No, I need to change some settings</button>
-          </div>
-        </div>
+    <!-- Running session -->
+    <template v-if="guided.totalSeconds > 0 && !guided.sessionComplete">
+      <div v-if="waitingForKokoroReady" class="guided-voice-wait" role="status">
+        Hold on, voice not downloaded yet.
       </div>
-    </template>
-
-    <!-- Countdown screen: settle in before session begins -->
-    <template v-else-if="pendingConfig && countdownValue !== null">
-      <div class="guided-countdown-screen">
-        <div class="guided-countdown-inner">
-          <p class="guided-countdown-text">Get settled and put your phone down</p>
-          <div class="guided-countdown-number" :key="countdownValue">{{ countdownValue }}</div>
-        </div>
-      </div>
-    </template>
-
-    <!-- Wizard: no session configured yet -->
-    <template v-else-if="guided.totalSeconds === 0">
-      <GuidedSetupWizard @start="onWizardStart" />
-    </template>
-
-    <template v-else-if="guided.sessionComplete">
-      <div class="guided-block session-complete">
-        <p class="guided-block-text">Session complete.</p>
-        <div class="row guided-block-actions center">
-          <button type="button" class="primary" @click="continueInFreePlay">Continue in Dice game</button>
-          <button type="button" class="secondary" @click="endSession">End session</button>
-        </div>
-      </div>
-    </template>
-
-    <template v-else>
       <div class="guided-center">
         <div class="guided-action-timer">
           <span v-if="guided.currentActionLabel" class="guided-action-label">{{ guided.currentActionLabel }}</span>
           <span class="guided-action-value">{{ formatTime(actionTimerValue) }}</span>
         </div>
-
         <div class="guided-circle-wrap">
           <div class="guided-sparkle-circle" :class="{ breathing: !!guided.pendingSpeech }" aria-hidden="true"></div>
         </div>
-
         <div class="guided-timers-row">
           <div class="guided-phase-cell">
             <span class="guided-phase-label">Phase {{ session.phase }}</span>
@@ -67,19 +21,16 @@
           <span class="guided-total-timer">Total {{ formatTime(guided.totalTimeRemaining) }}</span>
         </div>
       </div>
-
       <div v-if="guided.currentPrompt.instruction || guided.currentPrompt.clothing" class="guided-block guided-output guided-instruction-box">
         <div v-if="guided.currentPrompt.instruction" class="instruction-output instruction-fluid">{{ guided.currentPrompt.instruction }}</div>
         <div v-if="guided.currentPrompt.clothing" class="output-line clothing-line"><strong>Clothing:</strong> {{ guided.currentPrompt.clothing }}</div>
       </div>
-
       <div v-if="session.phase <= 2" class="partner-label">
         {{ guided.partnerName(guided.currentPartner) }} → {{ guided.partnerName(guided.receiver) }}
       </div>
       <div v-else class="partner-label">
         {{ guided.partnerName(guided.currentPartner) }} leads
       </div>
-
       <div v-if="session.phase === 3 && guided.currentPrompt?.locationRoll != null" class="guided-favorites-row">
         <button
           type="button"
@@ -93,7 +44,6 @@
           View favorites
         </button>
       </div>
-
       <div v-if="guided.inPhaseCheckIn" class="guided-block phase-check-in">
         <p class="guided-block-text">Phase {{ guided.completedPhase }} complete. Ready to continue to the next phase?</p>
         <div class="row guided-block-actions center">
@@ -101,13 +51,98 @@
           <button type="button" class="secondary danger" @click="guided.stop()">Stop session</button>
         </div>
       </div>
-
       <div v-else class="guided-controls">
         <button v-if="guided.paused" type="button" class="primary guided-ctrl-btn" @click="guided.resume()">Resume</button>
         <button v-else type="button" class="secondary guided-ctrl-btn" @click="guided.pause()">Pause</button>
         <button type="button" class="secondary guided-ctrl-btn" @click="guided.skipToNextTurn()">Skip turn</button>
         <button type="button" class="secondary danger guided-ctrl-btn" @click="guided.stop()">Stop session</button>
       </div>
+    </template>
+
+    <!-- Session complete -->
+    <template v-else-if="guided.sessionComplete">
+      <div class="guided-block session-complete">
+        <p class="guided-block-text">Session complete.</p>
+        <div class="row guided-block-actions center">
+          <button type="button" class="primary" @click="continueInFreePlay">Continue in Dice game</button>
+          <button type="button" class="secondary" @click="endSession">End session</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Review session plan -->
+    <template v-else-if="guidedStep === 'review' && guided.sessionPlan">
+      <div class="guided-review-screen">
+        <div class="guided-review-inner">
+          <h2 class="guided-ready-title">Review your session</h2>
+          <p class="guided-review-sub">{{ guided.sessionPlan.turns.length }} turns. Reroll any turn or confirm to generate audio.</p>
+          <div class="guided-review-list">
+            <div
+              v-for="(t, idx) in guided.sessionPlan.turns"
+              :key="idx"
+              class="guided-review-turn"
+            >
+              <div class="guided-review-turn-head">
+                <span class="guided-review-turn-num">Turn {{ t.turnIndex }}</span>
+                <span class="guided-review-turn-phase">Phase {{ t.phase }}</span>
+                <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(idx)">Reroll</button>
+              </div>
+              <div class="guided-review-turn-body">
+                <div v-if="t.where" class="guided-review-where"><strong>Where:</strong> {{ t.where }}</div>
+                <div v-if="t.what" class="guided-review-what"><strong>What:</strong> {{ t.what }}</div>
+                <div v-if="t.instruction" class="guided-review-instruction">{{ t.instruction }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="guided-review-actions">
+            <button type="button" class="secondary" @click="onReviewBack">Back to setup</button>
+            <button type="button" class="secondary" @click="guided.rerollAll()">Reroll all</button>
+            <button type="button" class="primary" @click="onConfirmSession">Confirm session</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Cooking: generating audio -->
+    <template v-else-if="guidedStep === 'cooking'">
+      <div class="guided-cooking-screen">
+        <div class="guided-cooking-inner">
+          <h2 class="guided-ready-title">Cooking your session…</h2>
+          <p class="guided-cooking-sub">Generating {{ cookingProgressTotal }} audio phrases.</p>
+          <div class="guided-cooking-progress-wrap">
+            <div class="guided-cooking-progress-bar">
+              <div class="guided-cooking-progress-fill" :style="{ width: cookingProgressPercent + '%' }"></div>
+            </div>
+            <p class="guided-cooking-count">{{ cookingProgressCurrent }} of {{ cookingProgressTotal }}</p>
+          </div>
+          <p v-if="cookingError" class="guided-cooking-error">{{ cookingError }}</p>
+          <div v-if="cookingError" class="guided-review-actions">
+            <button type="button" class="secondary" @click="onCookingBack">Back to review</button>
+            <button type="button" class="primary" @click="startCooking">Try again</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Start: ready to begin -->
+    <template v-else-if="guidedStep === 'start'">
+      <div class="guided-ready-screen">
+        <div class="guided-ready-inner">
+          <h2 class="guided-ready-title">Your session is ready</h2>
+          <p class="guided-ready-sub">Tap Start to begin. Voice will play from pre-generated audio.</p>
+          <div class="guided-ready-actions">
+            <button type="button" class="primary guided-ready-btn" @click.stop="onStartSession">
+              Start
+            </button>
+            <button type="button" class="secondary guided-ready-btn" @click.stop="onStartBack">Back</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Wizard: no session configured yet -->
+    <template v-else>
+      <GuidedSetupWizard @start="onWizardStart" />
     </template>
   </div>
 </template>
@@ -123,11 +158,13 @@ import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
-const { speak, preparePhrase, warmupWorker, stop: stopSpeech, isVoiceReadyForGuided } = useSpeech()
+const { speak, preparePhrase, warmupWorker, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, generateSessionAudio, playBlob } = useSpeech()
 
 const pendingConfig = ref(null)
-const countdownValue = ref(null)
-let countdownTimer = null
+const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
+const cookingProgressCurrent = ref(0)
+const cookingProgressTotal = ref(0)
+const cookingError = ref(null)
 
 function formatTime(sec) {
   if (sec == null || sec < 0) return '0:00'
@@ -141,6 +178,11 @@ const actionTimerValue = computed(() => {
   if (guided.breakPhase !== 'none' && guided.breakCountdown > 0) return guided.breakCountdown
   if (guided.turnTimeRemaining > 0) return guided.turnTimeRemaining
   return 0
+})
+
+const cookingProgressPercent = computed(() => {
+  const t = cookingProgressTotal.value
+  return t > 0 ? Math.round((cookingProgressCurrent.value / t) * 100) : 0
 })
 
 function pick(arr) {
@@ -171,38 +213,62 @@ function buildIntroText(clothingEnabled) {
 
 function onWizardStart(config) {
   pendingConfig.value = config
+  guided.buildSessionPlanFromConfig(config)
+  guidedStep.value = 'review'
 }
 
-function onReadyNo() {
+function onReviewBack() {
+  guidedStep.value = null
+  guided.clearSessionPlan()
   pendingConfig.value = null
 }
 
-function onReadyYes() {
-  if (!pendingConfig.value) return
-  // Prevent double-click: if countdown already running, ignore
-  if (countdownTimer != null) return
+function onConfirmSession() {
+  guidedStep.value = 'cooking'
+  cookingError.value = null
+  startCooking()
+}
+
+async function startCooking() {
+  cookingError.value = null
+  const plan = guided.sessionPlan
+  if (!plan?.script?.length) {
+    cookingError.value = 'No session plan.'
+    return
+  }
+  cookingProgressTotal.value = plan.script.length
+  cookingProgressCurrent.value = 0
+  try {
+    const blobs = await generateSessionAudio(plan.script, (current, total) => {
+      cookingProgressCurrent.value = current
+      cookingProgressTotal.value = total
+    })
+    guided.setPreGeneratedBlobs(blobs)
+    guidedStep.value = 'start'
+  } catch (e) {
+    cookingError.value = e?.message || 'Failed to generate audio.'
+  }
+}
+
+function onCookingBack() {
+  guidedStep.value = 'review'
+  cookingError.value = null
+}
+
+function onStartBack() {
+  guidedStep.value = 'cooking'
+}
+
+function onStartSession() {
+  if (!pendingConfig.value || !guided.preGeneratedBlobs) return
   guided.setSpeak((text, opts) => speak(text, opts))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
-
-  const prebuiltIntro = buildIntroText(pendingConfig.value.clothingEnabled)
+  guided.setPlayPreGeneratedBlob((blob, onEnd) => playBlob(blob, onEnd))
   warmupWorker()
-  preparePhrase(prebuiltIntro)
-
-  countdownValue.value = 3
-  countdownTimer = setInterval(() => {
-    countdownValue.value--
-    if (countdownValue.value <= 0) {
-      if (countdownTimer) {
-        clearInterval(countdownTimer)
-        countdownTimer = null
-      }
-      const config = pendingConfig.value
-      pendingConfig.value = null
-      countdownValue.value = null
-      if (config) guided.startGuidedMode(config, { prebuiltIntro })
-    }
-  }, 1000)
+  guided.startGuidedModeWithPreGenerated(pendingConfig.value, guided.preGeneratedBlobs)
+  guidedStep.value = null
+  pendingConfig.value = null
 }
 
 function continueInFreePlay() {
@@ -224,13 +290,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
-  }
   guided.setSpeak(null)
   guided.setStopSpeak(null)
   guided.setPreparePhrase(null)
+  guided.setPlayPreGeneratedBlob(null)
 })
 </script>
 
@@ -296,6 +359,107 @@ onUnmounted(() => {
   opacity: 0.6;
   cursor: not-allowed;
 }
+.guided-ready-sub {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Review session plan */
+.guided-review-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+  padding: 2rem 1rem;
+}
+.guided-review-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+  max-width: 480px;
+  width: 100%;
+}
+.guided-review-sub {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.guided-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.guided-review-turn {
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+.guided-review-turn-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.guided-review-turn-num { font-weight: 700; color: #e5e7eb; }
+.guided-review-turn-phase { font-size: 0.85rem; color: #94a3b8; }
+.guided-review-reroll { margin-left: auto; }
+.guided-review-turn-body { font-size: 0.9rem; color: #cbd5e1; line-height: 1.4; }
+.guided-review-where, .guided-review-what { margin-bottom: 0.25rem; }
+.guided-review-instruction { margin-top: 0.35rem; opacity: 0.95; }
+.guided-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* Cooking */
+.guided-cooking-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+  padding: 2rem 1rem;
+}
+.guided-cooking-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 340px;
+  text-align: center;
+}
+.guided-cooking-sub { font-size: 0.95rem; color: #94a3b8; margin: 0; }
+.guided-cooking-progress-wrap { width: 100%; }
+.guided-cooking-progress-bar {
+  height: 8px;
+  background: #334155;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.guided-cooking-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #a855f7, #22c55e);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.guided-cooking-count { font-size: 0.9rem; color: #94a3b8; margin: 0; }
+.guided-cooking-error {
+  font-size: 0.95rem;
+  color: #f87171;
+  margin: 0;
+}
 
 /* Countdown screen */
 .guided-countdown-screen {
@@ -334,6 +498,19 @@ onUnmounted(() => {
   0% { transform: scale(0.4); opacity: 0; }
   50% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* Voice not ready yet (waiting for Kokoro download) */
+.guided-voice-wait {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fbbf24;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(251, 191, 36, 0.12);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
 }
 
 /* Center area: action timer, sparkly circle, phase/total timers */

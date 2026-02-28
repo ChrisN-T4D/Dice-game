@@ -245,7 +245,7 @@
       <div class="wizard-navigation-inner">
         <button type="button" class="wizard-nav-btn back" :disabled="step <= 1" @click="step--">← Back</button>
         <button v-if="step < totalSteps" type="button" class="wizard-nav-btn next" @click="step++">Next →</button>
-        <button v-else type="button" class="primary wizard-nav-btn" @click="onStart">Start session</button>
+        <button v-else type="button" class="primary wizard-nav-btn" @click="onStart">Review session plan</button>
       </div>
     </div>
   </div>

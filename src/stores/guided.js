@@ -12,6 +12,7 @@ import {
   removeClothingItem,
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
+import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
 
 // -----------------------------------------------------------------------------
 // Helpers and constants (rolls, timed-step parsing, fixed phrases)
@@ -182,6 +183,12 @@ export const useGuidedStore = defineStore('guided', {
     breakTimerId: null,
     clothingWindowTimerId: null,
     phaseCheckInEnabled: false,
+
+    // Pre-generated session: plan (for review) and audio blobs (for playback)
+    sessionPlan: null,
+    preGeneratedBlobs: null,
+    preGeneratedIndex: 0,
+    playPreGeneratedBlob: null,
   }),
 
   getters: {
@@ -301,7 +308,24 @@ export const useGuidedStore = defineStore('guided', {
     setPreparePhrase(fn) {
       this.preparePhraseRef = fn
     },
+    /** Play one phrase: use pre-generated blob if set, else TTS. */
     safeSpeak(phrase, onEnd) {
+      if (this.preGeneratedBlobs != null && this.playPreGeneratedBlob != null && this.preGeneratedIndex < this.preGeneratedBlobs.length) {
+        const blob = this.preGeneratedBlobs[this.preGeneratedIndex++]
+        this.pendingSpeech = null
+        if (blob == null) {
+          if (onEnd) onEnd()
+          return
+        }
+        try {
+          this.playPreGeneratedBlob(blob, () => {
+            if (onEnd) onEnd()
+          })
+        } catch (_) {
+          if (onEnd) onEnd()
+        }
+        return
+      }
       if (!this.speakRef) {
         if (onEnd) onEnd()
         return
@@ -320,7 +344,60 @@ export const useGuidedStore = defineStore('guided', {
       })
     },
 
+    setSessionPlan(plan) {
+      this.sessionPlan = plan
+    },
+    clearSessionPlan() {
+      this.sessionPlan = null
+      this.preGeneratedBlobs = null
+      this.preGeneratedIndex = 0
+    },
+    buildSessionPlanFromConfig(config, seed) {
+      const plan = buildSessionPlan(config, seed)
+      this.sessionPlan = plan
+      return plan
+    },
+    rerollTurn(turnIndex) {
+      if (!this.sessionPlan) return
+      const plan = this.sessionPlan
+      const newPlan = buildSessionPlan(plan.config, Date.now())
+      if (newPlan.turns[turnIndex] == null) return
+      const oldTurn = plan.turns[turnIndex]
+      const newTurn = newPlan.turns[turnIndex]
+      const scriptStart =
+        1 +
+        plan.turns
+          .slice(0, turnIndex)
+          .reduce((acc, t) => acc + (t.phraseStrings?.length ?? 0), 0)
+      const oldLen = oldTurn.phraseStrings?.length ?? 0
+      plan.turns[turnIndex] = newTurn
+      plan.script.splice(scriptStart, oldLen, ...(newTurn.phraseStrings ?? []))
+    },
+    rerollAll() {
+      if (!this.sessionPlan) return
+      const plan = buildSessionPlan(this.sessionPlan.config, Date.now())
+      this.sessionPlan = plan
+    },
+    setPlayPreGeneratedBlob(fn) {
+      this.playPreGeneratedBlob = fn
+    },
+    setPreGeneratedBlobs(blobs) {
+      this.preGeneratedBlobs = blobs
+      this.preGeneratedIndex = 0
+    },
+
+    /** Start guided session using pre-generated audio blobs (same order as sessionPlan.script). */
+    startGuidedModeWithPreGenerated(config, blobs) {
+      this.setPreGeneratedBlobs(blobs)
+      this.startGuidedMode(config, { usePreGeneratedBlobs: true })
+    },
+
     startGuidedMode(config, options = {}) {
+      const usePreGeneratedBlobs = options.usePreGeneratedBlobs && Array.isArray(options.usePreGeneratedBlobs) && options.usePreGeneratedBlobs.length > 0
+      if (usePreGeneratedBlobs) {
+        this.preGeneratedBlobs = options.usePreGeneratedBlobs
+        this.preGeneratedIndex = 0
+      }
       const {
         totalMinutes,
         turnMinutes,
@@ -445,6 +522,11 @@ export const useGuidedStore = defineStore('guided', {
           this._introTimeoutId = null
         }
         this.performGuidedTurn()
+      }
+      if (usePreGeneratedBlobs && this.playPreGeneratedBlob && this.preGeneratedBlobs.length > 0) {
+        const blob = this.preGeneratedBlobs[this.preGeneratedIndex++]
+        this.playPreGeneratedBlob(blob, onIntroEnd)
+        return
       }
       if (this.speakRef) {
         this._introTimeoutId = setTimeout(onIntroEnd, 30000)
@@ -870,6 +952,8 @@ export const useGuidedStore = defineStore('guided', {
         this.sessionComplete = true
         sessionStore.isGuidedMode = false
         this.stopSpeakRef?.()
+        this.preGeneratedBlobs = null
+        this.preGeneratedIndex = 0
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick([
           'Session complete. Check in with each other.',
@@ -889,6 +973,8 @@ export const useGuidedStore = defineStore('guided', {
         this.sessionComplete = true
         sessionStore.isGuidedMode = false
         this.stopSpeakRef?.()
+        this.preGeneratedBlobs = null
+        this.preGeneratedIndex = 0
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick([
           'Session complete. Check in with each other.',
@@ -964,6 +1050,8 @@ export const useGuidedStore = defineStore('guided', {
         clearTimeout(this._introTimeoutId)
         this._introTimeoutId = null
       }
+      this.preGeneratedBlobs = null
+      this.preGeneratedIndex = 0
       this.sessionComplete = true
       this.totalSeconds = 0
       useSessionStore().isGuidedMode = false

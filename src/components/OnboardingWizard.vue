@@ -799,10 +799,10 @@ function finish() {
   width: 100%;
   max-width: 560px;
   padding: 1.5rem 2rem;
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: var(--card-welcome-bg);
+  border: var(--card-welcome-border);
+  border-radius: var(--card-welcome-radius);
+  box-shadow: var(--card-welcome-shadow);
   text-align: center;
   animation: fullscreen-welcome-card-in 0.6s ease-out forwards;
 }

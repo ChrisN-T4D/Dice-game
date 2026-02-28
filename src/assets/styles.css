@@ -19,6 +19,15 @@
   /* Title = Reenie Beanie (user loves it for titles); body = Patrick Hand (readable hand-printed small text) */
   --font-handwritten-title: 'Reenie Beanie', cursive;
   --font-handwritten-body: 'Patrick Hand', cursive;
+  /* Inner welcome card (fullscreen-welcome-card) */
+  --card-welcome-bg: rgba(30, 41, 59, 0.95);
+  --card-welcome-border: 1px solid rgba(148, 163, 184, 0.35);
+  --card-welcome-radius: 1rem;
+  --card-welcome-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  /* Outer container look – wizard-step-content / fullscreen-welcome-content (landing with fiery heart) */
+  --card-outer-bg: rgba(2, 6, 23, 0.6);
+  --card-outer-border: 1px solid #334155;
+  --card-outer-radius: 0.5rem;
 }
 
 html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
@@ -67,6 +76,34 @@ body.bg-image-2 { --bg-image-url: url('/Background/davidrockdesign-triangles-143
 body.phase-1 .card { border-color: #3b82f6; box-shadow: 0 18px 40px rgba(37,99,235,0.45); }
 body.phase-2 .card { border-color: #a855f7; box-shadow: 0 18px 40px rgba(168,85,247,0.45); }
 body.phase-3 .card { border-color: #ec4899; box-shadow: 0 18px 40px rgba(236,72,153,0.5); }
+body.phase-1 .card-content-panel,
+body.phase-1 .card-step-bar-panel,
+body.phase-2 .card-content-panel,
+body.phase-2 .card-step-bar-panel,
+body.phase-3 .card-content-panel,
+body.phase-3 .card-step-bar-panel {
+  border-color: transparent;
+}
+/* Main page cards: always welcome card look (phase/guided don't override) */
+body.phase-1 .page .card-header-panel,
+body.phase-1 .page .card-step-bar-panel,
+body.phase-1 .page .card-content-panel,
+body.phase-1 .page .card-nav-panel,
+body.phase-2 .page .card-header-panel,
+body.phase-2 .page .card-step-bar-panel,
+body.phase-2 .page .card-content-panel,
+body.phase-2 .page .card-nav-panel,
+body.phase-3 .page .card-header-panel,
+body.phase-3 .page .card-step-bar-panel,
+body.phase-3 .page .card-content-panel,
+body.phase-3 .page .card-nav-panel {
+  background: var(--card-outer-bg) !important;
+  border: var(--card-outer-border) !important;
+  border-radius: var(--card-outer-radius) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 body.phase-1 .primary { background: linear-gradient(to right, #3b82f6, #22c55e); }
 body.phase-2 .primary { background: linear-gradient(to right, #a855f7, #22c55e); }
 body.phase-3 .primary { background: linear-gradient(to right, #ec4899, #22c55e); }
@@ -85,12 +122,12 @@ body.phase-1 .phase-flash { background: rgba(59,130,246,0.35); }
 body.phase-2 .phase-flash { background: rgba(168,85,247,0.35); }
 body.phase-3 .phase-flash { background: rgba(236,72,153,0.35); }
 
-/* Mobile-first: viewport locked, scroll inside main content (default for narrow screens) */
+/* Mobile-first: three-card layout — header / content / nav stacked in a full-height flex column */
 .app-root { min-height: 100vh; }
 body.app-main-visible {
   overflow: hidden;
-  max-height: 100dvh;
   height: 100dvh;
+  max-height: 100dvh;
 }
 body.app-main-visible .app-root {
   height: 100dvh;
@@ -102,75 +139,166 @@ body.app-main-visible .app-root {
 body.app-main-visible .app-root .page {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-body.app-main-visible .app-root .card {
-  flex: 1;
-  min-height: 0;
+  gap: 0.25rem;
   overflow: hidden;
+}
+/* Header card: shrinks to its content */
+.card-header-panel {
+  flex-shrink: 0;
+}
+/* Step bar card: appears between header and content when wizard is active */
+.card-step-bar-panel {
+  flex-shrink: 0;
+  padding: 0.5rem 0.75rem;
+}
+.card-step-bar-panel:empty {
+  display: none;
+}
+/* When step bar has content (e.g. teleported wizard progress), show and lay it out */
+.card-step-bar-panel:not(:empty) {
   display: flex;
   flex-direction: column;
+  min-height: 3.5rem;
+  overflow: visible;
 }
-body.app-main-visible .app-root .card > .main-content {
+/* Wizard progress (teleported into step bar card) – global so it always shows */
+.card-step-bar-panel .wizard-progress-inner {
+  display: flex !important;
+  flex-direction: column;
+  width: 100%;
+  min-height: 2.5rem;
+  flex-shrink: 0;
+}
+.card-step-bar-panel .wizard-progress-text {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.card-step-bar-panel .wizard-progress-bar {
+  height: 6px;
+  min-height: 6px;
+  background: #334155;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+}
+.card-step-bar-panel .wizard-progress-fill {
+  height: 100%;
+  min-height: 6px;
+  background: linear-gradient(90deg, #a855f7, #22c55e);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+/* Content card: takes all remaining space, scrolls internally */
+.card-content-panel {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding: 0;
+}
+.card-content-panel > .main-content {
+  padding: 0.75rem clamp(0.75rem, 4vw, 1.25rem);
+}
+/* Nav card: shrinks to its content, hidden when empty */
+.card-nav-panel {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+}
+.card-nav-panel:empty {
+  display: none;
+}
+/* In guided mode always show nav card so wizard teleport target is visible */
+.page.guided-mode .card-nav-panel {
+  display: block;
+  min-height: 3.5rem;
+}
+.page.guided-mode .card-nav-panel:empty {
+  display: block;
 }
 
-/* Desktop (768px+): page scrolls with content for different monitor/browser sizes */
+/* Desktop (768px+): page scrolls naturally */
 @media (min-width: 768px) {
   body.app-main-visible {
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: none;
     height: auto;
-    min-height: 100vh;
+    max-height: none;
   }
   body.app-main-visible .app-root {
     height: auto;
     max-height: none;
-    min-height: 100vh;
     overflow: visible;
     display: block;
   }
   body.app-main-visible .app-root .page {
     flex: none;
-    min-height: 0;
     overflow: visible;
     display: block;
   }
-  body.app-main-visible .app-root .card {
-    flex: none;
-    min-height: 0;
+  .card-content-panel {
     overflow: visible;
-    display: block;
   }
-  body.app-main-visible .app-root .card > .main-content {
-    flex: none;
-    min-height: 0;
-    overflow: visible;
+  .card-step-bar-panel:empty {
+    display: none;
+  }
+  .card-nav-panel {
+    position: sticky;
+    bottom: 1rem;
   }
   .page {
     max-width: min(480px, 100%);
+    gap: 0.25rem;
     padding-bottom: 2rem;
   }
 }
 .card {
   background: rgba(15,23,42,0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 0.75rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   padding: clamp(0.75rem, 4vw, 1.25rem);
-  box-shadow: 0 18px 40px rgba(15,23,42,0.5);
-  border: 1px solid rgba(31,41,55,0.5);
   max-width: 100%;
   overflow-x: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 1rem;
+  box-shadow: 0 14px 32px rgba(15,23,42,0.4);
+}
+/* Page cards: match outer container (wizard-step-content / fullscreen-welcome-content) – background, border, radius */
+.page .card-header-panel,
+.page .card-step-bar-panel,
+.page .card-content-panel,
+.page .card-nav-panel {
+  background: var(--card-outer-bg) !important;
+  border: var(--card-outer-border) !important;
+  border-radius: var(--card-outer-radius) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.page .card-content-panel {
+  box-shadow: none !important;
+}
+/* Buttons inside page cards match welcome card buttons (0.5rem) */
+.page .card-content-panel button,
+.page .card-nav-panel button {
+  border-radius: 0.5rem;
+}
+.card-step-bar-panel {
+  border-color: transparent;
+}
+.card-content-panel {
+  box-shadow: 0 18px 40px rgba(15,23,42,0.5);
+  border-color: transparent;
 }
 .card + .card { margin-top: 1rem; }
+/* Page layout uses flex gap for card spacing; don't double up with margin */
+.page > .card + .card { margin-top: 0; }
 .card-header {
   margin-bottom: 0.75rem;
   display: grid;
@@ -375,68 +503,54 @@ input[type="number"] {
   background: linear-gradient(135deg, #020617 0%, #0f172a 100%); border-radius: 1rem; padding: 3rem 2rem;
   max-width: 600px; width: 100%; border: 2px solid #334155; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
 }
-.landing-content.card-bg-fiery-heart,
-.card.card-bg-fiery-heart {
+.page-bg-fiery-heart {
+  background-image: linear-gradient(to bottom, rgba(2,6,23,0.3) 0%, rgba(2,6,23,0.55) 60%, rgba(2,6,23,0.8) 100%), url('/Background/fiery-heart.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: local;
+}
+.page-bg-fiery-heart .card {
+  background: rgba(2,6,23,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 1rem;
+}
+/* Page cards always use outer container look, even on fiery heart background */
+.page-bg-fiery-heart .card-header-panel,
+.page-bg-fiery-heart .card-step-bar-panel,
+.page-bg-fiery-heart .card-content-panel,
+.page-bg-fiery-heart .card-nav-panel {
+  background: var(--card-outer-bg) !important;
+  border: var(--card-outer-border) !important;
+  border-radius: var(--card-outer-radius) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.landing-content.card-bg-fiery-heart {
   background-image: linear-gradient(to bottom, rgba(2,6,23,0.4) 0%, rgba(2,6,23,0.65) 50%, rgba(2,6,23,0.85) 100%), url('/Background/fiery-heart.jpg');
   background-size: cover;
   background-position: center;
 }
-/* Less transparent backing for text areas on busy background (match step bar) */
-.landing-content.card-bg-fiery-heart .wizard-step-content,
-.card.card-bg-fiery-heart .wizard-step-content {
+.landing-content.card-bg-fiery-heart .wizard-step-content {
   background: rgba(2,6,23,0.6);
   border-radius: 0.5rem;
   border: 1px solid #334155;
   padding: 1.25rem;
 }
-.landing-content.card-bg-fiery-heart .wizard-navigation,
-.card.card-bg-fiery-heart .wizard-navigation {
-  background: rgba(2,6,23,0.6);
-  border-radius: 0.5rem;
-  border: 1px solid #334155;
-  margin-top: 1.5rem;
-  padding: 1rem 1.25rem;
-  border-top: none;
-}
-.card-bg-fiery-heart .onboarding-q-card {
-  background: rgba(2,6,23,0.65);
-}
+.card-bg-fiery-heart .onboarding-q-card { background: rgba(2,6,23,0.65); }
 .landing-content.card-bg-fiery-heart .landing-title {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #334155;
-  display: block;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
-  /* Keep gradient visible (don’t override with solid background) */
+  padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #334155;
+  display: block; width: fit-content; margin-left: auto; margin-right: auto;
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .landing-content.card-bg-fiery-heart .landing-subtitle {
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.5rem;
-  background: rgba(2,6,23,0.6);
-  border: 1px solid #334155;
-  margin-bottom: 2rem;
+  padding: 0.75rem 1.25rem; border-radius: 0.5rem;
+  background: rgba(2,6,23,0.6); border: 1px solid #334155; margin-bottom: 2rem;
 }
-.landing-content.card-bg-fiery-heart .mode-button {
-  background: rgba(2,6,23,0.65);
-}
-.card.card-bg-fiery-heart .card-header,
-.card.card-bg-fiery-heart .play-mode-row,
-.card.card-bg-fiery-heart .main-content {
-  background: rgba(2,6,23,0.55);
-  border-radius: 0.5rem;
-  border: 1px solid #334155;
-  margin: 0 0 0.5rem;
-  padding: 0.75rem 1rem;
-}
-.card.card-bg-fiery-heart .card-header { margin-top: 0; }
-.card.card-bg-fiery-heart .play-mode-row { margin-top: 0.5rem; }
-.card.card-bg-fiery-heart .main-content { flex: 1; min-height: 0; margin-bottom: 0; }
+.landing-content.card-bg-fiery-heart .mode-button { background: rgba(2,6,23,0.65); }
 .landing-title {
   text-align: center; font-size: clamp(1.75rem, 5vmin, 2.25rem); margin-bottom: 1rem;
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;

@@ -14,101 +14,47 @@
       @choose="onChooseMode"
     />
 
-    <div v-show="showMainContent" class="page">
-      <div class="card" :class="{ 'card-bg-fiery-heart': prefs?.backgroundImage === '1' }">
-        <header class="card-header">
-          <button
-            type="button"
-            class="hamburger-menu-btn"
-            title="Open preferences"
-            aria-label="Open preferences"
-            @click="preferencesOpen = true"
-          >
-            ☰
-          </button>
-          <h1
-            role="button"
-            tabindex="0"
-            class="card-header-title"
-            title="Between Us"
-            @click="onTitleClick"
-            @keydown.enter.space.prevent="onTitleClick"
-          >
-            Between Us
-          </h1>
-          <button
-            type="button"
-            class="play-mode-in-header"
-            :aria-expanded="playModeExpanded"
-            aria-controls="play-mode-options"
-            :aria-label="playModeExpanded ? 'Collapse play mode' : 'Expand play mode'"
-            @click="playModeExpanded = !playModeExpanded"
-          >
-            <span class="play-mode-in-header-label">{{ session.uiMode === 'freeplay' ? 'Dice game' : session.uiMode === 'guided' ? 'Guided Mode' : 'Choose mode' }}</span>
-            <span class="play-mode-in-header-chevron" aria-hidden="true">{{ playModeExpanded ? '▲' : '▼' }}</span>
-          </button>
-        </header>
+    <div v-show="showMainContent" class="page" :class="{ 'page-bg-fiery-heart': prefs?.backgroundImage === '1', 'guided-mode': session.uiMode === 'guided' }">
+      <PreferencesSidebar :open="preferencesOpen" @close="preferencesOpen = false" @show-onboarding="openOnboardingAgain" @show-favorites="openFavoritesModal" />
+      <FavoritesModal />
 
-        <PreferencesSidebar
-          :open="preferencesOpen"
-          @close="preferencesOpen = false"
-          @show-onboarding="openOnboardingAgain"
-          @show-favorites="openFavoritesModal"
-        />
-        <FavoritesModal />
-
-        <div
-          v-show="playModeExpanded"
-          id="play-mode-options"
-          class="play-mode-row"
-          role="region"
-          aria-label="Play mode options"
-        >
+      <!-- Card 1: Header -->
+      <div class="card card-header-panel">
+        <button type="button" class="hamburger-menu-btn" title="Open preferences" aria-label="Open preferences" @click="preferencesOpen = true">☰</button>
+        <h1 role="button" tabindex="0" class="card-header-title" title="Between Us" @click="onTitleClick" @keydown.enter.space.prevent="onTitleClick">Between Us</h1>
+        <button type="button" class="play-mode-in-header" :aria-expanded="playModeExpanded" aria-controls="play-mode-options" :aria-label="playModeExpanded ? 'Collapse play mode' : 'Expand play mode'" @click="playModeExpanded = !playModeExpanded">
+          <span class="play-mode-in-header-label">{{ session.uiMode === 'freeplay' ? 'Dice game' : session.uiMode === 'guided' ? 'Guided Mode' : 'Choose mode' }}</span>
+          <span class="play-mode-in-header-chevron" aria-hidden="true">{{ playModeExpanded ? '▲' : '▼' }}</span>
+        </button>
+        <div v-show="playModeExpanded" id="play-mode-options" class="play-mode-row" role="region" aria-label="Play mode options">
           <div class="row">
-            <button
-              type="button"
-              class="secondary"
-              :class="{ 'preset-selected': session.uiMode === 'freeplay' }"
-              @click="session.uiMode = 'freeplay'"
-            >
-              Dice game
-            </button>
-            <button
-              type="button"
-              class="secondary"
-              :class="{ 'preset-selected': session.uiMode === 'guided' }"
-              @click="session.uiMode = 'guided'"
-            >
-              Guided Mode
-            </button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'freeplay' }" @click="session.uiMode = 'freeplay'">Dice game</button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'guided' }" @click="session.uiMode = 'guided'">Guided Mode</button>
           </div>
         </div>
-
-        <div v-if="session.uiMode === 'freeplay'" class="main-content">
-            <div class="toolbar-row">
-              <button type="button" class="secondary small" @click="goToNextPhase" :disabled="session.phase >= session.maxPhase">
-                Next phase
-              </button>
-              <button type="button" class="secondary small" @click="session.showLandingModal()">
-                New session
-              </button>
-              <button type="button" class="secondary small" @click="summaryOpen = true">
-                Summary
-              </button>
-              <TimerBar />
-            </div>
-            <FreePlayView />
-            <SummaryOverlay :open="summaryOpen" @close="summaryOpen = false" />
-          </div>
-
-          <div v-else-if="session.uiMode === 'guided'" class="main-content">
-            <GuidedModeView />
-          </div>
-
-          <div v-else class="main-content">
-            <p class="choose-mode-prompt">Choose <strong>Dice game</strong> or <strong>Guided Mode</strong> above to start.</p>
-          </div>
       </div>
+
+      <!-- Card 1b: Step bar (portal target — wizard teleports its progress bar here, hidden when empty) -->
+      <div id="step-bar-portal" class="card card-step-bar-panel"></div>
+
+      <!-- Card 2: Main content (scrollable, fills remaining space) -->
+      <div class="card card-content-panel">
+        <template v-if="session.uiMode === 'freeplay'">
+          <div class="toolbar-row">
+            <button type="button" class="secondary small" @click="goToNextPhase" :disabled="session.phase >= session.maxPhase">Next phase</button>
+            <button type="button" class="secondary small" @click="session.showLandingModal()">New session</button>
+            <button type="button" class="secondary small" @click="summaryOpen = true">Summary</button>
+            <TimerBar />
+          </div>
+          <FreePlayView />
+          <SummaryOverlay :open="summaryOpen" @close="summaryOpen = false" />
+        </template>
+        <GuidedModeView v-else-if="session.uiMode === 'guided'" />
+        <p v-else class="choose-mode-prompt">Choose <strong>Dice game</strong> or <strong>Guided Mode</strong> above to start.</p>
+      </div>
+
+      <!-- Card 3: Bottom navigation (portal target — components teleport their nav here) -->
+      <div id="bottom-nav-portal" class="card card-nav-panel"></div>
     </div>
     </template>
     <div class="app-version" aria-hidden="true">v{{ appVersion }}</div>
@@ -286,8 +232,19 @@ onUnmounted(() => {
 
 <style scoped>
 .app-root { min-height: 100vh; }
-.main-content { padding: 0.25rem 0; }
 .choose-mode-prompt { margin: 0; color: #9ca3af; font-size: 0.95rem; text-align: center; }
+
+/* Header card: grid layout without the old card-header wrapper */
+.card-header-panel {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  row-gap: 0.5rem;
+}
+.card-header-panel .play-mode-row {
+  grid-column: 1 / -1;
+}
 .card-header-title {
   cursor: pointer;
   border: none;

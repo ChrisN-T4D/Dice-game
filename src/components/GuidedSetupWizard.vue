@@ -1,12 +1,14 @@
 <template>
   <div class="guided-setup-wizard">
-    <div class="wizard-body">
-    <div class="wizard-progress">
-      <span class="wizard-progress-text">Step {{ step }} of {{ totalSteps }}</span>
-      <div class="wizard-progress-bar">
-        <div class="wizard-progress-fill" :style="{ width: progressPercent + '%' }"></div>
+    <Teleport to="#step-bar-portal">
+      <div class="wizard-progress-inner">
+        <span class="wizard-progress-text">Step {{ step }} of {{ totalSteps }}</span>
+        <div class="wizard-progress-bar">
+          <div class="wizard-progress-fill" :style="{ width: progressPercent + '%' }"></div>
+        </div>
       </div>
-    </div>
+    </Teleport>
+    <div class="wizard-body">
 
     <!-- Step 1: Phase distribution (compact so it fits without scrolling) -->
     <div v-show="step === 1" class="wizard-step active wizard-step-phase-distribution">
@@ -239,21 +241,24 @@
     </div>
     </div>
 
-    <div class="wizard-solid-footer" aria-hidden="true"></div>
-    <div class="wizard-fade-overlay" aria-hidden="true"></div>
-    <div class="wizard-navigation">
+    <Teleport to="#bottom-nav-portal">
       <div class="wizard-navigation-inner">
         <button type="button" class="wizard-nav-btn back" :disabled="step <= 1" @click="step--">← Back</button>
         <button v-if="step < totalSteps" type="button" class="wizard-nav-btn next" @click="step++">Next →</button>
         <button v-else type="button" class="primary wizard-nav-btn" @click="onStart">Review session plan</button>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { clothingPresets, getClothingEmoji, getClothingItemsByBody, groupClothingByBodyRegion, sortClothingByBodyRegion } from '@/data/clothing'
+
+const props = defineProps({
+  initialStep: { type: Number, default: 1 },
+  initialConfig: { type: Object, default: null },
+})
 
 const totalSteps = 9
 const step = ref(1)
@@ -381,6 +386,33 @@ function presetIcon(presetKey) {
 
 const emit = defineEmits(['start'])
 
+onMounted(() => {
+  if (props.initialConfig) {
+    const c = props.initialConfig
+    config.totalMinutes = c.totalMinutes ?? 30
+    config.turnMinutes = c.turnMinutes ?? 2
+    config.pauseSeconds = c.pauseSeconds ?? 15
+    config.clothingRemovalSeconds = c.clothingRemovalSeconds ?? 30
+    config.phasePercents = Array.isArray(c.phasePercents) ? [...c.phasePercents] : [33, 33, 34]
+    config.distributionMode = c.distributionMode ?? 'equal'
+    config.clothingEnabled = !!c.clothingEnabled
+    config.clothingListP1 = Array.isArray(c.clothingListP1) ? [...c.clothingListP1] : [...clothingPresets.undergarmentsMale]
+    config.clothingListP2 = Array.isArray(c.clothingListP2) ? [...c.clothingListP2] : [...clothingPresets.undergarmentsFemale]
+    config.phaseCheckInEnabled = !!c.phaseCheckInEnabled
+    if (c.partnerNames) {
+      config.partnerNames[1] = c.partnerNames[1] ?? ''
+      config.partnerNames[2] = c.partnerNames[2] ?? ''
+    }
+    if (c.partnerAnatomy) {
+      config.partnerAnatomy[1] = c.partnerAnatomy[1] ?? 'penis'
+      config.partnerAnatomy[2] = c.partnerAnatomy[2] ?? 'vulva'
+    }
+  }
+  if (props.initialStep >= 1 && props.initialStep <= totalSteps) {
+    step.value = props.initialStep
+  }
+})
+
 function onStart() {
   const phasePercents = config.distributionMode === 'custom' ? [...config.phasePercents] : phasePercentsByMode[config.distributionMode]
   if (config.distributionMode === 'quickie') {
@@ -407,25 +439,22 @@ function onStart() {
 <style scoped>
 .guided-setup-wizard {
   padding: 0;
-  max-width: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-height: 100%;
-  padding-bottom: 0;
+  box-sizing: border-box;
 }
 .wizard-body {
-  flex: 1;
-  min-height: 0;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 5.5rem;
-  /* Invisible-style scrollbar: thin floating thumb, no visible track */
+  padding-bottom: 1rem;
+  box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
 }
@@ -446,55 +475,26 @@ function onStart() {
 .wizard-body::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.75);
 }
-/* Full-width block behind Back/Next: solid at bottom, fading to transparent. Min clearance matches nav (Android nav bar). */
-.wizard-solid-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+.wizard-progress-inner {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: calc(4.25rem + 5rem + max(env(safe-area-inset-bottom, 3.5rem), 3.5rem));
-  background: linear-gradient(to top, rgb(15, 23, 42) 0%, rgb(15, 23, 42) 45%, transparent 100%);
-  pointer-events: none;
-  z-index: 18;
 }
-/* Gradient overlay on top of solid footer for fade effect; nav sits above this */
-.wizard-fade-overlay {
-  position: fixed;
-  bottom: calc(4.25rem + max(env(safe-area-inset-bottom, 3.5rem), 3.5rem));
-  left: 0;
-  right: 0;
-  height: 5rem;
-  pointer-events: none;
-  background: linear-gradient(to top, rgb(15, 23, 42) 0%, rgba(15, 23, 42, 0.6) 40%, transparent 100%);
-  z-index: 19;
-}
-.wizard-progress {
-  flex-shrink: 0;
-  width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.75rem 0.5rem;
-  background: rgba(15,23,42,0.98);
-  border-radius: 0 0 0.5rem 0.5rem;
-  border: 1px solid #334155;
-  border-top: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-.wizard-progress-text { font-size: 1rem; color: #9ca3af; font-weight: 600; }
+.wizard-progress-text { font-size: 0.85rem; color: #9ca3af; font-weight: 600; }
 .wizard-progress-bar {
-  height: 6px;
+  height: 5px;
   background: #334155;
   border-radius: 3px;
   overflow: hidden;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 .wizard-progress-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #22c55e); transition: width 0.3s ease; border-radius: 3px; }
 .wizard-step-header {
   margin-bottom: 1rem;
   text-align: center;
 }
-.wizard-step-title { font-family: var(--font-handwritten-title); font-size: clamp(1.25rem, 3vmin, 1.65rem); font-weight: 700; color: #e5e7eb; margin: 0; }
-.wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(0.9rem, 2.2vmin, 1.05rem); font-weight: 400; color: #9ca3af; margin-top: 0.35rem; line-height: 1.5; }
+.wizard-step-title { font-family: var(--font-handwritten-title); font-size: clamp(1.5rem, 5vmin, 2.1rem); font-weight: 700; color: #e5e7eb; margin: 0; }
+.wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(1rem, 2.8vmin, 1.25rem); font-weight: 400; color: #9ca3af; margin-top: 0.35rem; line-height: 1.5; }
 .wizard-step-content {
   padding: 0.5rem 0;
   width: 100%;
@@ -545,10 +545,10 @@ function onStart() {
 }
 .wizard-step-partner .wizard-step-content .row { gap: 0.35rem; }
 
-/* Phase distribution step: compact so it fits without scrolling */
+/* Phase distribution step: keep header compact but use responsive title/description */
 .wizard-step-phase-distribution .wizard-step-header { margin-bottom: 0.5rem; }
-.wizard-step-phase-distribution .wizard-step-title { font-size: 1.1rem; }
-.wizard-step-phase-distribution .wizard-step-description { font-size: 0.95rem; margin-top: 0.2rem; }
+.wizard-step-phase-distribution .wizard-step-title { font-size: clamp(1.4rem, 4.5vmin, 1.9rem); }
+.wizard-step-phase-distribution .wizard-step-description { font-size: clamp(1rem, 2.8vmin, 1.2rem); margin-top: 0.2rem; }
 .wizard-step-phase-distribution .wizard-step-content { padding: 0.25rem 0; }
 .wizard-step-phase-distribution .wizard-step-content .row { gap: 0.35rem; }
 .wizard-step-phase-distribution .wizard-opt-compact {
@@ -604,21 +604,6 @@ function onStart() {
 .custom-sliders input[type="range"] { flex: 1; min-width: 80px; accent-color: #a855f7; }
 .pct { min-width: 3rem; text-align: right; font-weight: 700; }
 .align-center { align-items: center; gap: 0.5rem; }
-/* Minimum bottom clearance so Back/Next sit above Android nav bar when safe-area-inset-bottom is 0 */
-.wizard-navigation {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 3.5rem));
-  background: rgb(15, 23, 42);
-  border-top: 1px solid #334155;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
-  z-index: 20;
-  isolation: isolate;
-}
 .wizard-navigation-inner {
   display: flex;
   gap: 0.5rem;

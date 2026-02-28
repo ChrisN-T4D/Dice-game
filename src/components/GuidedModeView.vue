@@ -70,8 +70,16 @@
       </div>
     </template>
 
-    <!-- Review session plan -->
+    <!-- Review session plan: turns in main content, actions in nav bar -->
     <template v-else-if="guidedStep === 'review' && guided.sessionPlan">
+      <Teleport to="#bottom-nav-portal">
+        <div class="guided-review-nav-actions">
+          <button type="button" class="secondary" @click="onReviewBack">Restart setup</button>
+          <button type="button" class="secondary" @click="onGoBackToPartnerSetup">Go back to partner setup</button>
+          <button type="button" class="secondary" @click="guided.rerollAll()">Reroll all</button>
+          <button type="button" class="primary" @click="onConfirmSession">Confirm session</button>
+        </div>
+      </Teleport>
       <div class="guided-review-screen">
         <div class="guided-review-inner">
           <h2 class="guided-ready-title">Review your session</h2>
@@ -88,16 +96,9 @@
                 <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(idx)">Reroll</button>
               </div>
               <div class="guided-review-turn-body">
-                <div v-if="t.where" class="guided-review-where"><strong>Where:</strong> {{ t.where }}</div>
-                <div v-if="t.what" class="guided-review-what"><strong>What:</strong> {{ t.what }}</div>
                 <div v-if="t.instruction" class="guided-review-instruction">{{ t.instruction }}</div>
               </div>
             </div>
-          </div>
-          <div class="guided-review-actions">
-            <button type="button" class="secondary" @click="onReviewBack">Back to setup</button>
-            <button type="button" class="secondary" @click="guided.rerollAll()">Reroll all</button>
-            <button type="button" class="primary" @click="onConfirmSession">Confirm session</button>
           </div>
         </div>
       </div>
@@ -107,8 +108,14 @@
     <template v-else-if="guidedStep === 'cooking'">
       <div class="guided-cooking-screen">
         <div class="guided-cooking-inner">
-          <h2 class="guided-ready-title">Cooking your session…</h2>
-          <p class="guided-cooking-sub">Generating {{ cookingProgressTotal }} audio phrases.</p>
+          <div class="guided-cooking-gif-wrap">
+            <img
+              :src="cookingGifs[cookingStepIndex]"
+              :alt="cookingLabels[cookingStepIndex]"
+              class="guided-cooking-gif"
+            />
+          </div>
+          <p class="guided-cooking-label">{{ cookingLabels[cookingStepIndex] }}</p>
           <div class="guided-cooking-progress-wrap">
             <div class="guided-cooking-progress-bar">
               <div class="guided-cooking-progress-fill" :style="{ width: cookingProgressPercent + '%' }"></div>
@@ -116,6 +123,7 @@
             <p class="guided-cooking-count">{{ cookingProgressCurrent }} of {{ cookingProgressTotal }}</p>
           </div>
           <p v-if="cookingError" class="guided-cooking-error">{{ cookingError }}</p>
+          <p v-if="cookingError && isKokoroError(cookingError)" class="guided-cooking-error-hint">Make sure the Kokoro model is in <code>public/models/</code>. Run: <code>npm run download-kokoro-model</code></p>
           <div v-if="cookingError" class="guided-review-actions">
             <button type="button" class="secondary" @click="onCookingBack">Back to review</button>
             <button type="button" class="primary" @click="startCooking">Try again</button>
@@ -140,15 +148,21 @@
       </div>
     </template>
 
-    <!-- Wizard: no session configured yet -->
+    <!-- Wizard: no session configured yet or returning to edit -->
     <template v-else>
-      <GuidedSetupWizard @start="onWizardStart" />
+      <div class="guided-wizard-wrap">
+        <GuidedSetupWizard
+          :initial-step="wizardInitialStep"
+          :initial-config="wizardInitialConfig"
+          @start="onWizardStart"
+        />
+      </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
@@ -162,9 +176,21 @@ const { speak, preparePhrase, warmupWorker, stop: stopSpeech, isVoiceReadyForGui
 
 const pendingConfig = ref(null)
 const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
+const wizardInitialStep = ref(1)
+
+const wizardInitialConfig = ref(null)
 const cookingProgressCurrent = ref(0)
 const cookingProgressTotal = ref(0)
 const cookingError = ref(null)
+
+const cookingGifs = [
+  '/GIFS/agp_studios-audio-22831_512.gif',
+  '/GIFS/dakernet-to-write-6621_512.gif',
+  '/GIFS/acatxio-procedural-generation-11379_512%20(1).gif',
+]
+const cookingLabels = ['recording....', 'writing....', 'compiling....']
+const cookingStepIndex = ref(0)
+let cookingIntervalId = null
 
 function formatTime(sec) {
   if (sec == null || sec < 0) return '0:00'
@@ -184,6 +210,10 @@ const cookingProgressPercent = computed(() => {
   const t = cookingProgressTotal.value
   return t > 0 ? Math.round((cookingProgressCurrent.value / t) * 100) : 0
 })
+
+function isKokoroError(message) {
+  return message && typeof message === 'string' && /kokoro|model.*load|timed out/i.test(message)
+}
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)]
@@ -215,12 +245,23 @@ function onWizardStart(config) {
   pendingConfig.value = config
   guided.buildSessionPlanFromConfig(config)
   guidedStep.value = 'review'
+  wizardInitialStep.value = 1
+  wizardInitialConfig.value = null
 }
 
 function onReviewBack() {
   guidedStep.value = null
   guided.clearSessionPlan()
   pendingConfig.value = null
+  wizardInitialStep.value = 1
+  wizardInitialConfig.value = null
+}
+
+function onGoBackToPartnerSetup() {
+  if (!pendingConfig.value) return
+  wizardInitialStep.value = 5
+  wizardInitialConfig.value = pendingConfig.value
+  guidedStep.value = null
 }
 
 function onConfirmSession() {
@@ -254,6 +295,24 @@ function onCookingBack() {
   guidedStep.value = 'review'
   cookingError.value = null
 }
+
+function clearCookingInterval() {
+  if (cookingIntervalId != null) {
+    clearInterval(cookingIntervalId)
+    cookingIntervalId = null
+  }
+}
+
+watch(guidedStep, (step) => {
+  clearCookingInterval()
+  if (step === 'cooking') {
+    cookingStepIndex.value = 0
+    cookingIntervalId = setInterval(() => {
+      cookingStepIndex.value = (cookingStepIndex.value + 1) % 3
+    }, 2200)
+  }
+})
+onUnmounted(clearCookingInterval)
 
 function onStartBack() {
   guidedStep.value = 'cooking'
@@ -301,6 +360,10 @@ onUnmounted(() => {
 .guided-mode-view { padding: 0; width: 100%; max-width: 100%; }
 .guided-mode-view.spacing-stack > * + * { margin-top: 1.25rem; }
 
+.guided-wizard-wrap {
+  width: 100%;
+}
+
 /* Ready screen: full-area centered prompt */
 .guided-ready-screen {
   display: flex;
@@ -329,6 +392,7 @@ onUnmounted(() => {
   color: #e5e7eb;
   margin: 0;
   line-height: 1.3;
+  text-align: center;
 }
 .guided-ready-loading {
   font-size: 0.95rem;
@@ -392,8 +456,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-height: 50vh;
-  overflow-y: auto;
   padding-right: 0.25rem;
 }
 .guided-review-turn {
@@ -412,7 +474,6 @@ onUnmounted(() => {
 .guided-review-turn-phase { font-size: 0.85rem; color: #94a3b8; }
 .guided-review-reroll { margin-left: auto; }
 .guided-review-turn-body { font-size: 0.9rem; color: #cbd5e1; line-height: 1.4; }
-.guided-review-where, .guided-review-what { margin-bottom: 0.25rem; }
 .guided-review-instruction { margin-top: 0.35rem; opacity: 0.95; }
 .guided-review-actions {
   display: flex;
@@ -420,6 +481,15 @@ onUnmounted(() => {
   gap: 0.75rem;
   justify-content: center;
   margin-top: 0.5rem;
+}
+/* Review step: actions live in nav bar (teleported) */
+.guided-review-nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 /* Cooking */
@@ -438,6 +508,29 @@ onUnmounted(() => {
   gap: 1.5rem;
   max-width: 340px;
   text-align: center;
+}
+.guided-cooking-gif-wrap {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+.guided-cooking-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.guided-cooking-label {
+  font-family: var(--font-handwritten-body);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #e2e8f0;
+  margin: 0;
+  min-height: 1.5em;
 }
 .guided-cooking-sub { font-size: 0.95rem; color: #94a3b8; margin: 0; }
 .guided-cooking-progress-wrap { width: 100%; }
@@ -459,6 +552,18 @@ onUnmounted(() => {
   font-size: 0.95rem;
   color: #f87171;
   margin: 0;
+}
+.guided-cooking-error-hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+}
+.guided-cooking-error-hint code {
+  background: rgba(2, 6, 23, 0.6);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.8em;
 }
 
 /* Countdown screen */

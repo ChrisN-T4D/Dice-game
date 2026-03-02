@@ -20,44 +20,6 @@
           ♥ Favorites
         </button>
       </div>
-      <div class="pref-block pref-block-stack">
-        <label class="pref-label">Prompt detail</label>
-        <div class="pref-buttons row">
-          <button
-            v-for="m in ['beginner', 'regular', 'expert']"
-            :key="m"
-            type="button"
-            class="secondary prompt-detail-btn"
-            :class="{ 'preset-selected': prefs.promptDetailMode === m }"
-            :title="m === 'beginner' ? 'Full descriptions' : m === 'expert' ? 'Short prompts' : 'Medium pace'"
-            @click="prefs.setPromptDetail(m)"
-          >
-            {{ m.charAt(0).toUpperCase() + m.slice(1) }}
-          </button>
-        </div>
-        <span class="pref-hint">{{ prefs.promptDetailLabel }}</span>
-      </div>
-      <div class="pref-block pref-block-stack">
-        <label class="pref-label">Penetration</label>
-        <div class="pref-buttons row">
-          <button
-            type="button"
-            class="secondary"
-            :class="{ 'preset-selected': prefs.penetrationPreference === 'prefer' }"
-            @click="prefs.setPenetration('prefer')"
-          >
-            Prefer penetration
-          </button>
-          <button
-            type="button"
-            class="secondary"
-            :class="{ 'preset-selected': prefs.penetrationPreference === 'minimal' }"
-            @click="prefs.setPenetration('minimal')"
-          >
-            Minimal penetration
-          </button>
-        </div>
-      </div>
       <div class="pref-block pref-sep pref-block-stack">
         <label class="pref-label">Background</label>
         <select
@@ -102,27 +64,6 @@
           <span class="pref-speed-value">{{ prefs.backgroundMusicVolume }}%</span>
         </div>
       </div>
-      <div class="pref-block pref-toggle">
-        <span class="pref-toggle-label">Include anal-only positions (distinct from rear-entry vaginal)</span>
-        <div class="row">
-          <button type="button" class="secondary small" :class="{ 'preset-selected': prefs.analPositionsEnabled }" @click="prefs.analPositionsEnabled = true">Yes</button>
-          <button type="button" class="secondary small" :class="{ 'preset-selected': !prefs.analPositionsEnabled }" @click="prefs.analPositionsEnabled = false">No</button>
-        </div>
-      </div>
-      <div class="pref-block pref-toggle">
-        <span class="pref-toggle-label">Include vibrator/toy modifiers in Phase 3</span>
-        <div class="row">
-          <button type="button" class="secondary small" :class="{ 'preset-selected': prefs.vibratorsPresent }" @click="prefs.vibratorsPresent = true">Yes</button>
-          <button type="button" class="secondary small" :class="{ 'preset-selected': !prefs.vibratorsPresent }" @click="prefs.vibratorsPresent = false">No</button>
-        </div>
-      </div>
-      <div class="pref-block pref-toggle">
-        <span class="pref-toggle-label">Pause for check-in between phases</span>
-        <div class="row">
-          <button type="button" class="secondary small" :class="{ 'preset-selected': prefs.guidedPhaseCheckInEnabled }" @click="prefs.guidedPhaseCheckInEnabled = true">Yes</button>
-          <button type="button" class="secondary small" :class="{ 'preset-selected': !prefs.guidedPhaseCheckInEnabled }" @click="prefs.guidedPhaseCheckInEnabled = false">No</button>
-        </div>
-      </div>
       <div class="pref-block pref-sep pref-voice">
         <label class="pref-label">Voice (read aloud)</label>
         <div class="pref-voice-row">
@@ -134,8 +75,8 @@
             </div>
           </div>
           <div class="pref-voice-select-wrap">
-            <label class="pref-sublabel">Voice</label>
-            <p class="pref-engine-notice">{{ kokoroSupported ? 'Kokoro (browser used as backup if needed).' : 'Browser voices only (Kokoro not supported on this browser).' }}</p>
+            <label class="pref-sublabel">Voice model selection:</label>
+            <p class="pref-engine-notice">{{ kokoroSupported ? 'Kokoro (runs in browser; Safari uses WASM).' : 'Browser voices only.' }}</p>
             <select
               :value="(speech.selectedVoiceKey && speech.selectedVoiceKey.value) ?? speech.selectedVoiceKey ?? ''"
               @change="onVoiceChange($event)"
@@ -158,16 +99,16 @@
             <span class="pref-speed-value">{{ (Number(speech.voiceRate) || 1).toFixed(1) }}×</span>
           </div>
           <div v-if="speech.canSpeak()" class="pref-test-voice-wrap">
-            <p v-if="kokoroSupported && modelDownloading" class="pref-downloading-notice">
-              Loading voice model from server (~80MB). First load may take 1–2 min; then voice is ready.
+            <p v-if="kokoroSupported" class="pref-downloading-notice">
+              Voice test uses pre-generated samples. No download needed.
             </p>
             <button
               type="button"
               class="secondary small pref-test-voice-btn"
-              :disabled="testVoicePlaying || modelDownloading"
+              :disabled="testVoicePlaying"
               @click="playTestVoice"
             >
-              {{ testVoicePlaying ? (modelDownloading ? 'Preparing…' : 'Playing…') : modelDownloading ? 'Loading model…' : 'Hear voice test' }}
+              {{ testVoicePlaying ? (modelDownloading ? 'Preparing…' : 'Playing…') : 'Hear voice test' }}
             </button>
             <button
               v-if="testVoicePlaying"
@@ -189,7 +130,6 @@ import { ref, computed, watch } from 'vue'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSpeech } from '@/composables/useSpeech'
 import { getMusicOptions, fetchMusicOptions } from '@/data/music'
-import { isWebKit } from '@/utils/platform'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -209,19 +149,16 @@ function onMusicChange(value) {
   prefs.playBackgroundMusicNow(normalized)
 }
 
-/** Unwrap ref so template reacts when voice enabled is toggled (Yes/No). */
 const voiceEnabled = computed(() => (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) ? speech.voiceEnabled.value : !!speech.voiceEnabled)
 const kokoroLoading = false
 const testVoicePlaying = ref(false)
-
 const modelDownloading = computed(() => {
   const k = speech.kokoroModelLoading
   const kVal = k && typeof k === 'object' && 'value' in k ? k.value : k
   return !!kVal
 })
-
-const kokoroSupported = !isWebKit()
-const kokoroVoicesList = computed(() => (speech.kokoroVoicesList && speech.kokoroVoicesList.value) || speech.kokoroVoicesList || [])
+const kokoroSupported = true
+const kokoroVoicesList = computed(() => (speech.kokoroVoicesListForLocale && speech.kokoroVoicesListForLocale.value) || speech.kokoroVoicesListForLocale || (speech.kokoroVoicesList && speech.kokoroVoicesList.value) || speech.kokoroVoicesList || [])
 const browserVoicesList = computed(() => (speech.browserVoicesCurrentLang && speech.browserVoicesCurrentLang.value) || speech.browserVoicesCurrentLang || [])
 
 watch(() => props.open, (isOpen) => {
@@ -241,31 +178,35 @@ function onVoiceChange(e) {
 }
 
 const TEST_PHRASE = 'This is a quick voice test.'
-
 function playTestVoice() {
   if (testVoicePlaying.value) return
   testVoicePlaying.value = true
-  speech.speak(TEST_PHRASE, {
-    force: true,
-    cacheForReplay: true,
-    onEnd: () => {
-      testVoicePlaying.value = false
-    },
-  })
+  const onEnd = () => { testVoicePlaying.value = false }
+  const voiceId = (speech.kokoroVoiceId && typeof speech.kokoroVoiceId === 'object' && 'value' in speech.kokoroVoiceId)
+    ? speech.kokoroVoiceId.value
+    : (speech.kokoroVoiceId ?? 'af_nicole')
+  const staticUrl = speech.getStaticAudioUrl?.('voice_test', voiceId)
+  if (staticUrl && speech.playBlob) {
+    fetch(staticUrl)
+      .then((r) => { if (!r.ok) throw new Error('Not found'); return r.blob() })
+      .then((blob) => speech.playBlob(blob, onEnd))
+      .catch(() => {
+        speech.speak(TEST_PHRASE, { force: true, cacheForReplay: true, onEnd })
+      })
+  } else {
+    speech.speak(TEST_PHRASE, { force: true, cacheForReplay: true, onEnd })
+  }
 }
-
 function stopTestVoice() {
   speech.stop()
   testVoicePlaying.value = false
 }
-
 function setVoiceEnabled(v) {
   if (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) {
     speech.voiceEnabled.value = v
   }
   prefs.$patch({ voiceEnabled: !!v })
 }
-
 watch(
   () => typeof speech.voiceRate === 'object' && 'value' in speech.voiceRate ? speech.voiceRate.value : speech.voiceRate,
   (rate) => { if (typeof rate === 'number') prefs.$patch({ voiceSpeed: rate }) }
@@ -320,7 +261,7 @@ function close() {
 .pref-speed-row { align-items: center; gap: 0.5rem; }
 .pref-music-volume { align-items: center; gap: 0.5rem; margin-top: 0.35rem; }
 .pref-slider { width: 100%; max-width: 140px; accent-color: #3b82f6; }
-.pref-test-voice-wrap { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
+.pref-test-voice-wrap { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; align-items: center; }
 .pref-downloading-notice {
   font-size: 0.8rem;
   color: #94a3b8;

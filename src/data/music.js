@@ -40,8 +40,15 @@ export async function fetchMusicOptions() {
     const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) || ''
     const url = `${base.replace(/\/$/, '')}/music/manifest.json`
     const res = await fetch(url)
-    if (res.ok) {
-      const data = await res.json()
+    const contentType = (res.headers.get('Content-Type') || '').toLowerCase()
+    if (res.ok && contentType.includes('application/json')) {
+      const text = await res.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch {
+        return getMusicOptions()
+      }
       const tracks = Array.isArray(data.tracks) ? data.tracks : Array.isArray(data) ? data : []
       const playlists = Array.isArray(data.playlists) ? data.playlists : []
       if (tracks.length > 0) {

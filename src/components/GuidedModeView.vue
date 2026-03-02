@@ -11,7 +11,13 @@
           <span class="guided-action-value">{{ formatTime(actionTimerValue) }}</span>
         </div>
         <div class="guided-circle-wrap">
-          <div class="guided-sparkle-circle" :class="{ breathing: !!guided.pendingSpeech }" aria-hidden="true"></div>
+          <img
+            :src="GUIDED_CIRCLE_GIF"
+            alt=""
+            class="guided-circle-gif"
+            :class="{ breathing: !!guided.pendingSpeech }"
+            aria-hidden="true"
+          />
         </div>
         <div class="guided-timers-row">
           <div class="guided-phase-cell">
@@ -44,29 +50,32 @@
           View favorites
         </button>
       </div>
-      <div v-if="guided.inPhaseCheckIn" class="guided-block phase-check-in">
-        <p class="guided-block-text">Phase {{ guided.completedPhase }} complete. Ready to continue to the next phase?</p>
-        <div class="row guided-block-actions center">
-          <button type="button" class="primary" @click="guided.continueAfterPhaseCheckIn()">Continue</button>
-          <button type="button" class="secondary danger" @click="guided.stop()">Stop session</button>
+      <!-- Session controls always visible in the bottom nav portal -->
+      <Teleport to="#bottom-nav-portal">
+        <div v-if="guided.inPhaseCheckIn" class="guided-controls">
+          <span class="guided-ctrl-checkin-label">Phase {{ guided.completedPhase }} complete</span>
+          <button type="button" class="primary guided-ctrl-btn" @click="guided.continueAfterPhaseCheckIn()">Continue</button>
+          <button type="button" class="secondary danger guided-ctrl-btn" @click="guided.stop()">Stop session</button>
         </div>
-      </div>
-      <div v-else class="guided-controls">
-        <button v-if="guided.paused" type="button" class="primary guided-ctrl-btn" @click="guided.resume()">Resume</button>
-        <button v-else type="button" class="secondary guided-ctrl-btn" @click="guided.pause()">Pause</button>
-        <button type="button" class="secondary guided-ctrl-btn" @click="guided.skipToNextTurn()">Skip turn</button>
-        <button type="button" class="secondary danger guided-ctrl-btn" @click="guided.stop()">Stop session</button>
-      </div>
+        <div v-else class="guided-controls">
+          <button v-if="guided.paused" type="button" class="primary guided-ctrl-btn" @click="guided.resume()">Resume</button>
+          <button v-else type="button" class="secondary guided-ctrl-btn" @click="guided.pause()">Pause</button>
+          <button type="button" class="secondary guided-ctrl-btn" @click="guided.skipToNextTurn()">Skip turn</button>
+          <button type="button" class="secondary danger guided-ctrl-btn" @click="guided.stop()">Stop session</button>
+        </div>
+      </Teleport>
     </template>
 
-    <!-- Session complete -->
-    <template v-else-if="guided.sessionComplete">
+    <!-- Session complete (hide when user asked to show wizard, e.g. clicked Guided Mode again) -->
+    <template v-else-if="guided.sessionComplete && !guided.requestShowWizard">
       <div class="guided-block session-complete">
         <p class="guided-block-text">Session complete.</p>
         <div class="row guided-block-actions center">
+          <button type="button" class="secondary" @click="saveSessionAsFavorite">Save as favorite</button>
           <button type="button" class="primary" @click="continueInFreePlay">Continue in Dice game</button>
           <button type="button" class="secondary" @click="endSession">End session</button>
         </div>
+        <p v-if="sessionFavoriteSaved" class="guided-session-saved-msg">Saved. You can start this session again from Saved sessions.</p>
       </div>
     </template>
 
@@ -74,12 +83,27 @@
     <template v-else-if="guidedStep === 'review' && guided.sessionPlan">
       <Teleport to="#bottom-nav-portal">
         <div class="guided-review-nav-actions">
-          <button type="button" class="secondary" @click="onReviewBack">Restart setup</button>
-          <button type="button" class="secondary" @click="onGoBackToPartnerSetup">Go back to partner setup</button>
-          <button type="button" class="secondary" @click="guided.rerollAll()">Reroll all</button>
-          <button type="button" class="primary" @click="onConfirmSession">Confirm session</button>
+          <button type="button" class="secondary guided-review-nav-btn" @click="showSavedSessionsList = true">Saved</button>
+          <button type="button" class="secondary guided-review-nav-btn" @click="onReviewBack">Restart setup</button>
+          <button type="button" class="secondary guided-review-nav-btn" @click="onGoBackToPartnerSetup">Go to partner setup</button>
+          <button type="button" class="secondary guided-review-nav-btn" @click="guided.rerollAll()">Reroll all</button>
+          <button type="button" class="primary guided-review-nav-btn guided-review-confirm" @click="onConfirmSession">Confirm session</button>
         </div>
       </Teleport>
+      <div v-if="showSavedSessionsList" class="guided-saved-overlay" @click.self="showSavedSessionsList = false">
+        <div class="guided-saved-list">
+          <h3>Saved sessions</h3>
+          <p v-if="!sessionFavorites.list.length" class="guided-saved-empty">No saved sessions yet. Complete a session and use "Save as favorite".</p>
+          <ul v-else>
+            <li v-for="fav in sessionFavorites.list" :key="fav.id">
+              <button type="button" class="guided-saved-item" @click="loadSavedSession(fav)">
+                {{ fav.name }} <span class="guided-saved-date">{{ new Date(fav.createdAt).toLocaleDateString() }}</span>
+              </button>
+            </li>
+          </ul>
+          <button type="button" class="secondary" @click="showSavedSessionsList = false">Close</button>
+        </div>
+      </div>
       <div class="guided-review-screen">
         <div class="guided-review-inner">
           <h2 class="guided-ready-title">Review your session</h2>
@@ -104,8 +128,14 @@
       </div>
     </template>
 
-    <!-- Cooking: generating audio -->
+    <!-- Cooking: generating audio; nav buttons teleported to bottom nav card -->
     <template v-else-if="guidedStep === 'cooking'">
+      <Teleport to="#bottom-nav-portal">
+        <div class="guided-cooking-nav-actions">
+          <button type="button" class="secondary guided-review-nav-btn" @click="onCookingBack">Back to setup</button>
+          <button type="button" class="secondary guided-review-nav-btn" @click="onCookingQuit">Quit</button>
+        </div>
+      </Teleport>
       <div class="guided-cooking-screen">
         <div class="guided-cooking-inner">
           <div class="guided-cooking-gif-wrap">
@@ -115,12 +145,13 @@
               class="guided-cooking-gif"
             />
           </div>
-          <p class="guided-cooking-label">{{ cookingLabels[cookingStepIndex] }}</p>
-          <div class="guided-cooking-progress-wrap">
+          <p class="guided-cooking-label">{{ cookingWaitingForModel ? 'Loading voice model…' : cookingLabels[cookingStepIndex] }}</p>
+          <p v-if="cookingWaitingForModel" class="guided-cooking-model-hint">~95 MB, usually 1–3 min (2–5 on slower connections). Loads in the background from app open.</p>
+          <div v-if="!cookingWaitingForModel" class="guided-cooking-progress-wrap">
             <div class="guided-cooking-progress-bar">
               <div class="guided-cooking-progress-fill" :style="{ width: cookingProgressPercent + '%' }"></div>
             </div>
-            <p class="guided-cooking-count">{{ cookingProgressCurrent }} of {{ cookingProgressTotal }}</p>
+            <p class="guided-cooking-count">{{ cookingProgressPercent }}%</p>
           </div>
           <p v-if="cookingError" class="guided-cooking-error">{{ cookingError }}</p>
           <p v-if="cookingError && isKokoroError(cookingError)" class="guided-cooking-error-hint">Make sure the Kokoro model is in <code>public/models/</code>. Run: <code>npm run download-kokoro-model</code></p>
@@ -166,28 +197,36 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
+import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
 import { useSpeech } from '@/composables/useSpeech'
 import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 
 const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
-const { speak, preparePhrase, warmupWorker, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, generateSessionAudio, playBlob } = useSpeech()
+const sessionFavorites = useSessionFavoritesStore()
+const { speak, preparePhrase, warmupWorker, waitForWorkerReady, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, generateSessionAudio, playBlob } = useSpeech()
 
 const pendingConfig = ref(null)
 const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
 const wizardInitialStep = ref(1)
 
 const wizardInitialConfig = ref(null)
+const sessionFavoriteSaved = ref(false)
+const showSavedSessionsList = ref(false)
 const cookingProgressCurrent = ref(0)
 const cookingProgressTotal = ref(0)
 const cookingError = ref(null)
+/** True while waiting for Kokoro model to load before we can generate audio (avoids showing 0% during model load). */
+const cookingWaitingForModel = ref(false)
 
 const cookingGifs = [
   '/GIFS/agp_studios-audio-22831_512.gif',
   '/GIFS/dakernet-to-write-6621_512.gif',
   '/GIFS/acatxio-procedural-generation-11379_512%20(1).gif',
 ]
+/** Loading GIF for the center circle during guided session (placidplace loading animation). */
+const GUIDED_CIRCLE_GIF = '/GIFS/placidplace-loading-23091_512.gif'
 const cookingLabels = ['recording....', 'writing....', 'compiling....']
 const cookingStepIndex = ref(0)
 let cookingIntervalId = null
@@ -264,6 +303,21 @@ function onGoBackToPartnerSetup() {
   guidedStep.value = null
 }
 
+function saveSessionAsFavorite() {
+  const config = guided.lastStartedConfig
+  if (!config) return
+  sessionFavorites.add({ name: `Session – ${new Date().toLocaleDateString()}`, config })
+  sessionFavoriteSaved.value = true
+}
+
+function loadSavedSession(fav) {
+  if (!fav?.config) return
+  pendingConfig.value = fav.config
+  guided.buildSessionPlanFromConfig(fav.config)
+  guidedStep.value = 'review'
+  showSavedSessionsList.value = false
+}
+
 function onConfirmSession() {
   guidedStep.value = 'cooking'
   cookingError.value = null
@@ -277,15 +331,51 @@ async function startCooking() {
     cookingError.value = 'No session plan.'
     return
   }
-  cookingProgressTotal.value = plan.script.length
+  cookingWaitingForModel.value = true
+  try {
+    await waitForWorkerReady()
+  } catch (e) {
+    cookingWaitingForModel.value = false
+    cookingError.value = e?.message || 'Voice not ready.'
+    return
+  }
+  cookingWaitingForModel.value = false
+  // Pre-generate intro + entire first turn via worker so there is ample audio to get into the session
+  const firstTurnPhraseCount = plan.turns?.[0]?.phraseStrings?.length ?? 5
+  const endIndex = Math.min(1 + firstTurnPhraseCount, plan.script.length)
+  const initialScript = plan.script.slice(0, endIndex)
+  cookingProgressTotal.value = endIndex
   cookingProgressCurrent.value = 0
   try {
-    const blobs = await generateSessionAudio(plan.script, (current, total) => {
+    const initialBlobs = await generateSessionAudio(initialScript, (current, total) => {
       cookingProgressCurrent.value = current
       cookingProgressTotal.value = total
     })
+    const fullLength = plan.script.length
+    const blobs = new Array(fullLength)
+    for (let i = 0; i < initialBlobs.length; i++) blobs[i] = initialBlobs[i]
+    const introOk = initialBlobs[0] != null && initialBlobs[0] !== undefined
+    const firstPhraseOk = endIndex < 2 || (initialBlobs[1] != null && initialBlobs[1] !== undefined)
+    if (!introOk || !firstPhraseOk) {
+      cookingError.value = 'Could not generate intro or first turn audio. Please try again.'
+      return
+    }
     guided.setPreGeneratedBlobs(blobs)
     guidedStep.value = 'start'
+    warmupWorker()
+    // Background: generate remaining phrases and fill blobs at correct indices
+    if (endIndex < fullLength) {
+      ;(async () => {
+        for (let j = endIndex; j < fullLength; j++) {
+          try {
+            const [blob] = await generateSessionAudio([plan.script[j]])
+            blobs[j] = blob
+          } catch (_) {
+            blobs[j] = null
+          }
+        }
+      })()
+    }
   } catch (e) {
     cookingError.value = e?.message || 'Failed to generate audio.'
   }
@@ -294,6 +384,18 @@ async function startCooking() {
 function onCookingBack() {
   guidedStep.value = 'review'
   cookingError.value = null
+}
+
+function onCookingQuit() {
+  cookingError.value = null
+  clearCookingInterval()
+  guided.resetAfterSessionComplete()
+  guided.clearSessionPlan()
+  pendingConfig.value = null
+  guidedStep.value = null
+  wizardInitialStep.value = 1
+  wizardInitialConfig.value = null
+  session.resetSession()
 }
 
 function clearCookingInterval() {
@@ -312,6 +414,24 @@ watch(guidedStep, (step) => {
     }, 2200)
   }
 })
+
+// When returning to guided mode (including on mount when uiMode is already 'guided'),
+// reset any completed session so the wizard shows instead of the end screen.
+// { immediate: true } ensures this fires on mount even when uiMode was already 'guided'
+// (e.g. user came from landing modal after endSession() unmounted this component).
+watch(() => session.uiMode, (mode) => {
+  if (mode === 'guided' && guided.sessionComplete) {
+    guided.resetAfterSessionComplete()
+    guidedStep.value = null
+  }
+}, { immediate: true })
+watch(() => guided.requestShowWizard, (show) => {
+  if (show) {
+    guidedStep.value = null
+    guided.requestShowWizard = false
+  }
+})
+
 onUnmounted(clearCookingInterval)
 
 function onStartBack() {
@@ -323,7 +443,7 @@ function onStartSession() {
   guided.setSpeak((text, opts) => speak(text, opts))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
-  guided.setPlayPreGeneratedBlob((blob, onEnd) => playBlob(blob, onEnd))
+  guided.setPlayPreGeneratedBlob((blob, onEnd, onPlaybackFailed) => playBlob(blob, onEnd, onPlaybackFailed))
   warmupWorker()
   guided.startGuidedModeWithPreGenerated(pendingConfig.value, guided.preGeneratedBlobs)
   guidedStep.value = null
@@ -338,13 +458,19 @@ function continueInFreePlay() {
 
 function endSession() {
   guided.stop()
+  // Clear the session-complete flag before resetting session so when the landing modal
+  // routes back to guided mode the watch (immediate) won't see sessionComplete=true
+  guided.resetAfterSessionComplete()
   session.resetSession()
+  sessionFavoriteSaved.value = false
 }
 
 onMounted(() => {
+  warmupWorker() // start loading voice model as soon as user enters Guided Mode
   guided.setSpeak((text, opts) => speak(text, opts))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
+  // Start loading the voice worker as soon as they enter the guided wizard so it's ready by cooking
   warmupWorker()
 })
 
@@ -357,11 +483,24 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.guided-mode-view { padding: 0; width: 100%; max-width: 100%; }
+.guided-mode-view {
+  padding: 0 0 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
 .guided-mode-view.spacing-stack > * + * { margin-top: 1.25rem; }
 
 .guided-wizard-wrap {
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ready screen: full-area centered prompt */
@@ -430,14 +569,19 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
-/* Review session plan */
+/* Review session plan: fill main card and scroll when turn list is long */
 .guided-review-screen {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+  justify-content: flex-start;
   width: 100%;
   padding: 2rem 1rem;
+  box-sizing: border-box;
 }
 .guided-review-inner {
   display: flex;
@@ -446,6 +590,7 @@ onUnmounted(() => {
   gap: 1.25rem;
   max-width: 480px;
   width: 100%;
+  min-width: 0;
 }
 .guided-review-sub {
   font-size: 0.95rem;
@@ -482,14 +627,78 @@ onUnmounted(() => {
   justify-content: center;
   margin-top: 0.5rem;
 }
-/* Review step: actions live in nav bar (teleported) */
-.guided-review-nav-actions {
+/* Saved sessions overlay */
+.guided-saved-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 0.75rem;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.guided-saved-list {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  max-width: 360px;
   width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+}
+.guided-saved-list h3 { margin: 0 0 0.75rem; font-size: 1.1rem; color: #e5e7eb; }
+.guided-saved-empty { font-size: 0.9rem; color: #94a3b8; margin: 0 0 1rem; }
+.guided-saved-list ul { list-style: none; margin: 0 0 1rem; padding: 0; }
+.guided-saved-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.guided-saved-date { font-size: 0.8rem; color: #94a3b8; margin-left: 0.5rem; }
+.guided-session-saved-msg { font-size: 0.9rem; color: #86efac; margin: 0.5rem 0 0; }
+
+/* Review step: actions live in nav bar (teleported), compact grid to fit nav card */
+.guided-review-nav-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.guided-review-nav-btn {
+  padding: 0.45rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-height: 38px;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+.guided-review-confirm {
+  grid-column: 1 / -1;
+}
+
+/* Cooking: nav actions in bottom nav card (same layout as review) */
+.guided-cooking-nav-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* Cooking */
@@ -497,22 +706,26 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  padding: 2rem 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 .guided-cooking-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  max-width: 340px;
+  gap: 0.85rem;
+  max-width: 320px;
+  width: 100%;
   text-align: center;
 }
 .guided-cooking-gif-wrap {
-  width: 100%;
-  max-width: 280px;
-  aspect-ratio: 1;
+  width: min(220px, 40vmin);
+  height: min(220px, 40vmin);
+  flex-shrink: 0;
   border-radius: 0.75rem;
   overflow: hidden;
   background: rgba(15, 23, 42, 0.6);
@@ -531,6 +744,13 @@ onUnmounted(() => {
   color: #e2e8f0;
   margin: 0;
   min-height: 1.5em;
+}
+.guided-cooking-model-hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: -0.5rem 0 0;
+  max-width: 280px;
+  line-height: 1.4;
 }
 .guided-cooking-sub { font-size: 0.95rem; color: #94a3b8; margin: 0; }
 .guided-cooking-progress-wrap { width: 100%; }
@@ -635,70 +855,33 @@ onUnmounted(() => {
 .guided-action-label { font-size: 0.95rem; font-weight: 600; color: #a855f7; }
 .guided-action-value { font-size: 2.5rem; font-weight: 700; color: #e5e7eb; line-height: 1; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 
-/* Sparkly breathing circle */
+/* Center circle: loading GIF (was spinning shimmer) */
 .guided-circle-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.5rem 0;
 }
-.guided-sparkle-circle {
+.guided-circle-gif {
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: radial-gradient(ellipse 70% 70% at 35% 35%, rgba(168, 85, 247, 0.45), rgba(34, 197, 94, 0.2) 45%, rgba(15, 23, 42, 0.6) 100%);
-  box-shadow:
-    0 0 0 1px rgba(168, 85, 247, 0.25),
-    0 0 24px rgba(168, 85, 247, 0.2),
-    inset 0 0 40px rgba(255, 255, 255, 0.06),
-    inset 8px -8px 16px rgba(255, 255, 255, 0.04),
-    -4px 4px 12px rgba(0, 0, 0, 0.2);
-  position: relative;
-  transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease-out;
 }
-.guided-sparkle-circle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.08) 60deg, transparent 120deg, rgba(255, 255, 255, 0.05) 180deg, transparent 240deg, rgba(255, 255, 255, 0.07) 300deg, transparent 360deg);
-  animation: sparkle-rotate 8s linear infinite;
-  pointer-events: none;
-  z-index: 0;
+.guided-circle-gif.breathing {
+  animation: guided-circle-breathe 2.2s ease-in-out infinite;
 }
-.guided-sparkle-circle::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.25) 0%, transparent 40%);
-  pointer-events: none;
-  z-index: 1;
-}
-.guided-sparkle-circle.breathing {
-  animation: breathe 2.2s ease-in-out infinite;
-}
-.guided-sparkle-circle.breathing::before {
-  animation: sparkle-rotate 6s linear infinite;
-}
-/* Animate only transform to avoid expensive repaints on mobile (box-shadow animation heats devices) */
-@keyframes breathe {
+@keyframes guided-circle-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
 }
-@keyframes sparkle-rotate {
-  to { transform: rotate(360deg); }
-}
-/* Pause animations when tab is hidden to reduce CPU/heat in background */
-:global(.app-root.page-hidden) .guided-sparkle-circle,
-:global(.app-root.page-hidden) .guided-sparkle-circle::before,
-:global(.app-root.page-hidden) .guided-sparkle-circle::after {
+:global(.app-root.page-hidden) .guided-circle-gif {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
-  .guided-sparkle-circle,
-  .guided-sparkle-circle::before,
-  .guided-sparkle-circle::after {
+  .guided-circle-gif.breathing {
     animation: none;
   }
 }
@@ -766,6 +949,12 @@ onUnmounted(() => {
   min-height: 40px;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
+  white-space: nowrap;
+}
+.guided-ctrl-checkin-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a855f7;
   white-space: nowrap;
 }
 .danger { background: rgba(127,29,29,0.5); color: #fecaca; }

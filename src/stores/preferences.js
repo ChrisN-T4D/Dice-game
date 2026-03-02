@@ -21,7 +21,7 @@ export const usePreferencesStore = defineStore('preferences', {
     phase3DoubleTime: false,
     vibratorsPresent: true,
     guidedPhaseCheckInEnabled: false,
-    voiceEnabled: false,
+    voiceEnabled: true,
     voiceSpeed: 1,
     partnerName1: '',
     partnerName2: '',

@@ -198,6 +198,35 @@
         <li v-for="(text, key) in phase3Modifiers" :key="key"><strong>{{ key }}.</strong> {{ text }}</li>
       </ul>
     </section>
+
+    <!-- Voice generating test -->
+    <section v-show="activeTab === 'voice-test'" class="admin-section" role="tabpanel">
+      <h3>Voice generating test</h3>
+      <p class="admin-hint">Submit a phrase to run the full TTS pipeline (Kokoro or browser fallback). Ensure voice is enabled in main app preferences and, for Kokoro, that the model is in <code>public/models/</code>.</p>
+      <div class="admin-voice-test">
+        <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>
+        <textarea
+          id="admin-voice-phrase"
+          v-model="voiceTestPhrase"
+          class="admin-voice-test-input"
+          rows="3"
+          placeholder="e.g. Hello, this is a test."
+        />
+        <div class="admin-voice-test-actions">
+          <button
+            type="button"
+            class="primary"
+            :disabled="!voiceTestPhrase.trim() || voiceTestStatus === 'generating'"
+            @click="runVoiceTest"
+          >
+            {{ voiceTestStatus === 'generating' ? 'Generating…' : 'Generate and play' }}
+          </button>
+        </div>
+        <p v-if="voiceTestStatus === 'generating'" class="admin-voice-test-status">Generating audio… (may take a few seconds)</p>
+        <p v-else-if="voiceTestStatus === 'done'" class="admin-voice-test-status admin-voice-test-status-done">Done. You should have heard the phrase.</p>
+        <p v-else-if="voiceTestStatus === 'error'" class="admin-voice-test-status admin-voice-test-status-error">{{ voiceTestError || 'Generation failed.' }}</p>
+      </div>
+    </section>
     </template>
   </div>
 </template>
@@ -209,6 +238,7 @@
  */
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
+import { useSpeech } from '@/composables/useSpeech'
 import {
   PHASE3_POSITIONS_LIST,
   PHASE3_NO_IMAGE_POSITION_NUMBERS,
@@ -294,10 +324,38 @@ const tabs = [
   { id: 'phase3', label: 'Phase 3: Image vs description' },
   { id: 'phase12', label: 'Phase 1 & 2 tables' },
   { id: 'modifiers', label: 'Phase 3 modifiers' },
+  { id: 'voice-test', label: 'Voice generating test' },
 ]
 
 const positionInput = ref(1)
 const imageError = ref(false)
+
+// Voice generating test
+const { speak, warmupWorker } = useSpeech()
+const voiceTestPhrase = ref('Hello, this is a voice test.')
+const voiceTestStatus = ref('idle') // 'idle' | 'generating' | 'done' | 'error'
+const voiceTestError = ref('')
+const VOICE_TEST_TIMEOUT_MS = 55000
+
+function runVoiceTest() {
+  const phrase = voiceTestPhrase.value?.trim()
+  if (!phrase) return
+  voiceTestStatus.value = 'generating'
+  voiceTestError.value = ''
+  const timeoutId = setTimeout(() => {
+    if (voiceTestStatus.value === 'generating') {
+      voiceTestStatus.value = 'error'
+      voiceTestError.value = 'Timed out. Check console and that Kokoro model is in public/models/.'
+    }
+  }, VOICE_TEST_TIMEOUT_MS)
+  warmupWorker()
+  speak(phrase, {
+    onEnd: () => {
+      clearTimeout(timeoutId)
+      if (voiceTestStatus.value === 'generating') voiceTestStatus.value = 'done'
+    },
+  })
+}
 
 onMounted(() => {
   nextTick(() => {
@@ -649,6 +707,42 @@ loadValidation()
   color: #cbd5e1;
   flex-shrink: 0;
 }
+.admin-hint code {
+  background: rgba(2, 6, 23, 0.6);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+.admin-voice-test {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+.admin-voice-test-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+.admin-voice-test-input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 4rem;
+}
+.admin-voice-test-input::placeholder { color: #64748b; }
+.admin-voice-test-actions { margin: 0; }
+.admin-voice-test-status {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.admin-voice-test-status-done { color: #86efac; }
+.admin-voice-test-status-error { color: #fca5a5; }
+
 /* Phase 3: vertical stack (image top, description below), no page scroll */
 .phase3-compare {
   flex: 1;

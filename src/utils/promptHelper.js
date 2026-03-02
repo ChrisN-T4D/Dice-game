@@ -80,8 +80,9 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const what = t.actions[act] || ''
     const whatWithAnatomy = withAnatomy(what, giverAnatomy, receiverAnatomy)
     const whatWithNames = withPartnerNames(whatWithAnatomy, giverName, receiverName)
+    const focusPart = (phase === 1 && loc === 19) ? where : `${receiverName}'s ${where}`
     const instruction = where
-      ? `${giverName}, focus on ${where}. ${whatWithNames}`
+      ? `${giverName}, focus on ${focusPart}. ${whatWithNames}`
       : whatWithNames
     return { where, what, instruction }
   }

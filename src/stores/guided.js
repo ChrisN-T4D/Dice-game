@@ -13,6 +13,7 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
+import { SESSION_COMPLETE_PHRASES } from '@/data/staticPhrases'
 
 // -----------------------------------------------------------------------------
 // Helpers and constants (rolls, timed-step parsing, fixed phrases)
@@ -100,12 +101,6 @@ const EASE_IN_PHRASES = [
   'Use the next few seconds to get comfortable. No rush.',
   "Whenever you're ready. No rush.",
 ]
-const SESSION_COMPLETE_PHRASES = [
-  'Session complete. Check in with each other.',
-  'Guided session complete. Check in with each other.',
-  "That's the end of the guided session. Check in with each other.",
-  'All done. Check in with each other.',
-]
 const SETTLE_INTO_POSITION = 'Settle into position.'
 
 function prepAll(prep, phrases) {
@@ -189,6 +184,12 @@ export const useGuidedStore = defineStore('guided', {
     preGeneratedBlobs: null,
     preGeneratedIndex: 0,
     playPreGeneratedBlob: null,
+    /** Config used to start the current/last session (for saving as favorite). */
+    lastStartedConfig: null,
+    /** Set true by resetAfterSessionComplete so the view can switch to wizard. */
+    requestShowWizard: false,
+    /** True when we played script[1] from blob right after intro to avoid TTS pause. */
+    firstTurnPhrasePlayedFromBlob: false,
   }),
 
   getters: {
@@ -308,22 +309,75 @@ export const useGuidedStore = defineStore('guided', {
     setPreparePhrase(fn) {
       this.preparePhraseRef = fn
     },
-    /** Play one phrase: use pre-generated blob if set, else TTS. */
+    /** Play one phrase: use pre-generated blob if set and ready, else TTS. Falls back to TTS when blob is null/not ready so turn description always plays. */
     safeSpeak(phrase, onEnd) {
       if (this.preGeneratedBlobs != null && this.playPreGeneratedBlob != null && this.preGeneratedIndex < this.preGeneratedBlobs.length) {
-        const blob = this.preGeneratedBlobs[this.preGeneratedIndex++]
-        this.pendingSpeech = null
-        if (blob == null) {
-          if (onEnd) onEnd()
+        let blob = this.preGeneratedBlobs[this.preGeneratedIndex]
+        if (blob !== undefined && blob != null) {
+          this.preGeneratedIndex++
+          this.pendingSpeech = null
+          const onPlaybackFailed = () => {
+            if (this.speakRef && phrase) {
+              this.pendingSpeech = { phrase, onEnd }
+              this.speakRef(phrase, { force: true, onEnd: () => { this.pendingSpeech = null; if (onEnd) onEnd() } })
+            } else if (onEnd) onEnd()
+          }
+          try {
+            this.playPreGeneratedBlob(blob, () => { if (onEnd) onEnd() }, onPlaybackFailed)
+          } catch (_) {
+            onPlaybackFailed()
+          }
           return
         }
-        try {
-          this.playPreGeneratedBlob(blob, () => {
-            if (onEnd) onEnd()
-          })
-        } catch (_) {
-          if (onEnd) onEnd()
+        if (blob === undefined) {
+          const idx = this.preGeneratedIndex
+          const start = Date.now()
+          const WAIT_MS = 3000
+          const iv = setInterval(() => {
+            blob = this.preGeneratedBlobs[idx]
+            if (blob !== undefined) {
+              clearInterval(iv)
+              if (blob != null) {
+                this.preGeneratedIndex = idx + 1
+                this.pendingSpeech = null
+                const onPlaybackFailed = () => {
+                  if (this.speakRef && phrase) {
+                    this.pendingSpeech = { phrase, onEnd }
+                    this.speakRef(phrase, { force: true, onEnd: () => { this.pendingSpeech = null; if (onEnd) onEnd() } })
+                  } else if (onEnd) onEnd()
+                }
+                try {
+                  this.playPreGeneratedBlob(blob, () => { if (onEnd) onEnd() }, onPlaybackFailed)
+                } catch (_) {
+                  onPlaybackFailed()
+                }
+              } else {
+                this.preGeneratedIndex = idx + 1
+                if (this.speakRef && phrase) {
+                  this.pendingSpeech = { phrase, onEnd }
+                  this.speakRef(phrase, { force: true, onEnd: () => { this.pendingSpeech = null; if (onEnd) onEnd() } })
+                } else if (onEnd) onEnd()
+              }
+            } else if (Date.now() - start > WAIT_MS) {
+              clearInterval(iv)
+              this.preGeneratedIndex = idx + 1
+              if (this.speakRef && phrase) {
+                this.pendingSpeech = { phrase, onEnd }
+                this.speakRef(phrase, { force: true, onEnd: () => { this.pendingSpeech = null; if (onEnd) onEnd() } })
+              } else if (onEnd) onEnd()
+            }
+          }, 200)
+          return
         }
+        this.preGeneratedIndex++
+        if (this.speakRef && phrase) {
+          this.pendingSpeech = null
+          try { this.stopSpeakRef?.() } catch (_) {}
+          this.pendingSpeech = { phrase, onEnd }
+          this.speakRef(phrase, { force: true, onEnd: () => { this.pendingSpeech = null; if (onEnd) onEnd() } })
+          return
+        }
+        if (onEnd) onEnd()
         return
       }
       if (!this.speakRef) {
@@ -351,6 +405,13 @@ export const useGuidedStore = defineStore('guided', {
       this.sessionPlan = null
       this.preGeneratedBlobs = null
       this.preGeneratedIndex = 0
+    },
+    /** Call when user clicks Guided Mode after a completed session; resets so they see setup from the start. */
+    resetAfterSessionComplete() {
+      this.sessionComplete = false
+      this.totalSeconds = 0
+      this.clearSessionPlan()
+      this.requestShowWizard = true
     },
     buildSessionPlanFromConfig(config, seed) {
       const plan = buildSessionPlan(config, seed)
@@ -384,15 +445,16 @@ export const useGuidedStore = defineStore('guided', {
     setPreGeneratedBlobs(blobs) {
       this.preGeneratedBlobs = blobs
       this.preGeneratedIndex = 0
+      this.firstTurnPhrasePlayedFromBlob = false
     },
 
     /** Start guided session using pre-generated audio blobs (same order as sessionPlan.script). */
     startGuidedModeWithPreGenerated(config, blobs) {
-      this.setPreGeneratedBlobs(blobs)
-      this.startGuidedMode(config, { usePreGeneratedBlobs: true })
+      this.startGuidedMode(config, { usePreGeneratedBlobs: true, preGeneratedBlobs: blobs })
     },
 
     startGuidedMode(config, options = {}) {
+      this.lastStartedConfig = config ? { ...config } : null
       const usePreGeneratedBlobs = options.usePreGeneratedBlobs && Array.isArray(options.usePreGeneratedBlobs) && options.usePreGeneratedBlobs.length > 0
       if (usePreGeneratedBlobs) {
         this.preGeneratedBlobs = options.usePreGeneratedBlobs
@@ -525,7 +587,22 @@ export const useGuidedStore = defineStore('guided', {
       }
       if (usePreGeneratedBlobs && this.playPreGeneratedBlob && this.preGeneratedBlobs.length > 0) {
         const blob = this.preGeneratedBlobs[this.preGeneratedIndex++]
-        this.playPreGeneratedBlob(blob, onIntroEnd)
+        if (blob == null) {
+          onIntroEnd()
+          return
+        }
+        const nextBlob = this.preGeneratedBlobs[this.preGeneratedIndex]
+        if (nextBlob != null) {
+          this.preGeneratedIndex++
+          this.playPreGeneratedBlob(blob, () => {
+            this.playPreGeneratedBlob(nextBlob, () => {
+              this.firstTurnPhrasePlayedFromBlob = true
+              onIntroEnd()
+            })
+          })
+        } else {
+          this.playPreGeneratedBlob(blob, onIntroEnd)
+        }
         return
       }
       if (this.speakRef) {
@@ -614,8 +691,6 @@ export const useGuidedStore = defineStore('guided', {
           }
           this.currentPrompt.clothing = clothingText
         }
-      } else if (this.clothingEnabled && phase < 3 && receiverItems.length > 0) {
-        this.currentPrompt.clothing = 'No clothing change this turn.'
       } else {
         this.currentPrompt.clothing = ''
       }
@@ -668,8 +743,9 @@ export const useGuidedStore = defineStore('guided', {
         'Begin.',
       ])
 
-      // Preload TTS as soon as we have the prompt so the worker has max time (break countdowns) to generate.
-      // Instruction and clothing first (longest, needed after before_clothing); then transition phrases.
+      // Preload TTS in the worker so audio is ready when needed. Worker runs in background; preparePhrase
+      // sends generate and caches the blob; when we speak() the same text we play from cache immediately.
+      // Instruction and clothing first (longest); then transition phrases.
       const prep = this.preparePhraseRef
       if (prep) {
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
@@ -737,8 +813,11 @@ export const useGuidedStore = defineStore('guided', {
           if (this.speakRef) this.safeSpeak(clothingText, onClothingSpoken)
           else onClothingSpoken()
         } else {
-          if (instructionText && this.speakRef) this.safeSpeak(instructionText, runSettleIn)
-          else runSettleIn()
+          const playInstructionThenSettle = () => {
+            if (instructionText && this.speakRef) this.safeSpeak(instructionText, runSettleIn)
+            else runSettleIn()
+          }
+          playInstructionThenSettle()
         }
       }
 
@@ -780,8 +859,28 @@ export const useGuidedStore = defineStore('guided', {
       if (useFirstTurnPhrase) {
         this.firstTurnOfSession = false
         if (phase === 3) this.firstTurnOfPhase3 = false
-        if (this.speakRef) this.safeSpeak(firstTurnPhrase, runAfterNextTurn)
-        else runAfterNextTurn()
+        const prep = this.preparePhraseRef
+        const instructionText = this.currentPrompt.instruction
+        const runWhenInstructionReady = () => {
+          runClothingThenInstruction()
+        }
+        if (this.firstTurnPhrasePlayedFromBlob) {
+          this.firstTurnPhrasePlayedFromBlob = false
+          if (instructionText && prep) {
+            prep(instructionText, runWhenInstructionReady)
+          } else {
+            runClothingThenInstruction()
+          }
+        } else {
+          if (this.speakRef) this.safeSpeak(firstTurnPhrase, () => {
+            if (instructionText && prep) prep(instructionText, runWhenInstructionReady)
+            else runClothingThenInstruction()
+          })
+          else {
+            if (instructionText && prep) prep(instructionText, runWhenInstructionReady)
+            else runClothingThenInstruction()
+          }
+        }
       } else {
         startNextTurnCountdown()
       }

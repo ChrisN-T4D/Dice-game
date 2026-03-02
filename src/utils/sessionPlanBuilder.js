@@ -10,6 +10,7 @@ import {
   removeClothingItem,
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
+import { SESSION_COMPLETE_PHRASES } from '@/data/staticPhrases'
 
 // -----------------------------------------------------------------------------
 // Seeded RNG (LCG) for deterministic plans
@@ -62,12 +63,6 @@ const EASE_IN_PHRASES = [
   "Settle into position when you're ready. No rush.",
   'Use the next few seconds to get comfortable. No rush.',
   "Whenever you're ready. No rush.",
-]
-const SESSION_COMPLETE_PHRASES = [
-  'Session complete. Check in with each other.',
-  'Guided session complete. Check in with each other.',
-  "That's the end of the guided session. Check in with each other.",
-  'All done. Check in with each other.',
 ]
 
 const AFTER_NEXT_TURN_SEC = 10
@@ -255,8 +250,6 @@ export function buildSessionPlan(config, seed) {
         }
         effectiveClothingSeconds = Math.round(clothingRemovalSeconds * getClothingRemovalComplexityMultiplier([removed], entry?.method || ''))
       }
-    } else if (clothingEnabled && phase < 3 && receiverItems.length > 0) {
-      clothingText = 'No clothing change this turn.'
     }
 
     let turnTime = turnSeconds

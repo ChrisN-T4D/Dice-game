@@ -1,5 +1,5 @@
 <template>
-  <div class="guided-setup-wizard">
+  <div class="guided-setup-wizard" :class="{ 'wizard-step-10-active': step === 10 }">
     <Teleport to="#step-bar-portal">
       <div class="wizard-progress-inner">
         <span class="wizard-progress-text">Step {{ step }} of {{ totalSteps }}</span>
@@ -17,11 +17,13 @@
         <div class="wizard-step-description">How to split time across the three phases</div>
       </div>
       <div class="wizard-step-content">
-        <div class="row wrap">
-          <button v-for="opt in phaseOptions" :key="opt.value" type="button" class="secondary wizard-opt wizard-opt-compact" :class="{ 'preset-selected': config.distributionMode === opt.value }" @click="selectPhaseOption(opt)">
-            <span class="wizard-opt-label">{{ opt.label }}</span>
-            <span class="wizard-opt-sub">{{ opt.sub }}</span>
-          </button>
+        <div class="wizard-options-card">
+          <div class="row wrap">
+            <button v-for="opt in phaseOptions" :key="opt.value" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.distributionMode === opt.value }" @click="selectPhaseOption(opt)">
+              <span class="wizard-opt-label">{{ opt.label }}</span>
+              <span class="wizard-opt-sub">{{ opt.sub }}</span>
+            </button>
+          </div>
         </div>
         <div v-if="config.distributionMode === 'custom'" class="custom-sliders custom-sliders-compact">
           <div class="row align-center"><label>Phase 1</label><span class="pct">{{ config.phasePercents[0] }}%</span><input v-model.number="config.phasePercents[0]" type="range" min="0" max="100" /></div>
@@ -38,8 +40,10 @@
         <div class="wizard-step-description">How long should the session be?</div>
       </div>
       <div class="wizard-step-content">
-        <div class="row wrap">
-          <button v-for="m in [15, 30, 45, 60, 90, 120]" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.totalMinutes === m }" @click="config.totalMinutes = m">{{ m }} min</button>
+        <div class="wizard-options-card">
+          <div class="row wrap">
+            <button v-for="m in [15, 30, 45, 60, 90, 120]" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.totalMinutes === m }" @click="config.totalMinutes = m">{{ m }} min</button>
+          </div>
         </div>
       </div>
     </div>
@@ -52,32 +56,83 @@
       </div>
       <div class="wizard-step-content">
         <label>Turn duration</label>
-        <div class="row wrap">
-          <button v-for="m in [1, 2, 3, 5]" :key="m" type="button" class="secondary" :class="{ 'preset-selected': config.turnMinutes === m }" @click="config.turnMinutes = m">{{ m }} min</button>
+        <div class="wizard-options-card">
+          <div class="row wrap">
+            <button v-for="m in [1, 2, 3, 5]" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.turnMinutes === m }" @click="config.turnMinutes = m">{{ m }} min</button>
+          </div>
         </div>
         <label class="mt">Pause between turns</label>
-        <div class="row wrap">
-          <button v-for="s in pauseOptions" :key="s.v" type="button" class="secondary small" :class="{ 'preset-selected': config.pauseSeconds === s.v }" @click="config.pauseSeconds = s.v">{{ s.label }}</button>
+        <div class="wizard-options-card">
+          <div class="row wrap">
+            <button v-for="s in pauseOptions" :key="s.v" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.pauseSeconds === s.v }" @click="config.pauseSeconds = s.v">{{ s.label }}</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 4: Clothing removal (enabled/disabled) – before partners -->
+    <!-- Step 4: Session options (prompt detail, penetration, anal, vibrators) -->
     <div v-show="step === 4" class="wizard-step active">
+      <div class="wizard-step-header">
+        <div class="wizard-step-title">Session options</div>
+        <div class="wizard-step-description">Prompt style and content options for this session</div>
+      </div>
+      <div class="wizard-step-content wizard-step-options">
+        <div class="wizard-option-row">
+          <span class="wizard-option-label">Prompt detail</span>
+          <div class="wizard-options-card">
+            <div class="row wrap">
+              <button v-for="m in ['beginner', 'regular', 'expert']" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.promptDetailMode === m }" :title="m === 'beginner' ? 'Full descriptions' : m === 'expert' ? 'Short prompts' : 'Medium pace'" @click="prefs.setPromptDetail(m)">{{ m.charAt(0).toUpperCase() + m.slice(1) }}</button>
+            </div>
+          </div>
+        </div>
+        <div class="wizard-option-row">
+          <span class="wizard-option-label">Penetration</span>
+          <div class="wizard-options-card">
+            <div class="row">
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.penetrationPreference === 'prefer' }" @click="prefs.setPenetration('prefer')">Prefer penetration</button>
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.penetrationPreference === 'minimal' }" @click="prefs.setPenetration('minimal')">Minimal penetration</button>
+            </div>
+          </div>
+        </div>
+        <div class="wizard-option-row">
+          <span class="wizard-option-label">Include anal-only positions (distinct from rear-entry vaginal)</span>
+          <div class="wizard-options-card">
+            <div class="row">
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.analPositionsEnabled }" @click="prefs.analPositionsEnabled = true">Yes</button>
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !prefs.analPositionsEnabled }" @click="prefs.analPositionsEnabled = false">No</button>
+            </div>
+          </div>
+        </div>
+        <div class="wizard-option-row">
+          <span class="wizard-option-label">Include vibrator/toy modifiers in Phase 3</span>
+          <div class="wizard-options-card">
+            <div class="row">
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.vibratorsPresent }" @click="prefs.vibratorsPresent = true">Yes</button>
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !prefs.vibratorsPresent }" @click="prefs.vibratorsPresent = false">No</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Clothing removal (enabled/disabled) – before partners -->
+    <div v-show="step === 5" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Clothing removal</div>
         <div class="wizard-step-description">Clothing removal during Phase 1 & 2?</div>
       </div>
       <div class="wizard-step-content">
-        <div class="row">
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.clothingEnabled }" @click="config.clothingEnabled = true">Enabled</button>
-          <button type="button" class="secondary" :class="{ 'preset-selected': !config.clothingEnabled }" @click="config.clothingEnabled = false">Disabled</button>
+        <div class="wizard-options-card">
+          <div class="row">
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.clothingEnabled }" @click="config.clothingEnabled = true">Enabled</button>
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !config.clothingEnabled }" @click="config.clothingEnabled = false">Disabled</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 5: Partner 1 -->
-    <div v-show="step === 5" class="wizard-step active wizard-step-partner">
+    <!-- Step 6: Partner 1 -->
+    <div v-show="step === 6" class="wizard-step active wizard-step-partner">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 1</div>
         <div class="wizard-step-description">Name, color, and anatomy</div>
@@ -97,15 +152,17 @@
           ></span>
         </div>
         <label class="mt">Anatomy</label>
-        <div class="row">
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.partnerAnatomy[1] === 'penis' }" @click="config.partnerAnatomy[1] = 'penis'">Penis & scrotum</button>
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.partnerAnatomy[1] === 'vulva' }" @click="config.partnerAnatomy[1] = 'vulva'">Vulva</button>
+        <div class="wizard-options-card">
+          <div class="row">
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[1] === 'penis' }" @click="config.partnerAnatomy[1] = 'penis'">Penis & scrotum</button>
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[1] === 'vulva' }" @click="config.partnerAnatomy[1] = 'vulva'">Vulva</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 6: Partner 1 clothing -->
-    <div v-show="step === 6" class="wizard-step active">
+    <!-- Step 7: Partner 1 clothing -->
+    <div v-show="step === 7" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 1 – clothing</div>
         <div class="wizard-step-description">Choose a preset, then add or remove items as you like.</div>
@@ -113,6 +170,7 @@
       <div class="wizard-step-content">
         <template v-if="config.clothingEnabled">
           <label>Preset</label>
+          <div class="wizard-options-card">
           <div class="row wrap clothing-presets">
             <button
               v-for="preset in presetNames"
@@ -126,6 +184,7 @@
               <span class="clothing-preset-icon">{{ presetIcon(preset) }}</span>
               {{ presetLabel(preset) }}
             </button>
+          </div>
           </div>
           <div class="clothing-list-by-body mt">
             <div class="clothing-list-intro">Choose a preset to add its items, then tap any item to turn it on or off. Grouped by body region (head to toe).</div>
@@ -147,12 +206,12 @@
             </div>
           </div>
         </template>
-        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 4 to choose items.</p>
+        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 5 to choose items.</p>
       </div>
     </div>
 
-    <!-- Step 7: Partner 2 -->
-    <div v-show="step === 7" class="wizard-step active wizard-step-partner">
+    <!-- Step 8: Partner 2 -->
+    <div v-show="step === 8" class="wizard-step active wizard-step-partner">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 2</div>
         <div class="wizard-step-description">Name, color, and anatomy</div>
@@ -172,15 +231,17 @@
           ></span>
         </div>
         <label class="mt">Anatomy</label>
-        <div class="row">
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.partnerAnatomy[2] === 'penis' }" @click="config.partnerAnatomy[2] = 'penis'">Penis & scrotum</button>
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.partnerAnatomy[2] === 'vulva' }" @click="config.partnerAnatomy[2] = 'vulva'">Vulva</button>
+        <div class="wizard-options-card">
+          <div class="row">
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[2] === 'penis' }" @click="config.partnerAnatomy[2] = 'penis'">Penis & scrotum</button>
+            <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[2] === 'vulva' }" @click="config.partnerAnatomy[2] = 'vulva'">Vulva</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 8: Partner 2 clothing -->
-    <div v-show="step === 8" class="wizard-step active">
+    <!-- Step 9: Partner 2 clothing -->
+    <div v-show="step === 9" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 2 – clothing</div>
         <div class="wizard-step-description">Choose a preset, then add or remove items as you like.</div>
@@ -188,6 +249,7 @@
       <div class="wizard-step-content">
         <template v-if="config.clothingEnabled">
           <label>Preset</label>
+          <div class="wizard-options-card">
           <div class="row wrap clothing-presets">
             <button
               v-for="preset in presetNames"
@@ -201,6 +263,7 @@
               <span class="clothing-preset-icon">{{ presetIcon(preset) }}</span>
               {{ presetLabel(preset) }}
             </button>
+          </div>
           </div>
           <div class="clothing-list-by-body mt">
             <div class="clothing-list-intro">Choose a preset to add its items, then tap any item to turn it on or off. Grouped by body region (head to toe).</div>
@@ -222,20 +285,22 @@
             </div>
           </div>
         </template>
-        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 4 to choose items.</p>
+        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 5 to choose items.</p>
       </div>
     </div>
 
-    <!-- Step 9: Phase check-in option & Start -->
-    <div v-show="step === 9" class="wizard-step active">
-      <div class="wizard-step-header">
-        <div class="wizard-step-title">Phase check-in</div>
-        <div class="wizard-step-description">Pause between phases to check in with each other before continuing?</div>
-      </div>
-      <div class="wizard-step-content">
-        <div class="row">
-          <button type="button" class="secondary" :class="{ 'preset-selected': config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = true">Yes</button>
-          <button type="button" class="secondary" :class="{ 'preset-selected': !config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = false">No</button>
+    <!-- Step 10: Phase check-in option & Start -->
+    <div v-show="step === 10" class="wizard-step active wizard-step-phase-checkin">
+      <div class="wizard-phase-checkin-inner">
+        <div class="wizard-step-header">
+          <div class="wizard-step-title">Phase check-in</div>
+          <div class="wizard-step-description">Pause between phases to check in with each other before continuing?</div>
+        </div>
+        <div class="wizard-options-card">
+          <div class="wizard-phase-checkin-actions">
+            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = true">Yes</button>
+            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': !config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = false">No</button>
+          </div>
         </div>
       </div>
     </div>
@@ -254,13 +319,14 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { clothingPresets, getClothingEmoji, getClothingItemsByBody, groupClothingByBodyRegion, sortClothingByBodyRegion } from '@/data/clothing'
+import { usePreferencesStore } from '@/stores/preferences'
 
 const props = defineProps({
   initialStep: { type: Number, default: 1 },
   initialConfig: { type: Object, default: null },
 })
 
-const totalSteps = 9
+const totalSteps = 10
 const step = ref(1)
 const progressPercent = computed(() => (step.value / totalSteps) * 100)
 
@@ -316,6 +382,8 @@ function presetLabel(key) {
 }
 /** Full list of clothing items grouped by body region (head to toe), for Custom mode. */
 const fullClothingGroups = groupClothingByBodyRegion(getClothingItemsByBody())
+
+const prefs = usePreferencesStore()
 
 const config = reactive({
   partnerNames: { 1: '', 2: '' },
@@ -440,23 +508,60 @@ function onStart() {
 .guided-setup-wizard {
   padding: 0;
   width: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+/* When step 10 is active, wizard body centers phase-check-in vertically */
+.guided-setup-wizard.wizard-step-10-active .wizard-body {
+  display: flex;
+  justify-content: center;
 }
 .wizard-body {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 1rem;
+  padding: 0 0 1rem;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+}
+/* Each step fills the body and centers its content vertically when there's extra space */
+.wizard-step {
+  flex: 1;
+  min-height: min-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Card around a single button group only (title/description stay outside) */
+.wizard-options-card {
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+.wizard-options-card .row {
+  justify-content: center;
+  gap: 0.5rem;
 }
 .wizard-body::-webkit-scrollbar {
   width: 6px;
@@ -490,16 +595,23 @@ function onStart() {
 }
 .wizard-progress-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #22c55e); transition: width 0.3s ease; border-radius: 3px; }
 .wizard-step-header {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   text-align: center;
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 .wizard-step-title { font-family: var(--font-handwritten-title); font-size: clamp(1.5rem, 5vmin, 2.1rem); font-weight: 700; color: #e5e7eb; margin: 0; }
-.wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(1rem, 2.8vmin, 1.25rem); font-weight: 400; color: #9ca3af; margin-top: 0.35rem; line-height: 1.5; }
+.wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(1rem, 2.8vmin, 1.25rem); font-weight: 400; color: #9ca3af; margin-top: 0.25rem; line-height: 1.5; }
 .wizard-step-content {
-  padding: 0.5rem 0;
+  padding: 0.25rem 0 0.5rem;
   width: 100%;
   max-width: 320px;
   min-width: 0;
+  margin-left: auto;
+  margin-right: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -545,28 +657,34 @@ function onStart() {
 }
 .wizard-step-partner .wizard-step-content .row { gap: 0.35rem; }
 
-/* Phase distribution step: keep header compact but use responsive title/description */
-.wizard-step-phase-distribution .wizard-step-header { margin-bottom: 0.5rem; }
+/* Phase distribution step: compact – title, description, buttons right below; card centered and close to title */
+.wizard-step-phase-distribution .wizard-step-header { margin-bottom: 0.15rem; }
 .wizard-step-phase-distribution .wizard-step-title { font-size: clamp(1.4rem, 4.5vmin, 1.9rem); }
-.wizard-step-phase-distribution .wizard-step-description { font-size: clamp(1rem, 2.8vmin, 1.2rem); margin-top: 0.2rem; }
-.wizard-step-phase-distribution .wizard-step-content { padding: 0.25rem 0; }
+.wizard-step-phase-distribution .wizard-step-description { font-size: clamp(1rem, 2.8vmin, 1.2rem); margin-top: 0.15rem; }
+.wizard-step-phase-distribution .wizard-step-content { padding: 0.1rem 0 0.5rem; align-items: center; }
 .wizard-step-phase-distribution .wizard-step-content .row { gap: 0.35rem; }
-.wizard-step-phase-distribution .wizard-opt-compact {
-  min-width: 0;
-  padding: 0.35rem 0.5rem;
-  min-height: 32px;
-  font-size: 0.8rem;
-  line-height: 1.25;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+.wizard-step-phase-distribution .wizard-opt { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .wizard-step-phase-distribution .wizard-opt-label { font-weight: 600; }
-.wizard-step-phase-distribution .wizard-opt-sub { font-size: 0.65rem; color: #9ca3af; margin-top: 0.05rem; }
+.wizard-step-phase-distribution .wizard-opt-sub { font-size: 0.8rem; color: #9ca3af; margin-top: 0.2rem; }
 .wizard-step-phase-distribution .custom-sliders-compact { margin-top: 0.5rem; gap: 0.25rem; max-width: 280px; }
 .wizard-step-phase-distribution .custom-sliders-compact .row { margin-bottom: 0.25rem; gap: 0.35rem; }
 .wizard-step-phase-distribution .custom-sliders-compact label { font-size: 0.8rem; margin: 0; }
+
+.wizard-step-options {
+  gap: 1rem;
+  align-items: stretch;
+  text-align: left;
+}
+.wizard-option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.wizard-option-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
 
 .color-dots {
   gap: 0.5rem;
@@ -593,12 +711,17 @@ function onStart() {
 }
 .wrap { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
 .wizard-opt {
-  min-width: 90px;
-  padding: 0.6rem 0.75rem;
+  min-width: 100px;
+  padding: 0.55rem 0.85rem;
   text-align: center;
   min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
 }
-.wizard-opt .sub { font-size: 0.8rem; color: #9ca3af; display: block; margin-top: 0.2rem; }
+.wizard-opt .sub,
+.wizard-opt .wizard-opt-sub { font-size: 0.8rem; font-weight: 500; color: #9ca3af; display: block; margin-top: 0.2rem; }
 .custom-sliders { gap: 0.5rem; width: 100%; max-width: 280px; }
 .custom-sliders .row { gap: 0.5rem; margin-bottom: 0.5rem; justify-content: center; }
 .custom-sliders input[type="range"] { flex: 1; min-width: 80px; accent-color: #a855f7; }
@@ -612,14 +735,63 @@ function onStart() {
   margin: 0 auto;
 }
 .wizard-nav-btn {
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 0.85rem;
   border-radius: 0.5rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   min-height: 44px;
   flex: 1;
+  box-sizing: border-box;
 }
 .wizard-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Step 9: Phase check-in – centered layout and large Yes/No buttons */
+.wizard-step-phase-checkin {
+  flex: 1;
+  width: 100%;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+  box-sizing: border-box;
+}
+.wizard-phase-checkin-inner {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.wizard-phase-checkin-inner .wizard-step-header {
+  margin-bottom: 1rem;
+}
+.wizard-phase-checkin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+.wizard-phase-checkin-btn {
+  flex: 1;
+  min-width: 100px;
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.wizard-phase-checkin-btn:hover { transform: scale(1.02); }
+
 /* Presets: 3 columns for a comfortable layout; no horizontal overflow */
 .clothing-presets {
   display: grid;
@@ -640,15 +812,16 @@ function onStart() {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.4rem 0.5rem;
-  min-height: 36px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.55rem 0.85rem;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
   background-color: #020617;
   color: #e5e7eb;
   border: 1px solid #4b5563;
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
   cursor: pointer;
+  box-sizing: border-box;
   transition: all 0.2s ease;
   touch-action: manipulation;
 }

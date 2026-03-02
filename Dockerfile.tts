@@ -1,0 +1,17 @@
+# TTS server for Kokoro (e.g. iOS / devices that can't run transformers.js in-browser).
+# Same stack as the web app; Traefik exposes at tts.${HOST}.
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Dependencies (Kokoro + transformers)
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# App code and download Kokoro model into image
+COPY . .
+RUN npm run download-kokoro-model
+
+EXPOSE 3333
+
+CMD ["node", "server/tts-server.js"]

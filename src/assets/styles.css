@@ -129,6 +129,16 @@ body.app-main-visible {
   height: 100dvh;
   max-height: 100dvh;
 }
+/* In guided mode keep viewport fixed on desktop too so only wizard body scrolls */
+body.app-main-visible.guided-mode {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+html:has(body.app-main-visible.guided-mode) {
+  overflow: hidden;
+  height: 100%;
+}
 body.app-main-visible .app-root {
   height: 100dvh;
   max-height: 100dvh;
@@ -193,7 +203,7 @@ body.app-main-visible .app-root .page {
   transition: width 0.3s ease;
   border-radius: 3px;
 }
-/* Content card: takes all remaining space, scrolls internally */
+/* Content card: takes all remaining space. In guided mode the inner wizard body scrolls; otherwise panel scrolls. */
 .card-content-panel {
   flex: 1;
   min-height: 0;
@@ -201,6 +211,17 @@ body.app-main-visible .app-root .page {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 0;
+}
+.page.guided-mode .card-content-panel {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.page.guided-mode .card-content-panel > * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .card-content-panel > .main-content {
   padding: 0.75rem clamp(0.75rem, 4vw, 1.25rem);
@@ -214,36 +235,51 @@ body.app-main-visible .app-root .page {
 .card-nav-panel:empty {
   display: none;
 }
-/* In guided mode always show nav card so wizard teleport target is visible */
+/* In guided mode always show nav card so wizard teleport target is visible; keep in flow (no sticky) so it never overlaps content when resizing */
 .page.guided-mode .card-nav-panel {
   display: block;
   min-height: 3.5rem;
+  flex-shrink: 0;
+  position: static;
+  bottom: auto;
 }
 .page.guided-mode .card-nav-panel:empty {
   display: block;
 }
 
-/* Desktop (768px+): page scrolls naturally */
+/* Desktop (768px+): page scrolls naturally, except in guided mode where viewport fills and only wizard body scrolls */
 @media (min-width: 768px) {
-  body.app-main-visible {
+  body.app-main-visible:not(.guided-mode) {
     overflow-x: hidden;
     overflow-y: auto;
     height: auto;
     max-height: none;
   }
-  body.app-main-visible .app-root {
+  body.app-main-visible:not(.guided-mode) .app-root {
     height: auto;
     max-height: none;
     overflow: visible;
     display: block;
   }
-  body.app-main-visible .app-root .page {
+  body.app-main-visible:not(.guided-mode) .app-root .page {
     flex: none;
     overflow: visible;
     display: block;
   }
   .card-content-panel {
     overflow: visible;
+  }
+  /* In guided mode keep viewport-filling layout so only wizard body scrolls */
+  .page.guided-mode .card-content-panel {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .page.guided-mode .card-content-panel > * {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   .card-step-bar-panel:empty {
     display: none;
@@ -252,10 +288,17 @@ body.app-main-visible .app-root .page {
     position: sticky;
     bottom: 1rem;
   }
+  .page.guided-mode .card-nav-panel {
+    position: static;
+    bottom: auto;
+  }
   .page {
     max-width: min(480px, 100%);
     gap: 0.25rem;
     padding-bottom: 2rem;
+  }
+  .page.guided-mode {
+    padding-bottom: 0;
   }
 }
 .card {
@@ -591,6 +634,26 @@ input[type="number"] {
 .wizard-nav-btn.next { background: linear-gradient(to right, #a855f7, #22c55e); color: #020617; border: none; }
 .wizard-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .wizard-step-content { min-height: 300px; display: flex; flex-direction: column; justify-content: center; }
+/* Guided setup wizard: override global wizard styles so step content and header are centered in main card */
+.guided-setup-wizard .wizard-step-content {
+  min-height: 0;
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  justify-content: flex-start;
+}
+.guided-setup-wizard .wizard-step-header {
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.guided-setup-wizard .wizard-options-card {
+  margin-left: auto;
+  margin-right: auto;
+}
 
 .select, input[type="text"], input[type="number"] { max-width: 100%; }
 

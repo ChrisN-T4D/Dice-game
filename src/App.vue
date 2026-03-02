@@ -29,7 +29,7 @@
         <div v-show="playModeExpanded" id="play-mode-options" class="play-mode-row" role="region" aria-label="Play mode options">
           <div class="row">
             <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'freeplay' }" @click="session.uiMode = 'freeplay'">Dice game</button>
-            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'guided' }" @click="session.uiMode = 'guided'">Guided Mode</button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'guided' }" @click="onGuidedModeClick">Guided Mode</button>
           </div>
         </div>
       </div>
@@ -107,6 +107,10 @@ const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | null – when set, 
 const showMainContent = computed(
   () => (profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding) || tourPreviewMode.value !== null
 )
+// Start loading the voice model as soon as main content is shown (e.g. after refresh or landing dismiss)
+watch(showMainContent, (show) => {
+  if (show) warmupWorker()
+}, { immediate: true })
 function onTourPreview(mode) {
   tourPreviewMode.value = mode
   if (mode) {
@@ -159,6 +163,11 @@ function onChooseMode(mode) {
   }
 }
 
+function onGuidedModeClick() {
+  if (guided.sessionComplete) guided.resetAfterSessionComplete()
+  session.uiMode = 'guided'
+}
+
 function goToNextPhase() {
   if (session.advancePhase()) {
     // could flash phase change
@@ -179,6 +188,13 @@ watch(
   () => !showAdmin.value && showMainContent.value,
   (mainVisible) => {
     document.body.classList.toggle('app-main-visible', mainVisible)
+  },
+  { immediate: true }
+)
+watch(
+  () => session.uiMode === 'guided' && showMainContent.value,
+  (isGuided) => {
+    document.body.classList.toggle('guided-mode', isGuided)
   },
   { immediate: true }
 )
@@ -222,6 +238,8 @@ onMounted(() => {
   profile.load()
   loadState(session, prefs, guided)
   syncVoiceFromStorage()
+  // Start loading the Kokoro model in the worker as soon as the page opens so it's ready for cooking
+  warmupWorker()
   whenIdle(() => warmupWorker(), { timeout: 3000 })
 })
 onUnmounted(() => {

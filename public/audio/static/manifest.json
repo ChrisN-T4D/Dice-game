@@ -1,0 +1,62 @@
+[
+  {
+    "phraseId": "voice_test",
+    "voiceId": "af_nicole",
+    "text": "This is a quick voice test."
+  },
+  {
+    "phraseId": "session_complete_1",
+    "voiceId": "af_nicole",
+    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+  },
+  {
+    "phraseId": "session_complete_2",
+    "voiceId": "af_nicole",
+    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+  },
+  {
+    "phraseId": "session_complete_3",
+    "voiceId": "af_nicole",
+    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+  },
+  {
+    "phraseId": "voice_test",
+    "voiceId": "af_bella",
+    "text": "This is a quick voice test."
+  },
+  {
+    "phraseId": "session_complete_1",
+    "voiceId": "af_bella",
+    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+  },
+  {
+    "phraseId": "session_complete_2",
+    "voiceId": "af_bella",
+    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+  },
+  {
+    "phraseId": "session_complete_3",
+    "voiceId": "af_bella",
+    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+  },
+  {
+    "phraseId": "voice_test",
+    "voiceId": "am_liam",
+    "text": "This is a quick voice test."
+  },
+  {
+    "phraseId": "session_complete_1",
+    "voiceId": "am_liam",
+    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+  },
+  {
+    "phraseId": "session_complete_2",
+    "voiceId": "am_liam",
+    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+  },
+  {
+    "phraseId": "session_complete_3",
+    "voiceId": "am_liam",
+    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+  }
+]

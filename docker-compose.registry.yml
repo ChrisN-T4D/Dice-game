@@ -1,13 +1,15 @@
 # Use this compose file when the image is built by GitHub Actions and pushed to GHCR.
-# GitHub builds on push to main and pushes to ghcr.io/chrisn-t4d/dice-game:latest.
-# In Portainer: Compose path = docker-compose.registry.yml, env HOST = your hostname.
+# In Portainer: Compose path = docker-compose.registry.yml, set HOST = your hostname (e.g. app.example.com).
 # Optionally set DICE_GAME_IMAGE (default below). Enable "Re-pull image" so Pull and redeploy works.
+# TTS server image: set DICE_GAME_TTS_IMAGE if you push a separate TTS image; otherwise TTS is built from this repo.
 
 services:
   app:
     image: ${DICE_GAME_IMAGE:-ghcr.io/chrisn-t4d/dice-game:latest}
     container_name: dice-game
     restart: unless-stopped
+    environment:
+      - HOST=${HOST}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -21,6 +23,27 @@ services:
       - "traefik.http.middlewares.limit.buffering.memRequestBodyBytes=200000000"
       - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=10737418240"
       - "traefik.http.middlewares.limit.buffering.memResponseBodyBytes=200000000"
+    networks:
+      - betwenus_internal
+      - traefik_proxy
+
+  tts-server:
+    image: ${DICE_GAME_TTS_IMAGE:-dice-game-tts:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.tts
+    container_name: dice-game-tts
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.dicegame-tts.entrypoints=websecure"
+      - "traefik.http.routers.dicegame-tts.rule=Host(`tts.${HOST}`)"
+      - "traefik.http.routers.dicegame-tts.tls.certresolver=le"
+      - "traefik.http.routers.dicegame-tts.service=dicegame-tts"
+      - "traefik.http.services.dicegame-tts.loadbalancer.server.port=3333"
+      - "traefik.http.routers.dicegame-tts.middlewares=tts-limit@docker"
+      - "traefik.http.middlewares.tts-limit.buffering.maxRequestBodyBytes=5242880"
     networks:
       - betwenus_internal
       - traefik_proxy

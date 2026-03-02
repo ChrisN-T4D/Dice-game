@@ -13,25 +13,65 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    // Serve /onnxe-wasm/* from public/onnxruntime-wasm/ (fix 404 when something requests the wrong path)
+    // Catch-all: intercept ANY request for ort-wasm*.wasm or ort-wasm*.mjs files
+    // regardless of URL path, and serve from node_modules/onnxruntime-web/dist/
+    // with correct MIME type. This prevents SPA fallback from returning index.html.
     {
-      name: 'serve-onnxe-wasm-alias',
+      name: 'serve-onnx-wasm',
       configureServer(server) {
-        const onnxDir = path.join(__dirname, 'public', 'onnxruntime-wasm')
-        server.middlewares.use('/onnxe-wasm', (req, res, next) => {
+        const distDir = path.join(__dirname, 'node_modules', 'onnxruntime-web', 'dist')
+        const publicDir = path.join(__dirname, 'public', 'onnxruntime-wasm')
+        server.middlewares.use((req, res, next) => {
+          const url = (req.url || '').replace(/\?.*$/, '')
+          const basename = url.split('/').pop() || ''
+          if (!/^ort-wasm.*\.(wasm|mjs)$/.test(basename)) return next()
+          const tryDirs = [distDir, publicDir]
+          const tryServe = (idx) => {
+            if (idx >= tryDirs.length) return next()
+            const filePath = path.join(tryDirs[idx], basename)
+            if (!path.resolve(filePath).startsWith(path.resolve(tryDirs[idx]))) return next()
+            fs.stat(filePath, (err, stat) => {
+              if (err || !stat.isFile()) return tryServe(idx + 1)
+              const ext = path.extname(filePath).toLowerCase()
+              const ct = ext === '.mjs' || ext === '.js' ? 'application/javascript'
+                : ext === '.wasm' ? 'application/wasm' : 'application/octet-stream'
+              res.setHeader('Content-Type', ct)
+              res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+              fs.createReadStream(filePath).on('error', () => next()).pipe(res)
+            })
+          }
+          tryServe(0)
+        })
+      },
+    },
+    // Serve /models/* from public/models/; return 404 for missing files (do not fall through to SPA index.html)
+    {
+      name: 'serve-models-no-spa-fallback',
+      configureServer(server) {
+        const modelsDir = path.join(__dirname, 'public', 'models')
+        server.middlewares.use('/models', (req, res, next) => {
           if (!req.url || req.url === '/') return next()
+          // req.url is e.g. "/models/Kokoro-82M-v1.0-ONNX/config.json" – strip /models/ prefix for subPath
           let subPath = req.url.replace(/\?.*$/, '').replace(/^\//, '').replace(/\.\./g, '')
+          if (subPath.toLowerCase().startsWith('models/')) subPath = subPath.slice(7)
+          else if (subPath.toLowerCase() === 'models') return next()
           if (!subPath) return next()
-          // Some builds request ort-wasm-simd-thd.* (abbrev); serve ort-wasm-simd-threaded.*
-          if (subPath.startsWith('ort-wasm-simd-thd.')) subPath = subPath.replace('ort-wasm-simd-thd.', 'ort-wasm-simd-threaded.')
-          const filePath = path.join(onnxDir, subPath)
-          if (!path.resolve(filePath).startsWith(path.resolve(onnxDir))) return next()
+          const filePath = path.join(modelsDir, subPath)
+          if (!path.resolve(filePath).startsWith(path.resolve(modelsDir))) return next()
           fs.stat(filePath, (err, stat) => {
-            if (err || !stat.isFile()) return next()
+            if (err || !stat?.isFile()) {
+              res.statusCode = 404
+              res.setHeader('Content-Type', 'text/plain')
+              res.end('Not Found')
+              return
+            }
             const ext = path.extname(filePath).toLowerCase()
-            const ct = ext === '.mjs' || ext === '.js' ? 'application/javascript' : ext === '.wasm' ? 'application/wasm' : 'application/octet-stream'
+            const ct =
+              ext === '.json' ? 'application/json'
+              : ext === '.onnx' || ext === '.bin' ? 'application/octet-stream'
+              : 'application/octet-stream'
             res.setHeader('Content-Type', ct)
-            fs.createReadStream(filePath).on('error', () => next()).pipe(res)
+            fs.createReadStream(filePath).on('error', () => { res.statusCode = 500; res.end() }).pipe(res)
           })
         })
       },
@@ -63,6 +103,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       'phase3-data': fileURLToPath(new URL('./phase3-positions-data.js', import.meta.url)),
+      // Stub Node "module" for browser so espeak-ng doesn't trigger externalize warning
+      module: path.join(__dirname, 'src', 'tts', 'browser-module-stub.js'),
     },
   },
   publicDir: 'public',

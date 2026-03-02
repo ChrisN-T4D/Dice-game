@@ -202,16 +202,45 @@
     <!-- Voice generating test -->
     <section v-show="activeTab === 'voice-test'" class="admin-section" role="tabpanel">
       <h3>Voice generating test</h3>
-      <p class="admin-hint">Submit a phrase to run the full TTS pipeline (Kokoro or browser fallback). Ensure voice is enabled in main app preferences and, for Kokoro, that the model is in <code>public/models/</code>.</p>
+      <p class="admin-hint">Submit a phrase to run the full TTS pipeline (Kokoro or browser fallback). Ensure voice is enabled in main app preferences. For correct Kokoro audio: run <code>npm run tts-server</code> and set <code>VITE_TTS_SERVER_URL=http://localhost:3333</code> in <code>.env</code> — the app will prefer the server when available.</p>
       <div class="admin-voice-test">
-        <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>
-        <textarea
-          id="admin-voice-phrase"
-          v-model="voiceTestPhrase"
-          class="admin-voice-test-input"
-          rows="3"
-          placeholder="e.g. Hello, this is a test."
-        />
+        <div class="admin-voice-test-row">
+          <div class="admin-voice-test-phrase-wrap">
+            <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>
+            <textarea
+              id="admin-voice-phrase"
+              v-model="voiceTestPhrase"
+              class="admin-voice-test-input"
+              rows="3"
+              placeholder="e.g. Hello, this is a test."
+            />
+          </div>
+          <div class="admin-voice-test-voice-wrap">
+            <label class="admin-voice-test-label" for="admin-voice-model">Voice</label>
+            <select
+              id="admin-voice-model"
+              v-model="adminVoiceId"
+              class="admin-voice-test-select"
+              aria-label="Kokoro voice"
+            >
+              <option v-for="v in adminKokoroVoices" :key="v.id" :value="v.id">{{ v.name }}</option>
+            </select>
+          </div>
+          <div class="admin-voice-test-mode-wrap">
+            <label class="admin-voice-test-label" for="admin-voice-mode">TTS pipeline</label>
+            <select
+              id="admin-voice-mode"
+              v-model="adminTtsMode"
+              class="admin-voice-test-select"
+              aria-label="TTS pipeline"
+            >
+              <option value="fullyLocal">Fully local (device: phonemize + tokenize + ONNX)</option>
+              <option value="auto">Auto (tokenize first, then full server)</option>
+              <option value="fullServer">Full server</option>
+              <option value="tokenize">Tokenize (server) + device ONNX</option>
+            </select>
+          </div>
+        </div>
         <div class="admin-voice-test-actions">
           <button
             type="button"
@@ -331,17 +360,32 @@ const positionInput = ref(1)
 const imageError = ref(false)
 
 // Voice generating test
-const { speak, warmupWorker } = useSpeech()
+const {
+  speak,
+  warmupWorker,
+  kokoroVoicesListForLocale,
+  kokoroVoiceId,
+} = useSpeech()
 const voiceTestPhrase = ref('Hello, this is a voice test.')
 const voiceTestStatus = ref('idle') // 'idle' | 'generating' | 'done' | 'error'
 const voiceTestError = ref('')
 const VOICE_TEST_TIMEOUT_MS = 55000
+// Admin can pick a voice for this test (stored in main prefs when generating)
+const adminVoiceId = ref(kokoroVoiceId.value || 'af_nicole')
+const adminKokoroVoices = kokoroVoicesListForLocale
+/** TTS pipeline for this test: fullyLocal (device only), auto, fullServer, or tokenize. */
+const adminTtsMode = ref('fullyLocal')
+watch(activeTab, (tab) => {
+  if (tab === 'voice-test') adminVoiceId.value = kokoroVoiceId.value || 'af_nicole'
+})
 
 function runVoiceTest() {
   const phrase = voiceTestPhrase.value?.trim()
   if (!phrase) return
   voiceTestStatus.value = 'generating'
   voiceTestError.value = ''
+  // Use admin-selected voice for this test
+  kokoroVoiceId.value = adminVoiceId.value
   const timeoutId = setTimeout(() => {
     if (voiceTestStatus.value === 'generating') {
       voiceTestStatus.value = 'error'
@@ -354,6 +398,7 @@ function runVoiceTest() {
       clearTimeout(timeoutId)
       if (voiceTestStatus.value === 'generating') voiceTestStatus.value = 'done'
     },
+    forceTtsMode: adminTtsMode.value,
   })
 }
 
@@ -717,8 +762,29 @@ loadValidation()
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-width: 28rem;
+  max-width: 36rem;
 }
+.admin-voice-test-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.admin-voice-test-phrase-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.admin-voice-test-voice-wrap,
+.admin-voice-test-mode-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.admin-voice-test-voice-wrap { width: 11rem; }
+.admin-voice-test-mode-wrap { width: 14rem; min-width: 12rem; }
 .admin-voice-test-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -735,6 +801,15 @@ loadValidation()
   min-height: 4rem;
 }
 .admin-voice-test-input::placeholder { color: #64748b; }
+.admin-voice-test-select {
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  min-height: 2.5rem;
+}
 .admin-voice-test-actions { margin: 0; }
 .admin-voice-test-status {
   margin: 0;

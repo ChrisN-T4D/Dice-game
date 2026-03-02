@@ -41,6 +41,7 @@ Thumbs.db
 coverage/
 .nyc_output/
 *.lcov
+tokenize-path-output.wav
 
 # Optional: large or generated assets (uncomment if you generate these locally)
 # public/models/

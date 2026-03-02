@@ -127,10 +127,42 @@ async function runKokoro(text, voiceId) {
   return blob
 }
 
+async function runKokoroFromIpa(phonemizedIpa, voiceId) {
+  await ensureKokoroLoaded()
+  const { generateFromIpa } = await import('../tts/kokoroOrt/index.js')
+  const voice = voiceId || 'af_nicole'
+  const blob = await generateFromIpa(phonemizedIpa, { voice })
+  if (!blob || !(blob instanceof Blob) || blob.size < 100) {
+    throw new Error('Kokoro produced empty or invalid audio from IPA.')
+  }
+  return blob
+}
+
+async function runKokoroFromTokenIds(tokenIds, voiceId) {
+  await ensureKokoroLoaded()
+  const { generateFromTokenIds } = await import('../tts/kokoroOrt/index.js')
+  const voice = voiceId || 'af_nicole'
+  const blob = await generateFromTokenIds(tokenIds, { voice })
+  if (!blob || !(blob instanceof Blob) || blob.size < 100) {
+    throw new Error('Kokoro produced empty or invalid audio from token IDs.')
+  }
+  return blob
+}
+
 async function processOne(msg) {
-  const { id, text, voiceId } = msg
+  const { id, text, phonemizedIpa, tokenIds, voiceId } = msg
   try {
-    const blob = await runKokoro(text, voiceId || 'af_nicole')
+    let blob
+    if (tokenIds != null && Array.isArray(tokenIds) && tokenIds.length > 0) {
+      if (import.meta.env?.DEV) {
+        console.log('[TTS worker] Generating from tokenIds, count=%d, first5=%o', tokenIds.length, tokenIds.slice(0, 5))
+      }
+      blob = await runKokoroFromTokenIds(tokenIds, voiceId || 'af_nicole')
+    } else if (phonemizedIpa != null && phonemizedIpa !== '') {
+      blob = await runKokoroFromIpa(phonemizedIpa, voiceId || 'af_nicole')
+    } else {
+      blob = await runKokoro(text, voiceId || 'af_nicole')
+    }
     if (blob) self.postMessage({ type: 'blob', id, blob })
     else self.postMessage({ type: 'error', id, message: 'No audio generated' })
   } catch (e) {

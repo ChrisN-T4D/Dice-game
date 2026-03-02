@@ -24,30 +24,40 @@ const modelDir = path.join(projectRoot, 'public', 'models', 'Kokoro-82M-v1.0-ONN
 
 // Unit tests (no network)
 async function runUnitTests() {
-  const { tokenize } = await import('../src/tts/kokoroOrt/tokenizer.js')
+  const { tokenize, initFromData } = await import('../src/tts/kokoroOrt/tokenizer.js')
   const { createWavBuffer } = await import('../src/tts/kokoroOrt/createWavBuffer.js')
   const { trimWaveform } = await import('../src/tts/kokoroOrt/trimWaveform.js')
+
+  const tokenizerPath = path.join(modelDir, 'tokenizer.json')
+  if (fs.existsSync(tokenizerPath)) {
+    const data = JSON.parse(fs.readFileSync(tokenizerPath, 'utf8'))
+    initFromData(data)
+  }
 
   let passed = 0
   let failed = 0
 
-  // Tokenizer: known IPA -> token IDs
-  const tokens = tokenize('həˈloʊ')
-  if (Array.isArray(tokens) && tokens.length > 0 && tokens.every(Number.isInteger)) {
-    console.log('  tokenizer: tokenize(IPA) returns token ids')
-    passed++
-  } else {
-    console.error('  tokenizer: expected non-empty array of integers')
-    failed++
-  }
+  // Tokenizer: known IPA -> token IDs (skip if tokenizer.json not present)
+  if (fs.existsSync(tokenizerPath)) {
+    const tokens = tokenize('həˈloʊ')
+    if (Array.isArray(tokens) && tokens.length > 0 && tokens.every(Number.isInteger)) {
+      console.log('  tokenizer: tokenize(IPA) returns token ids')
+      passed++
+    } else {
+      console.error('  tokenizer: expected non-empty array of integers')
+      failed++
+    }
 
-  const emptyTokens = tokenize('')
-  if (emptyTokens.length === 0) {
-    console.log('  tokenizer: tokenize("") returns []')
-    passed++
+    const emptyTokens = tokenize('')
+    if (emptyTokens.length === 0) {
+      console.log('  tokenizer: tokenize("") returns []')
+      passed++
+    } else {
+      console.error('  tokenizer: tokenize("") expected []')
+      failed++
+    }
   } else {
-    console.error('  tokenizer: tokenize("") expected []')
-    failed++
+    console.log('  tokenizer: skipped (tokenizer.json not found)')
   }
 
   // createWavBuffer: Float32 -> valid WAV

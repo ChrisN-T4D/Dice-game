@@ -1,7 +1,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
-import { isWebKit } from '@/utils/platform'
 import { getStaticPhraseIdForText, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
+
+/** Lazy-load phonemize so espeak-ng runs on main thread (reliable); worker then only runs ONNX. */
+let phonemizeFn = null
+async function getPhonemize() {
+  if (phonemizeFn) return phonemizeFn
+  const mod = await import('@/tts/kokoroOrt/phonemize.js')
+  phonemizeFn = mod.phonemize
+  return phonemizeFn
+}
 
 function readLS(key, fallback) {
   try { const v = localStorage.getItem(key); return v != null ? v : fallback } catch (_) { return fallback }
@@ -146,6 +154,79 @@ async function ensureTtsServerUrl() {
     }
   } catch (_) {}
   return ttsServerUrl.value
+}
+
+/** Ask server for token IDs only (phonemize+tokenize). Device will run ONNX. Returns tokenIds or null. */
+async function fetchTokenIdsFromServer(phrase) {
+  const base = ttsServerUrl.value?.replace(/\/$/, '')
+  if (!base) return null
+  try {
+    const res = await fetch(`${base}/tts/tokenize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: phrase }),
+    })
+    if (!res.ok) return null
+    const { tokenIds } = await res.json()
+    return Array.isArray(tokenIds) && tokenIds.length > 0 ? tokenIds : null
+  } catch (_) {
+    return null
+  }
+}
+
+/**
+ * Try server tokenize + device ONNX: fetch token IDs from server, send to worker, return blob or null.
+ * Used when server URL is set and worker is available; falls back to full server generate on failure.
+ */
+async function tryTokenizeThenWorkerBlob(phrase, voiceId, worker) {
+  const tokenIds = await fetchTokenIdsFromServer(phrase)
+  if (!tokenIds || !worker) return null
+  return new Promise((resolve) => {
+    const id = `tts-${++ttsNextId}-${Date.now()}`
+    const timeoutId = setTimeout(() => {
+      if (ttsPending.has(id)) {
+        ttsPending.delete(id)
+        resolve(null)
+      }
+    }, 45000)
+    ttsPending.set(id, {
+      resolve: (blob) => {
+        clearTimeout(timeoutId)
+        ttsPending.delete(id)
+        resolve(blob ?? null)
+      },
+      reject: () => {
+        clearTimeout(timeoutId)
+        ttsPending.delete(id)
+        resolve(null)
+      },
+      timeoutId,
+    })
+    worker.postMessage({ type: 'generate', id, tokenIds, voiceId })
+  })
+}
+
+/** Generate one phrase via TTS server (full kokoro-js). Returns blob or null. */
+async function generateViaTtsServer(phrase, voiceId) {
+  const base = ttsServerUrl.value?.replace(/\/$/, '')
+  if (!base) return null
+  try {
+    const res = await fetch(`${base}/tts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voiceId: voiceId || 'af_nicole', phrases: [phrase] }),
+    })
+    if (!res.ok) return null
+    const { blobs } = await res.json()
+    const b = Array.isArray(blobs) ? blobs[0] : null
+    if (b == null || b === '') return null
+    const binary = atob(b)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new Blob([bytes], { type: 'audio/wav' })
+  } catch (_) {
+    return null
+  }
 }
 
 function withTimeout(promise, ms, label) {
@@ -507,8 +588,26 @@ export function useSpeech() {
     }
 
     const provider = ttsProvider.value
-    const w = provider === 'kokoro' && kokoroAvailable ? getTtsWorker() : null
+    if (provider !== 'kokoro') return null
+
+    await ensureTtsServerUrl()
+    const w = kokoroAvailable ? getTtsWorker() : null
+    if (ttsServerUrl.value) {
+      const tokenizeBlob = await tryTokenizeThenWorkerBlob(cleaned, voiceId, w)
+      if (tokenizeBlob) return tokenizeBlob
+      const serverBlob = await generateViaTtsServer(cleaned, voiceId)
+      if (serverBlob) return serverBlob
+    }
     if (!w) return null
+    let ipa
+    try {
+      const phonemize = await getPhonemize()
+      ipa = await phonemize(cleaned)
+    } catch (err) {
+      if (import.meta.env?.DEV) console.warn('[TTS] Phonemize failed:', err)
+      return null
+    }
+    if (!ipa || typeof ipa !== 'string' || !ipa.trim()) return null
     return new Promise((resolve, reject) => {
       const id = `tts-${++ttsNextId}-${Date.now()}`
       const timeoutId = setTimeout(() => {
@@ -530,7 +629,7 @@ export function useSpeech() {
         },
         timeoutId,
       })
-      w.postMessage({ type: 'generate', id, text: cleaned, voiceId })
+      w.postMessage({ type: 'generate', id, phonemizedIpa: ipa, voiceId })
     })
   }
 
@@ -544,14 +643,8 @@ export function useSpeech() {
     const total = phrases.length
     const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
 
-    if (!kokoroAvailable) {
-      await ensureTtsServerUrl()
-      if (!ttsServerUrl.value) {
-        throw new Error('Guided voice on this device requires a TTS server. Set VITE_TTS_SERVER_URL or deploy with HOST so /config.json provides ttsServerUrl.')
-      }
-    }
-
-    if (!kokoroAvailable && ttsServerUrl.value) {
+    await ensureTtsServerUrl()
+    if (ttsServerUrl.value) {
       try {
         const base = ttsServerUrl.value.replace(/\/$/, '')
         const res = await fetch(`${base}/tts/generate`, {
@@ -584,6 +677,10 @@ export function useSpeech() {
       }
     }
 
+    if (!kokoroAvailable) {
+      throw new Error('Guided voice on this device requires a TTS server. Set VITE_TTS_SERVER_URL or deploy with HOST so /config.json provides ttsServerUrl.')
+    }
+
     const blobs = []
     for (let i = 0; i < total; i++) {
       const blob = await generatePhraseToBlob(phrases[i])
@@ -603,7 +700,7 @@ export function useSpeech() {
   }
 
   function speak(text, options = {}) {
-    const { force = false, onEnd, cacheForReplay = false } = options
+    const { force = false, onEnd, cacheForReplay = false, forceTtsMode } = options
     if (!force && !voiceEnabled.value) {
       if (onEnd) onEnd()
       return
@@ -649,9 +746,34 @@ export function useSpeech() {
     proceedWithTts()
 
     function proceedWithTts() {
-    // Kokoro: do not fall back to browser; wait for model ready then send generate (UI shows "voice not downloaded yet" while waiting)
     const KOKORO_GENERATE_TIMEOUT_MS = 45000
-    function sendKokoroGenerate() {
+    const forceMode = options.forceTtsMode
+    async function tryTtsServerThenWorker() {
+      await ensureTtsServerUrl()
+      if (forceMode !== 'fullServer' && ttsServerUrl.value && w) {
+        const tokenizeBlob = await tryTokenizeThenWorkerBlob(cleaned, voiceId, w)
+        if (tokenizeBlob) {
+          window.speechSynthesis?.cancel?.()
+          playBlob(tokenizeBlob, onEnd)
+          return
+        }
+        if (forceMode === 'tokenize') {
+          sendKokoroGenerate(false)
+          return
+        }
+      }
+      if (forceMode !== 'tokenize') {
+        const blob = await generateViaTtsServer(cleaned, voiceId)
+        if (blob) {
+          window.speechSynthesis?.cancel?.()
+          playBlob(blob, onEnd)
+          return
+        }
+      }
+      sendKokoroGenerate(false)
+    }
+    /** @param {boolean} [useTextOnly] - if true, send text to worker (worker does phonemize+tokenize+ONNX); no server, no main-thread phonemize */
+    function sendKokoroGenerate(useTextOnly = false) {
       if (!w) return
       window.speechSynthesis?.cancel?.()
       waitingForKokoroReady.value = false
@@ -674,27 +796,36 @@ export function useSpeech() {
         loadingRef: kokoroModelLoading,
         timeoutId,
       })
-      w.postMessage({ type: 'generate', id, text: cleaned, voiceId })
-    }
-    if (provider === 'kokoro' && kokoroAvailable && w) {
-      if (!kokoroReady.value) {
-        waitingForKokoroReady.value = true
-        if (waitForReadyUnwatch) waitForReadyUnwatch()
-        waitForReadyUnwatch = watch(
-          () => kokoroReady.value,
-          (ready) => {
-            if (!ready) return
-            if (waitForReadyUnwatch) {
-              waitForReadyUnwatch()
-              waitForReadyUnwatch = null
-            }
-            sendKokoroGenerate()
-          },
-          { immediate: true }
-        )
+      if (useTextOnly) {
+        w.postMessage({ type: 'generate', id, text: cleaned, voiceId })
         return
       }
-      sendKokoroGenerate()
+      ;(async () => {
+        try {
+          const phonemize = await getPhonemize()
+          const ipa = await phonemize(cleaned)
+          if (ipa && typeof ipa === 'string' && ipa.trim())
+            w.postMessage({ type: 'generate', id, phonemizedIpa: ipa, voiceId })
+          else throw new Error('Empty IPA from phonemize')
+        } catch (err) {
+          if (import.meta.env?.DEV) console.warn('[TTS] Phonemize failed:', err)
+          const pending = ttsPending.get(id)
+          if (pending) {
+            ttsPending.delete(id)
+            if (pending.timeoutId != null) clearTimeout(pending.timeoutId)
+            if (pending.loadingRef) pending.loadingRef.value = false
+            if (pending.text && pending.onEnd) speakWithBrowser(pending.text, pending.onEnd)
+            else if (pending.onEnd) pending.onEnd()
+          }
+        }
+      })()
+    }
+    if (provider === 'kokoro' && kokoroAvailable) {
+      if (forceMode === 'fullyLocal') {
+        sendKokoroGenerate(true)
+        return
+      }
+      tryTtsServerThenWorker()
       return
     }
     speakWithBrowser(cleaned, onEnd)

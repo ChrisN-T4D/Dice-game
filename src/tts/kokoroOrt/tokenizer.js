@@ -1,31 +1,59 @@
 /**
- * Phoneme character to token ID vocab for Kokoro-82M.
- * From onnx-community/Kokoro-82M-v1.0-ONNX and kokoro-web.
+ * Phoneme-to-token-ID for Kokoro-82M. Loads tokenizer.json from the model
+ * so tokenization matches kokoro-js / HuggingFace exactly. Applies normalizer:
+ * strips characters not in vocab (same as HF tokenizer).
  */
-const fallbackChar = 16
-const vocab = {
-  ';': 1, ':': 2, ',': 3, '.': 4, '!': 5, '?': 6, '—': 9, '…': 10,
-  '"': 11, '(': 12, ')': 13, '\u201C': 14, '\u201D': 15, ' ': 16, '\u0303': 17,
-  'ʣ': 18, 'ʥ': 19, 'ʦ': 20, 'ʨ': 21, 'ᵝ': 22, '\uAB67': 23,
-  'A': 24, 'I': 25, 'O': 31, 'Q': 33, 'S': 35, 'T': 36, 'W': 39, 'Y': 41,
-  'ᵊ': 42, 'a': 43, 'b': 44, 'c': 45, 'd': 46, 'e': 47, 'f': 48, 'h': 50,
-  'i': 51, 'j': 52, 'k': 53, 'l': 54, 'm': 55, 'n': 56, 'o': 57, 'p': 58,
-  'q': 59, 'r': 60, 's': 61, 't': 62, 'u': 63, 'v': 64, 'w': 65, 'x': 66, 'y': 67, 'z': 68,
-  'ɑ': 69, 'ɐ': 70, 'ɒ': 71, 'æ': 72, 'β': 75, 'ɔ': 76, 'ɕ': 77, 'ç': 78,
-  'ɖ': 80, 'ð': 81, 'ʤ': 82, 'ə': 83, 'ɚ': 85, 'ɛ': 86, 'ɜ': 87, 'ɟ': 90, 'ɡ': 92,
-  'ɥ': 99, 'ɨ': 101, 'ɪ': 102, 'ʝ': 103, 'ɯ': 110, 'ɰ': 111, 'ŋ': 112, 'ɳ': 113, 'ɲ': 114, 'ɴ': 115,
-  'ø': 116, 'ɸ': 118, 'θ': 119, 'œ': 120, 'ɹ': 123, 'ɾ': 125, 'ɻ': 126, 'ʁ': 128, 'ɽ': 129,
-  'ʂ': 130, 'ʃ': 131, 'ʈ': 132, 'ʧ': 133, 'ʊ': 135, 'ʋ': 136, 'ʌ': 138, 'ɣ': 139, 'ɤ': 140,
-  'χ': 142, 'ʎ': 143, 'ʒ': 147, 'ʔ': 148, 'ˈ': 156, 'ˌ': 157, 'ː': 158, 'ʰ': 162, 'ʲ': 164,
-  '↓': 169, '→': 171, '↗': 172, '↘': 173, 'ᵻ': 177,
+import { cachedFetch } from './cachedFetch.js'
+
+const MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
+const TOKENIZER_URL = `/models/${MODEL_ID}/tokenizer.json`
+
+let vocab = null
+let allowedChars = null
+let loadPromise = null
+
+async function ensureLoaded() {
+  if (vocab && allowedChars) return
+  if (loadPromise) return loadPromise
+  loadPromise = (async () => {
+    const res = await cachedFetch(TOKENIZER_URL)
+    if (!res.ok) throw new Error(`Tokenizer not found: ${TOKENIZER_URL}`)
+    const data = await res.json()
+    vocab = data?.model?.vocab
+    if (!vocab) throw new Error('Invalid tokenizer.json: missing model.vocab')
+    allowedChars = new Set(Object.keys(vocab).filter((k) => k !== '$'))
+  })()
+  return loadPromise
 }
 
 /**
- * Convert a string of phonemes to token IDs.
- * @param {string} phonemes
+ * Convert IPA phoneme string to content token IDs (no BOS/EOS).
+ * Uses tokenizer.json vocab and strips characters not in vocab (matches HF normalizer).
+ * Must call ensureTokenizerReady() before first use (done in loadKokoroOrt).
+ * @param {string} phonemes - IPA string
  * @returns {number[]}
  */
 export function tokenize(phonemes) {
+  if (!vocab || !allowedChars) {
+    throw new Error('Tokenizer not loaded. Call ensureTokenizerReady() during model load.')
+  }
   if (!phonemes || typeof phonemes !== 'string') return []
-  return [...phonemes].map((char) => vocab[char] ?? fallbackChar)
+  const normalized = [...phonemes].filter((c) => allowedChars.has(c)).join('')
+  if (!normalized) return []
+  return normalized.split('').map((c) => vocab[c] ?? 0)
+}
+
+/** Pre-load tokenizer (call during model warmup). */
+export async function ensureTokenizerReady() {
+  return ensureLoaded()
+}
+
+/**
+ * For Node tests: load tokenizer from filesystem. Call before tokenize().
+ * @param {object} data - parsed tokenizer.json (must have model.vocab)
+ */
+export function initFromData(data) {
+  vocab = data?.model?.vocab
+  if (!vocab) throw new Error('Invalid tokenizer data: missing model.vocab')
+  allowedChars = new Set(Object.keys(vocab).filter((k) => k !== '$'))
 }

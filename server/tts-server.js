@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 /**
  * Optional TTS server for iOS (and other clients that can't run Kokoro in-browser).
- * Generates session audio server-side with Kokoro; client POSTs phrases and receives WAV blobs (base64).
+ *
+ * Endpoints:
+ * - POST /tts/generate — full audio server-side (Kokoro); returns WAV blobs (base64).
+ * - POST /tts/tokenize — phonemize + tokenize only (no ONNX). Returns token IDs for client-side ONNX.
+ *   Use this so the device does generation (ONNX) and the server only does the transformers-ish part.
  *
  * Requires: Local Kokoro model (public/models/Kokoro-82M-v1.0-ONNX). Run npm run download-kokoro-model.
  *
  * Usage: node server/tts-server.js [--port=3333] [--gpu]
- * Endpoint: POST /tts/generate
- * Body: { "voiceId": "af_nicole", "phrases": ["Hello.", "Next phrase."] }
- * Response: { "blobs": ["<base64 wav>", null, ...] }  (null for empty/skipped phrases)
  */
 import http from 'node:http'
 import path from 'node:path'
 import fs from 'node:fs'
 import os from 'node:os'
 import { fileURLToPath } from 'node:url'
+import { phonemize as phonemizeLib } from 'phonemizer'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.join(__dirname, '..')
 
 const MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
+const modelDir = path.join(projectRoot, 'public', 'models', MODEL_ID)
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -37,14 +40,58 @@ function cleanText(text) {
   return String(text).replace(/\s+/g, ' ').trim()
 }
 
+/** Kokoro post-process for phonemizer output (match kokoro-js). */
+function kokoroPostProcess(str) {
+  if (!str || typeof str !== 'string') return ''
+  return str
+    .replace(/kəkˈoːɹoʊ/g, 'kˈoʊkəɹoʊ')
+    .replace(/kəkˈɔːɹəʊ/g, 'kˈəʊkəɹəʊ')
+    .replace(/ʲ/g, 'j')
+    .replace(/r/g, 'ɹ')
+    .replace(/x/g, 'k')
+    .replace(/ɬ/g, 'l')
+    .replace(/(?<=[a-zɹː])(?=hˈʌndɹɪd)/g, ' ')
+    .replace(/ z(?=[;:,.!?¡¿—…"«»"" ]|$)/g, 'z')
+    .replace(/(?<=nˈaɪn)ti(?!ː)/g, 'di')
+    .trim()
+}
+
+let tokenizerVocab = null
+let tokenizerAllowed = null
+
+function getTokenizer() {
+  if (tokenizerVocab && tokenizerAllowed) return { vocab: tokenizerVocab, allowedChars: tokenizerAllowed }
+  const tokenizerPath = path.join(modelDir, 'tokenizer.json')
+  if (!fs.existsSync(tokenizerPath)) return null
+  const data = JSON.parse(fs.readFileSync(tokenizerPath, 'utf8'))
+  tokenizerVocab = data?.model?.vocab
+  if (!tokenizerVocab) return null
+  tokenizerAllowed = new Set(Object.keys(tokenizerVocab).filter((k) => k !== '$'))
+  return { vocab: tokenizerVocab, allowedChars: tokenizerAllowed }
+}
+
+/** Phonemize + tokenize only (no ONNX). Returns content token IDs for client-side generation. */
+async function phonemizeAndTokenize(text) {
+  const trimmed = cleanText(text)
+  if (!trimmed) return []
+  const raw = await phonemizeLib(trimmed, 'en-us')
+  const joined = Array.isArray(raw) ? raw.join(' ') : (raw || '')
+  const ipa = kokoroPostProcess(joined.trim())
+  if (!ipa) return []
+  const tok = getTokenizer()
+  if (!tok) throw new Error('Tokenizer not found. Run npm run download-kokoro-model.')
+  const normalized = [...ipa].filter((c) => tok.allowedChars.has(c)).join('')
+  if (!normalized) return []
+  return normalized.split('').map((c) => tok.vocab[c] ?? tok.vocab['$'])
+}
+
 let ttsInstance = null
 
 async function getTts(useGpu) {
   if (ttsInstance) return ttsInstance
   const runKokoro = await import('../scripts/runKokoroStaticWavs.js')
-  const localModelDir = path.join(projectRoot, 'public', 'models', MODEL_ID)
-  if (!fs.existsSync(localModelDir)) {
-    throw new Error(`Kokoro model not found at ${localModelDir}. Run: npm run download-kokoro-model`)
+  if (!fs.existsSync(modelDir)) {
+    throw new Error(`Kokoro model not found at ${modelDir}. Run: npm run download-kokoro-model`)
   }
   await runKokoro.ensureKokoroVoicesForLocal(projectRoot)
   const { env } = await import('@huggingface/transformers')
@@ -128,8 +175,8 @@ const server = http.createServer(async (req, res) => {
     res.end()
     return
   }
-  if (req.method !== 'POST' || req.url !== '/tts/generate') {
-    sendJson(res, 404, { error: 'Not found. Use POST /tts/generate' })
+  if (req.method !== 'POST') {
+    sendJson(res, 404, { error: 'Not found. Use POST /tts/generate or POST /tts/tokenize' })
     return
   }
   let body
@@ -137,6 +184,27 @@ const server = http.createServer(async (req, res) => {
     body = await parseBody(req)
   } catch (e) {
     sendJson(res, 400, { error: 'Invalid JSON body' })
+    return
+  }
+
+  if (req.url === '/tts/tokenize') {
+    const text = body.text != null ? String(body.text).trim() : ''
+    if (!text) {
+      sendJson(res, 200, { tokenIds: [] })
+      return
+    }
+    try {
+      const tokenIds = await phonemizeAndTokenize(text)
+      sendJson(res, 200, { tokenIds })
+    } catch (e) {
+      console.error('Tokenize error:', e)
+      sendJson(res, 500, { error: e.message || 'Tokenize failed' })
+    }
+    return
+  }
+
+  if (req.url !== '/tts/generate') {
+    sendJson(res, 404, { error: 'Not found. Use POST /tts/generate or POST /tts/tokenize' })
     return
   }
   const voiceId = body.voiceId && String(body.voiceId).trim() || 'af_nicole'
@@ -159,5 +227,7 @@ const server = http.createServer(async (req, res) => {
 })
 
 server.listen(port, () => {
-  console.log(`TTS server listening on http://localhost:${port} (POST /tts/generate, GPU: ${useGpu})`)
+  console.log(`TTS server listening on http://localhost:${port}`)
+  console.log('  POST /tts/generate — full audio (Kokoro)')
+  console.log('  POST /tts/tokenize — phonemize+tokenize only (device does ONNX)')
 })

@@ -268,6 +268,7 @@ export function buildSessionPlan(config, seed) {
       instruction: prompt.instruction,
       clothing: clothingText || prompt.clothing || '',
       durationSec: turnTime,
+      extendedTime,
       phraseStrings: [],
     }
     const phraseStartIndex = script.length

@@ -23,7 +23,9 @@
     "generate-all": "node scripts/run-generate-sequence.js",
     "check-static-wavs": "node scripts/check-static-wavs.js",
     "tts-server": "node server/tts-server.js",
-    "test:kokoro-ort": "node scripts/test-kokoro-ort.js"
+    "test:kokoro-ort": "node scripts/test-kokoro-ort.js",
+    "compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",
+    "run-tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.5.1",

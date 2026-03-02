@@ -619,80 +619,100 @@ export const useGuidedStore = defineStore('guided', {
       this.totalTurnsInSession++
       this.turnsSinceLastRemoval++
 
-      let loc, actRoll, extendedTime = false
       const sessionStore = useSessionStore()
       const phase = sessionStore.phase
-      if (phase === 3) {
-        const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
-        const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy)
-        loc = pool[Math.floor(Math.random() * pool.length)]
-        actRoll = rollD20()
-        if (actRoll === 20 && this.distributionMode !== 'quickie') {
-          extendedTime = true
-          actRoll = Math.floor(Math.random() * 19) + 1
-        }
-      } else {
-        const r = randomRollsForPhase(sessionStore.phase)
-        loc = r.location
-        actRoll = r.action
-        if (actRoll === 20 && this.distributionMode !== 'quickie') {
-          extendedTime = true
-          actRoll = Math.floor(Math.random() * 19) + 1
-        }
-      }
-
       const giver = this.currentPartner
       const receiver = this.receiver
       if (receiver === 1) this.receiverOnceP1 = true
       if (receiver === 2) this.receiverOnceP2 = true
 
-      const partnerNames = { 1: this.partnerName(1), 2: this.partnerName(2) }
-      const partnerAnatomy = { 1: this.partnerAnatomy[1], 2: this.partnerAnatomy[2] }
-      const prompt = getPromptText(sessionStore.phase, loc, actRoll, giver, receiver, partnerNames, partnerAnatomy)
-      if (extendedTime) {
-        const ext = phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
-        prompt.what += ext
-        prompt.instruction += ext
-      }
-
-      this.currentPrompt = {
-        ...prompt,
-        extendedTime,
-        locationRoll: loc,
-        actionRoll: actRoll,
-      }
-
-      // Clothing removal (Phase 1 & 2 only)
+      let loc, actRoll, extendedTime = false
       let clothingRemoved = false
       let currentRemovedItems = []
       let currentClothingMethodText = ''
-      const receiverItems = receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2
-      if (this.clothingEnabled && phase < 3 && this.turnsSinceLastRemoval >= this.clothingMilestoneInterval && receiverItems.length > 0) {
-        const arr = receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2
-        const removed = removeClothingItem(arr)
-        this.turnsSinceLastRemoval = 0
-        if (removed) {
+
+      const usePlanTurn = this.sessionPlan && this.preGeneratedBlobs?.length > 0 && this.sessionPlan.turns[this.totalTurnsInSession - 1]
+      if (usePlanTurn) {
+        const planTurn = this.sessionPlan.turns[this.totalTurnsInSession - 1]
+        loc = planTurn.locationRoll
+        actRoll = planTurn.actionRoll
+        extendedTime = !!planTurn.extendedTime
+        this.currentPrompt = {
+          where: planTurn.where,
+          what: planTurn.what,
+          instruction: planTurn.instruction,
+          clothing: planTurn.clothing || '',
+          extendedTime,
+          locationRoll: loc,
+          actionRoll: actRoll,
+        }
+        if (planTurn.clothing) {
           clothingRemoved = true
-          currentRemovedItems = [removed]
-          let howRoll = Math.floor(Math.random() * 12) + 1
-          const entry = clothingTable[howRoll]
-          currentClothingMethodText = (entry && entry.method) || ''
-          const receiverLabel = this.partnerName(receiver)
-          const giverLabel = this.partnerName(giver)
-          const prefix = (entry?.prefix || '').replace(/\{receiver\}/g, receiverLabel)
-          const methodText = entry?.method ? ` ${entry.method}` : ''
-          let clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed}${methodText}`
-          if (howRoll === 12) {
-            const second = removeClothingItem(arr)
-            if (second) {
-              currentRemovedItems.push(second)
-              clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed} and ${second}${methodText}`
-            }
-          }
-          this.currentPrompt.clothing = clothingText
         }
       } else {
-        this.currentPrompt.clothing = ''
+        if (phase === 3) {
+          const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+          const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy)
+          loc = pool[Math.floor(Math.random() * pool.length)]
+          actRoll = rollD20()
+          if (actRoll === 20 && this.distributionMode !== 'quickie') {
+            extendedTime = true
+            actRoll = Math.floor(Math.random() * 19) + 1
+          }
+        } else {
+          const r = randomRollsForPhase(sessionStore.phase)
+          loc = r.location
+          actRoll = r.action
+          if (actRoll === 20 && this.distributionMode !== 'quickie') {
+            extendedTime = true
+            actRoll = Math.floor(Math.random() * 19) + 1
+          }
+        }
+
+        const partnerNames = { 1: this.partnerName(1), 2: this.partnerName(2) }
+        const partnerAnatomy = { 1: this.partnerAnatomy[1], 2: this.partnerAnatomy[2] }
+        const prompt = getPromptText(sessionStore.phase, loc, actRoll, giver, receiver, partnerNames, partnerAnatomy)
+        if (extendedTime) {
+          const ext = phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
+          prompt.what += ext
+          prompt.instruction += ext
+        }
+
+        this.currentPrompt = {
+          ...prompt,
+          extendedTime,
+          locationRoll: loc,
+          actionRoll: actRoll,
+        }
+
+        const receiverItems = receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2
+        if (this.clothingEnabled && phase < 3 && this.turnsSinceLastRemoval >= this.clothingMilestoneInterval && receiverItems.length > 0) {
+          const arr = receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2
+          const removed = removeClothingItem(arr)
+          this.turnsSinceLastRemoval = 0
+          if (removed) {
+            clothingRemoved = true
+            currentRemovedItems = [removed]
+            let howRoll = Math.floor(Math.random() * 12) + 1
+            const entry = clothingTable[howRoll]
+            currentClothingMethodText = (entry && entry.method) || ''
+            const receiverLabel = this.partnerName(receiver)
+            const giverLabel = this.partnerName(giver)
+            const prefix = (entry?.prefix || '').replace(/\{receiver\}/g, receiverLabel)
+            const methodText = entry?.method ? ` ${entry.method}` : ''
+            let clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed}${methodText}`
+            if (howRoll === 12) {
+              const second = removeClothingItem(arr)
+              if (second) {
+                currentRemovedItems.push(second)
+                clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed} and ${second}${methodText}`
+              }
+            }
+            this.currentPrompt.clothing = clothingText
+          }
+        } else {
+          this.currentPrompt.clothing = ''
+        }
       }
 
       let effectiveClothingSeconds = 0

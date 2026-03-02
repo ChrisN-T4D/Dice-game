@@ -39,3 +39,24 @@ export async function preprocessText(text, lang = 'en-us') {
   }
   return chunks
 }
+
+/**
+ * Build token chunks from already phonemized IPA (no espeak-ng). Used when main thread
+ * runs phonemization and sends IPA to the worker so espeak-ng never runs in the worker.
+ * @param {string} ipa - IPA phoneme string (e.g. from phonemize())
+ * @returns {{ type: 'text', content: string, tokens: number[] }[]}
+ */
+export function preprocessTextFromIpa(ipa) {
+  if (!ipa || typeof ipa !== 'string') return []
+  const trimmed = ipa.replace(/\s+/g, ' ').trim()
+  if (!trimmed) return []
+  const allTokens = tokenize(trimmed)
+  if (allTokens.length === 0) return []
+  const chunks = []
+  for (let from = 0; from < allTokens.length; from += TOKENS_PER_CHUNK) {
+    const to = Math.min(from + TOKENS_PER_CHUNK, allTokens.length)
+    const tokens = allTokens.slice(from, to)
+    chunks.push({ type: 'text', content: trimmed.substring(from, to), tokens })
+  }
+  return chunks
+}

@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
 import { isWebKit } from '@/utils/platform'
+import { getStaticPhraseIdForText, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
 
 function readLS(key, fallback) {
   try { const v = localStorage.getItem(key); return v != null ? v : fallback } catch (_) { return fallback }
@@ -14,6 +15,8 @@ const kokoroVoiceId = ref(readLS('kokoroVoiceId', 'af_nicole'))
 
 const kokoroModelLoading = ref(false)
 const kokoroReady = ref(false)
+/** If warmup failed, this holds the error message (e.g. model not found). Cleared when starting a new warmup. */
+const kokoroWarmupError = ref(null)
 /** True when Kokoro is selected but model not ready yet; we are waiting before sending generate (UI can show "voice not downloaded yet"). */
 const waitingForKokoroReady = ref(false)
 
@@ -102,8 +105,48 @@ const ALL_KOKORO_VOICES = [
 /** Voices exposed to the UI dropdown (populated immediately, no model load). */
 const kokoroVoicesList = ref(ALL_KOKORO_VOICES)
 
-/** Whether Kokoro is available on this browser (not Safari/WebKit). */
-const kokoroAvailable = !isWebKit()
+/** Kokoro lang codes we support; first segment of browser locale maps to these. */
+const BROWSER_LANG_TO_KOKORO = {
+  en: ['en', 'en-GB'],
+  es: ['es'],
+  fr: ['fr'],
+  hi: ['hi'],
+  it: ['it'],
+  ja: ['ja'],
+  pt: ['pt'],
+  zh: ['zh'],
+}
+
+/**
+ * Normalize navigator.language to a primary Kokoro lang (e.g. en-US -> en, zh-CN -> zh).
+ * Returns the list of Kokoro lang codes to show (e.g. ['en', 'en-GB'] for English).
+ */
+function getViewingLangCodes() {
+  if (typeof navigator === 'undefined') return ['en', 'en-GB']
+  const raw = (navigator.language || navigator.userLanguage || 'en').trim()
+  const primary = raw.split('-')[0].toLowerCase()
+  return BROWSER_LANG_TO_KOKORO[primary] || ['en', 'en-GB']
+}
+
+/** Kokoro is available on all browsers (ORT with WebGPU + WASM fallback for Safari). */
+const kokoroAvailable = true
+
+/** Optional TTS server URL for iOS etc.: POST /tts/generate with { voiceId, phrases } returns { blobs: (base64|null)[] }. Set at build (VITE_TTS_SERVER_URL) or at runtime via /config.json (e.g. Docker stack with HOST). */
+const ttsServerUrl = ref((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TTS_SERVER_URL) || '')
+
+let configFetched = false
+async function ensureTtsServerUrl() {
+  if (configFetched) return ttsServerUrl.value
+  configFetched = true
+  try {
+    const r = await fetch('/config.json')
+    if (r.ok) {
+      const d = await r.json()
+      if (d && typeof d.ttsServerUrl === 'string') ttsServerUrl.value = d.ttsServerUrl
+    }
+  } catch (_) {}
+  return ttsServerUrl.value
+}
 
 function withTimeout(promise, ms, label) {
   return Promise.race([
@@ -115,6 +158,20 @@ function withTimeout(promise, ms, label) {
 }
 
 export function useSpeech() {
+  /** Kokoro voices filtered by the language the user is viewing the app in (navigator.language). */
+  const kokoroVoicesListForLocale = computed(() => {
+    const codes = getViewingLangCodes()
+    const list = ALL_KOKORO_VOICES.filter((v) => v.lang && codes.includes(v.lang))
+    const currentId = (kokoroVoiceId.value && typeof kokoroVoiceId.value === 'object' && 'value' in kokoroVoiceId.value)
+      ? kokoroVoiceId.value.value
+      : (kokoroVoiceId.value || '')
+    if (currentId && !list.some((v) => v.id === currentId)) {
+      const current = ALL_KOKORO_VOICES.find((v) => v.id === currentId)
+      if (current) return [current, ...list]
+    }
+    return list
+  })
+
   function isSupported() {
     return typeof window !== 'undefined' && 'speechSynthesis' in window
   }
@@ -189,10 +246,18 @@ export function useSpeech() {
     return pickVoice()
   }
 
-  function playBlob(blob, onEnd) {
-    // #region agent log
-    fetch('http://127.0.0.1:7438/ingest/461d4f2b-c676-45af-9ce9-5f6fef50933e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0bbe15'},body:JSON.stringify({sessionId:'0bbe15',location:'useSpeech.js:playBlob',message:'playing Kokoro blob',data:{blobSize:blob?.size},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
+  /**
+   * Play an audio blob. If playback fails (e.g. autoplay blocked), calls onPlaybackFailed so the
+   * caller can fall back to TTS and ensure the user always hears the phrase.
+   * @param {Blob} blob
+   * @param {() => void} onEnd - called when playback finishes successfully
+   * @param {() => void} [onPlaybackFailed] - called when play() rejects or audio errors; caller should try TTS
+   */
+  function playBlob(blob, onEnd, onPlaybackFailed) {
+    if (blob == null || blob === undefined) {
+      onEnd?.()
+      return
+    }
     if (currentExternalAudio) {
       currentExternalAudio.pause()
       currentExternalAudio.src = ''
@@ -201,17 +266,27 @@ export function useSpeech() {
     const audio = new Audio(url)
     currentExternalAudio = audio
     audio.playbackRate = Math.max(0.5, Math.min(2, voiceRate.value))
-    audio.onended = () => {
+    const cleanup = () => {
       URL.revokeObjectURL(url)
       currentExternalAudio = null
+    }
+    audio.onended = () => {
+      cleanup()
       if (onEnd) onEnd()
     }
     audio.onerror = () => {
-      URL.revokeObjectURL(url)
-      currentExternalAudio = null
-      if (onEnd) onEnd()
+      cleanup()
+      if (onPlaybackFailed) onPlaybackFailed()
+      else if (onEnd) onEnd()
     }
-    audio.play()
+    const p = audio.play()
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {
+        cleanup()
+        if (onPlaybackFailed) onPlaybackFailed()
+        else if (onEnd) onEnd()
+      })
+    }
   }
 
   function estimateTtsMs(text) {
@@ -270,7 +345,6 @@ export function useSpeech() {
    */
   function speakWithBrowser(cleaned, onEnd) {
     // #region agent log
-    fetch('http://127.0.0.1:7438/ingest/461d4f2b-c676-45af-9ce9-5f6fef50933e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0bbe15'},body:JSON.stringify({sessionId:'0bbe15',location:'useSpeech.js:speakWithBrowser',message:'speaking with browser',data:{cleanedLen:cleaned?.length,supported:isSupported()},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
     // #endregion
     if (!isSupported()) {
       if (onEnd) onEnd()
@@ -301,11 +375,16 @@ export function useSpeech() {
       ttsWorker.onmessage = (ev) => {
         const d = ev.data
         // #region agent log
-        if (d.type === 'blob' || d.type === 'error') fetch('http://127.0.0.1:7438/ingest/461d4f2b-c676-45af-9ce9-5f6fef50933e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0bbe15'},body:JSON.stringify({sessionId:'0bbe15',location:'useSpeech.js:workerOnMessage',message:'worker response',data:{type:d.type,id:d.id},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
         // #endregion
         if (d.type === 'ready') {
           kokoroReady.value = true
           kokoroModelLoading.value = false
+          kokoroWarmupError.value = null
+          return
+        }
+        if (d.type === 'error' && d.id == null) {
+          kokoroModelLoading.value = false
+          kokoroWarmupError.value = d.message || 'Voice model failed to load.'
           return
         }
         const pending = d?.id != null ? ttsPending.get(d.id) : null
@@ -362,6 +441,7 @@ export function useSpeech() {
    */
   function warmupWorker() {
     if (!kokoroAvailable || kokoroReady.value) return
+    kokoroWarmupError.value = null
     const w = getTtsWorker()
     if (w) {
       kokoroModelLoading.value = true
@@ -370,16 +450,65 @@ export function useSpeech() {
   }
 
   /**
-   * Generate audio for one phrase and return the blob (or null for empty text).
-   * Used by generateSessionAudio. Resolves with null if text is empty or Kokoro unavailable.
+   * Wait for the TTS worker (Kokoro model) to be ready before generating.
+   * Call this at the start of cooking so generation uses the worker and has ample audio.
+   * When Kokoro is not available (e.g. TTS server path), resolves immediately.
    */
-  function generatePhraseToBlob(text) {
+  function waitForWorkerReady(timeoutMs = 120000) {
+    if (!kokoroAvailable) return Promise.resolve()
+    warmupWorker()
+    if (kokoroReady.value) return Promise.resolve()
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => {
+        unwatch()
+        reject(new Error('Voice model did not load in time. Try again or check that the Kokoro model is in public/models/.'))
+      }, timeoutMs)
+      const unwatch = watch(
+        [kokoroReady, kokoroWarmupError],
+        ([ready, warmupErr]) => {
+          if (warmupErr) {
+            clearTimeout(t)
+            unwatch()
+            reject(new Error(warmupErr))
+            return
+          }
+          if (ready) {
+            clearTimeout(t)
+            unwatch()
+            resolve()
+          }
+        },
+        { immediate: true }
+      )
+    })
+  }
+
+  /**
+   * Generate audio for one phrase and return the blob (or null for empty text).
+   * Uses pre-generated static WAV for intro when available (e.g. intro_no_clothing_1..9); else Kokoro.
+   */
+  async function generatePhraseToBlob(text) {
     const cleaned = cleanTextForSpeech(text)
-    if (!cleaned) return Promise.resolve(null)
+    if (!cleaned) return null
+    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+
+    // Use pre-generated static WAV when available (intro, next_turn, ease_in, etc.); else generate
+    const phraseId = getStaticPhraseIdForText(cleaned)
+    if (phraseId) {
+      for (const vid of [voiceId, voiceId !== DEFAULT_STATIC_VOICE_ID ? DEFAULT_STATIC_VOICE_ID : null].filter(Boolean)) {
+        try {
+          const res = await fetch(getStaticAudioUrl(phraseId, vid))
+          if (res.ok) {
+            const buf = await res.arrayBuffer()
+            return new Blob([buf], { type: 'audio/wav' })
+          }
+        } catch (_) {}
+      }
+    }
+
     const provider = ttsProvider.value
     const w = provider === 'kokoro' && kokoroAvailable ? getTtsWorker() : null
-    if (!w) return Promise.resolve(null)
-    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+    if (!w) return null
     return new Promise((resolve, reject) => {
       const id = `tts-${++ttsNextId}-${Date.now()}`
       const timeoutId = setTimeout(() => {
@@ -408,9 +537,53 @@ export function useSpeech() {
   /**
    * Generate audio for a full session script (sequential). Calls onProgress(current, total) and returns Blob[].
    * Empty phrases yield null in the array; playback should skip null (call onEnd immediately).
+   * On iOS (kokoroAvailable false), uses TTS server when VITE_TTS_SERVER_URL is set.
    */
   async function generateSessionAudio(phrases, onProgress) {
+    if (!Array.isArray(phrases)) return []
     const total = phrases.length
+    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+
+    if (!kokoroAvailable) {
+      await ensureTtsServerUrl()
+      if (!ttsServerUrl.value) {
+        throw new Error('Guided voice on this device requires a TTS server. Set VITE_TTS_SERVER_URL or deploy with HOST so /config.json provides ttsServerUrl.')
+      }
+    }
+
+    if (!kokoroAvailable && ttsServerUrl.value) {
+      try {
+        const base = ttsServerUrl.value.replace(/\/$/, '')
+        const res = await fetch(`${base}/tts/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voiceId, phrases }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.error || `TTS server error ${res.status}`)
+        }
+        const { blobs: rawBlobs } = await res.json()
+        const blobs = []
+        const list = Array.isArray(rawBlobs) ? rawBlobs : []
+        for (let i = 0; i < total; i++) {
+          const b = list[i]
+          if (b == null || b === '') {
+            blobs.push(null)
+          } else {
+            const binary = atob(b)
+            const bytes = new Uint8Array(binary.length)
+            for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
+            blobs.push(new Blob([bytes], { type: 'audio/wav' }))
+          }
+          if (onProgress) onProgress(i + 1, total)
+        }
+        return blobs
+      } catch (e) {
+        throw new Error(e?.message || 'Session audio from server failed')
+      }
+    }
+
     const blobs = []
     for (let i = 0; i < total; i++) {
       const blob = await generatePhraseToBlob(phrases[i])
@@ -418,6 +591,15 @@ export function useSpeech() {
       if (onProgress) onProgress(i + 1, total)
     }
     return blobs
+  }
+
+  /**
+   * URL for a pre-generated static WAV (e.g. /audio/static/af_nicole/voice_test.wav).
+   * Caller should fetch and play; if 404, fall back to TTS.
+   */
+  function getStaticAudioUrl(phraseId, voiceId) {
+    if (!phraseId || !voiceId) return null
+    return `/audio/static/${voiceId}/${phraseId}.wav`
   }
 
   function speak(text, options = {}) {
@@ -431,19 +613,42 @@ export function useSpeech() {
     const w = provider === 'kokoro' && kokoroAvailable ? getTtsWorker() : null
     const branch = !cleaned ? 'empty' : (provider === 'kokoro' && w ? 'kokoro' : 'browser')
     // #region agent log
-    fetch('http://127.0.0.1:7438/ingest/461d4f2b-c676-45af-9ce9-5f6fef50933e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0bbe15'},body:JSON.stringify({sessionId:'0bbe15',location:'useSpeech.js:speak',message:'speak entry',data:{force,voiceEnabled:voiceEnabled.value,cleanedLen:cleaned?.length,provider,branch},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
     // #endregion
     if (!cleaned) {
       if (onEnd) onEnd()
       return
     }
-    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : ''
+    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : (kokoroVoiceId.value?.trim() || DEFAULT_STATIC_VOICE_ID)
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()
       playBlob(testReplayCache[cacheKey], onEnd)
       return
     }
+    // Prefer pre-generated static WAV when this phrase has one (e.g. intro, next_turn, session_complete)
+    const phraseId = getStaticPhraseIdForText(cleaned)
+    if (phraseId && voiceId) {
+      const tryStatic = (vid) =>
+        fetch(getStaticAudioUrl(phraseId, vid))
+          .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))
+      const first = tryStatic(voiceId)
+      const fallback = voiceId !== DEFAULT_STATIC_VOICE_ID ? tryStatic(DEFAULT_STATIC_VOICE_ID) : Promise.resolve(null)
+      first
+        .then((blob) => (blob != null ? Promise.resolve(blob) : fallback))
+        .then((blob) => {
+          if (blob) {
+            window.speechSynthesis?.cancel?.()
+            playBlob(blob, onEnd)
+            return
+          }
+          proceedWithTts()
+        })
+        .catch(() => proceedWithTts())
+      return
+    }
+    proceedWithTts()
+
+    function proceedWithTts() {
     // Kokoro: do not fall back to browser; wait for model ready then send generate (UI shows "voice not downloaded yet" while waiting)
     const KOKORO_GENERATE_TIMEOUT_MS = 45000
     function sendKokoroGenerate() {
@@ -458,7 +663,8 @@ export function useSpeech() {
         if (!pending) return
         ttsPending.delete(id)
         if (pending.loadingRef) pending.loadingRef.value = false
-        if (pending.onEnd) pending.onEnd()
+        if (pending.text && pending.onEnd) speakWithBrowser(pending.text, pending.onEnd)
+        else if (pending.onEnd) pending.onEnd()
       }, KOKORO_GENERATE_TIMEOUT_MS)
       ttsPending.set(id, {
         cacheKey,
@@ -492,6 +698,7 @@ export function useSpeech() {
       return
     }
     speakWithBrowser(cleaned, onEnd)
+    }
   }
 
   function stop() {
@@ -555,6 +762,7 @@ export function useSpeech() {
     if (!settingsInitialized) {
       settingsInitialized = true
     }
+    if (!kokoroAvailable) ensureTtsServerUrl()
     const loadVoicesLater = () => {
       refreshVoices()
       if (isSupported()) {
@@ -599,6 +807,7 @@ export function useSpeech() {
 
   const isVoiceReadyForGuided = computed(() => {
     if (ttsProvider.value === 'kokoro' && kokoroAvailable) return kokoroReady.value
+    if (ttsProvider.value === 'kokoro' && !kokoroAvailable) return !!ttsServerUrl.value
     return true
   })
 
@@ -632,10 +841,12 @@ export function useSpeech() {
     ttsProvider,
     kokoroVoiceId,
     kokoroVoicesList,
+    kokoroVoicesListForLocale,
     kokoroModelLoading,
     kokoroReady,
     waitingForKokoroReady,
     kokoroAvailable,
+    ttsServerUrl,
     isSupported,
     canSpeak,
     cleanTextForSpeech,
@@ -651,6 +862,7 @@ export function useSpeech() {
     getEdgeVoices,
     preparePhrase,
     warmupWorker,
+    waitForWorkerReady,
     estimateTtsMs,
     getRecommendedVoices,
     selectedVoiceKey,
@@ -659,5 +871,6 @@ export function useSpeech() {
     syncVoiceFromStorage,
     playBlob,
     generateSessionAudio,
+    getStaticAudioUrl,
   }
 }

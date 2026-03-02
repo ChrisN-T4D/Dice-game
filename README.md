@@ -20,9 +20,11 @@ Dice-game/
 ├── index.html
 ├── package.json
 ├── vite.config.js
-├── phase3-positions-data.js    # Phase 3 positions (1–155): name, help, description, intensity, group, etc.
+├── phase3-positions-data.js     # Phase 3 positions (1–155); Vite alias "phase3-data"; scripts export → position-entries-by-number.json
+├── position-entries-by-number.json  # Export/copy of phase3 data for scripts (apply-position-mapping, validation)
+├── legacy/                      # Vanilla JS app (index-legacy.html + main, state, guided-mode, free-play, clothing, etc.)
 ├── public/                      # Static assets, ONNX/Kokoro WASM
-├── scripts/                     # Build: copy-public-assets, list-music; download-onnx-wasm, download-kokoro-model
+├── scripts/                     # Build & data: copy-public-assets, export-positions-from-js, apply-position-mapping, etc.
 └── src/
     ├── main.js                  # Vue app mount, global error handler
     ├── App.vue                   # Root: admin vs main app; main = onboarding, landing, play mode (freeplay/guided)
@@ -59,6 +61,8 @@ Dice-game/
     └── workers/
         └── tts.worker.js          # TTS in worker: Piper/Kokoro queue, post blob or error
 ```
+
+**Where things live:** The main app is Vue (`index.html` → `src/main.js`). The old vanilla JS app is in **legacy/** (`legacy/index-legacy.html`); it still loads `../phase3-positions-data.js` from the repo root. Phase 3 data and the JSON export stay at root so Vite and `scripts/` can reference them without path changes.
 
 ---
 
@@ -105,6 +109,7 @@ Dice-game/
 | `npm run preview` | Preview production build |
 | `npm run download-onnx-wasm` | Fetch ONNX runtime WASM for Piper |
 | `npm run download-kokoro-model` | Fetch Kokoro TTS model |
+| `npm run generate-static-wavs` | Generate all fixed-phrase WAVs into `public/audio/static/<voiceId>/` (run after Kokoro model; use `--local` if model is in `public/models/`) |
 | `npm run list-music` | Generate music manifest (used by build) |
 
 ---

@@ -1,7 +1,11 @@
-# Use this compose file when the image is built by GitHub Actions and pushed to GHCR.
-# In Portainer: Compose path = docker-compose.registry.yml, set HOST = your hostname (e.g. app.example.com).
-# Optionally set DICE_GAME_IMAGE (default below). Enable "Re-pull image" so Pull and redeploy works.
-# TTS server image: set DICE_GAME_TTS_IMAGE if you push a separate TTS image; otherwise TTS is built from this repo.
+# Use this compose file when images are built by GitHub Actions and pushed to GHCR.
+# In Portainer: Compose path = docker-compose.registry.yml. Set HOST (required). Enable "Re-pull image".
+# Pull and redeploy will update both app and TTS from ghcr.io.
+#
+# Env vars (stack or .env):
+#   HOST                  - Traefik hostname (e.g. app.example.com). App at https://HOST, TTS at https://tts.HOST
+#   DICE_GAME_IMAGE       - optional, default ghcr.io/chrisn-t4d/dice-game:latest
+#   DICE_GAME_TTS_IMAGE   - optional, default ghcr.io/chrisn-t4d/dice-game:tts
 
 services:
   app:
@@ -28,10 +32,7 @@ services:
       - traefik_proxy
 
   tts-server:
-    image: ${DICE_GAME_TTS_IMAGE:-dice-game-tts:latest}
-    build:
-      context: .
-      dockerfile: Dockerfile.tts
+    image: ${DICE_GAME_TTS_IMAGE:-ghcr.io/chrisn-t4d/dice-game:tts}
     container_name: dice-game-tts
     restart: unless-stopped
     labels:

@@ -5,73 +5,82 @@
 | File | Purpose |
 |------|--------|
 | `Dockerfile` | Multi-stage: Node 20 Alpine build → nginx Alpine serve |
-| `nginx.conf` | SPA fallback, COOP/COEP headers, `.wasm` MIME, `/onnxe-wasm/` alias |
-| `docker-compose.yml` | Optional: one service, build `.`, port 3000→80 |
+| `Dockerfile.tts` | TTS server (Node 20, Kokoro model in image) |
+| `nginx.conf` | SPA fallback, COOP/COEP headers, `.wasm` MIME, `/onnx-wasm/` alias |
+| `docker-compose.yml` | Build from Git: app + tts-server, Traefik labels |
+| `docker-compose.registry.yml` | Pull from GHCR only; use for Portainer "Pull and redeploy" |
 | `.dockerignore` | Excludes `node_modules`, `dist`, `.git`, `.cursor`, `.vscode`, `.env` |
 
-## Build flow
+## Build flow (app)
 
 1. **Install**: `npm ci` (requires `package-lock.json` in repo).
 2. **Build**: `npm run build` = `copy-public-assets.js` → `list-music.js` → `vite build`.
-   - `copy-public-assets.js` copies root `Position References` and `Background` into `public/` (skips if missing).
-   - `list-music.js` writes `public/music/manifest.json` (creates `public/music/` if missing).
-   - Vite builds into `dist/` and copies `public/` into `dist/`.
-3. **Serve**: nginx serves `dist/` at port 80.
+3. **Serve**: nginx serves `dist/` at port 80; `entrypoint.sh` writes `/config.json` (TTS URL) from `HOST`.
 
 ## Verify locally
 
 ```bash
 docker build -t dice-game:latest .
-docker run -p 3000:80 dice-game:latest
+docker run -p 3000:80 -e HOST=localhost dice-game:latest
 ```
 
 Then open **http://localhost:3000** (admin: **http://localhost:3000/#admin**).
 
-## Portainer
+---
 
-- **Stacks** → **Add stack** → use **Build from Git** with repo + branch, Compose path `docker-compose.yml`, or paste the stack YAML.
-- Set the **HOST** environment variable in the stack (Traefik hostname); the compose file uses only `HOST` (no default).
-- First deploy builds the image (can take several minutes); redeploy to rebuild after code changes.
+## Portainer: pull and redeploy (recommended)
 
-### "Pull access denied for dice-game"
+Use this so **Pull and redeploy** in Portainer updates both the app and the TTS server from GitHub after each push to `main`.
 
-If Portainer tries to **pull** `dice-game:latest` from Docker Hub, it will fail (that image isn’t on Docker Hub). Either:
+### One-time setup (primary or backup server)
 
-- **Build from Git:** Use **Build from Git** with Compose path `docker-compose.yml` so the stack **builds** the image from the repo (don’t rely on “Pull and redeploy” alone).
-- **Pull from registry:** Use Compose path `docker-compose.registry.yml` (default image `ghcr.io/chrisn-t4d/dice-game:latest`). Add GHCR as a registry in Portainer if the package is private, then “Pull and redeploy” will pull from GHCR.
-
-### Why "Pull and redeploy" doesn’t update the app
-
-For stacks that use **Build from Git** with `build: .` in the compose file, **Pull and redeploy** only re-fetches the compose file and redeploys. It does **not** rebuild the image, so the stack keeps using the existing `dice-game:latest` image and your new code never runs.
-
-**Options:**
-
-1. **Rebuild in Portainer (one-off)**  
-   Open the stack → **Editor** (or **Update the stack**). If your Portainer version offers a rebuild step (e.g. “Build image” or “Rebuild” before deploy), use it so the image is rebuilt from the latest Git source, then redeploy.
-
-2. **Use a registry image (recommended for updates)**  
-   Build the image in CI (e.g. GitHub Actions), push it to a registry (e.g. GHCR), and deploy from that image so “Pull and redeploy” pulls a new image instead of reusing a local one. See [Deploy from registry](#deploy-from-registry) below.
-
-## Deploy from registry (GitHub builds image, Portainer pulls it)
-
-**Flow:** Push to `main` → GitHub Actions builds the Docker image and pushes it to GitHub Container Registry (GHCR). Portainer uses the registry compose file and pulls that image; “Pull and redeploy” then updates the app.
-
-1. **GitHub (already set up)**  
-   `.github/workflows/docker-publish.yml` runs on every push to `main`, builds the image, and pushes to **ghcr.io/chrisn-t4d/dice-game:latest** (GHCR uses lowercase owner/repo).
+1. **GitHub**
+   - On every push to `main`, `.github/workflows/docker-publish.yml` builds and pushes:
+     - **ghcr.io/chrisn-t4d/dice-game:latest** (web app)
+     - **ghcr.io/chrisn-t4d/dice-game:tts** (TTS server)
+   - If the repo/package is private: **Settings** → **Packages** → create a PAT with `read:packages` and add it in Portainer as a registry (see below).
 
 2. **Portainer**
-   - **Add/Edit stack** → **Repository** (or Web editor).
-   - **Compose path:** `docker-compose.registry.yml` (or paste its contents). The default image is `ghcr.io/chrisn-t4d/dice-game:latest`.
-   - **Environment:** Set **HOST** = your Traefik hostname. Optionally set **DICE_GAME_IMAGE** if you use a different tag.
-   - Enable **Re-pull image** so “Pull and redeploy” pulls the latest image from GHCR.
-   - Deploy. Portainer will pull the image from GitHub; no build on the server.
+   - **Stacks** → **Add stack** (or use **Web editor**).
+   - **Build method**: **Git repository**.
+   - **Repository URL**: `https://github.com/ChrisN-T4D/Dice-game.git` (or your fork).
+   - **Repository reference**: `main` (or your branch).
+   - **Compose path**: **docker-compose.registry.yml**
+   - **Environment variables** (required):
+     - **HOST** = your Traefik hostname (e.g. `app.example.com`). App is at `https://HOST`, TTS at `https://tts.HOST`.
+   - Optional: **DICE_GAME_IMAGE**, **DICE_GAME_TTS_IMAGE** if you use a different registry/tag.
+   - Enable **Re-pull image before deploy** (or equivalent) so each redeploy pulls the latest images.
+   - Deploy.
 
-3. **First time / private package**
-   - In GitHub: **Packages** → open the `dice-game` package → **Package settings** → set visibility to **Public** if the server doesn’t log in to GHCR.
-   - If the package is private: in Portainer add **Registries** → GHCR, and use a GitHub PAT with `read:packages`.
+3. **Private GHCR (if needed)**
+   - Portainer → **Registries** → **Add registry** → **GitHub**. Use a GitHub PAT with `read:packages`.
+   - The stack will then be able to pull `ghcr.io/chrisn-t4d/dice-game:*`.
+
+### Updating the app (pull and redeploy)
+
+- **Stacks** → open the Dice game stack → **Pull and redeploy** (or **Update the stack** and redeploy).
+- Portainer pulls the latest `dice-game:latest` and `dice-game:tts` from GHCR and recreates the containers. No build on the server.
+
+### Backup server
+
+- On a second Portainer host (backup/failover), repeat the same one-time setup: add a stack with **Compose path** = `docker-compose.registry.yml`, **HOST** = the same or backup hostname, **Re-pull image** enabled.
+- To refresh the backup after a release: **Pull and redeploy** the stack on the backup server so it gets the same images as the primary.
+
+---
+
+## Portainer: build from Git (alternative)
+
+If you prefer to build on the server instead of using the registry:
+
+- **Compose path**: `docker-compose.yml` (not the registry file).
+- Set **HOST** in the stack.
+- First deploy builds both images (can take several minutes).
+- **Pull and redeploy** will **not** rebuild the images; it only re-pulls the compose file. To get new code you must **rebuild** the stack (if your Portainer has "Build image" / "Rebuild") or switch to the registry workflow above.
+
+---
 
 ## Notes
 
-- `package-lock.json` must be committed so `npm ci` works in the image.
-- Position reference images: ensure `Position References` (root) or `public/Position References` is in the repo so admin images load; the build script copies root → public when present.
-- Large assets (e.g. `public/models/`, `public/music/`) are included in the image; consider Git LFS or external storage if the image size is an issue.
+- `package-lock.json` must be committed so `npm ci` works in the images.
+- Position reference images: ensure `Position References` (root) or `public/Position References` is in the repo so admin images load.
+- Large assets (e.g. `public/models/`, `public/music/`) are included in the app image; TTS image includes the Kokoro model.

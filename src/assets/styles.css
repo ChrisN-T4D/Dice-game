@@ -113,6 +113,9 @@ body.phase-3 .primary { background: linear-gradient(to right, #ec4899, #22c55e);
   width: 100%;
   margin: 0 auto;
   padding: clamp(0.75rem, 4vw, 1.25rem);
+  padding-left: max(clamp(0.75rem, 4vw, 1.25rem), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(0.75rem, 4vw, 1.25rem), env(safe-area-inset-right, 0px));
+  padding-bottom: max(clamp(0.75rem, 4vw, 1.25rem), env(safe-area-inset-bottom, 0px));
   overflow-x: hidden;
 }
 .phase-flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 9999; }
@@ -226,11 +229,13 @@ body.app-main-visible .app-root .page {
 .card-content-panel > .main-content {
   padding: 0.75rem clamp(0.75rem, 4vw, 1.25rem);
 }
-/* Nav card: shrinks to its content, hidden when empty */
+/* Nav card: shrinks to its content, hidden when empty. Safe area keeps it above OS nav/gesture bar on mobile. */
 .card-nav-panel {
   flex-shrink: 0;
   padding: 0.75rem 1rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1.5rem));
 }
 .card-nav-panel:empty {
   display: none;

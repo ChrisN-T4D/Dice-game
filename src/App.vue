@@ -328,6 +328,8 @@ onUnmounted(() => {
   font-size: 0.7rem;
   color: #64748b;
   padding: 0.2rem 0.5rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
   z-index: 10001;
   pointer-events: none;
 }

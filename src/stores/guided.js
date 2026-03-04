@@ -177,6 +177,8 @@ export const useGuidedStore = defineStore('guided', {
     sessionPlan: null,
     preGeneratedBlobs: null,
     preGeneratedIndex: 0,
+    /** Indices we already played via TTS because the blob was late; background fill should not write these (discard late blob). */
+    consumedPreGeneratedIndices: new Set(),
     playPreGeneratedBlob: null,
     /** Config used to start the current/last session (for saving as favorite). */
     lastStartedConfig: null,
@@ -346,6 +348,7 @@ export const useGuidedStore = defineStore('guided', {
                   onPlaybackFailed()
                 }
               } else {
+                this.markPreGeneratedSlotConsumed(idx)
                 this.preGeneratedIndex = idx + 1
                 if (this.speakRef && phrase) {
                   this.pendingSpeech = { phrase, onEnd }
@@ -354,6 +357,7 @@ export const useGuidedStore = defineStore('guided', {
               }
             } else if (Date.now() - start > WAIT_MS) {
               clearInterval(iv)
+              this.markPreGeneratedSlotConsumed(idx)
               this.preGeneratedIndex = idx + 1
               if (this.speakRef && phrase) {
                 this.pendingSpeech = { phrase, onEnd }
@@ -363,6 +367,7 @@ export const useGuidedStore = defineStore('guided', {
           }, 200)
           return
         }
+        this.markPreGeneratedSlotConsumed(this.preGeneratedIndex)
         this.preGeneratedIndex++
         if (this.speakRef && phrase) {
           this.pendingSpeech = null
@@ -439,7 +444,12 @@ export const useGuidedStore = defineStore('guided', {
     setPreGeneratedBlobs(blobs) {
       this.preGeneratedBlobs = blobs
       this.preGeneratedIndex = 0
+      this.consumedPreGeneratedIndices = new Set()
       this.firstTurnPhrasePlayedFromBlob = false
+    },
+    /** Call when we fell back to TTS for this slot (blob was late); late blob should be discarded, not played. */
+    markPreGeneratedSlotConsumed(idx) {
+      this.consumedPreGeneratedIndices.add(idx)
     },
 
     /** Start guided session using pre-generated audio blobs (same order as sessionPlan.script). */

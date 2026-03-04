@@ -204,17 +204,17 @@
       <h3>Voice generating test</h3>
       <p class="admin-hint">Voice runs locally in the browser (Kokoro). Submit a phrase to test. Ensure voice is enabled in main app preferences and the Kokoro model is in <code>public/models/</code> (<code>npm run download-kokoro-model</code>). No server required. Optional: a TTS server can be used as fallback on devices where Kokoro does not run (e.g. some iOS); run <code>npm run tts-server</code> and set <code>VITE_TTS_SERVER_URL</code> if you need it.</p>
       <div class="admin-voice-test">
+        <div class="admin-voice-test-phrase-wrap">
+          <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>
+          <textarea
+            id="admin-voice-phrase"
+            v-model="voiceTestPhrase"
+            class="admin-voice-test-input"
+            rows="3"
+            placeholder="e.g. Hello, this is a test."
+          />
+        </div>
         <div class="admin-voice-test-row">
-          <div class="admin-voice-test-phrase-wrap">
-            <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>
-            <textarea
-              id="admin-voice-phrase"
-              v-model="voiceTestPhrase"
-              class="admin-voice-test-input"
-              rows="3"
-              placeholder="e.g. Hello, this is a test."
-            />
-          </div>
           <div class="admin-voice-test-voice-wrap">
             <label class="admin-voice-test-label" for="admin-voice-model">Voice</label>
             <select
@@ -394,6 +394,7 @@ function runVoiceTest() {
   }, VOICE_TEST_TIMEOUT_MS)
   warmupWorker()
   speak(phrase, {
+    force: true, // always attempt generation/playback in admin test, even if voice is off in prefs
     onEnd: () => {
       clearTimeout(timeoutId)
       if (voiceTestStatus.value === 'generating') voiceTestStatus.value = 'done'
@@ -763,28 +764,35 @@ loadValidation()
   flex-direction: column;
   gap: 0.75rem;
   max-width: 36rem;
+  width: 100%;
+  min-width: 0;
 }
 .admin-voice-test-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   align-items: flex-start;
+  width: 100%;
+  min-width: 0;
 }
 .admin-voice-test-phrase-wrap {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
 }
 .admin-voice-test-voice-wrap,
 .admin-voice-test-mode-wrap {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
-.admin-voice-test-voice-wrap { width: 11rem; }
-.admin-voice-test-mode-wrap { width: 14rem; min-width: 12rem; }
+.admin-voice-test-voice-wrap { min-width: 10rem; }
+.admin-voice-test-mode-wrap { min-width: 12rem; }
 .admin-voice-test-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -802,6 +810,9 @@ loadValidation()
 }
 .admin-voice-test-input::placeholder { color: #64748b; }
 .admin-voice-test-select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.5rem 0.6rem;
   border-radius: 0.5rem;
   border: 1px solid #475569;

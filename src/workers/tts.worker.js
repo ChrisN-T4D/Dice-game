@@ -6,6 +6,7 @@
  *   In:  { type: 'warmup' }              – pre-load model, no generation
  *        { type: 'generate', id, text, voiceId }
  *   Out: { type: 'ready' }               – model loaded (response to warmup)
+ *        { type: 'progress', id, status } – status: 'started' | 'running'
  *        { type: 'blob', id, blob }
  *        { type: 'error', id, message }
  */
@@ -172,6 +173,7 @@ function checkInputLimits(msg) {
 
 async function processOne(msg) {
   const { id, text, phonemizedIpa, tokenIds, voiceId } = msg
+  self.postMessage({ type: 'progress', id, status: 'started' })
   const limitErr = checkInputLimits(msg)
   if (limitErr) {
     self.postMessage({ type: 'error', id, message: limitErr })
@@ -179,6 +181,7 @@ async function processOne(msg) {
   }
   try {
     let blob
+    self.postMessage({ type: 'progress', id, status: 'running' })
     if (tokenIds != null && Array.isArray(tokenIds) && tokenIds.length > 0) {
       if (import.meta.env?.DEV) {
         console.log('[TTS worker] Generating from tokenIds, count=%d, first5=%o', tokenIds.length, tokenIds.slice(0, 5))

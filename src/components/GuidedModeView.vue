@@ -146,7 +146,7 @@
             />
           </div>
           <p class="guided-cooking-label">{{ cookingWaitingForModel ? 'Loading voice model…' : cookingLabels[cookingStepIndex] }}</p>
-          <p v-if="cookingWaitingForModel" class="guided-cooking-model-hint">~95 MB, usually 1–3 min (2–5 on slower connections). Loads in the background from app open.</p>
+          <p class="guided-cooking-sub">{{ cookingSubtext }}</p>
           <div v-if="!cookingWaitingForModel" class="guided-cooking-progress-wrap">
             <div class="guided-cooking-progress-bar">
               <div class="guided-cooking-progress-fill" :style="{ width: cookingProgressPercent + '%' }"></div>
@@ -206,7 +206,7 @@ const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
 const sessionFavorites = useSessionFavoritesStore()
-const { speak, preparePhrase, warmupWorker, waitForWorkerReady, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, generateSessionAudio, playBlob } = useSpeech()
+const { speak, preparePhrase, warmupWorker, waitForWorkerReady, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, ttsWorkerProgress, generateSessionAudio, playBlob } = useSpeech()
 
 const pendingConfig = ref(null)
 const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
@@ -220,6 +220,8 @@ const cookingProgressTotal = ref(0)
 const cookingError = ref(null)
 /** True while waiting for Kokoro model to load before we can generate audio (avoids showing 0% during model load). */
 const cookingWaitingForModel = ref(false)
+/** Labels for each phrase we're cooking (set in startCooking), e.g. ['Intro', 'First turn', 'Instruction', …]. */
+const cookingPhraseLabels = ref([])
 
 const cookingGifs = [
   '/GIFS/agp_studios-audio-22831_512.gif',
@@ -249,6 +251,26 @@ const actionTimerValue = computed(() => {
 const cookingProgressPercent = computed(() => {
   const t = cookingProgressTotal.value
   return t > 0 ? Math.round((cookingProgressCurrent.value / t) * 100) : 0
+})
+
+/** Sub-text under the main cooking label: explains what’s happening (model load vs generating phrases) and where (which phrase). */
+const cookingSubtext = computed(() => {
+  if (cookingWaitingForModel.value) {
+    return '~95 MB, usually 1–3 min (2–5 on slower connections). Loads in the background from app open.'
+  }
+  const total = cookingProgressTotal.value
+  const current = cookingProgressCurrent.value
+  const labels = cookingPhraseLabels.value
+  if (total <= 0) return 'Preparing…'
+  if (current >= total) {
+    return `All ${total} phrase${total === 1 ? '' : 's'} ready (intro and first turn). Opening session…`
+  }
+  // Progress is 1-based: current = number completed; next to generate is current+1
+  const nextNum = current + 1
+  const label = labels[current] != null ? labels[current] : `Phrase ${nextNum}`
+  const workerStatus = ttsWorkerProgress?.value?.status
+  const workerNote = workerStatus === 'started' ? ' (worker started)' : workerStatus === 'running' ? ' (worker running model…)' : ''
+  return `Generating phrase ${nextNum} of ${total}: ${label}${workerNote}`
 })
 
 function isKokoroError(message) {
@@ -326,10 +348,20 @@ async function startCooking() {
     return
   }
   cookingWaitingForModel.value = false
-  // Pre-generate intro + entire first turn via worker so there is ample audio to get into the session
+  // Pre-generate intro + entire first turn via worker so there is ample audio to get into the session.
+  // Ensure we always cook at least intro (script[0]) and the first turn's phrases (script[1]...).
   const firstTurnPhraseCount = plan.turns?.[0]?.phraseStrings?.length ?? 5
-  const endIndex = Math.min(1 + firstTurnPhraseCount, plan.script.length)
+  const endIndex = Math.min(
+    Math.max(2, 1 + firstTurnPhraseCount),
+    plan.script.length
+  )
   const initialScript = plan.script.slice(0, endIndex)
+  cookingPhraseLabels.value = initialScript.map((text, i) => {
+    if (i === 0) return 'Intro'
+    if (i === 1) return 'First turn'
+    const trim = text.trim().slice(0, 42)
+    return trim ? (trim.length < text.trim().length ? `${trim}…` : trim) : `Phrase ${i + 1}`
+  })
   cookingProgressTotal.value = endIndex
   cookingProgressCurrent.value = 0
   try {
@@ -337,6 +369,14 @@ async function startCooking() {
       cookingProgressCurrent.value = current
       cookingProgressTotal.value = total
     })
+    // Retry any nulls in the initial batch (e.g. turn_begins / "Whenever you're ready") so playback starts immediately
+    for (let i = 0; i < initialBlobs.length; i++) {
+      if (initialBlobs[i] != null) continue
+      try {
+        const [retryBlob] = await generateSessionAudio([initialScript[i]])
+        if (retryBlob != null) initialBlobs[i] = retryBlob
+      } catch (_) {}
+    }
     const fullLength = plan.script.length
     const blobs = new Array(fullLength)
     for (let i = 0; i < initialBlobs.length; i++) blobs[i] = initialBlobs[i]
@@ -347,17 +387,21 @@ async function startCooking() {
       return
     }
     guided.setPreGeneratedBlobs(blobs)
+    // Brief pause so the user sees "All N phrases ready. Opening session…" and 100% before the next screen
+    await new Promise((r) => setTimeout(r, 1200))
     guidedStep.value = 'start'
     warmupWorker()
     // Background: generate remaining phrases and fill blobs at correct indices
     if (endIndex < fullLength) {
       ;(async () => {
         for (let j = endIndex; j < fullLength; j++) {
+          if (guided.consumedPreGeneratedIndices?.has(j)) continue
           try {
             const [blob] = await generateSessionAudio([plan.script[j]])
+            if (guided.consumedPreGeneratedIndices?.has(j)) continue
             blobs[j] = blob
           } catch (_) {
-            blobs[j] = null
+            if (!guided.consumedPreGeneratedIndices?.has(j)) blobs[j] = null
           }
         }
       })()
@@ -426,7 +470,7 @@ function onStartBack() {
 
 function onStartSession() {
   if (!pendingConfig.value || !guided.preGeneratedBlobs) return
-  guided.setSpeak((text, opts) => speak(text, opts))
+  guided.setSpeak((text, opts) => speak(text, { ...opts, force: true }))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
   guided.setPlayPreGeneratedBlob((blob, onEnd, onPlaybackFailed) => playBlob(blob, onEnd, onPlaybackFailed))
@@ -453,7 +497,7 @@ function endSession() {
 
 onMounted(() => {
   warmupWorker() // start loading voice model as soon as user enters Guided Mode
-  guided.setSpeak((text, opts) => speak(text, opts))
+  guided.setSpeak((text, opts) => speak(text, { ...opts, force: true }))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
   // Start loading the voice worker as soon as they enter the guided wizard so it's ready by cooking

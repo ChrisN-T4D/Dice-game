@@ -42,6 +42,11 @@ let waitForReadyUnwatch = null
 /** Observed max generation time (ms); used to refine estimates. */
 let maxObservedTtsMs = 0
 
+/** Latest worker progress: { id, status } (status: 'started' | 'running'). Cleared when blob/error received. */
+const ttsWorkerProgress = ref({ id: null, status: null })
+
+const GENERATE_PHRASE_TIMEOUT_MS = 90000
+
 const TTS_MS_PER_CHAR = 55
 const TTS_ESTIMATE_MIN_MS = 800
 const TTS_ESTIMATE_MAX_MS = 14_000
@@ -336,7 +341,8 @@ export function useSpeech() {
    */
   function playBlob(blob, onEnd, onPlaybackFailed) {
     if (blob == null || blob === undefined) {
-      onEnd?.()
+      if (onPlaybackFailed) onPlaybackFailed()
+      else if (onEnd) onEnd()
       return
     }
     if (currentExternalAudio) {
@@ -468,8 +474,24 @@ export function useSpeech() {
           kokoroWarmupError.value = d.message || 'Voice model failed to load.'
           return
         }
+        if (d.type === 'progress' && d.id != null) {
+          ttsWorkerProgress.value = { id: d.id, status: d.status || 'running' }
+          const pending = ttsPending.get(d.id)
+          if (pending && pending.timeoutId != null) {
+            clearTimeout(pending.timeoutId)
+            pending.timeoutId = setTimeout(() => {
+              if (ttsPending.has(d.id)) {
+                ttsPending.delete(d.id)
+                ttsWorkerProgress.value = { id: null, status: null }
+                pending.resolve?.(null)
+              }
+            }, GENERATE_PHRASE_TIMEOUT_MS)
+          }
+          return
+        }
         const pending = d?.id != null ? ttsPending.get(d.id) : null
         if (!pending) return
+        ttsWorkerProgress.value = { id: null, status: null }
         if (pending.timeoutId != null) clearTimeout(pending.timeoutId)
         ttsPending.delete(d.id)
         if (pending.sentAt != null) {
@@ -477,15 +499,26 @@ export function useSpeech() {
           if (elapsed > maxObservedTtsMs) maxObservedTtsMs = elapsed
         }
         if (d.type === 'blob' && d.blob) {
+          if (pending.cancelled) {
+            ttsPending.delete(d.id)
+            if (pending.loadingRef) pending.loadingRef.value = false
+            return
+          }
           if (pending.cacheKey) testReplayCache[pending.cacheKey] = d.blob
           if (pending.resolve) {
             pending.resolve(d.blob)
             return
           } else {
-            if (pending.onEnd) playBlob(d.blob, pending.onEnd)
+            const fallback = pending.text ? () => speakWithBrowser(pending.text, pending.onEnd) : undefined
+            if (pending.onEnd) playBlob(d.blob, pending.onEnd, fallback)
           }
           if (pending.onReady) pending.onReady()
         } else if (d.type === 'error') {
+          if (pending.cancelled) {
+            ttsPending.delete(d.id)
+            if (pending.loadingRef) pending.loadingRef.value = false
+            return
+          }
           if (pending.reject) {
             pending.reject(new Error(d.message || 'TTS error'))
           } else if (pending.text && pending.onEnd) {
@@ -615,9 +648,10 @@ export function useSpeech() {
       const timeoutId = setTimeout(() => {
         if (ttsPending.has(id)) {
           ttsPending.delete(id)
+          ttsWorkerProgress.value = { id: null, status: null }
           resolve(null)
         }
-      }, 45000)
+      }, GENERATE_PHRASE_TIMEOUT_MS)
       ttsPending.set(id, {
         resolve: (blob) => {
           clearTimeout(timeoutId)
@@ -689,6 +723,9 @@ export function useSpeech() {
       const blob = await generatePhraseToBlob(phrases[i])
       blobs.push(blob)
       if (onProgress) onProgress(i + 1, total)
+      if (i < total - 1) {
+        await new Promise((r) => setTimeout(r, 150))
+      }
     }
     return blobs
   }
@@ -722,7 +759,7 @@ export function useSpeech() {
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()
-      playBlob(testReplayCache[cacheKey], onEnd)
+      playBlob(testReplayCache[cacheKey], onEnd, () => speakWithBrowser(cleaned, onEnd))
       return
     }
     // Prefer pre-generated static WAV when this phrase has one (e.g. intro, next_turn, session_complete)
@@ -738,7 +775,7 @@ export function useSpeech() {
         .then((blob) => {
           if (blob) {
             window.speechSynthesis?.cancel?.()
-            playBlob(blob, onEnd)
+            playBlob(blob, onEnd, () => speakWithBrowser(cleaned, onEnd))
             return
           }
           proceedWithTts()
@@ -762,7 +799,7 @@ export function useSpeech() {
         const blob = await generateViaTtsServer(cleaned, voiceId)
         if (blob) {
           window.speechSynthesis?.cancel?.()
-          playBlob(blob, onEnd)
+          playBlob(blob, onEnd, () => speakWithBrowser(cleaned, onEnd))
           return
         }
       }
@@ -779,7 +816,8 @@ export function useSpeech() {
       const timeoutId = setTimeout(() => {
         const pending = ttsPending.get(id)
         if (!pending) return
-        ttsPending.delete(id)
+        if (pending.timeoutId != null) clearTimeout(pending.timeoutId)
+        pending.cancelled = true
         if (pending.loadingRef) pending.loadingRef.value = false
         if (pending.text && pending.onEnd) speakWithBrowser(pending.text, pending.onEnd)
         else if (pending.onEnd) pending.onEnd()
@@ -817,10 +855,11 @@ export function useSpeech() {
       })()
     }
     if (provider === 'kokoro' && kokoroAvailable) {
-      if (forceMode === 'fullyLocal') {
+      if (forceMode === 'fullyLocal' && w) {
         sendKokoroGenerate(true)
         return
       }
+      // When worker is unavailable (e.g. mobile WebView), or not fullyLocal, try server then browser
       tryTtsServerThenWorker()
       return
     }
@@ -971,6 +1010,7 @@ export function useSpeech() {
     kokoroVoicesListForLocale,
     kokoroModelLoading,
     kokoroReady,
+    ttsWorkerProgress,
     waitingForKokoroReady,
     kokoroAvailable,
     ttsServerUrl,

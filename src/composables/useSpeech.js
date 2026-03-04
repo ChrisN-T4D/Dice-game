@@ -590,15 +590,17 @@ export function useSpeech() {
     const provider = ttsProvider.value
     if (provider !== 'kokoro') return null
 
-    await ensureTtsServerUrl()
     const w = kokoroAvailable ? getTtsWorker() : null
-    if (ttsServerUrl.value) {
-      const tokenizeBlob = await tryTokenizeThenWorkerBlob(cleaned, voiceId, w)
-      if (tokenizeBlob) return tokenizeBlob
-      const serverBlob = await generateViaTtsServer(cleaned, voiceId)
-      if (serverBlob) return serverBlob
+    if (w) {
+      /* Local-first: use worker only; do not call the TTS server. */
+    } else {
+      await ensureTtsServerUrl()
+      if (ttsServerUrl.value) {
+        const serverBlob = await generateViaTtsServer(cleaned, voiceId)
+        if (serverBlob) return serverBlob
+      }
+      return null
     }
-    if (!w) return null
     let ipa
     try {
       const phonemize = await getPhonemize()
@@ -750,20 +752,13 @@ export function useSpeech() {
     const KOKORO_GENERATE_TIMEOUT_MS = 45000
     const forceMode = options.forceTtsMode
     async function tryTtsServerThenWorker() {
-      await ensureTtsServerUrl()
-      if (forceMode !== 'fullServer' && ttsServerUrl.value && w) {
-        const tokenizeBlob = await tryTokenizeThenWorkerBlob(cleaned, voiceId, w)
-        if (tokenizeBlob) {
-          window.speechSynthesis?.cancel?.()
-          playBlob(tokenizeBlob, onEnd)
-          return
-        }
-        if (forceMode === 'tokenize') {
-          sendKokoroGenerate(false)
-          return
-        }
+      if (w) {
+        /* Local-first: when the worker is available, use it only. Do not call the TTS server. */
+        sendKokoroGenerate(true)
+        return
       }
-      if (forceMode !== 'tokenize') {
+      await ensureTtsServerUrl()
+      if (forceMode !== 'tokenize' && ttsServerUrl.value) {
         const blob = await generateViaTtsServer(cleaned, voiceId)
         if (blob) {
           window.speechSynthesis?.cancel?.()
@@ -771,7 +766,7 @@ export function useSpeech() {
           return
         }
       }
-      sendKokoroGenerate(false)
+      speakWithBrowser(cleaned, onEnd)
     }
     /** @param {boolean} [useTextOnly] - if true, send text to worker (worker does phonemize+tokenize+ONNX); no server, no main-thread phonemize */
     function sendKokoroGenerate(useTextOnly = false) {

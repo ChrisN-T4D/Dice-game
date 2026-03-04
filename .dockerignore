@@ -7,3 +7,6 @@ __main_*.tmp
 *.log
 .env
 .env.*
+
+# Exclude static WAVs from image; download at runtime via AUDIO_ASSETS_URL into container/volume
+public/audio

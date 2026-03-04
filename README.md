@@ -152,6 +152,20 @@ Then open **http://localhost:3000**.
 4. **Deploy** – Click **Deploy the stack**. First build can take a few minutes.
 5. **Access** – Open **http://&lt;your-server&gt;:3000**. Admin: **http://&lt;your-server&gt;:3000/#admin**.
 
+### Static audio (smaller image, download at startup)
+
+The Docker image does **not** include the static WAV files (`public/audio`), so the image builds faster and stays smaller. To have the app serve them:
+
+1. **Create the tarball** (once, on a machine that has `public/audio`):  
+   `npm run pack-audio-assets`. This creates `audio-assets.tar.gz` in the repo root (~1.7 GB).
+2. **Upload** `audio-assets.tar.gz` somewhere reachable (e.g. GitHub Release, S3, or your own server).
+3. **In Portainer**, set the env var **`AUDIO_ASSETS_URL`** to the **direct** download URL of that file.
+4. On container **start**, the entrypoint downloads the tarball and extracts it so `/audio/static/...` is served. It only downloads once (skips if already present).
+
+**Full step-by-step and URL troubleshooting:** see **[PORTAINER-URL-SETUP.md](PORTAINER-URL-SETUP.md)** (audio URL, TTS/config.json, and why the server URL might not have worked).
+
+If `AUDIO_ASSETS_URL` is not set, the app still runs; static phrase audio will 404 and the app will fall back to TTS for those phrases.
+
 ### Notes
 
 - The image builds the Vue app and serves it with nginx on port 80; map to any host port (e.g. 3000).

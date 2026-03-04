@@ -22,6 +22,7 @@
     "generate-static-phase-checkin": "node scripts/generate-static-phase-checkin.js",
     "generate-all": "node scripts/run-generate-sequence.js",
     "check-static-wavs": "node scripts/check-static-wavs.js",
+    "pack-audio-assets": "node scripts/pack-audio-assets.js",
     "tts-server": "node server/tts-server.js",
     "test:kokoro-ort": "node scripts/test-kokoro-ort.js",
     "compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
+    "tar": "^7.4.3",
     "vite": "^5.0.0"
   }
 }

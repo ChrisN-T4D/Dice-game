@@ -46,3 +46,6 @@ tokenize-path-output.wav
 # Optional: large or generated assets (uncomment if you generate these locally)
 # public/models/
 # public/audio/static/
+
+# Packed audio for Docker (upload to release/S3; do not commit)
+audio-assets.tar.gz

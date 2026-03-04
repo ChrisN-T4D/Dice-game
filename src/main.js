@@ -3,6 +3,30 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import './assets/styles.css'
 
+/**
+ * Safe area fallback: some browsers (e.g. Chrome on Android) don't set env(safe-area-inset-bottom).
+ * Detect when it's 0 on a mobile-sized viewport and set a CSS variable so the bottom nav stays above the OS bar.
+ */
+function applySafeAreaFallback() {
+  if (typeof document === 'undefined' || !document.documentElement) return
+  const el = document.createElement('div')
+  el.style.cssText = 'position:fixed;left:-9999px;padding-bottom:env(safe-area-inset-bottom);'
+  document.body.appendChild(el)
+  const computed = getComputedStyle(el)
+  const paddingBottom = computed.paddingBottom
+  document.body.removeChild(el)
+  const px = parseFloat(paddingBottom)
+  const isMobileSized = window.innerWidth < 768 || 'ontouchstart' in window
+  if (isMobileSized && (Number.isNaN(px) || px === 0)) {
+    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '34px')
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', applySafeAreaFallback)
+} else {
+  applySafeAreaFallback()
+}
+
 function showMountError(err) {
   console.error('App mount failed:', err)
   const el = document.getElementById('app')

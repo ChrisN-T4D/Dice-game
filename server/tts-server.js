@@ -207,7 +207,7 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 404, { error: 'Not found. Use POST /tts/generate or POST /tts/tokenize' })
     return
   }
-  const voiceId = body.voiceId && String(body.voiceId).trim() || 'af_nicole'
+  const voiceId = (body.voiceId ?? body.voiceld) && String(body.voiceId ?? body.voiceld).trim() || 'af_nicole'
   const phrases = Array.isArray(body.phrases) ? body.phrases : []
   if (phrases.length === 0) {
     sendJson(res, 200, { blobs: [] })

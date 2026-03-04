@@ -1,6 +1,8 @@
-# TTS server for Kokoro (e.g. iOS / devices that can't run transformers.js in-browser).
+# TTS server for Kokoro (e.g. iOS / devices that can't run Kokoro in-browser).
 # Same stack as the web app; Traefik exposes at tts.${HOST}.
-FROM node:20-alpine
+# Use glibc-based image: onnxruntime-node (used by kokoro-js/transformers) has no Alpine/musl builds;
+# on Alpine you get "Error loading shared library ld-linux-x86-64.so.2" at startup.
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 

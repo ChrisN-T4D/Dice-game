@@ -123,7 +123,7 @@ body.phase-3 .primary { background: linear-gradient(to right, #ec4899, #22c55e);
   padding: clamp(0.75rem, 4vw, 1.25rem);
   padding-left: max(clamp(0.75rem, 4vw, 1.25rem), env(safe-area-inset-left, 0px));
   padding-right: max(clamp(0.75rem, 4vw, 1.25rem), env(safe-area-inset-right, 0px));
-  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 2.5rem)));
+  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
   overflow-x: hidden;
 }
 .phase-flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 9999; }
@@ -156,8 +156,6 @@ body.app-main-visible .app-root {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* Reserve bottom space so nav bar (and all content) sits above OS nav/taskbar/gesture bar */
-  padding-bottom: max(0px, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
 }
 body.app-main-visible .app-root .page {
   flex: 1;
@@ -246,7 +244,7 @@ body.app-main-visible .app-root .page {
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
   /* constant() = older iOS; env() = standard; --safe-area-bottom-fallback = JS-set when env() is 0 on mobile */
-  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 2.5rem)));
+  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
   min-height: 3.5rem;
 }
 .card-nav-panel:empty {
@@ -303,7 +301,7 @@ body.app-main-visible .app-root .page {
   }
   .card-nav-panel {
     position: sticky;
-    bottom: max(1rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 0px)));
+    bottom: 1rem;
   }
   .page.guided-mode .card-nav-panel {
     position: static;
@@ -346,7 +344,7 @@ body.app-main-visible .app-root .page {
 .page .card-nav-panel {
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
-  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 2.5rem)));
+  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem))) !important;
 }
 .page .card-content-panel {
   box-shadow: none !important;

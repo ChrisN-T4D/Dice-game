@@ -156,6 +156,8 @@ body.app-main-visible .app-root {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* Reserve bottom space so nav bar (and all content) sits above OS nav/taskbar/gesture bar */
+  padding-bottom: max(0px, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
 }
 body.app-main-visible .app-root .page {
   flex: 1;
@@ -301,7 +303,7 @@ body.app-main-visible .app-root .page {
   }
   .card-nav-panel {
     position: sticky;
-    bottom: 1rem;
+    bottom: max(1rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 0px)));
   }
   .page.guided-mode .card-nav-panel {
     position: static;
@@ -316,6 +318,7 @@ body.app-main-visible .app-root .page {
     padding-bottom: 0;
   }
 }
+/* Base card padding; .page .card-nav-panel re-asserts its padding after this so safe-area isn’t overwritten */
 .card {
   background: rgba(15,23,42,0.95);
   backdrop-filter: blur(4px);
@@ -338,6 +341,12 @@ body.app-main-visible .app-root .page {
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+/* Nav panel padding must come after .card so it isn’t overwritten by .card’s shorthand padding; keeps nav above OS bar */
+.page .card-nav-panel {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 2.5rem)));
 }
 .page .card-content-panel {
   box-shadow: none !important;

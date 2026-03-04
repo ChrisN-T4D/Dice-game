@@ -6,6 +6,7 @@ import './assets/styles.css'
 /**
  * Safe area fallback: some browsers (e.g. Chrome on Android) don't set env(safe-area-inset-bottom).
  * Detect when it's 0 on a mobile-sized viewport and set a CSS variable so the bottom nav stays above the OS bar.
+ * Reserve enough space for gesture bars / taskbars (48px). Re-run on resize so rotation is handled.
  */
 function applySafeAreaFallback() {
   if (typeof document === 'undefined' || !document.documentElement) return
@@ -18,7 +19,9 @@ function applySafeAreaFallback() {
   const px = parseFloat(paddingBottom)
   const isMobileSized = window.innerWidth < 768 || 'ontouchstart' in window
   if (isMobileSized && (Number.isNaN(px) || px === 0)) {
-    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '34px')
+    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '48px')
+  } else {
+    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '0px')
   }
 }
 if (document.readyState === 'loading') {
@@ -26,6 +29,7 @@ if (document.readyState === 'loading') {
 } else {
   applySafeAreaFallback()
 }
+window.addEventListener('resize', applySafeAreaFallback)
 
 function showMountError(err) {
   console.error('App mount failed:', err)

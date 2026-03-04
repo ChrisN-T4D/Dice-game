@@ -13,7 +13,17 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
-import { SESSION_COMPLETE_PHRASES } from '@/data/staticPhrases'
+import {
+  SESSION_COMPLETE_PHRASES,
+  INTRO_OPENINGS,
+  INTRO_CLOSINGS,
+  INTRO_CLOTHING_LINES,
+  NEXT_TURN_TEXTS,
+  TURN_BEGINS_TEXTS,
+  EASE_IN_TEXTS,
+  SETTLE_INTO_POSITION_TEXT,
+  getPhaseCheckinTexts,
+} from '@/data/staticPhrases'
 
 // -----------------------------------------------------------------------------
 // Helpers and constants (rolls, timed-step parsing, fixed phrases)
@@ -86,22 +96,6 @@ function getSuggestedTurnSecondsFromPrompt(text) {
 const AFTER_DONG_SEC = 2
 const AFTER_NEXT_TURN_SEC = 10
 const SETTLE_IN_SEC = 20
-
-/** Fixed phrase sets for preloading so TTS never blocks. */
-const NEXT_TURN_PHRASES = [
-  'That finishes that turn. Time to switch.',
-  "That's the end of that turn. Time to switch.",
-  'This turn is over. Time to switch.',
-  "Switch when you're ready.",
-]
-const TURN_BEGINS_PHRASES = ['Turn begins.', 'Go.', "Whenever you're ready.", 'Begin.']
-const EASE_IN_PHRASES = [
-  'Take the next few seconds to settle into position. No rush.',
-  "Settle into position when you're ready. No rush.",
-  'Use the next few seconds to get comfortable. No rush.',
-  "Whenever you're ready. No rush.",
-]
-const SETTLE_INTO_POSITION = 'Settle into position.'
 
 function prepAll(prep, phrases) {
   if (!prep || !Array.isArray(phrases)) return
@@ -544,35 +538,20 @@ export const useGuidedStore = defineStore('guided', {
       if (options.prebuiltIntro) {
         intro = options.prebuiltIntro
       } else {
-        const introOpenings = [
-          'This is guided mode. You will hear a prompt for each turn. If a prompt does not work for you, substitute something you both like. ',
-          'This is guided mode. You will get a prompt each turn. Feel free to swap in something you both prefer. ',
-          'This is guided mode. Each turn has a prompt. If you would rather do something else, substitute anything you both like. ',
-        ]
-        const introClothingLines = [
-          'During the session you will hear when to remove an item of clothing and how to do it. ',
-          'You will hear when to remove clothing and how. ',
-          'Clothing removal prompts will tell you when and how. ',
-        ]
-        const introClosings = [
-          'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-          'Between turns you will hear when to switch, then time to settle into position, then the next prompt. Let us begin.',
-          'Each turn ends with a switch, then settle into position, then the next prompt. Let us begin.',
-        ]
-        intro = pick(introOpenings)
-        if (this.clothingEnabled) intro += pick(introClothingLines)
-        intro += pick(introClosings)
+        intro = pick(INTRO_OPENINGS)
+        if (this.clothingEnabled) intro += pick(INTRO_CLOTHING_LINES)
+        intro += pick(INTRO_CLOSINGS)
       }
 
       // Preload intro and fixed phrases immediately so they're ready; worker won't block.
       const prepAtStart = this.preparePhraseRef
       if (prepAtStart) {
         prepAtStart(intro)
-        prepAll(prepAtStart, NEXT_TURN_PHRASES)
-        prepAll(prepAtStart, TURN_BEGINS_PHRASES)
-        prepAll(prepAtStart, EASE_IN_PHRASES)
+        prepAll(prepAtStart, NEXT_TURN_TEXTS)
+        prepAll(prepAtStart, TURN_BEGINS_TEXTS)
+        prepAll(prepAtStart, EASE_IN_TEXTS)
         prepAll(prepAtStart, SESSION_COMPLETE_PHRASES)
-        prepAtStart(SETTLE_INTO_POSITION)
+        prepAtStart(SETTLE_INTO_POSITION_TEXT)
       }
 
       let introEnded = false
@@ -731,12 +710,7 @@ export const useGuidedStore = defineStore('guided', {
       const giverName = this.partnerName(giver)
       const receiverName = this.partnerName(receiver)
       const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-      const nextTurnPhrase = pick([
-        'That finishes that turn. Time to switch.',
-        "That's the end of that turn. Time to switch.",
-        'This turn is over. Time to switch.',
-        "Switch when you're ready.",
-      ])
+      const nextTurnPhrase = pick(NEXT_TURN_TEXTS)
       const firstTurnPhrase = phase === 3
         ? pick([
             `First turn. ${giverName} leads, ${receiverName} follows.`,
@@ -750,18 +724,8 @@ export const useGuidedStore = defineStore('guided', {
             `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
             `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
           ])
-      const easeInPhrase = pick([
-        'Take the next few seconds to settle into position. No rush.',
-        "Settle into position when you're ready. No rush.",
-        'Use the next few seconds to get comfortable. No rush.',
-        "Whenever you're ready. No rush.",
-      ])
-      const turnBeginsPhrase = pick([
-        'Turn begins.',
-        'Go.',
-        "Whenever you're ready.",
-        'Begin.',
-      ])
+      const easeInPhrase = pick(EASE_IN_TEXTS)
+      const turnBeginsPhrase = pick(TURN_BEGINS_TEXTS)
 
       // Preload TTS in the worker so audio is ready when needed. Worker runs in background; preparePhrase
       // sends generate and caches the blob; when we speak() the same text we play from cache immediately.
@@ -771,9 +735,9 @@ export const useGuidedStore = defineStore('guided', {
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         prep(firstTurnPhrase)
-        prepAll(prep, NEXT_TURN_PHRASES)
-        prepAll(prep, TURN_BEGINS_PHRASES)
-        prepAll(prep, EASE_IN_PHRASES)
+        prepAll(prep, NEXT_TURN_TEXTS)
+        prepAll(prep, TURN_BEGINS_TEXTS)
+        prepAll(prep, EASE_IN_TEXTS)
         if (this.phaseCheckInEnabled) {
           const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
           const nextLabel = phase < 3 ? `Continue to ${phaseNames[phase + 1]}` : 'end the session'
@@ -850,8 +814,8 @@ export const useGuidedStore = defineStore('guided', {
         if (prep) {
           if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
           if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
-          prep(SETTLE_INTO_POSITION)
-          prepAll(prep, TURN_BEGINS_PHRASES)
+          prep(SETTLE_INTO_POSITION_TEXT)
+          prepAll(prep, TURN_BEGINS_TEXTS)
         }
       }
 
@@ -870,8 +834,8 @@ export const useGuidedStore = defineStore('guided', {
           prep(nextTurnPhrase)
           if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
           if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
-          prep(SETTLE_INTO_POSITION)
-          prepAll(prep, TURN_BEGINS_PHRASES)
+          prep(SETTLE_INTO_POSITION_TEXT)
+          prepAll(prep, TURN_BEGINS_TEXTS)
         }
       }
 
@@ -936,12 +900,7 @@ export const useGuidedStore = defineStore('guided', {
         this.breakPhase = 'none'
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         if (phase === 'next_turn') {
-          const phrase = pick([
-            'That finishes that turn. Time to switch.',
-            "That's the end of that turn. Time to switch.",
-            'This turn is over. Time to switch.',
-            "Switch when you're ready.",
-          ])
+          const phrase = pick(NEXT_TURN_TEXTS)
           if (this.speakRef) this.safeSpeak(phrase, () => this.runAfterNextTurnFromTick())
           else this.runAfterNextTurnFromTick()
         } else if (phase === 'before_clothing') {
@@ -962,7 +921,7 @@ export const useGuidedStore = defineStore('guided', {
             this.runSettleInFromTick()
           }
         } else if (phase === 'settle_in') {
-          const phrase = pick(['Turn begins.', 'Go.', "Whenever you're ready.", 'Begin.'])
+          const phrase = pick(TURN_BEGINS_TEXTS)
           if (this.speakRef) this.safeSpeak(phrase, () => this.startTurnTimer())
           else this.startTurnTimer()
         }
@@ -978,20 +937,15 @@ export const useGuidedStore = defineStore('guided', {
       if (prep) {
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
-        prep(SETTLE_INTO_POSITION)
-        prepAll(prep, TURN_BEGINS_PHRASES)
+        prep(SETTLE_INTO_POSITION_TEXT)
+        prepAll(prep, TURN_BEGINS_TEXTS)
       }
     },
 
     runSettleInFromTick() {
       this.clearBreakTimer()
       const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-      const easeInPhrase = pick([
-        'Take the next few seconds to settle into position. No rush.',
-        "Settle into position when you're ready. No rush.",
-        'Use the next few seconds to get comfortable. No rush.',
-        "Whenever you're ready. No rush.",
-      ])
+      const easeInPhrase = pick(EASE_IN_TEXTS)
       if (this.speakRef) {
         this.safeSpeak(easeInPhrase, () => {
           this.breakPhase = 'settle_in'
@@ -1004,7 +958,7 @@ export const useGuidedStore = defineStore('guided', {
         this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
       }
       const prep = this.preparePhraseRef
-      if (prep) prepAll(prep, TURN_BEGINS_PHRASES)
+      if (prep) prepAll(prep, TURN_BEGINS_TEXTS)
     },
 
     tickClothingWindow() {
@@ -1054,13 +1008,7 @@ export const useGuidedStore = defineStore('guided', {
           this.completedPhase = phase
           this.stopSpeakRef?.()
           const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-          const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
-          const nextLabel = phase < 3 ? `Continue to ${phaseNames[phase + 1]}` : 'end the session'
-          const phrase = pick([
-            `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to ${nextLabel}.`,
-            `That's the end of ${phaseNames[phase]}. Check in with each other, then tap to ${nextLabel}.`,
-            `${phaseNames[phase]} is complete. Check in, then tap the button to ${nextLabel}.`,
-          ])
+          const phrase = pick(getPhaseCheckinTexts(phase))
           if (this.speakRef) this.safeSpeak(phrase)
         } else {
           this.advanceGuidedPhase()
@@ -1074,12 +1022,7 @@ export const useGuidedStore = defineStore('guided', {
         this.preGeneratedBlobs = null
         this.preGeneratedIndex = 0
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-        const phrase = pick([
-          'Session complete. Check in with each other.',
-          'Guided session complete. Check in with each other.',
-          "That's the end of the guided session. Check in with each other.",
-          'All done. Check in with each other.',
-        ])
+        const phrase = pick(SESSION_COMPLETE_PHRASES)
         if (this.speakRef) this.safeSpeak(phrase)
         return
       }
@@ -1095,12 +1038,7 @@ export const useGuidedStore = defineStore('guided', {
         this.preGeneratedBlobs = null
         this.preGeneratedIndex = 0
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-        const phrase = pick([
-          'Session complete. Check in with each other.',
-          'Guided session complete. Check in with each other.',
-          "That's the end of the guided session. Check in with each other.",
-          'All done. Check in with each other.',
-        ])
+        const phrase = pick(SESSION_COMPLETE_PHRASES)
         if (this.speakRef) this.safeSpeak(phrase)
         return
       }

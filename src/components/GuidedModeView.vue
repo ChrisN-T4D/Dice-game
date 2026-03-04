@@ -199,6 +199,7 @@ import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
 import { useSpeech } from '@/composables/useSpeech'
+import { INTRO_OPENINGS, INTRO_CLOSINGS, INTRO_CLOTHING_LINES } from '@/data/staticPhrases'
 import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 
 const session = useSessionStore()
@@ -259,24 +260,9 @@ function pick(arr) {
 }
 
 function buildIntroText(clothingEnabled) {
-  const openings = [
-    'This is guided mode. You will hear a prompt for each turn. If a prompt does not work for you, substitute something you both like. ',
-    'This is guided mode. You will get a prompt each turn. Feel free to swap in something you both prefer. ',
-    'This is guided mode. Each turn has a prompt. If you would rather do something else, substitute anything you both like. ',
-  ]
-  const clothingLines = [
-    'During the session you will hear when to remove an item of clothing and how to do it. ',
-    'You will hear when to remove clothing and how. ',
-    'Clothing removal prompts will tell you when and how. ',
-  ]
-  const closings = [
-    'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-    'Between turns you will hear when to switch, then time to settle into position, then the next prompt. Let us begin.',
-    'Each turn ends with a switch, then settle into position, then the next prompt. Let us begin.',
-  ]
-  let text = pick(openings)
-  if (clothingEnabled) text += pick(clothingLines)
-  text += pick(closings)
+  let text = pick(INTRO_OPENINGS)
+  if (clothingEnabled) text += pick(INTRO_CLOTHING_LINES)
+  text += pick(INTRO_CLOSINGS)
   return text
 }
 

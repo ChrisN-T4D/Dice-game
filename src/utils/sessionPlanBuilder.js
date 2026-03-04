@@ -10,7 +10,15 @@ import {
   removeClothingItem,
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
-import { SESSION_COMPLETE_PHRASES } from '@/data/staticPhrases'
+import {
+  SESSION_COMPLETE_PHRASES,
+  INTRO_OPENINGS,
+  INTRO_CLOSINGS,
+  INTRO_CLOTHING_LINES,
+  NEXT_TURN_TEXTS,
+  TURN_BEGINS_TEXTS,
+  EASE_IN_TEXTS,
+} from '@/data/staticPhrases'
 
 // -----------------------------------------------------------------------------
 // Seeded RNG (LCG) for deterministic plans
@@ -47,23 +55,6 @@ function randomRollsForPhaseSeeded(phase, rng) {
 function pick(arr, rng) {
   return arr[Math.floor(rng() * arr.length)]
 }
-
-// -----------------------------------------------------------------------------
-// Phrase constants (must match guided.js)
-// -----------------------------------------------------------------------------
-const NEXT_TURN_PHRASES = [
-  'That finishes that turn. Time to switch.',
-  "That's the end of that turn. Time to switch.",
-  'This turn is over. Time to switch.',
-  "Switch when you're ready.",
-]
-const TURN_BEGINS_PHRASES = ['Turn begins.', 'Go.', "Whenever you're ready.", 'Begin.']
-const EASE_IN_PHRASES = [
-  'Take the next few seconds to settle into position. No rush.',
-  "Settle into position when you're ready. No rush.",
-  'Use the next few seconds to get comfortable. No rush.',
-  "Whenever you're ready. No rush.",
-]
 
 const AFTER_NEXT_TURN_SEC = 10
 const SETTLE_IN_SEC = 20
@@ -134,25 +125,10 @@ export function buildSessionPlan(config, seed) {
   let receiverOnceP2 = false
   let turnIndex = 0
 
-  // Intro
-  const introOpenings = [
-    'This is guided mode. You will hear a prompt for each turn. If a prompt does not work for you, substitute something you both like. ',
-    'This is guided mode. You will get a prompt each turn. Feel free to swap in something you both prefer. ',
-    'This is guided mode. Each turn has a prompt. If you would rather do something else, substitute anything you both like. ',
-  ]
-  const introClothingLines = [
-    'During the session you will hear when to remove an item of clothing and how to do it. ',
-    'You will hear when to remove clothing and how. ',
-    'Clothing removal prompts will tell you when and how. ',
-  ]
-  const introClosings = [
-    'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-    'Between turns you will hear when to switch, then time to settle into position, then the next prompt. Let us begin.',
-    'Each turn ends with a switch, then settle into position, then the next prompt. Let us begin.',
-  ]
-  let intro = pick(introOpenings, rng)
-  if (clothingEnabled) intro += pick(introClothingLines, rng)
-  intro += pick(introClosings, rng)
+  // Intro (from staticPhrases)
+  let intro = pick(INTRO_OPENINGS, rng)
+  if (clothingEnabled) intro += pick(INTRO_CLOTHING_LINES, rng)
+  intro += pick(INTRO_CLOSINGS, rng)
   script.push(intro)
 
   const pushTurnPhrases = (turnData) => {
@@ -185,12 +161,12 @@ export function buildSessionPlan(config, seed) {
             )
       script.push(firstTurnPhrase)
     } else {
-      script.push(pick(NEXT_TURN_PHRASES, rng))
+      script.push(pick(NEXT_TURN_TEXTS, rng))
     }
     if (clothingText) script.push(clothingText)
     if (prompt.instruction) script.push(prompt.instruction)
-    script.push(pick(EASE_IN_PHRASES, rng))
-    script.push(pick(TURN_BEGINS_PHRASES, rng))
+    script.push(pick(EASE_IN_TEXTS, rng))
+    script.push(pick(TURN_BEGINS_TEXTS, rng))
   }
 
   while (totalTimeRemaining > 0 && phase <= 3) {

@@ -723,21 +723,3 @@ body.phase-3 #phaseDisplay.pulse { color: #f472b6; text-shadow: 0 0 18px rgba(23
 .color-dot:hover { transform: scale(1.2); }
 .color-dot.selected { border-color: #fff; box-shadow: 0 0 8px currentColor; transform: scale(1.15); }
 .color-presets { display: inline-flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
-
-/* ========== Mobile: nav card above OS bar + vertically centered (fixed 48px, cannot be overridden) ========== */
-@media (max-width: 767px) {
-  body.app-main-visible .app-root {
-    padding-bottom: 48px !important;
-  }
-  body.app-main-visible .app-root .page .card-nav-panel,
-  .page .card-nav-panel {
-    display: flex !important;
-    align-items: center !important;
-    padding-top: 0.75rem !important;
-    padding-bottom: 1.25rem !important;
-  }
-  .page .card-nav-panel > * {
-    width: 100% !important;
-    min-width: 0;
-  }
-}

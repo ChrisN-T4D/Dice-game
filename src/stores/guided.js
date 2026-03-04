@@ -96,6 +96,7 @@ function getSuggestedTurnSecondsFromPrompt(text) {
 const AFTER_DONG_SEC = 2
 const AFTER_NEXT_TURN_SEC = 10
 const SETTLE_IN_SEC = 20
+const SETTLE_IN_SEC_FIRST_TURN = 0
 
 function prepAll(prep, phrases) {
   if (!prep || !Array.isArray(phrases)) return
@@ -773,16 +774,17 @@ export const useGuidedStore = defineStore('guided', {
       }
 
       const runSettleIn = () => {
+        const settleSec = this.totalTurnsInSession === 1 ? SETTLE_IN_SEC_FIRST_TURN : SETTLE_IN_SEC
         if (this.speakRef) {
           this.safeSpeak(easeInPhrase, () => {
             this.breakPhase = 'settle_in'
-            this.breakCountdown = SETTLE_IN_SEC
+            this.breakCountdown = settleSec
             this.clearBreakTimer()
             this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
           })
         } else {
           this.breakPhase = 'settle_in'
-          this.breakCountdown = SETTLE_IN_SEC
+          this.breakCountdown = settleSec
           this.clearBreakTimer()
           this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
         }
@@ -860,11 +862,7 @@ export const useGuidedStore = defineStore('guided', {
         }
         if (this.firstTurnPhrasePlayedFromBlob) {
           this.firstTurnPhrasePlayedFromBlob = false
-          if (instructionText && prep) {
-            prep(instructionText, runWhenInstructionReady)
-          } else {
-            runClothingThenInstruction()
-          }
+          runClothingThenInstruction()
         } else {
           if (this.speakRef) this.safeSpeak(firstTurnPhrase, () => {
             if (instructionText && prep) prep(instructionText, runWhenInstructionReady)

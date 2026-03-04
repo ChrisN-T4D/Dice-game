@@ -606,18 +606,16 @@ export function useSpeech() {
     if (!cleaned) return null
     const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
 
-    // Use pre-generated static WAV when available (intro, next_turn, ease_in, etc.); else generate
+    // Use pre-generated static WAV only for the selected voice (never fall back to another voice)
     const phraseId = getStaticPhraseIdForText(cleaned)
-    if (phraseId) {
-      for (const vid of [voiceId, voiceId !== DEFAULT_STATIC_VOICE_ID ? DEFAULT_STATIC_VOICE_ID : null].filter(Boolean)) {
-        try {
-          const res = await fetch(getStaticAudioUrl(phraseId, vid))
-          if (res.ok) {
-            const buf = await res.arrayBuffer()
-            return new Blob([buf], { type: 'audio/wav' })
-          }
-        } catch (_) {}
-      }
+    if (phraseId && voiceId) {
+      try {
+        const res = await fetch(getStaticAudioUrl(phraseId, voiceId))
+        if (res.ok) {
+          const buf = await res.arrayBuffer()
+          return new Blob([buf], { type: 'audio/wav' })
+        }
+      } catch (_) {}
     }
 
     const provider = ttsProvider.value
@@ -765,13 +763,8 @@ export function useSpeech() {
     // Prefer pre-generated static WAV when this phrase has one (e.g. intro, next_turn, session_complete)
     const phraseId = getStaticPhraseIdForText(cleaned)
     if (phraseId && voiceId) {
-      const tryStatic = (vid) =>
-        fetch(getStaticAudioUrl(phraseId, vid))
-          .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))
-      const first = tryStatic(voiceId)
-      const fallback = voiceId !== DEFAULT_STATIC_VOICE_ID ? tryStatic(DEFAULT_STATIC_VOICE_ID) : Promise.resolve(null)
-      first
-        .then((blob) => (blob != null ? Promise.resolve(blob) : fallback))
+      fetch(getStaticAudioUrl(phraseId, voiceId))
+        .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))
         .then((blob) => {
           if (blob) {
             window.speechSynthesis?.cancel?.()

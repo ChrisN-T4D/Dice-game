@@ -256,6 +256,7 @@ body.app-main-visible .app-root .page {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 0.75rem 1rem;
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
@@ -270,14 +271,19 @@ body.app-main-visible .app-root .page {
 .card-nav-panel:empty {
   display: none;
 }
-/* In guided mode always show nav card so wizard teleport target is visible; keep in flow (no sticky) so it never overlaps content when resizing */
+/* In guided mode always show nav card so wizard teleport target is visible; keep in flow (no sticky) so it never overlaps content when resizing.
+   Equal vertical padding so buttons are truly centered (override .page .card-nav-panel’s bottom-heavy padding). */
 .page.guided-mode .card-nav-panel {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 3.5rem;
+  justify-content: center;
+  min-height: 4.25rem;
   flex-shrink: 0;
   position: static;
   bottom: auto;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
 }
 .page.guided-mode .card-nav-panel:empty {
   display: block;

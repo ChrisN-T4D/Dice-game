@@ -136,10 +136,10 @@ function getViewingLangCodes() {
   return BROWSER_LANG_TO_KOKORO[primary] || ['en', 'en-GB']
 }
 
-/** Kokoro is available on all browsers (ORT with WebGPU + WASM fallback for Safari). */
+/** Kokoro runs in-browser on all platforms (local-focused). Worker limits (queue, token cap, single voice, WASM numThreads=1 on WebKit) keep it within safe bounds on iOS/Safari. */
 const kokoroAvailable = true
 
-/** Optional TTS server URL for iOS etc.: POST /tts/generate with { voiceId, phrases } returns { blobs: (base64|null)[] }. Set at build (VITE_TTS_SERVER_URL) or at runtime via /config.json (e.g. Docker stack with HOST). */
+/** Optional TTS server fallback when in-browser Kokoro is unavailable (e.g. iOS). App is local-first: voice runs in the browser; server is not required. */
 const ttsServerUrl = ref((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TTS_SERVER_URL) || '')
 
 let configFetched = false
@@ -636,49 +636,50 @@ export function useSpeech() {
   /**
    * Generate audio for a full session script (sequential). Calls onProgress(current, total) and returns Blob[].
    * Empty phrases yield null in the array; playback should skip null (call onEnd immediately).
-   * On iOS (kokoroAvailable false), uses TTS server when VITE_TTS_SERVER_URL is set.
+   * Local-first: we use the in-browser Kokoro worker when available. Only when Kokoro is
+   * unavailable (e.g. iOS Safari) do we try the optional TTS server; otherwise use browser voices.
    */
   async function generateSessionAudio(phrases, onProgress) {
     if (!Array.isArray(phrases)) return []
     const total = phrases.length
     const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
 
-    await ensureTtsServerUrl()
-    if (ttsServerUrl.value) {
-      try {
-        const base = ttsServerUrl.value.replace(/\/$/, '')
-        const res = await fetch(`${base}/tts/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ voiceId, phrases }),
-        })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err.error || `TTS server error ${res.status}`)
-        }
-        const { blobs: rawBlobs } = await res.json()
-        const blobs = []
-        const list = Array.isArray(rawBlobs) ? rawBlobs : []
-        for (let i = 0; i < total; i++) {
-          const b = list[i]
-          if (b == null || b === '') {
-            blobs.push(null)
-          } else {
-            const binary = atob(b)
-            const bytes = new Uint8Array(binary.length)
-            for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
-            blobs.push(new Blob([bytes], { type: 'audio/wav' }))
+    const useWorker = kokoroAvailable
+    if (!useWorker) {
+      await ensureTtsServerUrl()
+      if (ttsServerUrl.value) {
+        try {
+          const base = ttsServerUrl.value.replace(/\/$/, '')
+          const res = await fetch(`${base}/tts/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voiceId, phrases }),
+          })
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.error || `TTS server error ${res.status}`)
           }
-          if (onProgress) onProgress(i + 1, total)
+          const { blobs: rawBlobs } = await res.json()
+          const blobs = []
+          const list = Array.isArray(rawBlobs) ? rawBlobs : []
+          for (let i = 0; i < total; i++) {
+            const b = list[i]
+            if (b == null || b === '') {
+              blobs.push(null)
+            } else {
+              const binary = atob(b)
+              const bytes = new Uint8Array(binary.length)
+              for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
+              blobs.push(new Blob([bytes], { type: 'audio/wav' }))
+            }
+            if (onProgress) onProgress(i + 1, total)
+          }
+          return blobs
+        } catch (e) {
+          throw new Error(e?.message || 'Session audio from server failed')
         }
-        return blobs
-      } catch (e) {
-        throw new Error(e?.message || 'Session audio from server failed')
       }
-    }
-
-    if (!kokoroAvailable) {
-      throw new Error('Guided voice on this device requires a TTS server. Set VITE_TTS_SERVER_URL or deploy with HOST so /config.json provides ttsServerUrl.')
+      throw new Error('Guided voice on this device: switch to Browser voices in Preferences (☰ → Voice) to hear prompts, or use another browser where Kokoro runs in the app.')
     }
 
     const blobs = []

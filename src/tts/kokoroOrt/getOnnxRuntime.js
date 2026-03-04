@@ -19,6 +19,11 @@ export async function getOnnxRuntime() {
     const ort = await import('onnxruntime-web')
     // Suppress verbose ONNX Runtime internal warnings (CPU vendor, EP assignment)
     if (ort.env) ort.env.logLevel = 'error'
+    // Single-threaded WASM uses less memory; helps stay under limits on iOS/Safari
+    if (typeof navigator !== 'undefined' && ort.env?.wasm) {
+      const ua = navigator.userAgent || ''
+      if (/AppleWebKit/.test(ua) && !/Chrome|Chromium/.test(ua)) ort.env.wasm.numThreads = 1
+    }
     return ort
   })()
   return ortPromise

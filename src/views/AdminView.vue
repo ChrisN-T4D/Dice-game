@@ -202,7 +202,7 @@
     <!-- Voice generating test -->
     <section v-show="activeTab === 'voice-test'" class="admin-section" role="tabpanel">
       <h3>Voice generating test</h3>
-      <p class="admin-hint">Submit a phrase to run the full TTS pipeline (Kokoro or browser fallback). Ensure voice is enabled in main app preferences. For correct Kokoro audio: run <code>npm run tts-server</code> and set <code>VITE_TTS_SERVER_URL=http://localhost:3333</code> in <code>.env</code> — the app will prefer the server when available.</p>
+      <p class="admin-hint">Voice runs locally in the browser (Kokoro). Submit a phrase to test. Ensure voice is enabled in main app preferences and the Kokoro model is in <code>public/models/</code> (<code>npm run download-kokoro-model</code>). No server required. Optional: a TTS server can be used as fallback on devices where Kokoro does not run (e.g. some iOS); run <code>npm run tts-server</code> and set <code>VITE_TTS_SERVER_URL</code> if you need it.</p>
       <div class="admin-voice-test">
         <div class="admin-voice-test-row">
           <div class="admin-voice-test-phrase-wrap">

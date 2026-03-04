@@ -42,6 +42,30 @@ function withAnatomy(text, giverAnatomy, receiverAnatomy) {
   return out
 }
 
+/** For phase 3 review: label for the position (name only, no position numbers or image refs). */
+function phase3PositionLabel(entry, pos) {
+  if (!entry || !entry.name || typeof entry.name !== 'string') return 'This position'
+  const name = entry.name.trim()
+  if (!name) return 'This position'
+  if (/^Position\s*\d+/i.test(name) || /no reference image|\.png|image\s*\d+/i.test(name)) return 'This position'
+  return name
+}
+
+/** For phase 3 review: remove references to position numbers, images, or file names so review text is name/instruction only. */
+function stripPhase3ReviewNoise(text) {
+  if (!text || typeof text !== 'string') return ''
+  return text
+    .replace(/\bPosition\s*\d+\s*(\([^)]*\))?/gi, '')
+    .replace(/\bposition\s*\d+\b/gi, '')
+    .replace(/\b(no\s+)?reference\s+image\b/gi, '')
+    .replace(/\bimage\s*\d*\b/gi, '')
+    .replace(/\bposition\s+references\b/gi, '')
+    .replace(/\.png\b/gi, '')
+    .replace(/\s*\(\s*duplicate\s+of\s+(?:image\s+)?\d+[^)]*\)/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 // -----------------------------------------------------------------------------
 // getPromptText (main export)
 // -----------------------------------------------------------------------------
@@ -92,17 +116,20 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const mod = Math.max(1, Math.min(20, actionRoll || 1))
     const baseEntry = PHASE3_POSITIONS_LIST[pos]
     const entry = baseEntry ? mergePhase3Entry(baseEntry, pos) : null
-    const where = entry ? (entry.name || `Position ${pos}`) : `Position ${pos}`
+    const positionName = phase3PositionLabel(entry, pos)
+    const where = positionName
     const what = phase3Modifiers[mod] || ''
     const help = entry ? (entry.help || '') : ''
     const whatWithAnatomy = withAnatomy(what, giverAnatomy, receiverAnatomy)
     const helpWithAnatomy = withAnatomy(help, giverAnatomy, receiverAnatomy)
     const whatWithNames = withPartnerNames(whatWithAnatomy, giverName, receiverName)
     const helpWithNames = withPartnerNames(helpWithAnatomy, giverName, receiverName)
-    const parts = [helpWithNames, whatWithNames].filter(Boolean)
+    const helpForReview = stripPhase3ReviewNoise(helpWithNames)
+    const whatForReview = stripPhase3ReviewNoise(whatWithNames)
+    const parts = [helpForReview, whatForReview].filter(Boolean)
     const instruction = parts.length
-      ? `${giverName} leads. ${parts.join('. ')}`
-      : `${giverName} leads.`
+      ? `${giverName} leads. ${positionName}. ${parts.join('. ')}`
+      : `${giverName} leads. ${positionName}.`
     return { where, what, instruction }
   }
 

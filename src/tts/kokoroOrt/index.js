@@ -14,6 +14,8 @@ import { cachedFetch } from './cachedFetch.js'
 const MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
 const SAMPLE_RATE = 24000
 const MODEL_CONTEXT_WINDOW = 512
+/** Max tokens per generate call to keep worker memory under control (e.g. mobile/Safari). */
+const MAX_TOKENS_PER_GENERATE = 2048
 
 let session = null
 
@@ -77,16 +79,18 @@ export async function generate(text, opts = {}) {
   let shapedVoice = voiceCache.get(voiceId)
   if (!shapedVoice) {
     shapedVoice = await loadShapedVoice(baseUrl, voiceId)
+    if (voiceCache.size >= 1) voiceCache.clear()
     voiceCache.set(voiceId, shapedVoice)
   }
 
   const chunks = await preprocessText(text, lang)
   if (chunks.length === 0) throw new Error('No tokens produced from text')
+  const limitedChunks = chunks.slice(0, Math.ceil(MAX_TOKENS_PER_GENERATE / (MODEL_CONTEXT_WINDOW - 2)))
 
   const ort = await getOnnxRuntime()
   const waveforms = []
 
-  for (const chunk of chunks) {
+  for (const chunk of limitedChunks) {
     if (chunk.type !== 'text' || !chunk.tokens?.length) continue
     const tokens = chunk.tokens
     // kokoro-js indexes style by tokens.length (not tokens.length-1):
@@ -153,17 +157,19 @@ export async function generateFromIpa(ipa, opts = {}) {
   let shapedVoice = voiceCache.get(voiceId)
   if (!shapedVoice) {
     shapedVoice = await loadShapedVoice(baseUrl, voiceId)
+    if (voiceCache.size >= 1) voiceCache.clear()
     voiceCache.set(voiceId, shapedVoice)
   }
 
   const { preprocessTextFromIpa } = await import('./textProcessor.js')
   const chunks = preprocessTextFromIpa(ipa)
   if (chunks.length === 0) throw new Error('No tokens from IPA. Check phonemization.')
+  const limitedChunks = chunks.slice(0, Math.ceil(MAX_TOKENS_PER_GENERATE / (MODEL_CONTEXT_WINDOW - 2)))
 
   const ort = await getOnnxRuntime()
   const waveforms = []
 
-  for (const chunk of chunks) {
+  for (const chunk of limitedChunks) {
     if (chunk.type !== 'text' || !chunk.tokens?.length) continue
     const tokens = chunk.tokens
     const refIndex = Math.min(tokens.length, shapedVoice.length - 1)
@@ -215,17 +221,19 @@ export async function generateFromTokenIds(tokenIds, opts = {}) {
   let shapedVoice = voiceCache.get(voiceId)
   if (!shapedVoice) {
     shapedVoice = await loadShapedVoice(baseUrl, voiceId)
+    if (voiceCache.size >= 1) voiceCache.clear()
     voiceCache.set(voiceId, shapedVoice)
   }
 
   if (!Array.isArray(tokenIds) || tokenIds.length === 0) throw new Error('No token IDs.')
+  const limited = tokenIds.length > MAX_TOKENS_PER_GENERATE ? tokenIds.slice(0, MAX_TOKENS_PER_GENERATE) : tokenIds
 
   const ort = await getOnnxRuntime()
   const waveforms = []
 
-  for (let from = 0; from < tokenIds.length; from += TOKENS_PER_CHUNK) {
-    const to = Math.min(from + TOKENS_PER_CHUNK, tokenIds.length)
-    const tokens = tokenIds.slice(from, to)
+  for (let from = 0; from < limited.length; from += TOKENS_PER_CHUNK) {
+    const to = Math.min(from + TOKENS_PER_CHUNK, limited.length)
+    const tokens = limited.slice(from, to)
     const refIndex = Math.min(tokens.length, shapedVoice.length - 1)
     const ref_s = shapedVoice[refIndex][0]
     const paddedTokens = [0, ...tokens, 0]

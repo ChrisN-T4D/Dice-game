@@ -16,6 +16,13 @@ const MODEL_CONFIG_URL = `/models/${KOKORO_MODEL_ID}/config.json`
 const MODEL_ONNX_URL = `/models/${KOKORO_MODEL_ID}/onnx/model_quantized.onnx`
 const MODEL_VOICE_URL = `/models/${KOKORO_MODEL_ID}/voices/af_nicole.bin`
 
+/** Max pending generate requests; keeps memory and backlog under control (e.g. for iOS). */
+const MAX_QUEUE_SIZE = 3
+/** Max character length for text or IPA per request to avoid huge allocations. */
+const MAX_TEXT_IPA_LENGTH = 4000
+/** Max token IDs per request (model context is 512; 4 chunks = 2040 tokens). */
+const MAX_TOKEN_IDS = 2048
+
 let loadPromise = null
 let loadFailed = false
 let loadFailureMessage = 'Kokoro model failed to load'
@@ -149,8 +156,27 @@ async function runKokoroFromTokenIds(tokenIds, voiceId) {
   return blob
 }
 
+function checkInputLimits(msg) {
+  const { id, text, phonemizedIpa, tokenIds } = msg
+  if (tokenIds != null && Array.isArray(tokenIds)) {
+    if (tokenIds.length > MAX_TOKEN_IDS) {
+      return `Request too long: ${tokenIds.length} tokens (max ${MAX_TOKEN_IDS}). Split into shorter phrases.`
+    }
+  } else if (phonemizedIpa != null && typeof phonemizedIpa === 'string' && phonemizedIpa.length > MAX_TEXT_IPA_LENGTH) {
+    return `Request too long: ${phonemizedIpa.length} characters (max ${MAX_TEXT_IPA_LENGTH}).`
+  } else if (text != null && typeof text === 'string' && text.length > MAX_TEXT_IPA_LENGTH) {
+    return `Request too long: ${text.length} characters (max ${MAX_TEXT_IPA_LENGTH}).`
+  }
+  return null
+}
+
 async function processOne(msg) {
   const { id, text, phonemizedIpa, tokenIds, voiceId } = msg
+  const limitErr = checkInputLimits(msg)
+  if (limitErr) {
+    self.postMessage({ type: 'error', id, message: limitErr })
+    return
+  }
   try {
     let blob
     if (tokenIds != null && Array.isArray(tokenIds) && tokenIds.length > 0) {
@@ -196,6 +222,14 @@ self.onmessage = (ev) => {
     return
   }
   if (data?.type === 'generate') {
+    if (queue.length >= MAX_QUEUE_SIZE) {
+      self.postMessage({
+        type: 'error',
+        id: data.id ?? null,
+        message: `TTS queue full (max ${MAX_QUEUE_SIZE}). Please wait and try again.`,
+      })
+      return
+    }
     queue.push(data)
     drain()
   }

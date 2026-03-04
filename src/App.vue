@@ -57,7 +57,6 @@
       <div id="bottom-nav-portal" class="card card-nav-panel"></div>
     </div>
     </template>
-    <div class="app-version" aria-hidden="true">v{{ appVersion }}</div>
   </div>
 </template>
 
@@ -82,8 +81,6 @@ import TimerBar from '@/components/TimerBar.vue'
 import SummaryOverlay from '@/components/SummaryOverlay.vue'
 const AdminView = defineAsyncComponent(() => import('@/views/AdminView.vue'))
 
-/** Injected at build time from package.json version */
-const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 const FreePlayView = defineAsyncComponent(() => import('@/components/FreePlayView.vue'))
 
 const session = useSessionStore()
@@ -321,16 +318,4 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-.app-version {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  font-size: 0.7rem;
-  color: #64748b;
-  padding: 0.2rem 0.5rem;
-  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
-  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
-  z-index: 10001;
-  pointer-events: none;
-}
 </style>

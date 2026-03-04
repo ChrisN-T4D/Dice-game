@@ -140,6 +140,12 @@ body.app-main-visible {
   height: 100dvh;
   max-height: 100dvh;
 }
+body.app-main-visible #app {
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
 /* In guided mode keep viewport fixed on desktop too so only wizard body scrolls */
 body.app-main-visible.guided-mode {
   overflow: hidden;
@@ -151,11 +157,16 @@ html:has(body.app-main-visible.guided-mode) {
   height: 100%;
 }
 body.app-main-visible .app-root {
-  height: 100dvh;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   max-height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  /* Reserve bottom so nav card sits above home indicator / OS bar */
+  padding-bottom: max(0px, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
 }
 body.app-main-visible .app-root .page {
   flex: 1;
@@ -164,6 +175,8 @@ body.app-main-visible .app-root .page {
   flex-direction: column;
   gap: 0.25rem;
   overflow: hidden;
+  /* Don’t double bottom reserve; app-root already has padding-bottom */
+  padding-bottom: 0;
 }
 /* Header card: shrinks to its content */
 .card-header-panel {
@@ -240,6 +253,9 @@ body.app-main-visible .app-root .page {
 /* Nav card: shrinks to its content, hidden when empty. Safe area keeps it above OS nav/gesture bar on mobile. */
 .card-nav-panel {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 0.75rem 1rem;
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
@@ -247,12 +263,17 @@ body.app-main-visible .app-root .page {
   padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem)));
   min-height: 3.5rem;
 }
+.card-nav-panel > * {
+  width: 100%;
+  min-width: 0;
+}
 .card-nav-panel:empty {
   display: none;
 }
 /* In guided mode always show nav card so wizard teleport target is visible; keep in flow (no sticky) so it never overlaps content when resizing */
 .page.guided-mode .card-nav-panel {
-  display: block;
+  display: flex;
+  align-items: center;
   min-height: 3.5rem;
   flex-shrink: 0;
   position: static;
@@ -340,11 +361,12 @@ body.app-main-visible .app-root .page {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
-/* Nav panel padding must come after .card so it isn’t overwritten by .card’s shorthand padding; keeps nav above OS bar */
+/* Nav panel: padding after .card so not overwritten; margin-bottom pushes card above OS bar; content vertically centered */
 .page .card-nav-panel {
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   padding-right: max(1rem, env(safe-area-inset-right, 0px));
   padding-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem))) !important;
+  margin-bottom: max(1.25rem, constant(safe-area-inset-bottom), env(safe-area-inset-bottom, var(--safe-area-bottom-fallback, 3rem))) !important;
 }
 .page .card-content-panel {
   box-shadow: none !important;
@@ -701,3 +723,21 @@ body.phase-3 #phaseDisplay.pulse { color: #f472b6; text-shadow: 0 0 18px rgba(23
 .color-dot:hover { transform: scale(1.2); }
 .color-dot.selected { border-color: #fff; box-shadow: 0 0 8px currentColor; transform: scale(1.15); }
 .color-presets { display: inline-flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+
+/* ========== Mobile: nav card above OS bar + vertically centered (fixed 48px, cannot be overridden) ========== */
+@media (max-width: 767px) {
+  body.app-main-visible .app-root {
+    padding-bottom: 48px !important;
+  }
+  body.app-main-visible .app-root .page .card-nav-panel,
+  .page .card-nav-panel {
+    display: flex !important;
+    align-items: center !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 1.25rem !important;
+  }
+  .page .card-nav-panel > * {
+    width: 100% !important;
+    min-width: 0;
+  }
+}

@@ -4,8 +4,8 @@ import App from './App.vue'
 import './assets/styles.css'
 
 /**
- * Safe area fallback: some browsers (e.g. Chrome on Android) don't set env(safe-area-inset-bottom).
- * Detect when it's 0 on a mobile-sized viewport and set a CSS variable so the bottom nav stays above the OS bar.
+ * Safe area fallback: some browsers (e.g. Chrome on Android, some iOS contexts) don't set env(safe-area-inset-bottom).
+ * Set a CSS variable so the bottom nav stays above the OS bar. Always set on mobile so it's never missing.
  */
 function applySafeAreaFallback() {
   if (typeof document === 'undefined' || !document.documentElement) return
@@ -17,8 +17,10 @@ function applySafeAreaFallback() {
   document.body.removeChild(el)
   const px = parseFloat(paddingBottom)
   const isMobileSized = window.innerWidth < 768 || 'ontouchstart' in window
-  if (isMobileSized && (Number.isNaN(px) || px === 0)) {
-    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '48px')
+  if (isMobileSized) {
+    document.documentElement.style.setProperty('--safe-area-bottom-fallback', (Number.isNaN(px) || px === 0) ? '48px' : `${px}px`)
+  } else {
+    document.documentElement.style.setProperty('--safe-area-bottom-fallback', '0px')
   }
 }
 if (document.readyState === 'loading') {
@@ -26,6 +28,7 @@ if (document.readyState === 'loading') {
 } else {
   applySafeAreaFallback()
 }
+window.addEventListener('resize', applySafeAreaFallback)
 
 function showMountError(err) {
   console.error('App mount failed:', err)

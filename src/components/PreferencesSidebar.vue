@@ -121,6 +121,7 @@
           </div>
         </div>
       </div>
+      <p class="preferences-version" aria-hidden="true">v{{ appVersion }}</p>
     </div>
   </aside>
 </template>
@@ -136,6 +137,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'showOnboarding', 'showFavorites'])
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 const prefs = usePreferencesStore()
 const speech = useSpeech()
 const musicOptions = ref(getMusicOptions())
@@ -273,4 +275,12 @@ function close() {
 .pref-speed-slider { width: 100%; max-width: 140px; accent-color: #3b82f6; }
 .pref-speed-value { font-size: 0.9rem; font-weight: 600; min-width: 2.5rem; }
 .pref-sep { padding-top: 0.75rem; border-top: 1px solid #334155; margin-top: 0.25rem; }
+.preferences-version {
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #334155;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
 </style>

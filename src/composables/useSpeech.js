@@ -30,7 +30,28 @@ const waitingForKokoroReady = ref(false)
 
 let settingsInitialized = false
 let currentExternalAudio = null
+/** When playing via Web Audio API (fallback after play_rejected), so we can stop it on next play. */
+let currentWebAudioSource = null
 let testReplayCache = {}
+
+/** AudioContext unlocked on user gesture so blob play() is not blocked by autoplay policy. */
+let _audioContextUnlock = null
+function getAudioContextForUnlock() {
+  if (typeof window === 'undefined' || (!window.AudioContext && !window.webkitAudioContext)) return null
+  if (_audioContextUnlock) return _audioContextUnlock
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  _audioContextUnlock = new Ctx()
+  return _audioContextUnlock
+}
+
+/**
+ * Unlock audio on user gesture (e.g. Start session) so subsequent blob play() is not blocked.
+ * Call this from a click handler before starting guided mode.
+ */
+function unlockAudio() {
+  const ctx = getAudioContextForUnlock()
+  if (ctx && ctx.state === 'suspended') ctx.resume()
+}
 
 /** Web Worker for TTS generation (Kokoro) so the main thread stays responsive. */
 let ttsWorker = null
@@ -332,47 +353,116 @@ export function useSpeech() {
     return pickVoice()
   }
 
+  /** Max time we wait for blob playback to finish before treating as failed (silent/corrupt/stalled). */
+  const PLAYBACK_MAX_MS = 90000
+  /** Min blob size to consider valid (worker also uses 100); smaller → treat as no audio and fall back. */
+  const MIN_BLOB_SIZE = 100
+
   /**
    * Play an audio blob. If playback fails (e.g. autoplay blocked), calls onPlaybackFailed so the
    * caller can fall back to TTS and ensure the user always hears the phrase.
+   * Also fails if blob is too small (likely empty/invalid) or if 'ended' never fires within PLAYBACK_MAX_MS.
    * @param {Blob} blob
    * @param {() => void} onEnd - called when playback finishes successfully
-   * @param {() => void} [onPlaybackFailed] - called when play() rejects or audio errors; caller should try TTS
+   * @param {(reason?: string) => void} [onPlaybackFailed] - called when play() rejects, audio errors, or playback times out; receives a short reason for the dev log
    */
   function playBlob(blob, onEnd, onPlaybackFailed) {
     if (blob == null || blob === undefined) {
-      if (onPlaybackFailed) onPlaybackFailed()
+      if (onPlaybackFailed) onPlaybackFailed('blob_missing')
+      else if (onEnd) onEnd()
+      return
+    }
+    if (blob.size < MIN_BLOB_SIZE) {
+      if (onPlaybackFailed) onPlaybackFailed('blob_too_small')
       else if (onEnd) onEnd()
       return
     }
     if (currentExternalAudio) {
+      currentExternalAudio.onended = null
+      currentExternalAudio.onerror = null
       currentExternalAudio.pause()
       currentExternalAudio.src = ''
+      currentExternalAudio = null
+    }
+    if (currentWebAudioSource) {
+      try { currentWebAudioSource.stop() } catch (_) {}
+      currentWebAudioSource = null
     }
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
     currentExternalAudio = audio
     audio.playbackRate = Math.max(0.5, Math.min(2, voiceRate.value))
+    let ended = false
+    let timeoutId = null
     const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
       URL.revokeObjectURL(url)
       currentExternalAudio = null
     }
-    audio.onended = () => {
+    const runEnd = () => {
+      if (ended) return
+      ended = true
       cleanup()
+      if (currentWebAudioSource) {
+        currentWebAudioSource = null
+      }
       if (onEnd) onEnd()
     }
-    audio.onerror = () => {
+    const runFailed = (reason) => {
+      if (ended) return
+      ended = true
       cleanup()
-      if (onPlaybackFailed) onPlaybackFailed()
+      if (currentWebAudioSource) {
+        currentWebAudioSource = null
+      }
+      const errReason = reason || 'unknown'
+      if (onPlaybackFailed) onPlaybackFailed(errReason)
       else if (onEnd) onEnd()
     }
+    const tryWebAudioFallback = (reason) => {
+      cleanup()
+      const ctx = getAudioContextForUnlock()
+      if (!ctx) {
+        runFailed(reason || 'play_rejected')
+        return
+      }
+      if (ctx.state === 'suspended') ctx.resume()
+      blob.arrayBuffer()
+        .then((ab) => ctx.decodeAudioData(ab))
+        .then((buffer) => {
+          if (ended) return
+          const source = ctx.createBufferSource()
+          source.buffer = buffer
+          source.connect(ctx.destination)
+          source.playbackRate.value = Math.max(0.5, Math.min(2, voiceRate.value))
+          currentWebAudioSource = source
+          const t = setTimeout(() => {
+            if (!ended && currentWebAudioSource === source) {
+              currentWebAudioSource = null
+              runFailed('playback_timeout')
+            }
+          }, PLAYBACK_MAX_MS)
+          source.onended = () => {
+            clearTimeout(t)
+            runEnd()
+          }
+          source.start(0)
+        })
+        .catch(() => runFailed(reason || 'play_rejected'))
+    }
+    audio.onended = runEnd
+    audio.onerror = () => tryWebAudioFallback('audio_error')
+    audio.addEventListener('loadedmetadata', () => {
+      const d = audio.duration
+      if (d === 0 || !Number.isFinite(d)) runFailed('invalid_duration')
+    }, { once: true })
+    timeoutId = setTimeout(() => runFailed('playback_timeout'), PLAYBACK_MAX_MS)
     const p = audio.play()
     if (p && typeof p.catch === 'function') {
-      p.catch(() => {
-        cleanup()
-        if (onPlaybackFailed) onPlaybackFailed()
-        else if (onEnd) onEnd()
-      })
+      p.catch(() => tryWebAudioFallback('play_rejected'))
     }
   }
 
@@ -506,10 +596,16 @@ export function useSpeech() {
           }
           if (pending.cacheKey) testReplayCache[pending.cacheKey] = d.blob
           if (pending.resolve) {
+            pending.onDetail?.({ phase: 'blob', size: d.blob.size })
             pending.resolve(d.blob)
             return
           } else {
-            const fallback = pending.text ? () => speakWithBrowser(pending.text, pending.onEnd) : undefined
+            const fallback = pending.text ? (reason) => {
+              pending.onPlaybackFailed?.(reason)
+              pending.onSource?.('browser')
+              speakWithBrowser(pending.text, pending.onEnd)
+            } : undefined
+            pending.onSource?.('kokoro')
             if (pending.onEnd) playBlob(d.blob, pending.onEnd, fallback)
           }
           if (pending.onReady) pending.onReady()
@@ -519,6 +615,10 @@ export function useSpeech() {
             if (pending.loadingRef) pending.loadingRef.value = false
             return
           }
+          if (pending.reject) {
+            pending.onDetail?.({ phase: 'error', message: d.message || 'TTS error' })
+          }
+          pending.onSource?.('browser')
           if (pending.reject) {
             pending.reject(new Error(d.message || 'TTS error'))
           } else if (pending.text && pending.onEnd) {
@@ -533,6 +633,7 @@ export function useSpeech() {
       ttsWorker.onerror = () => {
         kokoroModelLoading.value = false
         ttsPending.forEach((p) => {
+          p.onSource?.('browser')
           if (p.text && p.onEnd) {
             speakWithBrowser(p.text, p.onEnd)
           } else if (p.onEnd) {
@@ -600,8 +701,10 @@ export function useSpeech() {
   /**
    * Generate audio for one phrase and return the blob (or null for empty text).
    * Uses pre-generated static WAV for intro when available (e.g. intro_no_clothing_1..9); else Kokoro.
+   * @param {string} text
+   * @param {(ev: { phase: string, size?: number, message?: string, textSnippet?: string }) => void} [onDetail] - optional callback for dev log (request/blob/error/timeout)
    */
-  async function generatePhraseToBlob(text) {
+  async function generatePhraseToBlob(text, onDetail) {
     const cleaned = cleanTextForSpeech(text)
     if (!cleaned) return null
     const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
@@ -613,6 +716,7 @@ export function useSpeech() {
         const res = await fetch(getStaticAudioUrl(phraseId, voiceId))
         if (res.ok) {
           const buf = await res.arrayBuffer()
+          onDetail?.({ phase: 'static', size: buf.byteLength })
           return new Blob([buf], { type: 'audio/wav' })
         }
       } catch (_) {}
@@ -641,10 +745,14 @@ export function useSpeech() {
       return null
     }
     if (!ipa || typeof ipa !== 'string' || !ipa.trim()) return null
+    const textSnippet = cleaned.slice(0, 50) + (cleaned.length > 50 ? '…' : '')
     return new Promise((resolve, reject) => {
       const id = `tts-${++ttsNextId}-${Date.now()}`
+      onDetail?.({ phase: 'request', textSnippet })
       const timeoutId = setTimeout(() => {
-        if (ttsPending.has(id)) {
+        const pending = ttsPending.get(id)
+        if (pending) {
+          pending.onDetail?.({ phase: 'timeout', message: 'Worker did not respond in time' })
           ttsPending.delete(id)
           ttsWorkerProgress.value = { id: null, status: null }
           resolve(null)
@@ -662,6 +770,7 @@ export function useSpeech() {
           reject(err)
         },
         timeoutId,
+        onDetail,
       })
       w.postMessage({ type: 'generate', id, phonemizedIpa: ipa, voiceId })
     })
@@ -669,11 +778,12 @@ export function useSpeech() {
 
   /**
    * Generate audio for a full session script (sequential). Calls onProgress(current, total) and returns Blob[].
+   * Optional onPhraseDetail(phraseIndex, event) is called for each phrase with worker/static detail for the dev log.
    * Empty phrases yield null in the array; playback should skip null (call onEnd immediately).
    * Local-first: we use the in-browser Kokoro worker when available. Only when Kokoro is
    * unavailable (e.g. iOS Safari) do we try the optional TTS server; otherwise use browser voices.
    */
-  async function generateSessionAudio(phrases, onProgress) {
+  async function generateSessionAudio(phrases, onProgress, onPhraseDetail) {
     if (!Array.isArray(phrases)) return []
     const total = phrases.length
     const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
@@ -700,11 +810,14 @@ export function useSpeech() {
             const b = list[i]
             if (b == null || b === '') {
               blobs.push(null)
+              onPhraseDetail?.(i, { phase: 'server_null' })
             } else {
               const binary = atob(b)
               const bytes = new Uint8Array(binary.length)
               for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
-              blobs.push(new Blob([bytes], { type: 'audio/wav' }))
+              const blob = new Blob([bytes], { type: 'audio/wav' })
+              blobs.push(blob)
+              onPhraseDetail?.(i, { phase: 'server', size: blob.size })
             }
             if (onProgress) onProgress(i + 1, total)
           }
@@ -718,7 +831,8 @@ export function useSpeech() {
 
     const blobs = []
     for (let i = 0; i < total; i++) {
-      const blob = await generatePhraseToBlob(phrases[i])
+      const detailCb = onPhraseDetail ? (ev) => onPhraseDetail(i, ev) : undefined
+      const blob = await generatePhraseToBlob(phrases[i], detailCb)
       blobs.push(blob)
       if (onProgress) onProgress(i + 1, total)
       if (i < total - 1) {
@@ -738,7 +852,7 @@ export function useSpeech() {
   }
 
   function speak(text, options = {}) {
-    const { force = false, onEnd, cacheForReplay = false, forceTtsMode } = options
+    const { force = false, onEnd, cacheForReplay = false, forceTtsMode, onSource, onPlaybackFailed } = options
     if (!force && !voiceEnabled.value) {
       if (onEnd) onEnd()
       return
@@ -757,7 +871,11 @@ export function useSpeech() {
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()
-      playBlob(testReplayCache[cacheKey], onEnd, () => speakWithBrowser(cleaned, onEnd))
+      onSource?.('kokoro')
+      playBlob(testReplayCache[cacheKey], onEnd, (reason) => {
+        onPlaybackFailed?.(reason)
+        speakWithBrowser(cleaned, onEnd)
+      })
       return
     }
     // Prefer pre-generated static WAV when this phrase has one (e.g. intro, next_turn, session_complete)
@@ -768,7 +886,11 @@ export function useSpeech() {
         .then((blob) => {
           if (blob) {
             window.speechSynthesis?.cancel?.()
-            playBlob(blob, onEnd, () => speakWithBrowser(cleaned, onEnd))
+            onSource?.('kokoro')
+            playBlob(blob, onEnd, (reason) => {
+              onPlaybackFailed?.(reason)
+              speakWithBrowser(cleaned, onEnd)
+            })
             return
           }
           proceedWithTts()
@@ -781,6 +903,11 @@ export function useSpeech() {
     function proceedWithTts() {
     const KOKORO_GENERATE_TIMEOUT_MS = 45000
     const forceMode = options.forceTtsMode
+    if (forceMode === 'browser') {
+      onSource?.('browser')
+      speakWithBrowser(cleaned, onEnd)
+      return
+    }
     async function tryTtsServerThenWorker() {
       if (w) {
         /* Local-first: when the worker is available, use it only. Do not call the TTS server. */
@@ -792,10 +919,15 @@ export function useSpeech() {
         const blob = await generateViaTtsServer(cleaned, voiceId)
         if (blob) {
           window.speechSynthesis?.cancel?.()
-          playBlob(blob, onEnd, () => speakWithBrowser(cleaned, onEnd))
+          onSource?.('kokoro')
+          playBlob(blob, onEnd, (reason) => {
+            onPlaybackFailed?.(reason)
+            speakWithBrowser(cleaned, onEnd)
+          })
           return
         }
       }
+      onSource?.('browser')
       speakWithBrowser(cleaned, onEnd)
     }
     /** @param {boolean} [useTextOnly] - if true, send text to worker (worker does phonemize+tokenize+ONNX); no server, no main-thread phonemize */
@@ -812,6 +944,7 @@ export function useSpeech() {
         if (pending.timeoutId != null) clearTimeout(pending.timeoutId)
         pending.cancelled = true
         if (pending.loadingRef) pending.loadingRef.value = false
+        pending.onSource?.('browser')
         if (pending.text && pending.onEnd) speakWithBrowser(pending.text, pending.onEnd)
         else if (pending.onEnd) pending.onEnd()
       }, KOKORO_GENERATE_TIMEOUT_MS)
@@ -819,6 +952,8 @@ export function useSpeech() {
         cacheKey,
         text: cleaned,
         onEnd,
+        onSource,
+        onPlaybackFailed,
         sentAt,
         loadingRef: kokoroModelLoading,
         timeoutId,
@@ -841,6 +976,7 @@ export function useSpeech() {
             ttsPending.delete(id)
             if (pending.timeoutId != null) clearTimeout(pending.timeoutId)
             if (pending.loadingRef) pending.loadingRef.value = false
+            pending.onSource?.('browser')
             if (pending.text && pending.onEnd) speakWithBrowser(pending.text, pending.onEnd)
             else if (pending.onEnd) pending.onEnd()
           }
@@ -856,6 +992,7 @@ export function useSpeech() {
       tryTtsServerThenWorker()
       return
     }
+    onSource?.('browser')
     speakWithBrowser(cleaned, onEnd)
     }
   }
@@ -1030,6 +1167,7 @@ export function useSpeech() {
     isVoiceReadyForGuided,
     syncVoiceFromStorage,
     playBlob,
+    unlockAudio,
     generateSessionAudio,
     getStaticAudioUrl,
   }

@@ -4,7 +4,7 @@
  */
 import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
 import { getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
-import { getPromptText } from '@/utils/promptHelper'
+import { getPromptText, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
 import {
   clothingTable,
   removeClothingItem,
@@ -163,8 +163,9 @@ export function buildSessionPlan(config, seed) {
     } else {
       script.push(pick(NEXT_TURN_TEXTS, rng))
     }
-    if (clothingText) script.push(clothingText)
-    if (prompt.instruction) script.push(prompt.instruction)
+    if (clothingText) script.push(normalizeParenthesesForTts(slashToAndForTts(clothingText)))
+    const instructionForTts = prompt.shortInstruction || prompt.instruction
+    if (instructionForTts) script.push(instructionForTts)
     script.push(pick(EASE_IN_TEXTS, rng))
     script.push(pick(TURN_BEGINS_TEXTS, rng))
   }
@@ -242,6 +243,7 @@ export function buildSessionPlan(config, seed) {
       where: prompt.where,
       what: prompt.what,
       instruction: prompt.instruction,
+      shortInstruction: prompt.shortInstruction || prompt.instruction,
       clothing: clothingText || prompt.clothing || '',
       durationSec: turnTime,
       extendedTime,

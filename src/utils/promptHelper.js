@@ -51,6 +51,19 @@ function phase3PositionLabel(entry, pos) {
   return name
 }
 
+/** Remove parenthetical phrases from text so TTS does not read them (e.g. "Reverse straddle (sitting up or leaning back)" → "Reverse straddle"). */
+function stripParenthesesForTts(text) {
+  if (!text || typeof text !== 'string') return text
+  return text.replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim() || text
+}
+
+/** Phase 3 position name for TTS: no parentheses read aloud. */
+function phase3PositionNameForTts(entry, pos) {
+  return stripParenthesesForTts(phase3PositionLabel(entry, pos))
+}
+
+const PHASE3_GET_INTO_LEAD_IN = 'To get into this position.'
+
 /** For phase 3 review: remove references to position numbers, images, or file names so review text is name/instruction only. */
 function stripPhase3ReviewNoise(text) {
   if (!text || typeof text !== 'string') return ''
@@ -69,6 +82,36 @@ function stripPhase3ReviewNoise(text) {
 // -----------------------------------------------------------------------------
 // getPromptText (main export)
 // -----------------------------------------------------------------------------
+/** Take long action text (e.g. "Slow hand strokes: Use the full palm...") and return the description for TTS (text after the colon), so we don't speak the title. */
+function actionDescriptionForTts(what) {
+  if (!what || typeof what !== 'string') return ''
+  const colon = what.indexOf(':')
+  if (colon > 0) return what.slice(colon + 1).trim()
+  return what
+}
+
+/** Replace " / " with " and " in text for natural TTS (e.g. "Nipples / Areolas" → "Nipples and Areolas"). */
+export function slashToAndForTts(text) {
+  if (!text || typeof text !== 'string') return text
+  return text.replace(/\s*\/\s*/g, ' and ')
+}
+
+/**
+ * Remove parentheses from text for TTS: integrate content as natural speech (e.g. "Ears (Lobes or Outer Shell)" → "Ears, lobes or outer shell")
+ * or drop if empty. Avoids awkward "parenthesis" flow in speech.
+ */
+export function normalizeParenthesesForTts(text) {
+  if (!text || typeof text !== 'string') return text
+  let out = text.replace(/\s*\(([^)]*)\)/g, (_, inner) => {
+    const t = inner.trim()
+    if (!t) return ''
+    const rest = t.charAt(0).toLowerCase() + t.slice(1)
+    return ', ' + rest
+  })
+  out = out.replace(/\s*,\s*,/g, ',').replace(/\s{2,}/g, ' ').replace(/^,\s*/, '').trim()
+  return out || text
+}
+
 /**
  * @param {number} phase - 1, 2, or 3
  * @param {number} locationRoll - for phase 1/2: location table index; for phase 3: position number (1–155)
@@ -77,7 +120,7 @@ function stripPhase3ReviewNoise(text) {
  * @param {number} receiver - 1 or 2
  * @param {{ 1?: string, 2?: string }} partnerNames - optional names for "Partner 1" / "Partner 2"
  * @param {{ 1?: string, 2?: string }} partnerAnatomy - optional 'penis' | 'vulva' per partner
- * @returns {{ where: string, what: string, instruction: string }}
+ * @returns {{ where: string, what: string, instruction: string, shortInstruction: string }}
  */
 export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, partnerNames = {}, partnerAnatomy = {}) {
   const name = (p) => (partnerNames[p] && partnerNames[p].trim()) || `Partner ${p}`
@@ -89,7 +132,7 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
   if (phase === 1 || phase === 2) {
     const base = phase1And2Tables[phase]
     const t = base ? mergePhase12Table(base, phase) : null
-    if (!t) return { where: '', what: '', instruction: '' }
+    if (!t) return { where: '', what: '', instruction: '', shortInstruction: '' }
     const loc = Math.max(1, Math.min(20, locationRoll || 1))
     const act = Math.max(1, Math.min(20, actionRoll || 1))
     let where = t.locations[loc] || ''
@@ -108,7 +151,13 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const instruction = where
       ? `${giverName}, focus on ${focusPart}. ${whatWithNames}`
       : whatWithNames
-    return { where, what, instruction }
+    const descriptionForTts = actionDescriptionForTts(whatWithNames)
+    let shortInstruction = where && descriptionForTts
+      ? `${giverName}, touch ${focusPart}. ${descriptionForTts}`
+      : instruction
+    shortInstruction = slashToAndForTts(shortInstruction)
+    shortInstruction = normalizeParenthesesForTts(shortInstruction)
+    return { where, what, instruction, shortInstruction }
   }
 
   if (phase === 3) {
@@ -117,6 +166,7 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const baseEntry = PHASE3_POSITIONS_LIST[pos]
     const entry = baseEntry ? mergePhase3Entry(baseEntry, pos) : null
     const positionName = phase3PositionLabel(entry, pos)
+    const positionNameForTts = phase3PositionNameForTts(entry, pos)
     const where = positionName
     const what = phase3Modifiers[mod] || ''
     const help = entry ? (entry.help || '') : ''
@@ -127,11 +177,15 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const helpForReview = stripPhase3ReviewNoise(helpWithNames)
     const whatForReview = stripPhase3ReviewNoise(whatWithNames)
     const parts = [helpForReview, whatForReview].filter(Boolean)
-    const instruction = parts.length
-      ? `${giverName} leads. ${positionName}. ${parts.join('. ')}`
-      : `${giverName} leads. ${positionName}.`
-    return { where, what, instruction }
+    let instruction = parts.length
+      ? `${giverName} leads. ${positionNameForTts}. ${PHASE3_GET_INTO_LEAD_IN} ${parts.join('. ')}`
+      : `${giverName} leads. ${positionNameForTts}. ${PHASE3_GET_INTO_LEAD_IN}`
+    instruction = slashToAndForTts(instruction)
+    instruction = normalizeParenthesesForTts(instruction)
+    let shortInstruction = slashToAndForTts(`${giverName} leads. ${positionNameForTts}.`)
+    shortInstruction = normalizeParenthesesForTts(shortInstruction)
+    return { where, what, instruction, shortInstruction }
   }
 
-  return { where: '', what: '', instruction: '' }
+  return { where: '', what: '', instruction: '', shortInstruction: '' }
 }

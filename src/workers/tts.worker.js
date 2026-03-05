@@ -9,6 +9,11 @@
  *        { type: 'progress', id, status } – status: 'started' | 'running'
  *        { type: 'blob', id, blob }
  *        { type: 'error', id, message }
+ *
+ * Common error messages you may see:
+ *   - "TTS queue full (max N)..." – too many generate requests at once; queue size increased to reduce this.
+ *   - "Request too long: N characters (max 4000)" or "...tokens (max 2048)" – phrase or IPA too long; split into shorter phrases.
+ *   - "Kokoro produced empty or invalid audio" – model/voice issue or very short input.
  */
 
 const KOKORO_LOAD_TIMEOUT_MS = 5 * 60 * 1000
@@ -17,8 +22,8 @@ const MODEL_CONFIG_URL = `/models/${KOKORO_MODEL_ID}/config.json`
 const MODEL_ONNX_URL = `/models/${KOKORO_MODEL_ID}/onnx/model_quantized.onnx`
 const MODEL_VOICE_URL = `/models/${KOKORO_MODEL_ID}/voices/af_nicole.bin`
 
-/** Max pending generate requests; keeps memory and backlog under control (e.g. for iOS). */
-const MAX_QUEUE_SIZE = 3
+/** Max pending generate requests; keeps memory and backlog under control (e.g. for iOS). Increased so cooking many phrases at once does not hit "queue full". */
+const MAX_QUEUE_SIZE = 8
 /** Max character length for text or IPA per request to avoid huge allocations. */
 const MAX_TEXT_IPA_LENGTH = 4000
 /** Max token IDs per request (model context is 512; 4 chunks = 2040 tokens). */

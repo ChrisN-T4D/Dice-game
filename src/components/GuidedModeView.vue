@@ -5,12 +5,21 @@
       <div v-if="waitingForKokoroReady" class="guided-voice-wait" role="status">
         Hold on, voice not downloaded yet.
       </div>
+      <div aria-live="polite" aria-atomic="true" class="guided-sr-step">
+        <span v-if="guided.lastStepLabel">{{ guided.lastStepLabel }}</span>
+      </div>
       <div class="guided-center">
         <div class="guided-action-timer">
           <span v-if="guided.currentActionLabel" class="guided-action-label">{{ guided.currentActionLabel }}</span>
           <span class="guided-action-value">{{ formatTime(actionTimerValue) }}</span>
         </div>
-        <div class="guided-circle-wrap">
+        <div
+          class="guided-circle-wrap"
+          role="button"
+          tabindex="0"
+          aria-label="Session indicator"
+          @click="onCircleClick"
+        >
           <img
             :src="GUIDED_CIRCLE_GIF"
             alt=""
@@ -51,6 +60,57 @@
         </button>
       </div>
       <!-- Session controls always visible in the bottom nav portal -->
+      <!-- Dev overlay: 5 taps on center circle to open; shows audio log and pause durations -->
+      <div v-if="showDevOverlay" class="guided-dev-overlay" @click.self="showDevOverlay = false">
+        <div class="guided-dev-panel">
+          <div class="guided-dev-header">
+            <h3>Audio dev log</h3>
+            <button type="button" class="guided-dev-close" aria-label="Close" @click="showDevOverlay = false">×</button>
+          </div>
+          <div class="guided-dev-current">
+            <strong>Current:</strong> {{ guided.pendingSpeech?.phrase ? (guided.pendingSpeech.phrase.slice(0, 60) + (guided.pendingSpeech.phrase.length > 60 ? '…' : '')) : 'idle' }}
+          </div>
+          <div v-if="cookingLogRows.length" class="guided-dev-section">
+            <h4 class="guided-dev-section-title">Cooking log (worker responses)</h4>
+            <div class="guided-dev-log guided-dev-log-cooking">
+              <div
+                v-for="(entry, i) in cookingLogRows"
+                :key="'cook-' + i"
+                class="guided-dev-row guided-dev-row-cooking"
+                :class="entry.phase"
+              >
+                <span class="guided-dev-time">{{ entry.time }}</span>
+                <span class="guided-dev-cook-phase">#{{ entry.phraseIndex }} {{ entry.phase }}</span>
+                <span v-if="entry.size != null" class="guided-dev-cook-detail">size {{ entry.size }}</span>
+                <span v-if="entry.message" class="guided-dev-cook-detail guided-dev-cook-msg">{{ entry.message }}</span>
+                <span v-if="entry.textSnippet" class="guided-dev-text" :title="entry.textSnippet">{{ entry.textSnippet }}</span>
+                <span v-if="entry.retry" class="guided-dev-cook-tag">retry</span>
+                <span v-if="entry.background" class="guided-dev-cook-tag">bg</span>
+              </div>
+            </div>
+          </div>
+          <div class="guided-dev-section">
+            <h4 class="guided-dev-section-title">Session audio log</h4>
+            <div class="guided-dev-log guided-dev-log-session">
+              <div
+                v-for="(entry, i) in devLogRows"
+                :key="i"
+                class="guided-dev-row"
+                :class="entry.type"
+              >
+                <span class="guided-dev-time">{{ entry.time }}</span>
+                <span class="guided-dev-type">{{ entry.type }}</span>
+                <span v-if="entry.type === 'step'" class="guided-dev-step">→ {{ entry.text }}</span>
+                <span v-if="entry.type === 'phrase_start'" class="guided-dev-source" :class="entry.source || 'unknown'">{{ entry.source === 'kokoro' ? 'Kokoro' : entry.source === 'browser' ? 'Browser' : '—' }}</span>
+                <span v-if="entry.type === 'playback_failed'" class="guided-dev-fail">fail: {{ entry.reason || 'unknown' }}</span>
+                <span v-if="entry.duration != null" class="guided-dev-duration">({{ entry.duration }}s)</span>
+                <span v-if="entry.text && entry.type !== 'step'" class="guided-dev-text">{{ entry.text }}</span>
+              </div>
+              <div v-if="!guided.devAudioLog.length" class="guided-dev-empty">No events yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <Teleport to="#bottom-nav-portal">
         <div v-if="guided.inPhaseCheckIn" class="guided-controls">
           <span class="guided-ctrl-checkin-label">Phase {{ guided.completedPhase }} complete</span>
@@ -153,6 +213,7 @@
             </div>
             <p class="guided-cooking-count">{{ cookingProgressPercent }}%</p>
           </div>
+          <p v-if="cookingKokoroFallback" class="guided-cooking-kokoro-fallback">{{ cookingKokoroFallback }}</p>
           <p v-if="cookingError" class="guided-cooking-error">{{ cookingError }}</p>
           <p v-if="cookingError && isKokoroError(cookingError)" class="guided-cooking-error-hint">Make sure the Kokoro model is in <code>public/models/</code>. Run: <code>npm run download-kokoro-model</code></p>
           <div v-if="cookingError" class="guided-review-actions">
@@ -206,7 +267,7 @@ const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
 const sessionFavorites = useSessionFavoritesStore()
-const { speak, preparePhrase, warmupWorker, waitForWorkerReady, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, ttsWorkerProgress, generateSessionAudio, playBlob } = useSpeech()
+const { speak, preparePhrase, warmupWorker, waitForWorkerReady, stop: stopSpeech, isVoiceReadyForGuided, waitingForKokoroReady, ttsWorkerProgress, generateSessionAudio, playBlob, unlockAudio } = useSpeech()
 
 const pendingConfig = ref(null)
 const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
@@ -215,6 +276,10 @@ const wizardInitialStep = ref(1)
 const wizardInitialConfig = ref(null)
 const sessionFavoriteSaved = ref(false)
 const showSavedSessionsList = ref(false)
+/** Dev overlay: open after 5 clicks on center circle in guided session. */
+const showDevOverlay = ref(false)
+let circleClickCount = 0
+let circleClickResetAt = null
 const cookingProgressCurrent = ref(0)
 const cookingProgressTotal = ref(0)
 const cookingError = ref(null)
@@ -222,6 +287,8 @@ const cookingError = ref(null)
 const cookingWaitingForModel = ref(false)
 /** Labels for each phrase we're cooking (set in startCooking), e.g. ['Intro', 'First turn', 'Instruction', …]. */
 const cookingPhraseLabels = ref([])
+/** When set, Kokoro failed for some phrases; playback will use browser TTS for those. Shown on cooking screen. */
+const cookingKokoroFallback = ref(null)
 
 const cookingGifs = [
   '/GIFS/agp_studios-audio-22831_512.gif',
@@ -246,6 +313,57 @@ const actionTimerValue = computed(() => {
   if (guided.breakPhase !== 'none' && guided.breakCountdown > 0) return guided.breakCountdown
   if (guided.turnTimeRemaining > 0) return guided.turnTimeRemaining
   return 0
+})
+
+function onCircleClick() {
+  if (guided.totalSeconds <= 0 || guided.sessionComplete) return
+  circleClickCount++
+  if (circleClickResetAt != null) clearTimeout(circleClickResetAt)
+  if (circleClickCount >= 5) {
+    showDevOverlay.value = true
+    circleClickCount = 0
+    circleClickResetAt = null
+    return
+  }
+  circleClickResetAt = setTimeout(() => { circleClickCount = 0; circleClickResetAt = null }, 1500)
+}
+
+/** Dev log rows with relative time, pause duration (pause → next resume), and TTS source (kokoro/browser). */
+const devLogRows = computed(() => {
+  const log = guided.devAudioLog || []
+  const base = log[0]?.t ?? Date.now()
+  return log.map((entry, i) => {
+    const next = log[i + 1]
+    const elapsed = ((entry.t - base) / 1000).toFixed(1)
+    const duration = entry.type === 'pause' && next?.type === 'resume' ? ((next.t - entry.t) / 1000).toFixed(1) : null
+    return {
+      type: entry.type,
+      time: `+${elapsed}s`,
+      duration: duration ?? undefined,
+      text: entry.text || undefined,
+      source: entry.source || undefined,
+      reason: entry.reason || undefined,
+    }
+  })
+})
+
+/** Cooking log rows: worker request/blob/error/timeout/static per phrase, with relative time. */
+const cookingLogRows = computed(() => {
+  const log = guided.cookingLog || []
+  const base = log[0]?.t ?? Date.now()
+  return log.map((entry) => {
+    const elapsed = ((entry.t - base) / 1000).toFixed(1)
+    return {
+      time: `+${elapsed}s`,
+      phraseIndex: entry.phraseIndex,
+      phase: entry.phase,
+      size: entry.size,
+      message: entry.message,
+      textSnippet: entry.textSnippet,
+      retry: entry.retry,
+      background: entry.background,
+    }
+  })
 })
 
 const cookingProgressPercent = computed(() => {
@@ -334,6 +452,7 @@ function onConfirmSession() {
 
 async function startCooking() {
   cookingError.value = null
+  cookingKokoroFallback.value = null
   const plan = guided.sessionPlan
   if (!plan?.script?.length) {
     cookingError.value = 'No session plan.'
@@ -364,16 +483,29 @@ async function startCooking() {
   })
   cookingProgressTotal.value = endIndex
   cookingProgressCurrent.value = 0
+  guided.clearCookingLog()
   try {
-    const initialBlobs = await generateSessionAudio(initialScript, (current, total) => {
-      cookingProgressCurrent.value = current
-      cookingProgressTotal.value = total
-    })
+    const initialBlobs = await generateSessionAudio(
+      initialScript,
+      (current, total) => {
+        cookingProgressCurrent.value = current
+        cookingProgressTotal.value = total
+      },
+      (phraseIndex, ev) => {
+        guided.addCookingLogEntry({ phraseIndex, ...ev })
+      }
+    )
     // Retry any nulls in the initial batch (e.g. turn_begins / "Whenever you're ready") so playback starts immediately
     for (let i = 0; i < initialBlobs.length; i++) {
       if (initialBlobs[i] != null) continue
       try {
-        const [retryBlob] = await generateSessionAudio([initialScript[i]])
+        const [retryBlob] = await generateSessionAudio(
+          [initialScript[i]],
+          undefined,
+          (phraseIndex, ev) => {
+            guided.addCookingLogEntry({ phraseIndex: i, ...ev, retry: true })
+          }
+        )
         if (retryBlob != null) initialBlobs[i] = retryBlob
       } catch (_) {}
     }
@@ -386,6 +518,10 @@ async function startCooking() {
       cookingError.value = 'Could not generate intro or first turn audio. Please try again.'
       return
     }
+    const nullCount = initialBlobs.filter((b) => b == null).length
+    if (nullCount > 0) {
+      cookingKokoroFallback.value = `${nullCount} phrase${nullCount === 1 ? '' : 's'} could not be generated with Kokoro; browser voice will be used for those during playback.`
+    }
     guided.setPreGeneratedBlobs(blobs)
     // Brief pause so the user sees "All N phrases ready. Opening session…" and 100% before the next screen
     await new Promise((r) => setTimeout(r, 1200))
@@ -397,11 +533,17 @@ async function startCooking() {
         for (let j = endIndex; j < fullLength; j++) {
           if (guided.consumedPreGeneratedIndices?.has(j)) continue
           try {
-            const [blob] = await generateSessionAudio([plan.script[j]])
+            const [blob] = await generateSessionAudio(
+              [plan.script[j]],
+              undefined,
+              (phraseIndex, ev) => {
+                guided.addCookingLogEntry({ phraseIndex: j, ...ev, background: true })
+              }
+            )
             if (guided.consumedPreGeneratedIndices?.has(j)) continue
-            blobs[j] = blob
+            guided.setPreGeneratedBlobAt(j, blob)
           } catch (_) {
-            if (!guided.consumedPreGeneratedIndices?.has(j)) blobs[j] = null
+            if (!guided.consumedPreGeneratedIndices?.has(j)) guided.setPreGeneratedBlobAt(j, null)
           }
         }
       })()
@@ -470,6 +612,7 @@ function onStartBack() {
 
 function onStartSession() {
   if (!pendingConfig.value || !guided.preGeneratedBlobs) return
+  unlockAudio()
   guided.setSpeak((text, opts) => speak(text, { ...opts, force: true }))
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
@@ -798,6 +941,15 @@ onUnmounted(() => {
   transition: width 0.3s ease;
 }
 .guided-cooking-count { font-size: 0.9rem; color: #94a3b8; margin: 0; }
+.guided-cooking-kokoro-fallback {
+  font-size: 0.9rem;
+  color: #fbbf24;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(251, 191, 36, 0.12);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
 .guided-cooking-error {
   font-size: 0.95rem;
   color: #f87171;
@@ -868,6 +1020,19 @@ onUnmounted(() => {
   border: 1px solid rgba(251, 191, 36, 0.35);
 }
 
+/* Screen-reader-only live region for step announcements */
+.guided-sr-step {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Center area: action timer, sparkly circle, phase/total timers */
 .guided-center {
   display: flex;
@@ -885,12 +1050,14 @@ onUnmounted(() => {
 .guided-action-label { font-size: 0.95rem; font-weight: 600; color: #a855f7; }
 .guided-action-value { font-size: 2.5rem; font-weight: 700; color: #e5e7eb; line-height: 1; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 
-/* Center circle: loading GIF (was spinning shimmer) */
+/* Center circle: loading GIF (was spinning shimmer); 5 taps opens dev overlay */
 .guided-circle-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.5rem 0;
+  cursor: pointer;
+  user-select: none;
 }
 .guided-circle-gif {
   width: 140px;
@@ -914,6 +1081,138 @@ onUnmounted(() => {
   .guided-circle-gif.breathing {
     animation: none;
   }
+}
+
+/* Dev overlay: audio log and pause durations */
+.guided-dev-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.guided-dev-panel {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 0.75rem;
+  max-width: min(420px, 100%);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+.guided-dev-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #334155;
+}
+.guided-dev-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.guided-dev-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+.guided-dev-close:hover {
+  color: #e2e8f0;
+  background: #334155;
+}
+.guided-dev-current {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  border-bottom: 1px solid #334155;
+  word-break: break-word;
+}
+.guided-dev-log {
+  padding: 0.5rem 1rem;
+  overflow-y: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.guided-dev-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+.guided-dev-section { margin-top: 0.75rem; }
+.guided-dev-section:first-of-type { margin-top: 0; }
+.guided-dev-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin: 0 0 0.35rem 0;
+}
+.guided-dev-log-cooking,
+.guided-dev-log-session { max-height: 12rem; overflow-y: auto; }
+.guided-dev-row-cooking { font-size: 0.85rem; }
+.guided-dev-row-cooking.request { color: #93c5fd; }
+.guided-dev-row-cooking.blob { color: #86efac; }
+.guided-dev-row-cooking.static { color: #a5b4fc; }
+.guided-dev-row-cooking.error { color: #fca5a5; }
+.guided-dev-row-cooking.timeout { color: #fcd34d; }
+.guided-dev-row-cooking.server { color: #86efac; }
+.guided-dev-row-cooking.server_null { color: #64748b; }
+.guided-dev-cook-phase { font-weight: 600; margin-right: 0.35rem; }
+.guided-dev-cook-detail { font-size: 0.8rem; color: #94a3b8; margin-left: 0.25rem; }
+.guided-dev-cook-msg { color: #f87171; }
+.guided-dev-cook-tag { font-size: 0.7rem; opacity: 0.9; margin-left: 0.25rem; }
+.guided-dev-row.phrase_start { color: #86efac; }
+.guided-dev-row.phrase_end { color: #93c5fd; }
+.guided-dev-row.playback_failed { color: #fca5a5; }
+.guided-dev-row.pause { color: #fcd34d; }
+.guided-dev-row.resume { color: #a5b4fc; }
+.guided-dev-fail {
+  font-size: 0.8rem;
+  color: #f87171;
+  font-weight: 600;
+}
+.guided-dev-time {
+  color: #64748b;
+  min-width: 4rem;
+}
+.guided-dev-type { font-weight: 600; }
+.guided-dev-source {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+}
+.guided-dev-source.kokoro { background: rgba(34, 197, 94, 0.3); color: #4ade80; }
+.guided-dev-source.browser { background: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+.guided-dev-source.unknown { background: rgba(100, 116, 139, 0.35); color: #94a3b8; }
+.guided-dev-duration { color: #fbbf24; }
+.guided-dev-text {
+  color: #cbd5e1;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.guided-dev-empty {
+  color: #64748b;
+  font-style: italic;
+  padding: 0.5rem 0;
 }
 
 /* Phase (left: label + time) and Total (right) below the circle */

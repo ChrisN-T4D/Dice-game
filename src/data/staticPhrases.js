@@ -91,12 +91,12 @@ const TURN_BEGINS_PHRASES = [
   { id: 'turn_begins_3', text: "Whenever you're ready." },
   { id: 'turn_begins_4', text: "Begin when you're ready." },
 ]
-/** Parallel: [Settle/get comfortable when ready.] No rush. */
+/** Settle-in: take this time to get into position before the turn starts. */
 const EASE_IN_PHRASES = [
   { id: 'ease_in_1', text: 'Take a few seconds to settle into position. No rush.' },
   { id: 'ease_in_2', text: "Settle into position when you're ready. No rush." },
   { id: 'ease_in_3', text: 'Take a few seconds to get comfortable. No rush.' },
-  { id: 'ease_in_4', text: "Whenever you're ready. No rush." },
+  { id: 'ease_in_4', text: 'Take this time to settle in. No rush.' },
 ]
 
 /** String arrays for sessionPlanBuilder and guided store (pick at random). */

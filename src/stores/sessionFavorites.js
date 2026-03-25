@@ -39,11 +39,17 @@ export const useSessionFavoritesStore = defineStore('sessionFavorites', {
       const id = typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
         : `s-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      let configCopy
+      try {
+        configCopy = structuredClone(config)
+      } catch {
+        configCopy = JSON.parse(JSON.stringify(config))
+      }
       const item = {
         id,
         name: name || `Session – ${new Date().toLocaleDateString()}`,
         createdAt: Date.now(),
-        config: { ...config },
+        config: configCopy,
       }
       this.list = [item, ...this.list]
       saveToStorage(this.list)

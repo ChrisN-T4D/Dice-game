@@ -479,7 +479,7 @@ export function useSpeech() {
   /**
    * Pre-generate and cache audio in the TTS worker so speak() can play immediately later.
    */
-  function preparePhrase(text, onReady) {
+  function preparePhrase(text, onReady, voiceIdOverride) {
     const cleaned = cleanTextForSpeech(text)
     if (!cleaned) {
       if (onReady) onReady()
@@ -490,7 +490,7 @@ export function useSpeech() {
       if (onReady) onReady()
       return
     }
-    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+    const voiceId = (voiceIdOverride && String(voiceIdOverride).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
     const cacheKey = `${provider}:${voiceId}:${cleaned}`
     if (testReplayCache[cacheKey]) {
       if (onReady) onReady()
@@ -704,10 +704,10 @@ export function useSpeech() {
    * @param {string} text
    * @param {(ev: { phase: string, size?: number, message?: string, textSnippet?: string }) => void} [onDetail] - optional callback for dev log (request/blob/error/timeout)
    */
-  async function generatePhraseToBlob(text, onDetail) {
+  async function generatePhraseToBlob(text, onDetail, voiceIdOverride) {
     const cleaned = cleanTextForSpeech(text)
     if (!cleaned) return null
-    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+    const voiceId = (voiceIdOverride && String(voiceIdOverride).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
 
     // Use pre-generated static WAV only for the selected voice (never fall back to another voice)
     const phraseId = getStaticPhraseIdForText(cleaned)
@@ -783,10 +783,10 @@ export function useSpeech() {
    * Local-first: we use the in-browser Kokoro worker when available. Only when Kokoro is
    * unavailable (e.g. iOS Safari) do we try the optional TTS server; otherwise use browser voices.
    */
-  async function generateSessionAudio(phrases, onProgress, onPhraseDetail) {
+  async function generateSessionAudio(phrases, onProgress, onPhraseDetail, genOptions = {}) {
     if (!Array.isArray(phrases)) return []
     const total = phrases.length
-    const voiceId = kokoroVoiceId.value?.trim() || 'af_nicole'
+    const voiceId = (genOptions.voiceId && String(genOptions.voiceId).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
 
     const useWorker = kokoroAvailable
     if (!useWorker) {
@@ -832,7 +832,7 @@ export function useSpeech() {
     const blobs = []
     for (let i = 0; i < total; i++) {
       const detailCb = onPhraseDetail ? (ev) => onPhraseDetail(i, ev) : undefined
-      const blob = await generatePhraseToBlob(phrases[i], detailCb)
+      const blob = await generatePhraseToBlob(phrases[i], detailCb, voiceId)
       blobs.push(blob)
       if (onProgress) onProgress(i + 1, total)
       if (i < total - 1) {
@@ -852,7 +852,7 @@ export function useSpeech() {
   }
 
   function speak(text, options = {}) {
-    const { force = false, onEnd, cacheForReplay = false, forceTtsMode, onSource, onPlaybackFailed } = options
+    const { force = false, onEnd, cacheForReplay = false, forceTtsMode, onSource, onPlaybackFailed, voiceId: voiceIdOption } = options
     if (!force && !voiceEnabled.value) {
       if (onEnd) onEnd()
       return
@@ -867,7 +867,8 @@ export function useSpeech() {
       if (onEnd) onEnd()
       return
     }
-    const voiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : (kokoroVoiceId.value?.trim() || DEFAULT_STATIC_VOICE_ID)
+    const baseVoiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : (kokoroVoiceId.value?.trim() || DEFAULT_STATIC_VOICE_ID)
+    const voiceId = (voiceIdOption && String(voiceIdOption).trim()) || baseVoiceId
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
     if (cacheKey && testReplayCache[cacheKey]) {
       window.speechSynthesis?.cancel?.()

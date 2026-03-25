@@ -19,6 +19,10 @@ This app is a static Vue build served by **nginx** in [Dockerfile](../Dockerfile
 
 ### Static phrase audio
 
+**Default:** If **`public/audio/static/...`** is present when **`npm run build`** runs (committed in the repo and not excluded from the Docker build context), the nginx image serves **`/audio/static/...`** and the app uses those WAVs (see **`getStaticAudioUrl`** in `src/composables/useSpeech.js`).
+
+**Optional tarball:** To avoid large binaries in git or to refresh assets without rebuilding:
+
 1. Locally: `npm run pack-audio-assets`
 2. Upload `audio-assets.tar.gz` (e.g. GitHub Release asset or any HTTPS URL).
 3. Set **`AUDIO_ASSETS_URL`** to that URL and redeploy.

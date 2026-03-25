@@ -57,6 +57,12 @@ export function loadState(sessionStore, preferencesStore, guidedStore) {
     if (state.partnerColor2) preferencesStore.$patch({ partnerColor2: state.partnerColor2 })
     if (state.partnerAnatomy1) preferencesStore.$patch({ partnerAnatomy1: state.partnerAnatomy1 })
     if (state.partnerAnatomy2) preferencesStore.$patch({ partnerAnatomy2: state.partnerAnatomy2 })
+    if (state.excludeWhenTouching && typeof state.excludeWhenTouching === 'object') {
+      preferencesStore.$patch({ excludeWhenTouching: { ...preferencesStore.excludeWhenTouching, ...state.excludeWhenTouching } })
+    }
+    if (state.excludeWhenTouched && typeof state.excludeWhenTouched === 'object') {
+      preferencesStore.$patch({ excludeWhenTouched: { ...preferencesStore.excludeWhenTouched, ...state.excludeWhenTouched } })
+    }
 
     const hasProgress =
       state.rollCount > 0 ||
@@ -99,6 +105,8 @@ export function saveState(sessionStore, preferencesStore, guidedStore) {
       partnerAnatomy2: preferencesStore.partnerAnatomy2,
       voiceEnabled: preferencesStore.voiceEnabled,
       voiceSpeed: preferencesStore.voiceSpeed,
+      excludeWhenTouching: preferencesStore.excludeWhenTouching,
+      excludeWhenTouched: preferencesStore.excludeWhenTouched,
       lastSaveTime: Date.now(),
     }
     if (guidedStore?.isActive && guidedStore.persistenceSnapshot) {

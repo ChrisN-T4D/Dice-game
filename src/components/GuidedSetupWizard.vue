@@ -112,6 +112,50 @@
             </div>
           </div>
         </div>
+        <div class="wizard-option-row wizard-option-row-voice">
+          <span class="wizard-option-label">Voice for this session</span>
+          <div class="wizard-options-card">
+            <select v-model="config.kokoroVoiceId" class="wizard-select-voice" aria-label="Kokoro voice for guided session">
+              <option v-for="v in kokoroVoicesList" :key="v.id" :value="v.id">{{ v.name }}</option>
+            </select>
+            <p class="wizard-voice-hint">Used for Kokoro prompts and matching static phrase audio when available.</p>
+          </div>
+        </div>
+        <div class="wizard-option-row wizard-option-row-body">
+          <span class="wizard-option-label">Avoid prompts involving…</span>
+          <div class="wizard-body-exclude-grid">
+            <div class="wizard-body-exclude-col">
+              <div class="wizard-body-exclude-heading">When you are touching</div>
+              <div class="wizard-options-card wizard-body-exclude-card">
+                <button
+                  v-for="key in excludeBodyKeys"
+                  :key="'touch-' + key"
+                  type="button"
+                  class="secondary wizard-opt wizard-exclude-btn"
+                  :class="{ 'preset-selected': prefs.excludeWhenTouching[key] }"
+                  @click="toggleExcludeTouching(key)"
+                >
+                  {{ bodyExcludeLabels[key] }}
+                </button>
+              </div>
+            </div>
+            <div class="wizard-body-exclude-col">
+              <div class="wizard-body-exclude-heading">When you are touched</div>
+              <div class="wizard-options-card wizard-body-exclude-card">
+                <button
+                  v-for="key in excludeBodyKeys"
+                  :key="'touched-' + key"
+                  type="button"
+                  class="secondary wizard-opt wizard-exclude-btn"
+                  :class="{ 'preset-selected': prefs.excludeWhenTouched[key] }"
+                  @click="toggleExcludeTouched(key)"
+                >
+                  {{ bodyExcludeLabels[key] }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -320,6 +364,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { clothingPresets, getClothingEmoji, getClothingItemsByBody, groupClothingByBodyRegion, sortClothingByBodyRegion } from '@/data/clothing'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useSpeech } from '@/composables/useSpeech'
+import { EXCLUDE_BODY_KEYS, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 
 const props = defineProps({
   initialStep: { type: Number, default: 1 },
@@ -384,6 +430,34 @@ function presetLabel(key) {
 const fullClothingGroups = groupClothingByBodyRegion(getClothingItemsByBody())
 
 const prefs = usePreferencesStore()
+const speech = useSpeech()
+
+const excludeBodyKeys = EXCLUDE_BODY_KEYS
+const bodyExcludeLabels = {
+  feet: 'Feet',
+  licking: 'Licking / mouth',
+  nipples: 'Nipples / chest',
+  genitals: 'Genitals',
+  buttocks: 'Buttocks',
+  perineum: 'Perineum',
+}
+
+const kokoroVoicesList = computed(() => {
+  const v = speech.kokoroVoicesListForLocale
+  const list = (v && typeof v === 'object' && 'value' in v ? v.value : v) || []
+  return Array.isArray(list) ? list : []
+})
+
+function toggleExcludeTouching(key) {
+  prefs.$patch({
+    excludeWhenTouching: { ...prefs.excludeWhenTouching, [key]: !prefs.excludeWhenTouching[key] },
+  })
+}
+function toggleExcludeTouched(key) {
+  prefs.$patch({
+    excludeWhenTouched: { ...prefs.excludeWhenTouched, [key]: !prefs.excludeWhenTouched[key] },
+  })
+}
 
 const config = reactive({
   partnerNames: { 1: '', 2: '' },
@@ -399,6 +473,7 @@ const config = reactive({
   clothingListP1: [...clothingPresets.undergarmentsMale],
   clothingListP2: [...clothingPresets.undergarmentsFemale],
   phaseCheckInEnabled: false,
+  kokoroVoiceId: 'af_nicole',
 })
 
 function selectPhaseOption(opt) {
@@ -475,6 +550,18 @@ onMounted(() => {
       config.partnerAnatomy[1] = c.partnerAnatomy[1] ?? 'penis'
       config.partnerAnatomy[2] = c.partnerAnatomy[2] ?? 'vulva'
     }
+    if (c.kokoroVoiceId) {
+      const v = String(c.kokoroVoiceId).trim()
+      if (v) config.kokoroVoiceId = v
+    }
+    if (c.excludeWhenTouching) prefs.$patch({ excludeWhenTouching: mergeExcludePrefs(c.excludeWhenTouching) })
+    if (c.excludeWhenTouched) prefs.$patch({ excludeWhenTouched: mergeExcludePrefs(c.excludeWhenTouched) })
+    if (typeof c.vibratorsPresent === 'boolean') prefs.vibratorsPresent = c.vibratorsPresent
+  } else {
+    const kid = speech.kokoroVoiceId && typeof speech.kokoroVoiceId === 'object' && 'value' in speech.kokoroVoiceId
+      ? speech.kokoroVoiceId.value
+      : speech.kokoroVoiceId
+    if (kid && typeof kid === 'string' && kid.trim()) config.kokoroVoiceId = kid.trim()
   }
   if (props.initialStep >= 1 && props.initialStep <= totalSteps) {
     step.value = props.initialStep
@@ -500,6 +587,10 @@ function onStart() {
     partnerNames: { 1: config.partnerNames[1], 2: config.partnerNames[2] },
     partnerAnatomy: { 1: config.partnerAnatomy[1], 2: config.partnerAnatomy[2] },
     phaseCheckInEnabled: config.phaseCheckInEnabled,
+    kokoroVoiceId: (config.kokoroVoiceId && String(config.kokoroVoiceId).trim()) || 'af_nicole',
+    excludeWhenTouching: mergeExcludePrefs(prefs.excludeWhenTouching),
+    excludeWhenTouched: mergeExcludePrefs(prefs.excludeWhenTouched),
+    vibratorsPresent: !!prefs.vibratorsPresent,
   })
 }
 </script>
@@ -684,6 +775,47 @@ function onStart() {
   font-size: 0.9rem;
   font-weight: 600;
   color: #e5e7eb;
+}
+.wizard-select-voice {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  font-size: 0.9rem;
+}
+.wizard-voice-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0.35rem 0 0;
+}
+.wizard-body-exclude-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 560px;
+}
+@media (max-width: 520px) {
+  .wizard-body-exclude-grid { grid-template-columns: 1fr; }
+}
+.wizard-body-exclude-heading {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
+}
+.wizard-body-exclude-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+.wizard-exclude-btn {
+  min-width: auto;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
 }
 
 .color-dots {

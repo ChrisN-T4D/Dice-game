@@ -152,19 +152,21 @@ Then open **http://localhost:3000**.
 4. **Deploy** – Click **Deploy the stack**. First build can take a few minutes.
 5. **Access** – Open **http://&lt;your-server&gt;:3000**. Admin: **http://&lt;your-server&gt;:3000/#admin**.
 
-### Static audio (smaller image, download at startup)
+### Static audio (Docker image vs download at startup)
 
-The Docker image does **not** include the static WAV files (`public/audio`), so the image builds faster and stays smaller. To have the app serve them:
+`npm run build` copies everything under **`public/`** into **`dist/`**, including **`public/audio/static/...`**. The root **`.dockerignore`** no longer excludes `public/audio`, so **Railway / Portainer builds that include committed WAVs** also serve **`/audio/static/<voiceId>/<phraseId>.wav`** from nginx without extra setup.
+
+**Optional: smaller image + download at startup** — If you keep WAVs out of git (or want a slimmer image), use **`AUDIO_ASSETS_URL`**:
 
 1. **Create the tarball** (once, on a machine that has `public/audio`):  
    `npm run pack-audio-assets`. This creates `audio-assets.tar.gz` in the repo root (~1.7 GB).
 2. **Upload** `audio-assets.tar.gz` somewhere reachable (e.g. GitHub Release, S3, or your own server).
-3. **In Portainer**, set the env var **`AUDIO_ASSETS_URL`** to the **direct** download URL of that file.
+3. Set **`AUDIO_ASSETS_URL`** to the **direct** download URL of that file.
 4. On container **start**, the entrypoint downloads the tarball and extracts it so `/audio/static/...` is served. It only downloads once (skips if already present).
 
 **Full step-by-step and URL troubleshooting:** see **[PORTAINER-URL-SETUP.md](PORTAINER-URL-SETUP.md)** (audio URL, TTS/config.json, and why the server URL might not have worked).
 
-If `AUDIO_ASSETS_URL` is not set, the app still runs; static phrase audio will 404 and the app will fall back to TTS for those phrases.
+If there are no WAVs in the built **`dist`** and `AUDIO_ASSETS_URL` is unset, the app still runs; static phrase requests **404** and **`useSpeech`** falls back to TTS for those phrases.
 
 ### How to update static audio after changing scripts or phrase text
 

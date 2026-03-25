@@ -21,7 +21,7 @@ RUN apk add --no-cache wget ca-certificates
 RUN mkdir -p /etc/nginx/templates
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Copy built app from builder (no public/audio; use AUDIO_ASSETS_URL at runtime)
+# Copy built app (includes public/audio → dist if present in build context)
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Runtime config (e.g. TTS URL from HOST) and optional audio download

@@ -546,13 +546,18 @@ function finish() {
   background-size: cover;
   background-position: center;
 }
-/* Step 3 tour preview: show real main UI behind; modal becomes a bottom bar */
+/* Step 3 tour preview: show real main UI behind; modal becomes a bottom-centered sheet (not bottom-right) */
 .onboarding-modal.tour-showing-main {
   background: rgba(2, 6, 23, 0.4);
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 .onboarding-modal.tour-showing-main .onboarding-content {
+  max-width: min(560px, 100%);
+  width: 100%;
   max-height: 50%;
   height: auto;
   min-height: auto;

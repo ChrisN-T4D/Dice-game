@@ -4,7 +4,7 @@
  */
 import { defineStore } from 'pinia'
 import { useSessionStore } from '@/stores/session'
-import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
+import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
 import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST, getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
 import { getPromptText, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
 import {
@@ -13,6 +13,7 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
+import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 import {
   SESSION_COMPLETE_PHRASES,
   INTRO_NO_CLOTHING_VARIANTS,
@@ -140,6 +141,11 @@ export const useGuidedStore = defineStore('guided', {
     clothingMilestoneInterval: 3,
     partnerNames: { 1: '', 2: '' },
     partnerAnatomy: { 1: 'penis', 2: 'vulva' },
+    excludeWhenTouching: mergeExcludePrefs(),
+    excludeWhenTouched: mergeExcludePrefs(),
+    vibratorsPresent: true,
+    /** Kokoro voice id for this session; empty = use global preference at speak time. */
+    sessionKokoroVoiceId: '',
 
     // Running state
     turnsSinceLastRemoval: 0,
@@ -255,6 +261,10 @@ export const useGuidedStore = defineStore('guided', {
         partnerNames: { ...this.partnerNames },
         partnerAnatomy: { ...this.partnerAnatomy },
         phaseCheckInEnabled: this.phaseCheckInEnabled,
+        excludeWhenTouching: mergeExcludePrefs(this.excludeWhenTouching),
+        excludeWhenTouched: mergeExcludePrefs(this.excludeWhenTouched),
+        vibratorsPresent: this.vibratorsPresent,
+        sessionKokoroVoiceId: this.sessionKokoroVoiceId,
         turnsSinceLastRemoval: this.turnsSinceLastRemoval,
         totalTurnsInSession: this.totalTurnsInSession,
         currentPartner: this.currentPartner,
@@ -297,6 +307,10 @@ export const useGuidedStore = defineStore('guided', {
       this.partnerNames = snapshot.partnerNames && typeof snapshot.partnerNames === 'object' ? { ...snapshot.partnerNames } : { 1: '', 2: '' }
       this.partnerAnatomy = snapshot.partnerAnatomy && typeof snapshot.partnerAnatomy === 'object' ? { ...snapshot.partnerAnatomy } : { 1: 'penis', 2: 'vulva' }
       this.phaseCheckInEnabled = !!snapshot.phaseCheckInEnabled
+      this.excludeWhenTouching = mergeExcludePrefs(snapshot.excludeWhenTouching)
+      this.excludeWhenTouched = mergeExcludePrefs(snapshot.excludeWhenTouched)
+      this.vibratorsPresent = snapshot.vibratorsPresent !== false
+      this.sessionKokoroVoiceId = typeof snapshot.sessionKokoroVoiceId === 'string' ? snapshot.sessionKokoroVoiceId : ''
       this.turnsSinceLastRemoval = Math.max(0, Number(snapshot.turnsSinceLastRemoval) || 0)
       this.totalTurnsInSession = Math.max(0, Number(snapshot.totalTurnsInSession) || 0)
       this.currentPartner = snapshot.currentPartner === 2 ? 2 : 1
@@ -351,11 +365,13 @@ export const useGuidedStore = defineStore('guided', {
     },
     /** Options for speakRef; use browser TTS for short cues (ease-in, turn-begins) so fallback is instant. */
     _speakOpts(phrase, onEnd) {
+      const voiceId = this.sessionKokoroVoiceId?.trim?.() || null
       const base = {
         force: true,
         onEnd: this._oncePhraseEnd(onEnd),
         onSource: (s) => this._devLog('phrase_start', phrase, { source: s }),
         onPlaybackFailed: (reason) => this._devLog('playback_failed', phrase, { source: 'kokoro', reason }),
+        ...(voiceId ? { voiceId } : {}),
       }
       const shortCue = phrase && (EASE_IN_TEXTS.includes(phrase) || TURN_BEGINS_TEXTS.includes(phrase))
       return shortCue ? { ...base, forceTtsMode: 'browser' } : base
@@ -533,7 +549,15 @@ export const useGuidedStore = defineStore('guided', {
     },
 
     startGuidedMode(config, options = {}) {
-      this.lastStartedConfig = config ? { ...config } : null
+      if (config) {
+        this.lastStartedConfig = {
+          ...config,
+          excludeWhenTouching: mergeExcludePrefs(config.excludeWhenTouching),
+          excludeWhenTouched: mergeExcludePrefs(config.excludeWhenTouched),
+        }
+      } else {
+        this.lastStartedConfig = null
+      }
       const usePreGeneratedBlobs = options.usePreGeneratedBlobs && Array.isArray(options.usePreGeneratedBlobs) && options.usePreGeneratedBlobs.length > 0
       if (usePreGeneratedBlobs) {
         this.preGeneratedBlobs = options.usePreGeneratedBlobs
@@ -552,7 +576,16 @@ export const useGuidedStore = defineStore('guided', {
         partnerNames,
         partnerAnatomy,
         phaseCheckInEnabled,
+        excludeWhenTouching: cfgExTouch,
+        excludeWhenTouched: cfgExTouched,
+        vibratorsPresent: cfgVibrators,
+        kokoroVoiceId: cfgVoiceId,
       } = config
+
+      this.excludeWhenTouching = mergeExcludePrefs(cfgExTouch)
+      this.excludeWhenTouched = mergeExcludePrefs(cfgExTouched)
+      this.vibratorsPresent = cfgVibrators !== false
+      this.sessionKokoroVoiceId = (cfgVoiceId && String(cfgVoiceId).trim()) || ''
 
       this.totalSeconds = totalMinutes * 60
       this.turnSeconds = turnMinutes * 60
@@ -632,12 +665,14 @@ export const useGuidedStore = defineStore('guided', {
       // Preload intro and fixed phrases immediately so they're ready; worker won't block.
       const prepAtStart = this.preparePhraseRef
       if (prepAtStart) {
-        prepAtStart(intro)
-        prepAll(prepAtStart, NEXT_TURN_TEXTS)
-        prepAll(prepAtStart, TURN_BEGINS_TEXTS)
-        prepAll(prepAtStart, EASE_IN_TEXTS)
-        prepAll(prepAtStart, SESSION_COMPLETE_PHRASES)
-        prepAtStart(SETTLE_INTO_POSITION_TEXT)
+        const vid = this.sessionKokoroVoiceId?.trim() || undefined
+        const runPrep = (phrase) => prepAtStart(phrase, undefined, vid)
+        runPrep(intro)
+        prepAll(runPrep, NEXT_TURN_TEXTS)
+        prepAll(runPrep, TURN_BEGINS_TEXTS)
+        prepAll(runPrep, EASE_IN_TEXTS)
+        prepAll(runPrep, SESSION_COMPLETE_PHRASES)
+        runPrep(SETTLE_INTO_POSITION_TEXT)
       }
 
       let introEnded = false
@@ -718,23 +753,19 @@ export const useGuidedStore = defineStore('guided', {
           clothingRemoved = true
         }
       } else {
+        const rng = Math.random
         if (phase === 3) {
           const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
           const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy)
           loc = pool[Math.floor(Math.random() * pool.length)]
-          actRoll = rollD20()
-          if (actRoll === 20 && this.distributionMode !== 'quickie') {
-            extendedTime = true
-            actRoll = Math.floor(Math.random() * 19) + 1
-          }
+          const mod = rollPhase3ModifierWithVibratorRule(rng, this.distributionMode, this.vibratorsPresent)
+          actRoll = mod.actRoll
+          extendedTime = mod.extendedTime
         } else {
-          const r = randomRollsForPhase(sessionStore.phase)
-          loc = r.location
-          actRoll = r.action
-          if (actRoll === 20 && this.distributionMode !== 'quickie') {
-            extendedTime = true
-            actRoll = Math.floor(Math.random() * 19) + 1
-          }
+          const r = rollPhase12WithExclusions(phase, rng, this.distributionMode, this.excludeWhenTouching, this.excludeWhenTouched)
+          loc = r.loc
+          actRoll = r.actRoll
+          extendedTime = r.extendedTime
         }
 
         const partnerNames = { 1: this.partnerName(1), 2: this.partnerName(2) }

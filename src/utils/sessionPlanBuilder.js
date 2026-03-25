@@ -2,7 +2,6 @@
  * Session plan builder: deterministic dry-run of guided mode.
  * Produces SessionPlan { config, turns, script } for review and pre-generate audio.
  */
-import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
 import { getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
 import { getPromptText, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
 import {
@@ -18,6 +17,7 @@ import {
   TURN_BEGINS_TEXTS,
   EASE_IN_TEXTS,
 } from '@/data/staticPhrases'
+import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 
 // -----------------------------------------------------------------------------
 // Seeded RNG (LCG) for deterministic plans
@@ -32,23 +32,6 @@ function createSeededRng(seed) {
 
 function rollD20(rng) {
   return Math.floor(rng() * 20) + 1
-}
-
-function rollPhase3Position(rng) {
-  const a = rollD20(rng)
-  const b = rollD20(rng)
-  return Math.min(155, ((a - 1) * 20 + b - 1) % 156 + 1)
-}
-
-/** Same as tables.randomRollsForPhase but with seeded rng. */
-function randomRollsForPhaseSeeded(phase, rng) {
-  if (phase === 1 || phase === 2) {
-    return { location: rollD20(rng), action: rollD20(rng) }
-  }
-  if (phase === 3) {
-    return { position: Math.floor(rng() * 155) + 1, modifier: rollD20(rng) }
-  }
-  return {}
 }
 
 function pick(arr, rng) {
@@ -81,7 +64,13 @@ export function buildSessionPlan(config, seed) {
     partnerNames = { 1: '', 2: '' },
     partnerAnatomy = { 1: 'penis', 2: 'vulva' },
     phaseCheckInEnabled = false,
+    excludeWhenTouching: _exTouch,
+    excludeWhenTouched: _exTouched,
+    vibratorsPresent = true,
   } = config
+
+  const excludeWhenTouching = mergeExcludePrefs(_exTouch)
+  const excludeWhenTouched = mergeExcludePrefs(_exTouched)
 
   const totalSeconds = totalMinutes * 60
   const turnSeconds = turnMinutes * 60
@@ -178,19 +167,14 @@ export function buildSessionPlan(config, seed) {
       const receiverAnatomyVal = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
       const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal)
       loc = pool[Math.floor(rng() * pool.length)]
-      actRoll = rollD20(rng)
-      if (actRoll === 20 && distributionMode !== 'quickie') {
-        extendedTime = true
-        actRoll = Math.floor(rng() * 19) + 1
-      }
+      const mod = rollPhase3ModifierWithVibratorRule(rng, distributionMode, !!vibratorsPresent)
+      actRoll = mod.actRoll
+      extendedTime = mod.extendedTime
     } else {
-      const r = randomRollsForPhaseSeeded(phase, rng)
-      loc = r.location
-      actRoll = r.action
-      if (actRoll === 20 && distributionMode !== 'quickie') {
-        extendedTime = true
-        actRoll = Math.floor(rng() * 19) + 1
-      }
+      const r = rollPhase12WithExclusions(phase, rng, distributionMode, excludeWhenTouching, excludeWhenTouched)
+      loc = r.loc
+      actRoll = r.actRoll
+      extendedTime = r.extendedTime
     }
 
     const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }

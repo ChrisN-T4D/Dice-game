@@ -481,6 +481,8 @@ async function startCooking() {
   cookingProgressTotal.value = endIndex
   cookingProgressCurrent.value = 0
   guided.clearCookingLog()
+  const cookVoiceId = plan.config?.kokoroVoiceId?.trim()
+  const cookGenOpts = cookVoiceId ? { voiceId: cookVoiceId } : {}
   try {
     const initialBlobs = await generateSessionAudio(
       initialScript,
@@ -490,7 +492,8 @@ async function startCooking() {
       },
       (phraseIndex, ev) => {
         guided.addCookingLogEntry({ phraseIndex, ...ev })
-      }
+      },
+      cookGenOpts
     )
     // Retry any nulls in the initial batch (e.g. turn_begins / "Whenever you're ready") so playback starts immediately
     for (let i = 0; i < initialBlobs.length; i++) {
@@ -501,7 +504,8 @@ async function startCooking() {
           undefined,
           (phraseIndex, ev) => {
             guided.addCookingLogEntry({ phraseIndex: i, ...ev, retry: true })
-          }
+          },
+          cookGenOpts
         )
         if (retryBlob != null) initialBlobs[i] = retryBlob
       } catch (_) {}
@@ -535,7 +539,8 @@ async function startCooking() {
               undefined,
               (phraseIndex, ev) => {
                 guided.addCookingLogEntry({ phraseIndex: j, ...ev, background: true })
-              }
+              },
+              cookGenOpts
             )
             if (guided.consumedPreGeneratedIndices?.has(j)) continue
             guided.setPreGeneratedBlobAt(j, blob)

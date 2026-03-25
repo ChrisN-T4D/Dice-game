@@ -15,9 +15,8 @@ import {
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
 import {
   SESSION_COMPLETE_PHRASES,
-  INTRO_OPENINGS,
-  INTRO_CLOSINGS,
-  INTRO_CLOTHING_LINES,
+  INTRO_NO_CLOTHING_VARIANTS,
+  INTRO_WITH_CLOTHING_VARIANTS,
   NEXT_TURN_TEXTS,
   TURN_BEGINS_TEXTS,
   EASE_IN_TEXTS,
@@ -627,9 +626,7 @@ export const useGuidedStore = defineStore('guided', {
       if (options.prebuiltIntro) {
         intro = options.prebuiltIntro
       } else {
-        intro = pick(INTRO_OPENINGS)
-        if (this.clothingEnabled) intro += pick(INTRO_CLOTHING_LINES)
-        intro += pick(INTRO_CLOSINGS)
+        intro = pick(this.clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS)
       }
 
       // Preload intro and fixed phrases immediately so they're ready; worker won't block.

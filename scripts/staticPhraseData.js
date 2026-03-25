@@ -21,16 +21,6 @@ const INTRO_NO_CLOTHING_VARIANTS = [
   'You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin.',
 ]
 
-const INTRO_OPENINGS = [
-  'This is guided mode. You will hear a prompt for each turn. If a prompt does not work for you, substitute another action you both like. ',
-  'This is guided mode. You will hear a prompt for each turn. Feel free to use another action you both prefer instead. ',
-  'This is guided mode. You will hear a prompt for each turn. If you would rather do something else, substitute any other action you both like. ',
-]
-const INTRO_CLOSINGS = [
-  'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-  'Between turns you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-  'When each turn ends you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-]
 export const INTRO_NO_CLOTHING = (() => {
   return INTRO_NO_CLOTHING_VARIANTS.map((text, i) => ({ id: `intro_no_clothing_${i + 1}`, text }))
 })()

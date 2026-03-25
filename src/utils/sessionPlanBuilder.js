@@ -12,9 +12,8 @@ import {
 } from '@/data/clothing'
 import {
   SESSION_COMPLETE_PHRASES,
-  INTRO_OPENINGS,
-  INTRO_CLOSINGS,
-  INTRO_CLOTHING_LINES,
+  INTRO_NO_CLOTHING_VARIANTS,
+  INTRO_WITH_CLOTHING_VARIANTS,
   NEXT_TURN_TEXTS,
   TURN_BEGINS_TEXTS,
   EASE_IN_TEXTS,
@@ -126,9 +125,7 @@ export function buildSessionPlan(config, seed) {
   let turnIndex = 0
 
   // Intro (from staticPhrases)
-  let intro = pick(INTRO_OPENINGS, rng)
-  if (clothingEnabled) intro += pick(INTRO_CLOTHING_LINES, rng)
-  intro += pick(INTRO_CLOSINGS, rng)
+  const intro = pick(clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS, rng)
   script.push(intro)
 
   const pushTurnPhrases = (turnData) => {

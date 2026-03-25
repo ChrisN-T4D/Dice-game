@@ -260,7 +260,7 @@ import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
 import { useSpeech } from '@/composables/useSpeech'
-import { INTRO_OPENINGS, INTRO_CLOSINGS, INTRO_CLOTHING_LINES } from '@/data/staticPhrases'
+import { INTRO_NO_CLOTHING_VARIANTS, INTRO_WITH_CLOTHING_VARIANTS } from '@/data/staticPhrases'
 import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 
 const session = useSessionStore()
@@ -400,10 +400,7 @@ function pick(arr) {
 }
 
 function buildIntroText(clothingEnabled) {
-  let text = pick(INTRO_OPENINGS)
-  if (clothingEnabled) text += pick(INTRO_CLOTHING_LINES)
-  text += pick(INTRO_CLOSINGS)
-  return text
+  return pick(clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS)
 }
 
 function onWizardStart(config) {

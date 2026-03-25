@@ -43,18 +43,6 @@ export const INTRO_NO_CLOTHING_VARIANTS = [
   'You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin.',
 ]
 
-/** Parallel structure: guided mode + prompt per turn + substitute if needed. */
-export const INTRO_OPENINGS = [
-  'This is guided mode. You will hear a prompt for each turn. If a prompt does not work for you, substitute another action you both like. ',
-  'This is guided mode. You will hear a prompt for each turn. Feel free to use another action you both prefer instead. ',
-  'This is guided mode. You will hear a prompt for each turn. If you would rather do something else, substitute any other action you both like. ',
-]
-/** Parallel structure: [when] you will hear when to switch, then settle into position, then the next prompt. Let us begin. */
-export const INTRO_CLOSINGS = [
-  'After each turn you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-  'Between turns you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-  'When each turn ends you will hear when to switch, then settle into position, then the next prompt. Let us begin.',
-]
 /** Intro with clothing: 9 intentionally distinct variants (less repetitive in TTS). */
 export const INTRO_WITH_CLOTHING_VARIANTS = [
   'Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin.',

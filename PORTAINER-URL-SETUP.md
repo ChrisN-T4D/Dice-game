@@ -20,16 +20,12 @@ The container runs `wget -O /tmp/audio-assets.tar.gz "$AUDIO_ASSETS_URL"`. The U
 - **HTTPS** (or HTTP).
 - **Direct download**: the request must return the file itself, not an HTML page (e.g. “sign in” or “click to download”).
 
-**Option A – GitHub Release (simple and free)**
+**Option A – GitHub Release**
 
-1. On GitHub: your repo → **Releases** → **Draft a new release**.
-2. **Choose a tag** (e.g. `v0.8` or `audio-assets`); create the tag if needed.
-3. **Attach** `audio-assets.tar.gz` (drag and drop or “attach binaries”).
-4. Publish the release.
-5. **Copy the asset URL**: right‑click `audio-assets.tar.gz` in the release → **Copy link address**.  
-   It should look like:  
-   `https://github.com/ChrisN-T4D/Dice-game/releases/download/v0.8/audio-assets.tar.gz`  
-   (Use your real repo name and tag.)
+You can use either of these:
+
+- **Preferred (smaller download):** Create a tarball with `npm run pack-audio-assets` (top-level `audio/` only). Draft a release, **attach** that file as a release asset, then copy the **asset** URL (e.g. `https://github.com/.../releases/download/audio-assets/audio-assets.tar.gz`).  
+- **Source-code archive:** You can use the **“Source code (tar.gz)”** link from a release (e.g. right‑click → Copy link address). That URL looks like `https://github.com/.../archive/refs/tags/audio-assets.tar.gz` and contains the full repo. The entrypoint detects this format and uses `<repo-dir>/public/audio` so it still works. The download is larger than the packed-audio-only tarball.
 
 **Option B – S3 / R2 / your server**
 
@@ -69,18 +65,19 @@ The app can use an optional **TTS server** for devices where in‑browser Kokoro
 ### How config.json is built
 
 - **Entrypoint** (`entrypoint.sh`) writes `/usr/share/nginx/html/config.json` when the container starts.
-- It uses **one** env var: **`HOST`**.
+- **`TTS_SERVER_URL`** (optional) — if set, it wins and is written as `ttsServerUrl` as-is (full URL). Use this on platforms like **Railway** where TTS is a separate public URL, not `https://tts.<HOST>`.
+- Else **`HOST`** (Traefik / subdomain style):
   - If **`HOST`** is set (e.g. `app.example.com`), it writes:  
     `{"ttsServerUrl":"https://tts.app.example.com"}`  
-    So the TTS URL is **always** `https://tts.<HOST>`.
-  - If **`HOST`** is **not** set, it writes:  
+    So the TTS URL is **`https://tts.<HOST>`**.
+  - If neither is set, it writes:  
     `{"ttsServerUrl":""}`  
     So the app does **not** use a TTS server.
 
 So when you “set the URL for the server”, what actually matters is:
 
-1. **`HOST`** in the stack (for the app service).
-2. Whether you run the **TTS container** and Traefik routes `tts.<HOST>` to it.
+1. **`TTS_SERVER_URL`** on the app service (if you need a full URL), **or**
+2. **`HOST`** in the stack plus Traefik routing `tts.<HOST>` to the TTS container.
 
 ### Why the TTS server was broken
 

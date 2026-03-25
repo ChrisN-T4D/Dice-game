@@ -17,8 +17,9 @@ FROM nginx:alpine
 # For downloading audio assets at startup (optional AUDIO_ASSETS_URL)
 RUN apk add --no-cache wget ca-certificates
 
-# SPA + correct MIME for wasm/js
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# SPA template: entrypoint substitutes __NGINX_PORT__ from PORT (default 80; Railway sets PORT)
+RUN mkdir -p /etc/nginx/templates
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copy built app from builder (no public/audio; use AUDIO_ASSETS_URL at runtime)
 COPY --from=builder /app/dist /usr/share/nginx/html

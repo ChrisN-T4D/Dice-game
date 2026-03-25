@@ -15,7 +15,11 @@
  *      Requires onnxruntime-node with GPU support. Falls back to CPU if GPU load fails.
  *
  * Usage:
- *   node scripts/generate-static-wavs.js [--voice af_nicole] [--phrase voice_test] [--local] [--gpu]
+ *   node scripts/generate-static-wavs.js [--voice af_nicole] [--phrase voice_test] [--local] [--gpu] [--skip-existing]
+ *
+ * By default, existing WAVs are overwritten (so re-run after changing phrase text to update audio).
+ * Use --skip-existing to only generate missing files (faster when adding new phrases).
+ * Use --phrase <id> to regenerate just one phrase (e.g. ease_in_1) for all voices.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -37,13 +41,15 @@ function parseArgs() {
   let phrase = null
   let useLocal = false
   let useGpu = false
+  let skipExisting = false
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--voice' && args[i + 1]) voice = args[++i]
     else if (args[i] === '--phrase' && args[i + 1]) phrase = args[++i]
     else if (args[i] === '--local') useLocal = true
     else if (args[i] === '--gpu') useGpu = true
+    else if (args[i] === '--skip-existing') skipExisting = true
   }
-  return { voice, phrase, useLocal, useGpu }
+  return { voice, phrase, useLocal, useGpu, skipExisting }
 }
 
 async function ensureKokoroVoicesForLocal(projectRoot) {
@@ -67,7 +73,7 @@ async function ensureKokoroVoicesForLocal(projectRoot) {
 }
 
 async function main() {
-  const { voice: filterVoice, phrase: filterPhrase, useLocal, useGpu } = parseArgs()
+  const { voice: filterVoice, phrase: filterPhrase, useLocal, useGpu, skipExisting } = parseArgs()
   const voices = filterVoice ? [filterVoice] : DEFAULT_VOICES
   const phrases = filterPhrase ? STATIC_PHRASES.filter((p) => p.id === filterPhrase) : STATIC_PHRASES
   if (filterPhrase && phrases.length === 0) {
@@ -116,6 +122,11 @@ async function main() {
   for (const voiceId of voices) {
     for (const { id: phraseId, text } of phrases) {
       const outPath = path.join(staticRoot, voiceId, `${phraseId}.wav`)
+      if (skipExisting && fs.existsSync(outPath)) {
+        done++
+        console.log(`[${done}/${total}] ${voiceId}/${phraseId}.wav (skip existing)`)
+        continue
+      }
       try {
         const audio = await tts.generate(text, { voice: voiceId })
         await audio.save(outPath)

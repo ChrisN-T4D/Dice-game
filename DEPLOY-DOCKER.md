@@ -6,7 +6,7 @@
 |------|--------|
 | `Dockerfile` | Multi-stage: Node 20 Alpine build → nginx Alpine serve |
 | `Dockerfile.tts` | TTS server (Node 20, Kokoro model in image) |
-| `nginx.conf` | SPA fallback, COOP/COEP headers, `.wasm` MIME, `/onnx-wasm/` alias |
+| `nginx.conf.template` | Same as above; `entrypoint.sh` substitutes `__NGINX_PORT__` from `PORT` (default 80) |
 | `docker-compose.yml` | Build from Git: app + tts-server, Traefik labels |
 | `docker-compose.registry.yml` | Pull from GHCR only; use for Portainer "Pull and redeploy" |
 | `.dockerignore` | Excludes `node_modules`, `dist`, `.git`, `.cursor`, `.vscode`, `.env` |
@@ -15,7 +15,7 @@
 
 1. **Install**: `npm ci` (requires `package-lock.json` in repo).
 2. **Build**: `npm run build` = `copy-public-assets.js` → `list-music.js` → `vite build`.
-3. **Serve**: nginx serves `dist/` at port 80; `entrypoint.sh` writes `/config.json` (TTS URL) from `HOST`.
+3. **Serve**: nginx serves `dist/`; `entrypoint.sh` writes `default.conf` from the template using **`PORT`** (default **80**) and writes `/config.json` (**`TTS_SERVER_URL`** or **`HOST`** for legacy Traefik `https://tts.<HOST>`).
 
 ## Verify locally
 

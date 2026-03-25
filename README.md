@@ -166,8 +166,37 @@ The Docker image does **not** include the static WAV files (`public/audio`), so 
 
 If `AUDIO_ASSETS_URL` is not set, the app still runs; static phrase audio will 404 and the app will fall back to TTS for those phrases.
 
+### How to update static audio after changing scripts or phrase text
+
+1. **Keep phrase data in sync**  
+   The app uses `src/data/staticPhrases.js`; the generators use `scripts/staticPhraseData.js`. If you change **wording** or **which phrases exist**, update both so IDs and text match (see comments in `staticPhraseData.js`).
+
+2. **Regenerate WAVs** (requires Kokoro model and Node):
+   ```bash
+   npm run generate-static-wavs
+   ```
+   Use `--local` if the model is in `public/models/` (e.g. after `npm run download-kokoro-model`). To limit to one voice or one phrase:
+   ```bash
+   npm run generate-static-wavs -- --local --voice af_nicole
+   npm run generate-static-wavs -- --local --phrase ease_in_1
+   ```
+   **By default, existing WAVs are overwritten**—so re-running after changing phrase text updates those files. Use `--skip-existing` to only generate missing files (faster when adding new phrases). Output goes to `public/audio/static/<voiceId>/<phraseId>.wav`.
+
+3. **Verify** (optional):
+   ```bash
+   npm run check-static-wavs
+   ```
+
+4. **For Docker / Portainer**  
+   Repack and re-upload so containers get the new audio:
+   ```bash
+   npm run pack-audio-assets
+   ```
+   Then upload the new `audio-assets.tar.gz` (e.g. as a new release asset or replace the existing one) and set `AUDIO_ASSETS_URL` to its URL. **Redeploy** the stack. If the container already downloaded audio once, remove the volume (or the container) so the entrypoint downloads again, or use a new release URL so the marker path changes.
+
 ### Notes
 
-- The image builds the Vue app and serves it with nginx on port 80; map to any host port (e.g. 3000).
-- `nginx.conf` sets SPA fallback, COOP/COEP headers, and MIME types for WASM.
+- The image builds the Vue app and serves it with nginx; the listen port comes from **`PORT`** (default **80**; Railway sets `PORT` automatically). Map to any host port in Docker (e.g. `-p 3000:80`).
+- `nginx.conf.template` defines SPA fallback, COOP/COEP headers, and MIME types for WASM; the entrypoint substitutes `__NGINX_PORT__` at startup.
+- **Railway:** see [docs/RAILWAY.md](docs/RAILWAY.md) for `PORT`, `TTS_SERVER_URL`, and optional `Dockerfile.tts` service.
 - To update: pull latest in the stack and **Redeploy**.

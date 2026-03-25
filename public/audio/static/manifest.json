@@ -2,61 +2,706 @@
   {
     "phraseId": "voice_test",
     "voiceId": "af_nicole",
-    "text": "This is a quick voice test."
+    "text": "This is a quick voice check."
+  },
+  {
+    "phraseId": "intro_no_clothing_1",
+    "voiceId": "af_nicole",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If something does not fit, choose another action you both enjoy. We will tell you when to switch, settle in, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_2",
+    "voiceId": "af_nicole",
+    "text": "This is guided mode. You will hear one prompt per turn. Feel free to substitute anything that feels better for both of you. Between turns, you will hear when to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_3",
+    "voiceId": "af_nicole",
+    "text": "Guided mode is on. Each turn comes with a single prompt. If you prefer something else, choose another action together. At each transition, you will hear switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_4",
+    "voiceId": "af_nicole",
+    "text": "You're in guided mode. We'll give one prompt at a time. If a suggestion does not work, swap in something you both like. After each turn, you'll hear when to switch, settle, and start the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_5",
+    "voiceId": "af_nicole",
+    "text": "This session uses guided mode. You will hear clear prompts for each turn. You can always substitute another action you both prefer. You will also hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_6",
+    "voiceId": "af_nicole",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We'll guide each transition: switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_7",
+    "voiceId": "af_nicole",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. At the end of each turn, you will hear cues to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_8",
+    "voiceId": "af_nicole",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. You'll hear transition cues for switching, settling in, and starting the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_9",
+    "voiceId": "af_nicole",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_1",
+    "voiceId": "af_nicole",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_2",
+    "voiceId": "af_nicole",
+    "text": "This is guided mode. You will hear one prompt per turn, and you can substitute anything that feels better for both of you. Clothing-removal guidance is included when needed. Between turns, you will hear when to switch, settle in, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_3",
+    "voiceId": "af_nicole",
+    "text": "Guided mode is on. Each turn has one prompt, and you can choose another action together any time. You will also hear when and how to remove clothing. When a turn ends, you will hear switch, settle into position, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_4",
+    "voiceId": "af_nicole",
+    "text": "You're in guided mode. We'll give one prompt at a time, and you can swap in something you both like whenever needed. We will cue clothing-removal moments clearly. After each turn, listen for switch, settle, and next-prompt cues. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_5",
+    "voiceId": "af_nicole",
+    "text": "This session uses guided mode with clear turn-by-turn prompts. You can always choose another action you both prefer. Clothing-removal steps will be announced at the right times. Between turns, you will hear when to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_6",
+    "voiceId": "af_nicole",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We will guide when and how to remove clothing, then cue each transition to switch, settle, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_7",
+    "voiceId": "af_nicole",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. You will hear calm cues for clothing removal when it applies. At each transition, we will cue switch, settle in, and the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_8",
+    "voiceId": "af_nicole",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. We will include clothing-removal guidance as needed. When turns change, you will hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_9",
+    "voiceId": "af_nicole",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. You will also hear clear cues for clothing removal during the flow. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "next_turn_1",
+    "voiceId": "af_nicole",
+    "text": "That turn is complete. Time to switch."
+  },
+  {
+    "phraseId": "next_turn_2",
+    "voiceId": "af_nicole",
+    "text": "This turn has ended. Go ahead and switch."
+  },
+  {
+    "phraseId": "next_turn_3",
+    "voiceId": "af_nicole",
+    "text": "Switch roles when you're both ready."
+  },
+  {
+    "phraseId": "next_turn_4",
+    "voiceId": "af_nicole",
+    "text": "Switch when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_1",
+    "voiceId": "af_nicole",
+    "text": "Your turn starts now."
+  },
+  {
+    "phraseId": "turn_begins_2",
+    "voiceId": "af_nicole",
+    "text": "Go ahead when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_3",
+    "voiceId": "af_nicole",
+    "text": "Whenever you're ready, begin."
+  },
+  {
+    "phraseId": "turn_begins_4",
+    "voiceId": "af_nicole",
+    "text": "You can begin now."
+  },
+  {
+    "phraseId": "ease_in_1",
+    "voiceId": "af_nicole",
+    "text": "Take a moment to settle into position. No rush."
+  },
+  {
+    "phraseId": "ease_in_2",
+    "voiceId": "af_nicole",
+    "text": "Get comfortable first, then begin when you're ready."
+  },
+  {
+    "phraseId": "ease_in_3",
+    "voiceId": "af_nicole",
+    "text": "Settle in at your own pace. No rush."
+  },
+  {
+    "phraseId": "ease_in_4",
+    "voiceId": "af_nicole",
+    "text": "Whenever you're ready, settle into position."
   },
   {
     "phraseId": "session_complete_1",
     "voiceId": "af_nicole",
-    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+    "text": "You've reached the end of the guided instructions. Check in with each other and decide whether to continue. You can save this session as a favorite, play the dice game, start another session, or continue on your own without the app."
   },
   {
     "phraseId": "session_complete_2",
     "voiceId": "af_nicole",
-    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+    "text": "That's the end of the guided instructions. Take a moment to check in together. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow what feels right."
   },
   {
     "phraseId": "session_complete_3",
     "voiceId": "af_nicole",
-    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+    "text": "Guided instructions are complete. Check in with each other and choose what's next. You can save this session as a favorite, play the dice game, start another session, or leave the app and continue in your own way."
+  },
+  {
+    "phraseId": "settle_into_position_1",
+    "voiceId": "af_nicole",
+    "text": "Settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_2",
+    "voiceId": "af_nicole",
+    "text": "Settle into position when you're both ready."
+  },
+  {
+    "phraseId": "settle_into_position_3",
+    "voiceId": "af_nicole",
+    "text": "Take a moment to settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_4",
+    "voiceId": "af_nicole",
+    "text": "Get into position at a pace that works for both of you."
+  },
+  {
+    "phraseId": "phase_checkin_1",
+    "voiceId": "af_nicole",
+    "text": "Phase 1 is complete. Take a moment to check in together, then tap the button to continue to Phase 2 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_2",
+    "voiceId": "af_nicole",
+    "text": "Phase 1 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_3",
+    "voiceId": "af_nicole",
+    "text": "Phase 1 is done. Check in together, and tap the button when you're ready to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_4",
+    "voiceId": "af_nicole",
+    "text": "Phase 2 is complete. Take a moment to check in together, then tap the button to continue to Phase 3 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_5",
+    "voiceId": "af_nicole",
+    "text": "Phase 2 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_6",
+    "voiceId": "af_nicole",
+    "text": "Phase 2 is done. Check in together, and tap the button when you're ready to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_7",
+    "voiceId": "af_nicole",
+    "text": "Phase 3 is complete. Take a moment to check in together, then tap the button to end the session when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_8",
+    "voiceId": "af_nicole",
+    "text": "Phase 3 has ended. Pause and check in with each other. When you're both ready, tap the button to end the session."
+  },
+  {
+    "phraseId": "phase_checkin_9",
+    "voiceId": "af_nicole",
+    "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
   },
   {
     "phraseId": "voice_test",
     "voiceId": "af_bella",
-    "text": "This is a quick voice test."
+    "text": "This is a quick voice check."
+  },
+  {
+    "phraseId": "intro_no_clothing_1",
+    "voiceId": "af_bella",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If something does not fit, choose another action you both enjoy. We will tell you when to switch, settle in, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_2",
+    "voiceId": "af_bella",
+    "text": "This is guided mode. You will hear one prompt per turn. Feel free to substitute anything that feels better for both of you. Between turns, you will hear when to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_3",
+    "voiceId": "af_bella",
+    "text": "Guided mode is on. Each turn comes with a single prompt. If you prefer something else, choose another action together. At each transition, you will hear switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_4",
+    "voiceId": "af_bella",
+    "text": "You're in guided mode. We'll give one prompt at a time. If a suggestion does not work, swap in something you both like. After each turn, you'll hear when to switch, settle, and start the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_5",
+    "voiceId": "af_bella",
+    "text": "This session uses guided mode. You will hear clear prompts for each turn. You can always substitute another action you both prefer. You will also hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_6",
+    "voiceId": "af_bella",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We'll guide each transition: switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_7",
+    "voiceId": "af_bella",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. At the end of each turn, you will hear cues to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_8",
+    "voiceId": "af_bella",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. You'll hear transition cues for switching, settling in, and starting the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_9",
+    "voiceId": "af_bella",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_1",
+    "voiceId": "af_bella",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_2",
+    "voiceId": "af_bella",
+    "text": "This is guided mode. You will hear one prompt per turn, and you can substitute anything that feels better for both of you. Clothing-removal guidance is included when needed. Between turns, you will hear when to switch, settle in, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_3",
+    "voiceId": "af_bella",
+    "text": "Guided mode is on. Each turn has one prompt, and you can choose another action together any time. You will also hear when and how to remove clothing. When a turn ends, you will hear switch, settle into position, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_4",
+    "voiceId": "af_bella",
+    "text": "You're in guided mode. We'll give one prompt at a time, and you can swap in something you both like whenever needed. We will cue clothing-removal moments clearly. After each turn, listen for switch, settle, and next-prompt cues. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_5",
+    "voiceId": "af_bella",
+    "text": "This session uses guided mode with clear turn-by-turn prompts. You can always choose another action you both prefer. Clothing-removal steps will be announced at the right times. Between turns, you will hear when to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_6",
+    "voiceId": "af_bella",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We will guide when and how to remove clothing, then cue each transition to switch, settle, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_7",
+    "voiceId": "af_bella",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. You will hear calm cues for clothing removal when it applies. At each transition, we will cue switch, settle in, and the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_8",
+    "voiceId": "af_bella",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. We will include clothing-removal guidance as needed. When turns change, you will hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_9",
+    "voiceId": "af_bella",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. You will also hear clear cues for clothing removal during the flow. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "next_turn_1",
+    "voiceId": "af_bella",
+    "text": "That turn is complete. Time to switch."
+  },
+  {
+    "phraseId": "next_turn_2",
+    "voiceId": "af_bella",
+    "text": "This turn has ended. Go ahead and switch."
+  },
+  {
+    "phraseId": "next_turn_3",
+    "voiceId": "af_bella",
+    "text": "Switch roles when you're both ready."
+  },
+  {
+    "phraseId": "next_turn_4",
+    "voiceId": "af_bella",
+    "text": "Switch when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_1",
+    "voiceId": "af_bella",
+    "text": "Your turn starts now."
+  },
+  {
+    "phraseId": "turn_begins_2",
+    "voiceId": "af_bella",
+    "text": "Go ahead when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_3",
+    "voiceId": "af_bella",
+    "text": "Whenever you're ready, begin."
+  },
+  {
+    "phraseId": "turn_begins_4",
+    "voiceId": "af_bella",
+    "text": "You can begin now."
+  },
+  {
+    "phraseId": "ease_in_1",
+    "voiceId": "af_bella",
+    "text": "Take a moment to settle into position. No rush."
+  },
+  {
+    "phraseId": "ease_in_2",
+    "voiceId": "af_bella",
+    "text": "Get comfortable first, then begin when you're ready."
+  },
+  {
+    "phraseId": "ease_in_3",
+    "voiceId": "af_bella",
+    "text": "Settle in at your own pace. No rush."
+  },
+  {
+    "phraseId": "ease_in_4",
+    "voiceId": "af_bella",
+    "text": "Whenever you're ready, settle into position."
   },
   {
     "phraseId": "session_complete_1",
     "voiceId": "af_bella",
-    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+    "text": "You've reached the end of the guided instructions. Check in with each other and decide whether to continue. You can save this session as a favorite, play the dice game, start another session, or continue on your own without the app."
   },
   {
     "phraseId": "session_complete_2",
     "voiceId": "af_bella",
-    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+    "text": "That's the end of the guided instructions. Take a moment to check in together. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow what feels right."
   },
   {
     "phraseId": "session_complete_3",
     "voiceId": "af_bella",
-    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+    "text": "Guided instructions are complete. Check in with each other and choose what's next. You can save this session as a favorite, play the dice game, start another session, or leave the app and continue in your own way."
+  },
+  {
+    "phraseId": "settle_into_position_1",
+    "voiceId": "af_bella",
+    "text": "Settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_2",
+    "voiceId": "af_bella",
+    "text": "Settle into position when you're both ready."
+  },
+  {
+    "phraseId": "settle_into_position_3",
+    "voiceId": "af_bella",
+    "text": "Take a moment to settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_4",
+    "voiceId": "af_bella",
+    "text": "Get into position at a pace that works for both of you."
+  },
+  {
+    "phraseId": "phase_checkin_1",
+    "voiceId": "af_bella",
+    "text": "Phase 1 is complete. Take a moment to check in together, then tap the button to continue to Phase 2 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_2",
+    "voiceId": "af_bella",
+    "text": "Phase 1 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_3",
+    "voiceId": "af_bella",
+    "text": "Phase 1 is done. Check in together, and tap the button when you're ready to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_4",
+    "voiceId": "af_bella",
+    "text": "Phase 2 is complete. Take a moment to check in together, then tap the button to continue to Phase 3 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_5",
+    "voiceId": "af_bella",
+    "text": "Phase 2 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_6",
+    "voiceId": "af_bella",
+    "text": "Phase 2 is done. Check in together, and tap the button when you're ready to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_7",
+    "voiceId": "af_bella",
+    "text": "Phase 3 is complete. Take a moment to check in together, then tap the button to end the session when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_8",
+    "voiceId": "af_bella",
+    "text": "Phase 3 has ended. Pause and check in with each other. When you're both ready, tap the button to end the session."
+  },
+  {
+    "phraseId": "phase_checkin_9",
+    "voiceId": "af_bella",
+    "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
   },
   {
     "phraseId": "voice_test",
     "voiceId": "am_liam",
-    "text": "This is a quick voice test."
+    "text": "This is a quick voice check."
+  },
+  {
+    "phraseId": "intro_no_clothing_1",
+    "voiceId": "am_liam",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If something does not fit, choose another action you both enjoy. We will tell you when to switch, settle in, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_2",
+    "voiceId": "am_liam",
+    "text": "This is guided mode. You will hear one prompt per turn. Feel free to substitute anything that feels better for both of you. Between turns, you will hear when to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_3",
+    "voiceId": "am_liam",
+    "text": "Guided mode is on. Each turn comes with a single prompt. If you prefer something else, choose another action together. At each transition, you will hear switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_4",
+    "voiceId": "am_liam",
+    "text": "You're in guided mode. We'll give one prompt at a time. If a suggestion does not work, swap in something you both like. After each turn, you'll hear when to switch, settle, and start the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_5",
+    "voiceId": "am_liam",
+    "text": "This session uses guided mode. You will hear clear prompts for each turn. You can always substitute another action you both prefer. You will also hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_6",
+    "voiceId": "am_liam",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We'll guide each transition: switch, settle in, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_7",
+    "voiceId": "am_liam",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. At the end of each turn, you will hear cues to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_8",
+    "voiceId": "am_liam",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. You'll hear transition cues for switching, settling in, and starting the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_no_clothing_9",
+    "voiceId": "am_liam",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_1",
+    "voiceId": "am_liam",
+    "text": "Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_2",
+    "voiceId": "am_liam",
+    "text": "This is guided mode. You will hear one prompt per turn, and you can substitute anything that feels better for both of you. Clothing-removal guidance is included when needed. Between turns, you will hear when to switch, settle in, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_3",
+    "voiceId": "am_liam",
+    "text": "Guided mode is on. Each turn has one prompt, and you can choose another action together any time. You will also hear when and how to remove clothing. When a turn ends, you will hear switch, settle into position, then the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_4",
+    "voiceId": "am_liam",
+    "text": "You're in guided mode. We'll give one prompt at a time, and you can swap in something you both like whenever needed. We will cue clothing-removal moments clearly. After each turn, listen for switch, settle, and next-prompt cues. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_5",
+    "voiceId": "am_liam",
+    "text": "This session uses guided mode with clear turn-by-turn prompts. You can always choose another action you both prefer. Clothing-removal steps will be announced at the right times. Between turns, you will hear when to switch, settle into position, and move on. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_6",
+    "voiceId": "am_liam",
+    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We will guide when and how to remove clothing, then cue each transition to switch, settle, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_7",
+    "voiceId": "am_liam",
+    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. You will hear calm cues for clothing removal when it applies. At each transition, we will cue switch, settle in, and the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_8",
+    "voiceId": "am_liam",
+    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. We will include clothing-removal guidance as needed. When turns change, you will hear cues to switch, settle into position, and continue. Let us begin."
+  },
+  {
+    "phraseId": "intro_with_clothing_9",
+    "voiceId": "am_liam",
+    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. You will also hear clear cues for clothing removal during the flow. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+  },
+  {
+    "phraseId": "next_turn_1",
+    "voiceId": "am_liam",
+    "text": "That turn is complete. Time to switch."
+  },
+  {
+    "phraseId": "next_turn_2",
+    "voiceId": "am_liam",
+    "text": "This turn has ended. Go ahead and switch."
+  },
+  {
+    "phraseId": "next_turn_3",
+    "voiceId": "am_liam",
+    "text": "Switch roles when you're both ready."
+  },
+  {
+    "phraseId": "next_turn_4",
+    "voiceId": "am_liam",
+    "text": "Switch when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_1",
+    "voiceId": "am_liam",
+    "text": "Your turn starts now."
+  },
+  {
+    "phraseId": "turn_begins_2",
+    "voiceId": "am_liam",
+    "text": "Go ahead when you're ready."
+  },
+  {
+    "phraseId": "turn_begins_3",
+    "voiceId": "am_liam",
+    "text": "Whenever you're ready, begin."
+  },
+  {
+    "phraseId": "turn_begins_4",
+    "voiceId": "am_liam",
+    "text": "You can begin now."
+  },
+  {
+    "phraseId": "ease_in_1",
+    "voiceId": "am_liam",
+    "text": "Take a moment to settle into position. No rush."
+  },
+  {
+    "phraseId": "ease_in_2",
+    "voiceId": "am_liam",
+    "text": "Get comfortable first, then begin when you're ready."
+  },
+  {
+    "phraseId": "ease_in_3",
+    "voiceId": "am_liam",
+    "text": "Settle in at your own pace. No rush."
+  },
+  {
+    "phraseId": "ease_in_4",
+    "voiceId": "am_liam",
+    "text": "Whenever you're ready, settle into position."
   },
   {
     "phraseId": "session_complete_1",
     "voiceId": "am_liam",
-    "text": "This is the end of the guided instructions. Check in with each other and see if you're done or want to continue. You can save this session as a favorite, continue with the dice game, start another session, or continue on your own without the app."
+    "text": "You've reached the end of the guided instructions. Check in with each other and decide whether to continue. You can save this session as a favorite, play the dice game, start another session, or continue on your own without the app."
   },
   {
     "phraseId": "session_complete_2",
     "voiceId": "am_liam",
-    "text": "The guided instructions are complete. Take a moment to check in with each other. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow wherever you're drawn."
+    "text": "That's the end of the guided instructions. Take a moment to check in together. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow what feels right."
   },
   {
     "phraseId": "session_complete_3",
     "voiceId": "am_liam",
-    "text": "That's the end of the guided session. Check in with each other and decide whether you're done or want to continue. You can save this session as a favorite, continue by playing the dice game, start another session, or leave the app here and see where the moment takes you."
+    "text": "Guided instructions are complete. Check in with each other and choose what's next. You can save this session as a favorite, play the dice game, start another session, or leave the app and continue in your own way."
+  },
+  {
+    "phraseId": "settle_into_position_1",
+    "voiceId": "am_liam",
+    "text": "Settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_2",
+    "voiceId": "am_liam",
+    "text": "Settle into position when you're both ready."
+  },
+  {
+    "phraseId": "settle_into_position_3",
+    "voiceId": "am_liam",
+    "text": "Take a moment to settle into position together."
+  },
+  {
+    "phraseId": "settle_into_position_4",
+    "voiceId": "am_liam",
+    "text": "Get into position at a pace that works for both of you."
+  },
+  {
+    "phraseId": "phase_checkin_1",
+    "voiceId": "am_liam",
+    "text": "Phase 1 is complete. Take a moment to check in together, then tap the button to continue to Phase 2 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_2",
+    "voiceId": "am_liam",
+    "text": "Phase 1 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_3",
+    "voiceId": "am_liam",
+    "text": "Phase 1 is done. Check in together, and tap the button when you're ready to continue to Phase 2."
+  },
+  {
+    "phraseId": "phase_checkin_4",
+    "voiceId": "am_liam",
+    "text": "Phase 2 is complete. Take a moment to check in together, then tap the button to continue to Phase 3 when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_5",
+    "voiceId": "am_liam",
+    "text": "Phase 2 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_6",
+    "voiceId": "am_liam",
+    "text": "Phase 2 is done. Check in together, and tap the button when you're ready to continue to Phase 3."
+  },
+  {
+    "phraseId": "phase_checkin_7",
+    "voiceId": "am_liam",
+    "text": "Phase 3 is complete. Take a moment to check in together, then tap the button to end the session when you're ready."
+  },
+  {
+    "phraseId": "phase_checkin_8",
+    "voiceId": "am_liam",
+    "text": "Phase 3 has ended. Pause and check in with each other. When you're both ready, tap the button to end the session."
+  },
+  {
+    "phraseId": "phase_checkin_9",
+    "voiceId": "am_liam",
+    "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
   }
 ]

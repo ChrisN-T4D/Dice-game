@@ -1,0 +1,6 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# PORT is set by Railway; entrypoint renders nginx listen from PORT (default 80 locally).

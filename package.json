@@ -22,6 +22,7 @@
     "generate-static-phase-checkin": "node scripts/generate-static-phase-checkin.js",
     "generate-all": "node scripts/run-generate-sequence.js",
     "check-static-wavs": "node scripts/check-static-wavs.js",
+    "generate-static-script-review": "node scripts/generate-static-script-review.js",
     "pack-audio-assets": "node scripts/pack-audio-assets.js",
     "tts-server": "node server/tts-server.js",
     "test:kokoro-ort": "node scripts/test-kokoro-ort.js",

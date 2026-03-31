@@ -21,6 +21,7 @@ id_rsa.pub
 # IDE and editor (local only)
 .cursor/
 .vscode/
+*.code-workspace
 *.suo
 *.user
 *.userosscache

@@ -24,25 +24,27 @@
     "check-static-wavs": "node scripts/check-static-wavs.js",
     "generate-static-script-review": "node scripts/generate-static-script-review.js",
     "pack-audio-assets": "node scripts/pack-audio-assets.js",
-    "tts-server": "node server/tts-server.js",
     "test:kokoro-ort": "node scripts/test-kokoro-ort.js",
     "compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",
-    "run-tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js"
+    "run-tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js",
+    "debug:kokoro-ort": "node scripts/test-kokoro-ort.js",
+    "debug:compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",
+    "debug:tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.5.1",
     "edge-tts-client": "^1.0.2",
     "espeak-ng": "1.0.2",
     "kokoro-js": "^1.2.1",
-    "wavefile": "11.0.0",
     "onnxruntime-web": "^1.24.2",
     "pinia": "^2.1.0",
     "vue": "^3.4.0",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "wavefile": "11.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^6.0.5",
     "tar": "^7.4.3",
-    "vite": "^5.0.0"
+    "vite": "^8.0.3"
   }
 }

@@ -10,18 +10,20 @@ server {
     }
 
     # Don't cache index.html so deploys are picked up without hard refresh
+    # (Repeat COOP/COEP/CSP: nginx does not inherit server add_header when a location adds its own.)
     location = /index.html {
         add_header Cache-Control "no-cache, no-store, must-revalidate";
-    }
-
-    # Runtime config (e.g. TTS URL from HOST) — do not cache
-    location = /config.json {
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Cross-Origin-Opener-Policy "same-origin";
+        add_header Cross-Origin-Embedder-Policy "credentialless";
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' blob: data: https:; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob: data:; base-uri 'self'; form-action 'self'; frame-ancestors 'self';";
     }
 
     # WASM MIME type (do not override default mime.types)
     location ~* \.wasm$ {
         add_header Cache-Control "public, max-age=31536000";
+        add_header Cross-Origin-Opener-Policy "same-origin";
+        add_header Cross-Origin-Embedder-Policy "credentialless";
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' blob: data: https:; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob: data:; base-uri 'self'; form-action 'self'; frame-ancestors 'self';";
         default_type application/wasm;
     }
 
@@ -33,6 +35,7 @@ server {
     # Headers for SharedArrayBuffer / COOP+COEP (used by app)
     add_header Cross-Origin-Opener-Policy "same-origin";
     add_header Cross-Origin-Embedder-Policy "credentialless";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' blob: data: https:; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob: data:; base-uri 'self'; form-action 'self'; frame-ancestors 'self';";
 
     # Optional: alias typo path used by some builds
     location /onnxe-wasm/ {

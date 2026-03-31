@@ -22,9 +22,10 @@ Dice-game/
 ├── vite.config.js
 ├── phase3-positions-data.js     # Phase 3 positions (1–155); Vite alias "phase3-data"; scripts export → position-entries-by-number.json
 ├── position-entries-by-number.json  # Export/copy of phase3 data for scripts (apply-position-mapping, validation)
-├── legacy/                      # Vanilla JS app (index-legacy.html + main, state, guided-mode, free-play, clothing, etc.)
-├── public/                      # Static assets, ONNX/Kokoro WASM
-├── scripts/                     # Build & data: copy-public-assets, export-positions-from-js, apply-position-mapping, etc.
+├── archive/
+│   └── legacy/                 # Reference-only vanilla JS app (not imported by `src/`); see archive/legacy/README.md
+├── public/                      # Static assets, ONNX/Kokoro WASM, static phrase WAVs
+├── scripts/                     # Build, audio generation, data export (see Scripts table below)
 └── src/
     ├── main.js                  # Vue app mount, global error handler
     ├── App.vue                   # Root: admin vs main app; main = onboarding, landing, play mode (freeplay/guided)
@@ -33,7 +34,6 @@ Dice-game/
     ├── components/
     │   ├── FreePlayView.vue      # Dice game UI: phase, rolls, prompt, summary
     │   ├── GuidedModeView.vue     # Guided UI: countdown, instruction, next/settle, break timers
-    │   ├── GuidedPlaceholder.vue  # Placeholder when guided not started
     │   ├── GuidedSetupWizard.vue  # Guided config: partner names, phase distribution, time, options
     │   ├── LandingModal.vue       # Choose Dice game or Guided Mode
     │   ├── OnboardingWizard.vue   # First-time onboarding + tour
@@ -54,15 +54,17 @@ Dice-game/
     │   └── session.js             # phase, rollCount, maxPhase, uiMode (freeplay/guided), showLanding
     ├── utils/
     │   ├── adminEdits.js          # Admin localStorage: Phase 3 edits, Phase 1/2 table edits, Phase 1/2 images
+    │   ├── bodyPartRollExclusions.js  # Shared roll filters (guided + session plan builder)
     │   ├── persistence.js         # loadState / saveState (session, preferences, guided) → intimacyGameState
-    │   └── promptHelper.js        # getPromptText(phase, locationRoll, actionRoll, giver, receiver, names, anatomy)
+    │   ├── promptHelper.js        # getPromptText(phase, locationRoll, actionRoll, giver, receiver, names, anatomy)
+    │   └── sessionPlanBuilder.js  # Deterministic guided session preview (no UI)
     ├── views/
     │   └── AdminView.vue          # Admin: password gate; Phase 3 (image + name/help/description, validation); Phase 1&2 tables; modifiers
     └── workers/
         └── tts.worker.js          # TTS in worker: Piper/Kokoro queue, post blob or error
 ```
 
-**Where things live:** The main app is Vue (`index.html` → `src/main.js`). The old vanilla JS app is in **legacy/** (`legacy/index-legacy.html`); it still loads `../phase3-positions-data.js` from the repo root. Phase 3 data and the JSON export stay at root so Vite and `scripts/` can reference them without path changes.
+**Where things live:** The main app is Vue (`index.html` → `src/main.js`). **archive/legacy/** is kept for reference and manual testing only; the shipped app does not import it. `archive/legacy/index-legacy.html` loads `../../phase3-positions-data.js` from the repo root. Phase 3 data and the JSON export stay at root so Vite and `scripts/` can reference them without path changes.
 
 ---
 
@@ -75,6 +77,7 @@ Dice-game/
   - If `window.location.hash === '#admin'` → show **AdminView** (password-protected).
   - Else: show onboarding (if incomplete), then landing (choose mode), then main content.
   - Main content: **FreePlayView** (Dice game) or **GuidedModeView** (Guided Mode) plus **PreferencesSidebar**, **SummaryOverlay**, **TimerBar** as needed.
+- **Navigation, store boundaries, and Guided `Teleport` targets** (no prop drilling for game state): see **[docs/UI-AND-STATE-FLOW.md](docs/UI-AND-STATE-FLOW.md)**.
 
 ### Data and prompts
 
@@ -96,11 +99,13 @@ Dice-game/
 
 ### Persistence
 
-- **persistence.js**: **loadState** / **saveState** read/write `intimacyGameState` in localStorage (session, preferences, guided snapshot). App restores on load; a watcher schedules saves when relevant store state changes.
+- **persistence.js**: **loadState** / **saveState** read/write `intimacyGameState` in localStorage (session, preferences, guided snapshot). App restores on load; **`useDebouncedAppPersistence`** in `App.vue` debounces saves when relevant store state changes.
 
 ---
 
 ## Scripts
+
+### Core (app and build)
 
 | Script | Purpose |
 |--------|--------|
@@ -109,8 +114,28 @@ Dice-game/
 | `npm run preview` | Preview production build |
 | `npm run download-onnx-wasm` | Fetch ONNX runtime WASM for Piper |
 | `npm run download-kokoro-model` | Fetch Kokoro TTS model |
-| `npm run generate-static-wavs` | Generate all fixed-phrase WAVs into `public/audio/static/<voiceId>/` (run after Kokoro model; use `--local` if model is in `public/models/`) |
 | `npm run list-music` | Generate music manifest (used by build) |
+
+### Static audio and assets
+
+| Script | Purpose |
+|--------|--------|
+| `npm run generate-static-wavs` | Generate all fixed-phrase WAVs into `public/audio/static/<voiceId>/` (run after Kokoro model; use `--local` if model is in `public/models/`) |
+| `npm run check-static-wavs` | Verify static WAVs on disk vs phrase manifest |
+| `npm run pack-audio-assets` | Create `audio-assets.tar.gz` for optional Docker download (see Deploy section) |
+| `npm run generate-all` | Run `scripts/run-generate-sequence.js` — full static phrase generation sequence |
+
+Other `generate-static-*` and `generate-voice-test-wavs` scripts exist for targeted or experimental generation; prefer **`npm run generate-all`** when you need the full scripted batch.
+
+### Debug (ONNX / tokenizer — not needed to run the app)
+
+| Script | Purpose |
+|--------|--------|
+| `npm run test:kokoro-ort` | Kokoro ORT test script |
+| `npm run compare-tokenize` | Compare tokenize + inspect ONNX |
+| `npm run run-tokenize-path-onnx` | Run tokenize path ONNX in Node |
+
+Aliases (same commands): `npm run debug:kokoro-ort`, `debug:compare-tokenize`, `debug:tokenize-path-onnx`.
 
 ---
 
@@ -118,9 +143,11 @@ Dice-game/
 
 - **Section comments**: Larger files use `// -----------------------------------------------------------------------------` and a short section title (e.g. “Phase 3: position edits”, “Auth (password gate)”) so you can scan and jump.
 - **File-level JSDoc**: Top of key files (e.g. `adminEdits.js`, `promptHelper.js`, `guided.js`, `AdminView.vue`) describe the file’s role in one or two sentences.
-- **Stores**: Pinia stores in `src/stores/`; guided store is the largest and is split into helpers/constants, state, and actions in comments.
-- **Data**: Static tables in `src/data/`; Phase 3 positions in root `phase3-positions-data.js` (alias `phase3-data` in Vite).
-- **Utils**: Pure helpers and persistence in `src/utils/`; no UI.
+- **Stores (`src/stores/`)**: Pinia owns persisted session shape, preferences, guided runtime state, and actions that coordinate rolls, prompts, and timers. The guided store is the largest; helpers/constants stay in the same file with section comments unless a clear shared module is needed.
+- **Composables (`src/composables/`)**: Browser-facing side effects — audio playback, speech/TTS worker wiring, background music. Prefer calling stores for game state; composables should not duplicate store logic.
+- **Utils (`src/utils/`)**: Pure helpers (prompt text, roll filters, session plan math), persistence adapters, and admin merge helpers. No Vue components; no direct DOM except where a small helper is unavoidable.
+- **Data (`src/data/`)**: Static tables and manifests. Phase 3 positions live in root `phase3-positions-data.js` (alias `phase3-data` in Vite).
+- **Legacy (`archive/legacy/`)**: Not imported by `src/`. Treat as historical reference or manual comparison; new features belong in Vue.
 
 ---
 
@@ -134,6 +161,10 @@ Dice-game/
 ## Deploy with Docker / Portainer
 
 The app is containerized with a multi-stage Dockerfile (Node build + nginx serve).
+
+### Security
+
+Runtime hardening (CSP on nginx), admin password expectations, and git hygiene are summarized in **[docs/RAILWAY.md](docs/RAILWAY.md)**. This repo includes a **[gitleaks](.github/workflows/gitleaks.yml)** workflow on pushes and pull requests to `main`.
 
 ### Build and run locally
 
@@ -162,9 +193,10 @@ Then open **http://localhost:3000**.
    `npm run pack-audio-assets`. This creates `audio-assets.tar.gz` in the repo root (~1.7 GB).
 2. **Upload** `audio-assets.tar.gz` somewhere reachable (e.g. GitHub Release, S3, or your own server).
 3. Set **`AUDIO_ASSETS_URL`** to the **direct** download URL of that file.
-4. On container **start**, the entrypoint downloads the tarball and extracts it so `/audio/static/...` is served. It only downloads once (skips if already present).
+4. Optional integrity check: set **`AUDIO_ASSETS_SHA256`** (hex digest of that tarball). If checksum mismatches, extraction is skipped.
+5. On container **start**, the entrypoint downloads the tarball and extracts it so `/audio/static/...` is served. It only downloads once (skips if already present).
 
-**Full step-by-step and URL troubleshooting:** see **[PORTAINER-URL-SETUP.md](PORTAINER-URL-SETUP.md)** (audio URL, TTS/config.json, and why the server URL might not have worked).
+**Full step-by-step and URL troubleshooting:** see **[PORTAINER-URL-SETUP.md](PORTAINER-URL-SETUP.md)** (audio download URL and checklist).
 
 If there are no WAVs in the built **`dist`** and `AUDIO_ASSETS_URL` is unset, the app still runs; static phrase requests **404** and **`useSpeech`** falls back to TTS for those phrases.
 
@@ -200,5 +232,5 @@ If there are no WAVs in the built **`dist`** and `AUDIO_ASSETS_URL` is unset, th
 
 - The image builds the Vue app and serves it with nginx; the listen port comes from **`PORT`** (default **80**; Railway sets `PORT` automatically). Map to any host port in Docker (e.g. `-p 3000:80`).
 - `nginx.conf.template` defines SPA fallback, COOP/COEP headers, and MIME types for WASM; the entrypoint substitutes `__NGINX_PORT__` at startup.
-- **Railway:** see [docs/RAILWAY.md](docs/RAILWAY.md) for `PORT`, `TTS_SERVER_URL`, and optional `Dockerfile.tts` service.
+- **Railway:** see [docs/RAILWAY.md](docs/RAILWAY.md) for `PORT` and optional `AUDIO_ASSETS_URL`.
 - To update: pull latest in the stack and **Redeploy**.

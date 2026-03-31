@@ -61,6 +61,11 @@
 </template>
 
 <script setup>
+/**
+ * Root shell: admin hash, onboarding → landing → main. Game views do not receive props from here;
+ * they use Pinia (session, guided, preferences, …). See docs/UI-AND-STATE-FLOW.md for navigation,
+ * store ownership, and Teleport targets (#step-bar-portal, #bottom-nav-portal).
+ */
 import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 
 import { useSessionStore } from '@/stores/session'
@@ -72,6 +77,8 @@ import { loadState, saveState } from '@/utils/persistence'
 import { whenIdle } from '@/utils/whenIdle'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
 import { useSpeech } from '@/composables/useSpeech'
+import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
+import { useDebouncedAppPersistence } from '@/composables/useDebouncedAppPersistence'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
@@ -152,6 +159,9 @@ function onTitleClick() {
 const summaryOpen = ref(false)
 const pageVisible = ref(typeof document !== 'undefined' ? !document.hidden : true)
 
+const { updateBodyClass } = useAppBodyClasses({ session, prefs, showAdmin, showMainContent })
+useDebouncedAppPersistence(session, prefs, guided, saveState)
+
 function onChooseMode(mode) {
   session.startSession(mode)
   if (mode === 'freeplay') {
@@ -170,58 +180,6 @@ function goToNextPhase() {
     // could flash phase change
   }
 }
-
-function updateBodyClass() {
-  document.body.classList.remove('phase-1', 'phase-2', 'phase-3', 'bg-image-1', 'bg-image-2')
-  document.body.classList.add(`phase-${session.phase}`)
-  if (prefs.backgroundImage !== 'none') document.body.classList.add(`bg-image-${prefs.backgroundImage}`)
-}
-
-watch([() => session.phase, () => prefs.backgroundImage], updateBodyClass, { immediate: true })
-watch(showAdmin, (isAdmin) => {
-  document.body.classList.toggle('admin-open', isAdmin)
-}, { immediate: true })
-watch(
-  () => !showAdmin.value && showMainContent.value,
-  (mainVisible) => {
-    document.body.classList.toggle('app-main-visible', mainVisible)
-  },
-  { immediate: true }
-)
-watch(
-  () => session.uiMode === 'guided' && showMainContent.value,
-  (isGuided) => {
-    document.body.classList.toggle('guided-mode', isGuided)
-  },
-  { immediate: true }
-)
-
-let saveTimeout = null
-function scheduleSave() {
-  if (saveTimeout) clearTimeout(saveTimeout)
-  saveTimeout = setTimeout(() => {
-    saveState(session, prefs, guided)
-    saveTimeout = null
-  }, 500)
-}
-watch(
-  [
-    () => session.phase,
-    () => session.rollCount,
-    () => session.uiMode,
-    () => session.showLanding,
-    () => prefs.promptDetailMode,
-    () => prefs.penetrationPreference,
-    () => prefs.backgroundImage,
-    () => prefs.partnerName1,
-    () => prefs.partnerName2,
-    () => prefs.voiceEnabled,
-    () => prefs.voiceSpeed,
-    () => (guided.isActive ? guided.persistenceSnapshot : null),
-  ],
-  scheduleSave,
-  { deep: true }
-)
 
 function onVisibility() {
   pageVisible.value = !document.hidden

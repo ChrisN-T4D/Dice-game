@@ -165,96 +165,6 @@ function getViewingLangCodes() {
 /** Kokoro runs in-browser on all platforms (local-focused). Worker limits (queue, token cap, single voice, WASM numThreads=1 on WebKit) keep it within safe bounds on iOS/Safari. */
 const kokoroAvailable = true
 
-/** Optional TTS server fallback when in-browser Kokoro is unavailable (e.g. iOS). App is local-first: voice runs in the browser; server is not required. */
-const ttsServerUrl = ref((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TTS_SERVER_URL) || '')
-
-let configFetched = false
-async function ensureTtsServerUrl() {
-  if (configFetched) return ttsServerUrl.value
-  configFetched = true
-  try {
-    const r = await fetch('/config.json')
-    if (r.ok) {
-      const d = await r.json()
-      if (d && typeof d.ttsServerUrl === 'string') ttsServerUrl.value = d.ttsServerUrl
-    }
-  } catch (_) {}
-  return ttsServerUrl.value
-}
-
-/** Ask server for token IDs only (phonemize+tokenize). Device will run ONNX. Returns tokenIds or null. */
-async function fetchTokenIdsFromServer(phrase) {
-  const base = ttsServerUrl.value?.replace(/\/$/, '')
-  if (!base) return null
-  try {
-    const res = await fetch(`${base}/tts/tokenize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: phrase }),
-    })
-    if (!res.ok) return null
-    const { tokenIds } = await res.json()
-    return Array.isArray(tokenIds) && tokenIds.length > 0 ? tokenIds : null
-  } catch (_) {
-    return null
-  }
-}
-
-/**
- * Try server tokenize + device ONNX: fetch token IDs from server, send to worker, return blob or null.
- * Used when server URL is set and worker is available; falls back to full server generate on failure.
- */
-async function tryTokenizeThenWorkerBlob(phrase, voiceId, worker) {
-  const tokenIds = await fetchTokenIdsFromServer(phrase)
-  if (!tokenIds || !worker) return null
-  return new Promise((resolve) => {
-    const id = `tts-${++ttsNextId}-${Date.now()}`
-    const timeoutId = setTimeout(() => {
-      if (ttsPending.has(id)) {
-        ttsPending.delete(id)
-        resolve(null)
-      }
-    }, 45000)
-    ttsPending.set(id, {
-      resolve: (blob) => {
-        clearTimeout(timeoutId)
-        ttsPending.delete(id)
-        resolve(blob ?? null)
-      },
-      reject: () => {
-        clearTimeout(timeoutId)
-        ttsPending.delete(id)
-        resolve(null)
-      },
-      timeoutId,
-    })
-    worker.postMessage({ type: 'generate', id, tokenIds, voiceId })
-  })
-}
-
-/** Generate one phrase via TTS server (full kokoro-js). Returns blob or null. */
-async function generateViaTtsServer(phrase, voiceId) {
-  const base = ttsServerUrl.value?.replace(/\/$/, '')
-  if (!base) return null
-  try {
-    const res = await fetch(`${base}/tts/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ voiceId: voiceId || 'af_nicole', phrases: [phrase] }),
-    })
-    if (!res.ok) return null
-    const { blobs } = await res.json()
-    const b = Array.isArray(blobs) ? blobs[0] : null
-    if (b == null || b === '') return null
-    const binary = atob(b)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    return new Blob([bytes], { type: 'audio/wav' })
-  } catch (_) {
-    return null
-  }
-}
-
 function withTimeout(promise, ms, label) {
   return Promise.race([
     promise,
@@ -667,7 +577,7 @@ export function useSpeech() {
   /**
    * Wait for the TTS worker (Kokoro model) to be ready before generating.
    * Call this at the start of cooking so generation uses the worker and has ample audio.
-   * When Kokoro is not available (e.g. TTS server path), resolves immediately.
+   * When Kokoro is not available, resolves immediately.
    */
   function waitForWorkerReady(timeoutMs = 120000) {
     if (!kokoroAvailable) return Promise.resolve()
@@ -726,16 +636,7 @@ export function useSpeech() {
     if (provider !== 'kokoro') return null
 
     const w = kokoroAvailable ? getTtsWorker() : null
-    if (w) {
-      /* Local-first: use worker only; do not call the TTS server. */
-    } else {
-      await ensureTtsServerUrl()
-      if (ttsServerUrl.value) {
-        const serverBlob = await generateViaTtsServer(cleaned, voiceId)
-        if (serverBlob) return serverBlob
-      }
-      return null
-    }
+    if (!w) return null
     let ipa
     try {
       const phonemize = await getPhonemize()
@@ -780,52 +681,14 @@ export function useSpeech() {
    * Generate audio for a full session script (sequential). Calls onProgress(current, total) and returns Blob[].
    * Optional onPhraseDetail(phraseIndex, event) is called for each phrase with worker/static detail for the dev log.
    * Empty phrases yield null in the array; playback should skip null (call onEnd immediately).
-   * Local-first: we use the in-browser Kokoro worker when available. Only when Kokoro is
-   * unavailable (e.g. iOS Safari) do we try the optional TTS server; otherwise use browser voices.
+   * Local-first: in-browser Kokoro worker when `kokoroAvailable`; otherwise guided audio cannot be generated server-side — use Browser voices in preferences.
    */
   async function generateSessionAudio(phrases, onProgress, onPhraseDetail, genOptions = {}) {
     if (!Array.isArray(phrases)) return []
     const total = phrases.length
     const voiceId = (genOptions.voiceId && String(genOptions.voiceId).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
 
-    const useWorker = kokoroAvailable
-    if (!useWorker) {
-      await ensureTtsServerUrl()
-      if (ttsServerUrl.value) {
-        try {
-          const base = ttsServerUrl.value.replace(/\/$/, '')
-          const res = await fetch(`${base}/tts/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ voiceId, phrases }),
-          })
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error(err.error || `TTS server error ${res.status}`)
-          }
-          const { blobs: rawBlobs } = await res.json()
-          const blobs = []
-          const list = Array.isArray(rawBlobs) ? rawBlobs : []
-          for (let i = 0; i < total; i++) {
-            const b = list[i]
-            if (b == null || b === '') {
-              blobs.push(null)
-              onPhraseDetail?.(i, { phase: 'server_null' })
-            } else {
-              const binary = atob(b)
-              const bytes = new Uint8Array(binary.length)
-              for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
-              const blob = new Blob([bytes], { type: 'audio/wav' })
-              blobs.push(blob)
-              onPhraseDetail?.(i, { phase: 'server', size: blob.size })
-            }
-            if (onProgress) onProgress(i + 1, total)
-          }
-          return blobs
-        } catch (e) {
-          throw new Error(e?.message || 'Session audio from server failed')
-        }
-      }
+    if (!kokoroAvailable) {
       throw new Error('Guided voice on this device: switch to Browser voices in Preferences (☰ → Voice) to hear prompts, or use another browser where Kokoro runs in the app.')
     }
 
@@ -909,24 +772,10 @@ export function useSpeech() {
       speakWithBrowser(cleaned, onEnd)
       return
     }
-    async function tryTtsServerThenWorker() {
+    function tryWorkerOrBrowser() {
       if (w) {
-        /* Local-first: when the worker is available, use it only. Do not call the TTS server. */
         sendKokoroGenerate(true)
         return
-      }
-      await ensureTtsServerUrl()
-      if (forceMode !== 'tokenize' && ttsServerUrl.value) {
-        const blob = await generateViaTtsServer(cleaned, voiceId)
-        if (blob) {
-          window.speechSynthesis?.cancel?.()
-          onSource?.('kokoro')
-          playBlob(blob, onEnd, (reason) => {
-            onPlaybackFailed?.(reason)
-            speakWithBrowser(cleaned, onEnd)
-          })
-          return
-        }
       }
       onSource?.('browser')
       speakWithBrowser(cleaned, onEnd)
@@ -990,7 +839,7 @@ export function useSpeech() {
         return
       }
       // When worker is unavailable (e.g. mobile WebView), or not fullyLocal, try server then browser
-      tryTtsServerThenWorker()
+      tryWorkerOrBrowser()
       return
     }
     onSource?.('browser')
@@ -1059,7 +908,6 @@ export function useSpeech() {
     if (!settingsInitialized) {
       settingsInitialized = true
     }
-    if (!kokoroAvailable) ensureTtsServerUrl()
     const loadVoicesLater = () => {
       refreshVoices()
       if (isSupported()) {
@@ -1104,7 +952,7 @@ export function useSpeech() {
 
   const isVoiceReadyForGuided = computed(() => {
     if (ttsProvider.value === 'kokoro' && kokoroAvailable) return kokoroReady.value
-    if (ttsProvider.value === 'kokoro' && !kokoroAvailable) return !!ttsServerUrl.value
+    if (ttsProvider.value === 'kokoro' && !kokoroAvailable) return false
     return true
   })
 
@@ -1144,7 +992,6 @@ export function useSpeech() {
     ttsWorkerProgress,
     waitingForKokoroReady,
     kokoroAvailable,
-    ttsServerUrl,
     isSupported,
     canSpeak,
     cleanTextForSpeech,

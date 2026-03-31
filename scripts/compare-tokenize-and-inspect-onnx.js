@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Compare server tokenize output with local tokenizer and inspect ONNX model.
- * Run from project root. For /tts/tokenize comparison, start TTS server first (npm run tts-server).
+ * Run from project root.
  *
  * Usage: node scripts/compare-tokenize-and-inspect-onnx.js [phrase]
  */

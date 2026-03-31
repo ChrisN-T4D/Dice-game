@@ -1,11 +1,10 @@
 # Use this compose file when images are built by GitHub Actions and pushed to GHCR.
 # In Portainer: Compose path = docker-compose.registry.yml. Set HOST (required). Enable "Re-pull image".
-# Pull and redeploy will update both app and TTS from ghcr.io.
+# Pull and redeploy will update the app image from ghcr.io.
 #
 # Env vars (stack or .env):
-#   HOST                  - Traefik hostname (e.g. app.example.com). App at https://HOST, TTS at https://tts.HOST
+#   HOST                  - Traefik hostname (e.g. app.example.com). App at https://HOST
 #   DICE_GAME_IMAGE       - optional, default ghcr.io/chrisn-t4d/dice-game:latest
-#   DICE_GAME_TTS_IMAGE   - optional, default ghcr.io/chrisn-t4d/dice-game:tts
 
 services:
   app:
@@ -27,24 +26,6 @@ services:
       - "traefik.http.middlewares.limit.buffering.memRequestBodyBytes=200000000"
       - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=10737418240"
       - "traefik.http.middlewares.limit.buffering.memResponseBodyBytes=200000000"
-    networks:
-      - betwenus_internal
-      - traefik_proxy
-
-  tts-server:
-    image: ${DICE_GAME_TTS_IMAGE:-ghcr.io/chrisn-t4d/dice-game:tts}
-    container_name: dice-game-tts
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.routers.dicegame-tts.entrypoints=websecure"
-      - "traefik.http.routers.dicegame-tts.rule=Host(`tts.${HOST}`)"
-      - "traefik.http.routers.dicegame-tts.tls.certresolver=le"
-      - "traefik.http.routers.dicegame-tts.service=dicegame-tts"
-      - "traefik.http.services.dicegame-tts.loadbalancer.server.port=3333"
-      - "traefik.http.routers.dicegame-tts.middlewares=tts-limit@docker"
-      - "traefik.http.middlewares.tts-limit.buffering.maxRequestBodyBytes=5242880"
     networks:
       - betwenus_internal
       - traefik_proxy

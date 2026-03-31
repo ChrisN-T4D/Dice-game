@@ -26,28 +26,6 @@ services:
       - betwenus_internal
       - traefik_proxy
 
-  tts-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.tts
-    image: dice-game-tts:latest
-    container_name: dice-game-tts
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.routers.dicegame-tts.entrypoints=websecure"
-      - "traefik.http.routers.dicegame-tts.rule=Host(`tts.${HOST}`)"
-      - "traefik.http.routers.dicegame-tts.tls.certresolver=le"
-      - "traefik.http.routers.dicegame-tts.service=dicegame-tts"
-      - "traefik.http.services.dicegame-tts.loadbalancer.server.port=3333"
-      # Allow larger request bodies for session payloads
-      - "traefik.http.routers.dicegame-tts.middlewares=tts-limit@docker"
-      - "traefik.http.middlewares.tts-limit.buffering.maxRequestBodyBytes=5242880"
-    networks:
-      - betwenus_internal
-      - traefik_proxy
-
 networks:
   betwenus_internal:
     name: betweenus

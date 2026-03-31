@@ -13,7 +13,16 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
+import { getSuggestedTurnSecondsFromPrompt } from './guided/promptParsing.js'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
+import {
+  AFTER_DONG_SEC,
+  AFTER_INSTRUCTION_TO_SETTLE_MS,
+  AFTER_NEXT_TURN_SEC,
+  SETTLE_IN_SEC,
+  SETTLE_IN_SEC_FIRST_TURN,
+  SKIP_TURN_GUARD_MS,
+} from './guided/constants.js'
 import {
   SESSION_COMPLETE_PHRASES,
   INTRO_NO_CLOTHING_VARIANTS,
@@ -26,83 +35,8 @@ import {
 } from '@/data/staticPhrases'
 
 // -----------------------------------------------------------------------------
-// Helpers and constants (rolls, timed-step parsing, fixed phrases)
+// Helpers (fixed phrase prep); timing constants in ./guided/constants.js; prompt parsing in ./guided/promptParsing.js
 // -----------------------------------------------------------------------------
-function rollD20() {
-  return Math.floor(Math.random() * 20) + 1
-}
-
-/** Phase 3: two d20s → position 1–156; clamped to 1–155 to match PHASE3_POSITIONS_LIST. */
-function rollPhase3Position() {
-  const a = rollD20()
-  const b = rollD20()
-  return Math.min(155, ((a - 1) * 20 + b - 1) % 156 + 1)
-}
-
-/**
- * Parse the "what" prompt for timed segments (e.g. "30s eyes closed, 30s eyes open").
- * Returns array of { seconds, label, completionLabel? } for step-by-step voice prompts.
- */
-function parseTimedSteps(text) {
-  if (!text || typeof text !== 'string') return []
-  const t = text.replace(/^Partner\s+\d+\s*:\s*/i, '').trim()
-
-  const singleWithContinue = t.match(/(?:^|:\s*)(?:for\s+)?(\d+)\s*s(?:econds?)?\s+(.+?)\s*;\s*then\s+continue/i)
-  if (singleWithContinue) {
-    const sec = parseInt(singleWithContinue[1], 10)
-    let desc = singleWithContinue[2].trim().replace(/\s+/g, ' ')
-    desc = desc.replace(/\s*while\s+.*$/i, '').trim()
-    desc = desc.replace(/\s*;.*$/, '').trim()
-    const label = desc ? `${sec} second${sec === 1 ? '' : 's'}, ${desc}` : `${sec} second${sec === 1 ? '' : 's'}`
-    const completionLabel = desc ? `${desc} done` : `${sec} second${sec === 1 ? '' : 's'} done`
-    return [{ seconds: sec, label, completionLabel }]
-  }
-
-  const parts = t.split(/\s*,\s*|\s+then\s+/i)
-  const segments = []
-  for (const part of parts) {
-    const m = part.match(/^\s*(?:for\s+)?(\d+)\s*s(?:econds?)?\s*(?:of\s+)?(.+)?$/i)
-    if (m) {
-      const sec = parseInt(m[1], 10)
-      let desc = (m[2] || '').trim().replace(/\s+/g, ' ')
-      desc = desc.replace(/\s*;.*$/, '').trim()
-      const label = desc ? `${sec} second${sec === 1 ? '' : 's'}, ${desc}` : `${sec} second${sec === 1 ? '' : 's'}`
-      segments.push({ seconds: sec, label })
-    }
-  }
-  return segments.length >= 2 ? segments : []
-}
-
-function getSuggestedTurnSecondsFromPrompt(text) {
-  if (!text || typeof text !== 'string') return 0
-  let suggested = 0
-  const secMatches = text.match(/\b(\d+)\s*s(?:econds?)?\b|for\s+(\d+)\s*s(?:econds?)?/gi)
-  if (secMatches) {
-    secMatches.forEach((m) => {
-      const n = parseInt(m.replace(/\D/g, ''), 10)
-      if (!isNaN(n)) suggested = Math.max(suggested, suggested + n)
-    })
-  }
-  const timesMatch = text.match(/(\d+)\s+times/gi)
-  if (timesMatch) {
-    timesMatch.forEach((m) => {
-      const n = parseInt(m.replace(/\D/g, ''), 10)
-      if (n > 0) suggested = Math.max(suggested, n * 10)
-    })
-  }
-  return suggested
-}
-
-/** Seconds to show "Time to switch" countdown before next turn's instructions. */
-const AFTER_DONG_SEC = 2
-/** Seconds between "Time to switch" and playing the next turn's instruction/clothing. */
-const AFTER_NEXT_TURN_SEC = 2
-/** Pause (seconds) after settle-in phrase before "Whenever you're ready" / start phrase. */
-const SETTLE_IN_SEC = 15
-const SETTLE_IN_SEC_FIRST_TURN = 15
-/** Delay (ms) after instruction ends before playing the settle-in phrase. */
-const AFTER_INSTRUCTION_TO_SETTLE_MS = 1000
-
 // Canonical session order (no duplicates, no extra phrases):
 // 1. Intro phrase → (optional) "Kicking off" / first-turn intro
 // 2. Turn 1: instruction (and clothing if any) → settle-in phrase → 15s → start phrase → turn timer
@@ -120,7 +54,6 @@ function prepAll(prep, phrases) {
 
 // Guard against rapid double-click on Skip turn
 let skipToNextTurnGuardUntil = 0
-const SKIP_TURN_GUARD_MS = 600
 
 // -----------------------------------------------------------------------------
 // Store definition

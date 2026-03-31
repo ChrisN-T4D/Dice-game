@@ -1,5 +1,5 @@
-# Build and push Docker images to GitHub Container Registry (ghcr.io).
-# After this runs, "Pull and redeploy" in Portainer updates both app and TTS if the
+# Build and push Docker image to GitHub Container Registry (ghcr.io).
+# After this runs, "Pull and redeploy" in Portainer updates the app if the
 # stack uses docker-compose.registry.yml with Re-pull image enabled.
 name: Docker build and push
 
@@ -37,17 +37,5 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha
-
-      - name: Build and push TTS server image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.tts
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:tts
-            ${{ env.IMAGE_NAME }}:tts-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha

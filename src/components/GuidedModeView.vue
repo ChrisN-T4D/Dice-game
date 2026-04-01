@@ -42,6 +42,14 @@
       @back="onStartBack"
     />
 
+    <div v-else-if="showSensateEntry" class="guided-wizard-wrap">
+      <SensateGuidedEntry
+        :resume-preset-id="sensateResumePresetId"
+        @choose-classic="onChooseClassicGuided"
+        @start-sensate="onSensateStart"
+      />
+    </div>
+
     <div v-else class="guided-wizard-wrap">
       <GuidedSetupWizard
         :initial-step="wizardInitialStep"
@@ -53,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
@@ -64,6 +72,7 @@ import GuidedSessionComplete from '@/components/guided/GuidedSessionComplete.vue
 import GuidedReviewPlan from '@/components/guided/GuidedReviewPlan.vue'
 import GuidedCookingProgress from '@/components/guided/GuidedCookingProgress.vue'
 import GuidedReadyScreen from '@/components/guided/GuidedReadyScreen.vue'
+import SensateGuidedEntry from '@/components/guided/SensateGuidedEntry.vue'
 
 const session = useSessionStore()
 const guided = useGuidedStore()
@@ -75,6 +84,9 @@ const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
 const wizardInitialStep = ref(1)
 
 const wizardInitialConfig = ref(null)
+/** Default guided entry: sensate picker; user can switch to classic dice wizard. */
+const guidedEntryMode = ref('sensate')
+const sensateResumePresetId = ref(null)
 const sessionFavoriteSaved = ref(false)
 const showSavedSessionsList = ref(false)
 const cookingProgressCurrent = ref(0)
@@ -101,6 +113,13 @@ const cookingProgressPercent = computed(() => {
   return t > 0 ? Math.round((cookingProgressCurrent.value / t) * 100) : 0
 })
 
+const showSensateEntry = computed(
+  () =>
+    guidedEntryMode.value === 'sensate' &&
+    guided.totalSeconds === 0 &&
+    !guided.sessionComplete
+)
+
 /** Sub-text under the main cooking label: explains what’s happening (model load vs generating phrases) and where (which phrase). */
 const cookingSubtext = computed(() => {
   if (cookingWaitingForModel.value) {
@@ -122,6 +141,7 @@ const cookingSubtext = computed(() => {
 })
 
 function onWizardStart(config) {
+  guidedEntryMode.value = 'classic'
   pendingConfig.value = config
   guided.buildSessionPlanFromConfig(config)
   guidedStep.value = 'review'
@@ -129,7 +149,38 @@ function onWizardStart(config) {
   wizardInitialConfig.value = null
 }
 
+function onChooseClassicGuided() {
+  guidedEntryMode.value = 'classic'
+}
+
+function onSensateStart({ presetId, partnerNames, kokoroVoiceId, sensateFirstToucherPreference }) {
+  sensateResumePresetId.value = null
+  guided.buildSensatePlanFromPreset(presetId, {
+    partnerNames,
+    kokoroVoiceId,
+    sensateFirstToucherPreference,
+  })
+  pendingConfig.value = guided.sessionPlan.config
+  guidedStep.value = 'review'
+  wizardInitialStep.value = 1
+  wizardInitialConfig.value = null
+}
+
 function onReviewBack() {
+  if (guided.sessionPlan?.kind === 'sensate') {
+    sensateResumePresetId.value = guided.sessionPlan.config.sensatePresetId
+    guidedStep.value = null
+    guided.clearSessionPlan()
+    pendingConfig.value = null
+    guidedEntryMode.value = 'sensate'
+    wizardInitialStep.value = 1
+    wizardInitialConfig.value = null
+    void nextTick(() => {
+      sensateResumePresetId.value = null
+    })
+    return
+  }
+  sensateResumePresetId.value = null
   guidedStep.value = null
   guided.clearSessionPlan()
   pendingConfig.value = null
@@ -138,6 +189,17 @@ function onReviewBack() {
 }
 
 function onGoBackToPartnerSetup() {
+  if (guided.sessionPlan?.kind === 'sensate') {
+    sensateResumePresetId.value = guided.sessionPlan.config.sensatePresetId
+    guidedStep.value = null
+    guided.clearSessionPlan()
+    pendingConfig.value = null
+    guidedEntryMode.value = 'sensate'
+    void nextTick(() => {
+      sensateResumePresetId.value = null
+    })
+    return
+  }
   if (!pendingConfig.value) return
   wizardInitialStep.value = 5
   wizardInitialConfig.value = pendingConfig.value
@@ -154,7 +216,12 @@ function saveSessionAsFavorite() {
 function loadSavedSession(fav) {
   if (!fav?.config) return
   pendingConfig.value = fav.config
-  guided.buildSessionPlanFromConfig(fav.config)
+  if (fav.config.sessionKind === 'sensate' && fav.config.sensatePresetId) {
+    guidedEntryMode.value = 'sensate'
+    guided.buildSensatePlanFromPreset(fav.config.sensatePresetId, fav.config)
+  } else {
+    guided.buildSessionPlanFromConfig(fav.config)
+  }
   guidedStep.value = 'review'
   showSavedSessionsList.value = false
 }
@@ -285,6 +352,7 @@ function onCookingQuit() {
   guided.clearSessionPlan()
   pendingConfig.value = null
   guidedStep.value = null
+  sensateResumePresetId.value = null
   wizardInitialStep.value = 1
   wizardInitialConfig.value = null
   session.resetSession()

@@ -2,6 +2,7 @@
  * Static phrase groups for WAV generation scripts. Single source of truth for phrase id + text.
  * Kept in sync with src/data/staticPhrases.js and guided/sessionPlanBuilder phrase sets.
  */
+import { SENSATE_STATIC_PHRASES } from '../src/data/sensateStaticPhrases.js'
 
 // --- Voice test (1) ---
 export const VOICE_TEST = [
@@ -120,4 +121,5 @@ export const STATIC_GROUPS = {
   session_complete: SESSION_COMPLETE_PHRASES,
   settle_into_position: SETTLE_INTO_POSITION,
   phase_checkin: PHASE_CHECKIN_PHRASES,
+  sensate: SENSATE_STATIC_PHRASES,
 }

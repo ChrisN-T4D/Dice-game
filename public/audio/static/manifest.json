@@ -235,473 +235,148 @@
     "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
   },
   {
-    "phraseId": "voice_test",
-    "voiceId": "af_bella",
-    "text": "This is a quick voice check."
+    "phraseId": "sensate_first_turn_standard",
+    "voiceId": "af_nicole",
+    "text": "First turn. Partner 1 is giver, Partner 2 is receiver."
   },
   {
-    "phraseId": "intro_no_clothing_1",
-    "voiceId": "af_bella",
-    "text": "Welcome to guided mode. You will hear one prompt each turn. If something does not fit, choose another action you both enjoy. We will tell you when to switch, settle in, and begin the next prompt. Let us begin."
+    "phraseId": "sensate_intro_phase1_non_genital",
+    "voiceId": "af_nicole",
+    "text": "This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a fully consensual relationship only. Stop if there is discomfort, distress, or any sign of coercion. For personalized care, speak with a qualified professional. Phase one, non-genital mindful touch: you will hear one block at a time. Substitute anything that does not fit. Let us begin."
   },
   {
-    "phraseId": "intro_no_clothing_2",
-    "voiceId": "af_bella",
-    "text": "This is guided mode. You will hear one prompt per turn. Feel free to substitute anything that feels better for both of you. Between turns, you will hear when to switch, settle into position, and continue. Let us begin."
+    "phraseId": "sensate_intro_phase1_genital",
+    "voiceId": "af_nicole",
+    "text": "This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a fully consensual relationship only. Stop if there is pain, distress, or coercion. See a clinician before genital touch if you have untreated pain or new symptoms. Phase one with breasts and genitals included, still non-demand. Let us begin."
   },
   {
-    "phraseId": "intro_no_clothing_3",
-    "voiceId": "af_bella",
-    "text": "Guided mode is on. Each turn comes with a single prompt. If you prefer something else, choose another action together. At each transition, you will hear switch, settle in, then the next prompt. Let us begin."
+    "phraseId": "sensate_intro_lotion",
+    "voiceId": "af_nicole",
+    "text": "This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. Patch test lotion and lubricant if you have sensitive skin; warm products before use. Stop if there is irritation or distress. Let us begin."
   },
   {
-    "phraseId": "intro_no_clothing_4",
-    "voiceId": "af_bella",
-    "text": "You're in guided mode. We'll give one prompt at a time. If a suggestion does not work, swap in something you both like. After each turn, you'll hear when to switch, settle, and start the next prompt. Let us begin."
+    "phraseId": "sensate_intro_mutual",
+    "voiceId": "af_nicole",
+    "text": "This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. If simultaneous touch feels overwhelming, return to turn-taking. Stop for any distress. Mutual touching segment. Let us begin."
   },
   {
-    "phraseId": "intro_no_clothing_5",
-    "voiceId": "af_bella",
-    "text": "This session uses guided mode. You will hear clear prompts for each turn. You can always substitute another action you both prefer. You will also hear cues to switch, settle into position, and continue. Let us begin."
+    "phraseId": "sensate_intro_phase2_comm",
+    "voiceId": "af_nicole",
+    "text": "This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. Phase two style communication belongs after solid phase one practice; if feedback increases pressure, return to silent sensory focus. Let us begin."
   },
   {
-    "phraseId": "intro_no_clothing_6",
-    "voiceId": "af_bella",
-    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We'll guide each transition: switch, settle in, then the next prompt. Let us begin."
+    "phraseId": "sensate_p1ng_t1",
+    "voiceId": "af_nicole",
+    "text": "Set the space: private, phones away, comfortable temperature, some light. Undress to your comfort. Skip music and candles for this practice. Agree you can pause or stop anytime."
   },
   {
-    "phraseId": "intro_no_clothing_7",
-    "voiceId": "af_bella",
-    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. At the end of each turn, you will hear cues to switch, settle into position, and move on. Let us begin."
+    "phraseId": "sensate_p1ng_t2",
+    "voiceId": "af_nicole",
+    "text": "Partner 1 touches Partner 2. Use hands and fingers only. Explore from head to toe, front and back. Leave breasts, chest, and genitals untouched. Touch for your own interest in temperature, pressure, and texture—not to produce a response. Partner 2 notices sensations where touched; move Partner 1’s hand only for discomfort."
   },
   {
-    "phraseId": "intro_no_clothing_8",
-    "voiceId": "af_bella",
-    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. You'll hear transition cues for switching, settling in, and starting the next prompt. Let us begin."
+    "phraseId": "sensate_p1ng_t3",
+    "voiceId": "af_nicole",
+    "text": "Partner 1, when you are ready, say switch aloud. Exchange roles calmly."
   },
   {
-    "phraseId": "intro_no_clothing_9",
-    "voiceId": "af_bella",
-    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+    "phraseId": "sensate_p1ng_t4",
+    "voiceId": "af_nicole",
+    "text": "Partner 2 touches Partner 1 the same way: hands and fingers only, full body except breasts, chest, and genitals. Touch for your own sensory curiosity. Partner 1 notices sensations and guides only for discomfort."
   },
   {
-    "phraseId": "intro_with_clothing_1",
-    "voiceId": "af_bella",
-    "text": "Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin."
+    "phraseId": "sensate_p1ng_t5",
+    "voiceId": "af_nicole",
+    "text": "Closing. Dress when you like. Optionally note what you sensed, what distracted you, and how it felt to refocus. This app does not replace a therapist."
   },
   {
-    "phraseId": "intro_with_clothing_2",
-    "voiceId": "af_bella",
-    "text": "This is guided mode. You will hear one prompt per turn, and you can substitute anything that feels better for both of you. Clothing-removal guidance is included when needed. Between turns, you will hear when to switch, settle in, and continue. Let us begin."
+    "phraseId": "sensate_p1g_t1",
+    "voiceId": "af_nicole",
+    "text": "Same calm environment as before: private, devices away, comfortable. Undress to comfort. Agree on pausing or stopping anytime."
   },
   {
-    "phraseId": "intro_with_clothing_3",
-    "voiceId": "af_bella",
-    "text": "Guided mode is on. Each turn has one prompt, and you can choose another action together any time. You will also hear when and how to remove clothing. When a turn ends, you will hear switch, settle into position, then the next prompt. Let us begin."
+    "phraseId": "sensate_p1g_t2",
+    "voiceId": "af_nicole",
+    "text": "Partner 1 touches Partner 2. Whole body including breasts and genitals, hands and fingers. Do not dwell longer on genitals than on other areas. Touch for your own sense of temperature, pressure, and texture. Partner 2 notices sensations; if arousal appears, simply notice it without chasing or suppressing. Hand-riding is optional for gentle guidance."
   },
   {
-    "phraseId": "intro_with_clothing_4",
-    "voiceId": "af_bella",
-    "text": "You're in guided mode. We'll give one prompt at a time, and you can swap in something you both like whenever needed. We will cue clothing-removal moments clearly. After each turn, listen for switch, settle, and next-prompt cues. Let us begin."
+    "phraseId": "sensate_p1g_t3",
+    "voiceId": "af_nicole",
+    "text": "Partner 1, say switch when ready. Exchange roles."
   },
   {
-    "phraseId": "intro_with_clothing_5",
-    "voiceId": "af_bella",
-    "text": "This session uses guided mode with clear turn-by-turn prompts. You can always choose another action you both prefer. Clothing-removal steps will be announced at the right times. Between turns, you will hear when to switch, settle into position, and move on. Let us begin."
+    "phraseId": "sensate_p1g_t4",
+    "voiceId": "af_nicole",
+    "text": "Partner 2 touches Partner 1 with the same rules: full body including breasts and genitals, even attention, non-demand curiosity, noticing arousal without goals. Hand-riding optional."
   },
   {
-    "phraseId": "intro_with_clothing_6",
-    "voiceId": "af_bella",
-    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We will guide when and how to remove clothing, then cue each transition to switch, settle, and continue. Let us begin."
+    "phraseId": "sensate_p1g_t5",
+    "voiceId": "af_nicole",
+    "text": "Closing. Dress if you wish. Jot sensations or distractions if helpful. Seek professional support for pain or strong anxiety."
   },
   {
-    "phraseId": "intro_with_clothing_7",
-    "voiceId": "af_bella",
-    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. You will hear calm cues for clothing removal when it applies. At each transition, we will cue switch, settle in, and the next prompt. Let us begin."
+    "phraseId": "sensate_lo_t1",
+    "voiceId": "af_nicole",
+    "text": "Prepare towels. Warm lotion or oil and water-based lubricant in your hands first. Use products you tolerate; this is exploration, not romance staging."
   },
   {
-    "phraseId": "intro_with_clothing_8",
-    "voiceId": "af_bella",
-    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. We will include clothing-removal guidance as needed. When turns change, you will hear cues to switch, settle into position, and continue. Let us begin."
+    "phraseId": "sensate_lo_t2",
+    "voiceId": "af_nicole",
+    "text": "Partner 1 touches Partner 2. Use lotion or oil on body and lubricant where appropriate for genital contact, same non-demand attitude: notice how the medium changes temperature, pressure, and glide. Partner 2 tracks the new sensations. No performance goals."
   },
   {
-    "phraseId": "intro_with_clothing_9",
-    "voiceId": "af_bella",
-    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. You will also hear clear cues for clothing removal during the flow. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
+    "phraseId": "sensate_lo_t3",
+    "voiceId": "af_nicole",
+    "text": "Partner 1, say switch when ready."
   },
   {
-    "phraseId": "next_turn_1",
-    "voiceId": "af_bella",
-    "text": "That turn is complete. Time to switch."
+    "phraseId": "sensate_lo_t4",
+    "voiceId": "af_nicole",
+    "text": "Partner 2 touches Partner 1 the same way with warmed products. Stay curious about texture and glide, not outcome."
   },
   {
-    "phraseId": "next_turn_2",
-    "voiceId": "af_bella",
-    "text": "This turn has ended. Go ahead and switch."
+    "phraseId": "sensate_lo_t5",
+    "voiceId": "af_nicole",
+    "text": "Closing. Wipe off if needed. Note what felt different in your skin attention today."
   },
   {
-    "phraseId": "next_turn_3",
-    "voiceId": "af_bella",
-    "text": "Switch roles when you're both ready."
+    "phraseId": "sensate_mu_t1",
+    "voiceId": "af_nicole",
+    "text": "Settle in the same private, distraction-free space. You will both touch at once—no single giver or receiver."
   },
   {
-    "phraseId": "next_turn_4",
-    "voiceId": "af_bella",
-    "text": "Switch when you're ready."
+    "phraseId": "sensate_mu_t2",
+    "voiceId": "af_nicole",
+    "text": "Together, touch each other at the same time. Use hands, lips, and tongue, but skip kissing and oral sex for now to avoid old automatic scripts. Each of you tracks your own experience of touching and being touched. No goal of arousal or intercourse. Pause if either of you needs a break."
   },
   {
-    "phraseId": "turn_begins_1",
-    "voiceId": "af_bella",
-    "text": "Your turn starts now."
+    "phraseId": "sensate_mu_t3",
+    "voiceId": "af_nicole",
+    "text": "Wind down when you both agree. Briefly share one sensory observation each if you want—information, not pressure. Professional guidance helps if old patterns rush back."
   },
   {
-    "phraseId": "turn_begins_2",
-    "voiceId": "af_bella",
-    "text": "Go ahead when you're ready."
+    "phraseId": "sensate_p2_t1",
+    "voiceId": "af_nicole",
+    "text": "Begin with a few minutes of phase one style touch: each person notices their own sensations without chatting."
   },
   {
-    "phraseId": "turn_begins_3",
-    "voiceId": "af_bella",
-    "text": "Whenever you're ready, begin."
+    "phraseId": "sensate_p2_t2",
+    "voiceId": "af_nicole",
+    "text": "Still in slow touch, add short phrases about what feels pleasant or connecting—offered as information, not as a demand on the other person."
   },
   {
-    "phraseId": "turn_begins_4",
-    "voiceId": "af_bella",
-    "text": "You can begin now."
+    "phraseId": "sensate_p2_t3",
+    "voiceId": "af_nicole",
+    "text": "Take turns naming one sensation or preference, then let the other respond with curiosity rather than obligation. Keep the pace slow."
   },
   {
-    "phraseId": "ease_in_1",
-    "voiceId": "af_bella",
-    "text": "Take a moment to settle into position. No rush."
+    "phraseId": "sensate_p2_t4",
+    "voiceId": "af_nicole",
+    "text": "Continue touch while practicing both self-awareness and hearing your partner. If performance worry returns, go back to silent sensing next time."
   },
   {
-    "phraseId": "ease_in_2",
-    "voiceId": "af_bella",
-    "text": "Get comfortable first, then begin when you're ready."
-  },
-  {
-    "phraseId": "ease_in_3",
-    "voiceId": "af_bella",
-    "text": "Settle in at your own pace. No rush."
-  },
-  {
-    "phraseId": "ease_in_4",
-    "voiceId": "af_bella",
-    "text": "Whenever you're ready, settle into position."
-  },
-  {
-    "phraseId": "session_complete_1",
-    "voiceId": "af_bella",
-    "text": "You've reached the end of the guided instructions. Check in with each other and decide whether to continue. You can save this session as a favorite, play the dice game, start another session, or continue on your own without the app."
-  },
-  {
-    "phraseId": "session_complete_2",
-    "voiceId": "af_bella",
-    "text": "That's the end of the guided instructions. Take a moment to check in together. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow what feels right."
-  },
-  {
-    "phraseId": "session_complete_3",
-    "voiceId": "af_bella",
-    "text": "Guided instructions are complete. Check in with each other and choose what's next. You can save this session as a favorite, play the dice game, start another session, or leave the app and continue in your own way."
-  },
-  {
-    "phraseId": "settle_into_position_1",
-    "voiceId": "af_bella",
-    "text": "Settle into position together."
-  },
-  {
-    "phraseId": "settle_into_position_2",
-    "voiceId": "af_bella",
-    "text": "Settle into position when you're both ready."
-  },
-  {
-    "phraseId": "settle_into_position_3",
-    "voiceId": "af_bella",
-    "text": "Take a moment to settle into position together."
-  },
-  {
-    "phraseId": "settle_into_position_4",
-    "voiceId": "af_bella",
-    "text": "Get into position at a pace that works for both of you."
-  },
-  {
-    "phraseId": "phase_checkin_1",
-    "voiceId": "af_bella",
-    "text": "Phase 1 is complete. Take a moment to check in together, then tap the button to continue to Phase 2 when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_2",
-    "voiceId": "af_bella",
-    "text": "Phase 1 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 2."
-  },
-  {
-    "phraseId": "phase_checkin_3",
-    "voiceId": "af_bella",
-    "text": "Phase 1 is done. Check in together, and tap the button when you're ready to continue to Phase 2."
-  },
-  {
-    "phraseId": "phase_checkin_4",
-    "voiceId": "af_bella",
-    "text": "Phase 2 is complete. Take a moment to check in together, then tap the button to continue to Phase 3 when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_5",
-    "voiceId": "af_bella",
-    "text": "Phase 2 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 3."
-  },
-  {
-    "phraseId": "phase_checkin_6",
-    "voiceId": "af_bella",
-    "text": "Phase 2 is done. Check in together, and tap the button when you're ready to continue to Phase 3."
-  },
-  {
-    "phraseId": "phase_checkin_7",
-    "voiceId": "af_bella",
-    "text": "Phase 3 is complete. Take a moment to check in together, then tap the button to end the session when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_8",
-    "voiceId": "af_bella",
-    "text": "Phase 3 has ended. Pause and check in with each other. When you're both ready, tap the button to end the session."
-  },
-  {
-    "phraseId": "phase_checkin_9",
-    "voiceId": "af_bella",
-    "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
-  },
-  {
-    "phraseId": "voice_test",
-    "voiceId": "am_liam",
-    "text": "This is a quick voice check."
-  },
-  {
-    "phraseId": "intro_no_clothing_1",
-    "voiceId": "am_liam",
-    "text": "Welcome to guided mode. You will hear one prompt each turn. If something does not fit, choose another action you both enjoy. We will tell you when to switch, settle in, and begin the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_2",
-    "voiceId": "am_liam",
-    "text": "This is guided mode. You will hear one prompt per turn. Feel free to substitute anything that feels better for both of you. Between turns, you will hear when to switch, settle into position, and continue. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_3",
-    "voiceId": "am_liam",
-    "text": "Guided mode is on. Each turn comes with a single prompt. If you prefer something else, choose another action together. At each transition, you will hear switch, settle in, then the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_4",
-    "voiceId": "am_liam",
-    "text": "You're in guided mode. We'll give one prompt at a time. If a suggestion does not work, swap in something you both like. After each turn, you'll hear when to switch, settle, and start the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_5",
-    "voiceId": "am_liam",
-    "text": "This session uses guided mode. You will hear clear prompts for each turn. You can always substitute another action you both prefer. You will also hear cues to switch, settle into position, and continue. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_6",
-    "voiceId": "am_liam",
-    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We'll guide each transition: switch, settle in, then the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_7",
-    "voiceId": "am_liam",
-    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. At the end of each turn, you will hear cues to switch, settle into position, and move on. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_8",
-    "voiceId": "am_liam",
-    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. You'll hear transition cues for switching, settling in, and starting the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_no_clothing_9",
-    "voiceId": "am_liam",
-    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_1",
-    "voiceId": "am_liam",
-    "text": "Welcome to guided mode. You will hear one prompt each turn. If a prompt does not fit, choose another action you both enjoy. You will hear when and how to remove clothing. After each turn, you will hear when to switch, settle into position, and begin the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_2",
-    "voiceId": "am_liam",
-    "text": "This is guided mode. You will hear one prompt per turn, and you can substitute anything that feels better for both of you. Clothing-removal guidance is included when needed. Between turns, you will hear when to switch, settle in, and continue. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_3",
-    "voiceId": "am_liam",
-    "text": "Guided mode is on. Each turn has one prompt, and you can choose another action together any time. You will also hear when and how to remove clothing. When a turn ends, you will hear switch, settle into position, then the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_4",
-    "voiceId": "am_liam",
-    "text": "You're in guided mode. We'll give one prompt at a time, and you can swap in something you both like whenever needed. We will cue clothing-removal moments clearly. After each turn, listen for switch, settle, and next-prompt cues. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_5",
-    "voiceId": "am_liam",
-    "text": "This session uses guided mode with clear turn-by-turn prompts. You can always choose another action you both prefer. Clothing-removal steps will be announced at the right times. Between turns, you will hear when to switch, settle into position, and move on. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_6",
-    "voiceId": "am_liam",
-    "text": "Welcome to this guided session. You'll hear one prompt for every turn. If a prompt is not right today, choose another action you both want. We will guide when and how to remove clothing, then cue each transition to switch, settle, and continue. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_7",
-    "voiceId": "am_liam",
-    "text": "Guided mode will walk you through one prompt at a time. Use any substitute you both enjoy whenever needed. You will hear calm cues for clothing removal when it applies. At each transition, we will cue switch, settle in, and the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_8",
-    "voiceId": "am_liam",
-    "text": "This is a guided session with one prompt per turn. If you'd rather do something else, use any action you both like. We will include clothing-removal guidance as needed. When turns change, you will hear cues to switch, settle into position, and continue. Let us begin."
-  },
-  {
-    "phraseId": "intro_with_clothing_9",
-    "voiceId": "am_liam",
-    "text": "You are in guided mode. We will offer one prompt each turn, and you may substitute freely when needed. You will also hear clear cues for clothing removal during the flow. Between turns, listen for switch and settle-in cues before the next prompt. Let us begin."
-  },
-  {
-    "phraseId": "next_turn_1",
-    "voiceId": "am_liam",
-    "text": "That turn is complete. Time to switch."
-  },
-  {
-    "phraseId": "next_turn_2",
-    "voiceId": "am_liam",
-    "text": "This turn has ended. Go ahead and switch."
-  },
-  {
-    "phraseId": "next_turn_3",
-    "voiceId": "am_liam",
-    "text": "Switch roles when you're both ready."
-  },
-  {
-    "phraseId": "next_turn_4",
-    "voiceId": "am_liam",
-    "text": "Switch when you're ready."
-  },
-  {
-    "phraseId": "turn_begins_1",
-    "voiceId": "am_liam",
-    "text": "Your turn starts now."
-  },
-  {
-    "phraseId": "turn_begins_2",
-    "voiceId": "am_liam",
-    "text": "Go ahead when you're ready."
-  },
-  {
-    "phraseId": "turn_begins_3",
-    "voiceId": "am_liam",
-    "text": "Whenever you're ready, begin."
-  },
-  {
-    "phraseId": "turn_begins_4",
-    "voiceId": "am_liam",
-    "text": "You can begin now."
-  },
-  {
-    "phraseId": "ease_in_1",
-    "voiceId": "am_liam",
-    "text": "Take a moment to settle into position. No rush."
-  },
-  {
-    "phraseId": "ease_in_2",
-    "voiceId": "am_liam",
-    "text": "Get comfortable first, then begin when you're ready."
-  },
-  {
-    "phraseId": "ease_in_3",
-    "voiceId": "am_liam",
-    "text": "Settle in at your own pace. No rush."
-  },
-  {
-    "phraseId": "ease_in_4",
-    "voiceId": "am_liam",
-    "text": "Whenever you're ready, settle into position."
-  },
-  {
-    "phraseId": "session_complete_1",
-    "voiceId": "am_liam",
-    "text": "You've reached the end of the guided instructions. Check in with each other and decide whether to continue. You can save this session as a favorite, play the dice game, start another session, or continue on your own without the app."
-  },
-  {
-    "phraseId": "session_complete_2",
-    "voiceId": "am_liam",
-    "text": "That's the end of the guided instructions. Take a moment to check in together. You can save this session as a favorite, play the dice game, start a new session, or put the app aside and follow what feels right."
-  },
-  {
-    "phraseId": "session_complete_3",
-    "voiceId": "am_liam",
-    "text": "Guided instructions are complete. Check in with each other and choose what's next. You can save this session as a favorite, play the dice game, start another session, or leave the app and continue in your own way."
-  },
-  {
-    "phraseId": "settle_into_position_1",
-    "voiceId": "am_liam",
-    "text": "Settle into position together."
-  },
-  {
-    "phraseId": "settle_into_position_2",
-    "voiceId": "am_liam",
-    "text": "Settle into position when you're both ready."
-  },
-  {
-    "phraseId": "settle_into_position_3",
-    "voiceId": "am_liam",
-    "text": "Take a moment to settle into position together."
-  },
-  {
-    "phraseId": "settle_into_position_4",
-    "voiceId": "am_liam",
-    "text": "Get into position at a pace that works for both of you."
-  },
-  {
-    "phraseId": "phase_checkin_1",
-    "voiceId": "am_liam",
-    "text": "Phase 1 is complete. Take a moment to check in together, then tap the button to continue to Phase 2 when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_2",
-    "voiceId": "am_liam",
-    "text": "Phase 1 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 2."
-  },
-  {
-    "phraseId": "phase_checkin_3",
-    "voiceId": "am_liam",
-    "text": "Phase 1 is done. Check in together, and tap the button when you're ready to continue to Phase 2."
-  },
-  {
-    "phraseId": "phase_checkin_4",
-    "voiceId": "am_liam",
-    "text": "Phase 2 is complete. Take a moment to check in together, then tap the button to continue to Phase 3 when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_5",
-    "voiceId": "am_liam",
-    "text": "Phase 2 has ended. Pause and check in with each other. When you're both ready, tap the button to continue to Phase 3."
-  },
-  {
-    "phraseId": "phase_checkin_6",
-    "voiceId": "am_liam",
-    "text": "Phase 2 is done. Check in together, and tap the button when you're ready to continue to Phase 3."
-  },
-  {
-    "phraseId": "phase_checkin_7",
-    "voiceId": "am_liam",
-    "text": "Phase 3 is complete. Take a moment to check in together, then tap the button to end the session when you're ready."
-  },
-  {
-    "phraseId": "phase_checkin_8",
-    "voiceId": "am_liam",
-    "text": "Phase 3 has ended. Pause and check in with each other. When you're both ready, tap the button to end the session."
-  },
-  {
-    "phraseId": "phase_checkin_9",
-    "voiceId": "am_liam",
-    "text": "Phase 3 is done. Check in together, and tap the button when you're ready to end the session."
+    "phraseId": "sensate_p2_t5",
+    "voiceId": "af_nicole",
+    "text": "Closing. Check in kindly. Phase two works best after steady phase one skills; consider discussing this session with a qualified therapist."
   }
 ]

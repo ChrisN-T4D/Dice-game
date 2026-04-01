@@ -2,6 +2,7 @@
  * Single source of truth for static phrase text (and later phrase ids for WAV resolution).
  * Used by sessionPlanBuilder, guided store, and static WAV generator.
  */
+import { SENSATE_STATIC_PHRASES } from '@/data/sensateStaticPhrases'
 
 /** End-of-session script: three variations (check in, then options: save favorite / dice game / new session / continue without app). */
 export const SESSION_COMPLETE_PHRASES = [
@@ -148,6 +149,7 @@ const ALL_STATIC_PHRASES = [
   ...SESSION_COMPLETE_STATIC,
   ...SETTLE_INTO_POSITION_PHRASES,
   ...PHASE_CHECKIN_PHRASES,
+  ...SENSATE_STATIC_PHRASES,
 ]
 
 function normalizeForMatch(text) {

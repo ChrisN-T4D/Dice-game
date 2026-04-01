@@ -13,6 +13,7 @@ import {
   getClothingRemovalComplexityMultiplier,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
+import { buildSensateSessionPlan } from '@/utils/sensateSessionPlanBuilder'
 import { getSuggestedTurnSecondsFromPrompt } from './guided/promptParsing.js'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 import {
@@ -427,8 +428,13 @@ export const useGuidedStore = defineStore('guided', {
       this.sessionPlan = plan
       return plan
     },
+    buildSensatePlanFromPreset(presetId, config) {
+      const plan = buildSensateSessionPlan(presetId, config)
+      this.sessionPlan = plan
+      return plan
+    },
     rerollTurn(turnIndex) {
-      if (!this.sessionPlan) return
+      if (!this.sessionPlan || this.sessionPlan.kind === 'sensate') return
       const plan = this.sessionPlan
       const newPlan = buildSessionPlan(plan.config, Date.now())
       if (newPlan.turns[turnIndex] == null) return
@@ -444,7 +450,7 @@ export const useGuidedStore = defineStore('guided', {
       plan.script.splice(scriptStart, oldLen, ...(newTurn.phraseStrings ?? []))
     },
     rerollAll() {
-      if (!this.sessionPlan) return
+      if (!this.sessionPlan || this.sessionPlan.kind === 'sensate') return
       const plan = buildSessionPlan(this.sessionPlan.config, Date.now())
       this.sessionPlan = plan
     },
@@ -669,6 +675,9 @@ export const useGuidedStore = defineStore('guided', {
       const usePlanTurn = this.sessionPlan && this.preGeneratedBlobs?.length > 0 && this.sessionPlan.turns[this.totalTurnsInSession - 1]
       if (usePlanTurn) {
         const planTurn = this.sessionPlan.turns[this.totalTurnsInSession - 1]
+        if (this.sessionPlan.kind === 'sensate') {
+          this.currentPartner = planTurn.currentPartner
+        }
         loc = planTurn.locationRoll
         actRoll = planTurn.actionRoll
         extendedTime = !!planTurn.extendedTime
@@ -756,9 +765,23 @@ export const useGuidedStore = defineStore('guided', {
       let baseTurnSec = this.turnSeconds
       this.turnTimeRemaining = baseTurnSec
       if (clothingRemoved && effectiveClothingSeconds > 0) this.turnTimeRemaining += effectiveClothingSeconds
-      const suggested = getSuggestedTurnSecondsFromPrompt(prompt.what)
-      if (suggested > 0) this.turnTimeRemaining = Math.min(Math.max(this.turnTimeRemaining, suggested), 5 * 60)
-      if (extendedTime) this.turnTimeRemaining *= 2
+      const planTurnForDuration =
+        usePlanTurn && this.sessionPlan?.turns ? this.sessionPlan.turns[this.totalTurnsInSession - 1] : null
+      if (
+        planTurnForDuration &&
+        this.sessionPlan?.kind === 'sensate' &&
+        typeof planTurnForDuration.durationSec === 'number' &&
+        planTurnForDuration.durationSec > 0
+      ) {
+        this.turnTimeRemaining = planTurnForDuration.durationSec
+        if (clothingRemoved && effectiveClothingSeconds > 0) this.turnTimeRemaining += effectiveClothingSeconds
+        if (extendedTime) this.turnTimeRemaining *= 2
+      } else {
+        const whatForSuggest = usePlanTurn ? this.currentPrompt.what : prompt.what
+        const suggested = getSuggestedTurnSecondsFromPrompt(whatForSuggest)
+        if (suggested > 0) this.turnTimeRemaining = Math.min(Math.max(this.turnTimeRemaining, suggested), 5 * 60)
+        if (extendedTime) this.turnTimeRemaining *= 2
+      }
 
       const giverName = this.partnerName(giver)
       const receiverName = this.partnerName(receiver)
@@ -1065,8 +1088,20 @@ export const useGuidedStore = defineStore('guided', {
       const sessionStore = useSessionStore()
       const phase = sessionStore.phase
       const bothReceived = this.receiverOnceP1 && this.receiverOnceP2
+      const sensatePlan = this.sessionPlan?.kind === 'sensate' ? this.sessionPlan : null
+      if (sensatePlan && this.totalTurnsInSession >= sensatePlan.turns.length) {
+        this.sessionComplete = true
+        sessionStore.isGuidedMode = false
+        this.stopSpeakRef?.()
+        this.preGeneratedBlobs = null
+        this.preGeneratedIndex = 0
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+        const phrase = pick(SESSION_COMPLETE_PHRASES)
+        if (this.speakRef) this.safeSpeak(phrase)
+        return
+      }
       // Last turn of phase: insert end-of-phase then next phase (turn instruction → settle in → 15s → start phrase …)
-      if (this.phaseTimeRemaining <= 0 && bothReceived) {
+      if (!sensatePlan && this.phaseTimeRemaining <= 0 && bothReceived) {
         if (this.phaseCheckInEnabled) {
           this.paused = true
           this.inPhaseCheckIn = true
@@ -1080,7 +1115,7 @@ export const useGuidedStore = defineStore('guided', {
         }
         return
       }
-      if (this.totalTimeRemaining <= 0) {
+      if (!sensatePlan && this.totalTimeRemaining <= 0) {
         this.sessionComplete = true
         sessionStore.isGuidedMode = false
         this.stopSpeakRef?.()

@@ -5,7 +5,14 @@
         <button type="button" class="secondary guided-review-nav-btn" @click="$emit('open-saved')">Saved</button>
         <button type="button" class="secondary guided-review-nav-btn" @click="$emit('review-back')">Restart setup</button>
         <button type="button" class="secondary guided-review-nav-btn" @click="$emit('go-partner-setup')">Go to partner setup</button>
-        <button type="button" class="secondary guided-review-nav-btn" @click="guided.rerollAll()">Reroll all</button>
+        <button
+          v-if="!isSensatePlan"
+          type="button"
+          class="secondary guided-review-nav-btn"
+          @click="guided.rerollAll()"
+        >
+          Reroll all
+        </button>
         <button type="button" class="primary guided-review-nav-btn guided-review-confirm" @click="$emit('confirm')">Confirm session</button>
       </div>
     </Teleport>
@@ -26,7 +33,11 @@
     <div class="guided-review-screen">
       <div class="guided-review-inner">
         <h2 class="guided-ready-title">Review your session</h2>
-        <p class="guided-review-sub">{{ guided.sessionPlan.turns.length }} turns. Reroll any turn or confirm to generate audio.</p>
+        <p class="guided-review-sub">
+          <template v-if="isSensatePlan">{{ guided.sessionPlan.turns.length }} scripted turns. Confirm to prepare audio.</template>
+          <template v-else>{{ guided.sessionPlan.turns.length }} turns. Reroll any turn or confirm to generate audio.</template>
+        </p>
+        <p v-if="sensateFirstToucherNote" class="guided-review-sensate-meta">{{ sensateFirstToucherNote }}</p>
         <div class="guided-review-list">
           <div
             v-for="(t, idx) in guided.sessionPlan.turns"
@@ -36,7 +47,14 @@
             <div class="guided-review-turn-head">
               <span class="guided-review-turn-num">Turn {{ t.turnIndex }}</span>
               <span class="guided-review-turn-phase">Phase {{ t.phase }}</span>
-              <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(idx)">Reroll</button>
+              <button
+              v-if="!isSensatePlan"
+              type="button"
+              class="secondary small guided-review-reroll"
+              @click="guided.rerollTurn(idx)"
+            >
+              Reroll
+            </button>
             </div>
             <div class="guided-review-turn-body">
               <div v-if="t.instruction" class="guided-review-instruction">{{ t.instruction }}</div>
@@ -49,6 +67,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useGuidedStore } from '@/stores/guided'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
 
@@ -67,6 +86,19 @@ defineEmits([
 
 const guided = useGuidedStore()
 const sessionFavorites = useSessionFavoritesStore()
+
+const isSensatePlan = computed(() => guided.sessionPlan?.kind === 'sensate')
+
+const sensateFirstToucherNote = computed(() => {
+  const c = guided.sessionPlan?.config
+  if (!c || c.sessionKind !== 'sensate' || c.sensateFirstGiverResolved == null) return ''
+  const g = c.sensateFirstGiverResolved
+  const pref = c.sensateFirstToucherPreference
+  const who = g === 1 ? 'Partner 1' : 'Partner 2'
+  if (pref === 'random') return `First toucher (random): ${who}.`
+  if (pref === 1 || pref === 2) return `First toucher (your choice): ${who}.`
+  return `First toucher: ${who}.`
+})
 </script>
 
 <style scoped>
@@ -104,6 +136,12 @@ const sessionFavorites = useSessionFavoritesStore()
   font-size: 0.95rem;
   color: #94a3b8;
   margin: 0;
+}
+.guided-review-sensate-meta {
+  font-size: 0.875rem;
+  color: #a78bfa;
+  margin: -0.5rem 0 0;
+  text-align: center;
 }
 .guided-review-list {
   display: flex;

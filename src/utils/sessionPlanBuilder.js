@@ -38,6 +38,27 @@ function pick(arr, rng) {
   return arr[Math.floor(rng() * arr.length)]
 }
 
+function shuffleInPlace(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    const t = arr[i]
+    arr[i] = arr[j]
+    arr[j] = t
+  }
+  return arr
+}
+
+/** Positions that appear in both partners' Phase 3 pools so the same position can span several turns when reuse modes are on. */
+function phase3PositionsEligibleForReuse(partnerAnatomy) {
+  const a1 = (partnerAnatomy[1] || 'penis').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+  const a2 = (partnerAnatomy[2] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+  const pool1 = getPhase3PositionNumbersForReceiverAnatomy(a1)
+  if (a1 === a2) return [...pool1]
+  const set2 = new Set(getPhase3PositionNumbersForReceiverAnatomy(a2))
+  const inter = pool1.filter((n) => set2.has(n))
+  return inter.length > 0 ? inter : [...pool1]
+}
+
 const AFTER_NEXT_TURN_SEC = 10
 const SETTLE_IN_SEC = 20
 
@@ -45,7 +66,7 @@ const SETTLE_IN_SEC = 20
 // buildSessionPlan
 // -----------------------------------------------------------------------------
 /**
- * @param {object} config - Same shape as wizard emit (totalMinutes, turnMinutes, pauseSeconds, clothingRemovalSeconds, phasePercents, clothingListP1, clothingListP2, clothingEnabled, distributionMode, partnerNames, partnerAnatomy, phaseCheckInEnabled)
+ * @param {object} config - phase3PositionMode ('each_turn' | 'reuse_rotate' | 'reuse_multi'). phase3MaxPositions applies only to reuse_multi. reuse_rotate cycles up to 20 compatible positions (all eligible if fewer).
  * @param {number} [seed] - Optional seed for RNG; if omitted uses Date.now()
  * @returns {{ config: object, turns: Turn[], script: string[] }}
  */
@@ -67,6 +88,8 @@ export function buildSessionPlan(config, seed) {
     excludeWhenTouching: _exTouch,
     excludeWhenTouched: _exTouched,
     vibratorsPresent = true,
+    phase3PositionMode = 'each_turn',
+    phase3MaxPositions = 4,
   } = config
 
   const excludeWhenTouching = mergeExcludePrefs(_exTouch)
@@ -112,6 +135,38 @@ export function buildSessionPlan(config, seed) {
   let receiverOnceP1 = false
   let receiverOnceP2 = false
   let turnIndex = 0
+  let phase3ReusePlan = null
+  let phase3ReuseSlot = 0
+  let phase3TurnInSlot = 0
+  const usePhase3Reuse =
+    phase3PositionMode === 'reuse_rotate' || phase3PositionMode === 'reuse_multi'
+
+  let phase3EligibleList = []
+  let phase3RotationCap = 1
+  if (usePhase3Reuse) {
+    phase3EligibleList = phase3PositionsEligibleForReuse(partnerAnatomy)
+    if (phase3PositionMode === 'reuse_rotate') {
+      phase3RotationCap = Math.max(1, Math.min(20, phase3EligibleList.length))
+    } else {
+      const rawCap = Number(phase3MaxPositions)
+      phase3RotationCap = Math.max(
+        1,
+        Math.min(Number.isFinite(rawCap) ? rawCap : 4, 20, phase3EligibleList.length)
+      )
+    }
+  }
+
+  const phase3TurnCostApprox = Math.max(1, turnSeconds + AFTER_NEXT_TURN_SEC + SETTLE_IN_SEC)
+  const estPhase3TurnCount = Math.max(1, Math.floor(phaseSeconds[2] / phase3TurnCostApprox))
+
+  let phase3TurnsPerSlot = 1
+  if (phase3PositionMode === 'reuse_rotate') {
+    phase3TurnsPerSlot = 2
+  } else if (phase3PositionMode === 'reuse_multi') {
+    const per =
+      phase3RotationCap > 0 ? Math.round(estPhase3TurnCount / phase3RotationCap) : estPhase3TurnCount
+    phase3TurnsPerSlot = Math.max(3, per)
+  }
 
   // Intro (from staticPhrases)
   const intro = pick(clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS, rng)
@@ -164,9 +219,20 @@ export function buildSessionPlan(config, seed) {
 
     let loc, actRoll, extendedTime = false
     if (phase === 3) {
-      const receiverAnatomyVal = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
-      const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal)
-      loc = pool[Math.floor(rng() * pool.length)]
+      if (usePhase3Reuse) {
+        if (phase3ReusePlan === null) {
+          const eligible = [...phase3EligibleList]
+          shuffleInPlace(eligible, rng)
+          phase3ReusePlan = eligible.slice(0, phase3RotationCap)
+          phase3ReuseSlot = 0
+          phase3TurnInSlot = 0
+        }
+        loc = phase3ReusePlan[phase3ReuseSlot % phase3ReusePlan.length]
+      } else {
+        const receiverAnatomyVal = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+        const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal)
+        loc = pool[Math.floor(rng() * pool.length)]
+      }
       const mod = rollPhase3ModifierWithVibratorRule(rng, distributionMode, !!vibratorsPresent)
       actRoll = mod.actRoll
       extendedTime = mod.extendedTime
@@ -243,6 +309,14 @@ export function buildSessionPlan(config, seed) {
     turnRecord.phraseStrings = script.slice(phraseStartIndex)
     turns.push(turnRecord)
 
+    if (phase === 3 && usePhase3Reuse && phase3ReusePlan?.length) {
+      phase3TurnInSlot++
+      if (phase3TurnInSlot >= phase3TurnsPerSlot) {
+        phase3TurnInSlot = 0
+        phase3ReuseSlot++
+      }
+    }
+
     firstTurnOfSession = false
     if (phase === 3) firstTurnOfPhase3 = false
 
@@ -284,8 +358,23 @@ export function buildSessionPlan(config, seed) {
     currentPartner = currentPartner === 1 ? 2 : 1
   }
 
+  const outConfig = { ...config }
+  delete outConfig.phase3TurnsPerPosition
+  if (phase3PositionMode === 'reuse_multi') {
+    outConfig.phase3ResolvedTurnsPerSlot = phase3TurnsPerSlot
+    outConfig.phase3EstimatedTurnsInPhase = estPhase3TurnCount
+  } else {
+    delete outConfig.phase3ResolvedTurnsPerSlot
+    delete outConfig.phase3EstimatedTurnsInPhase
+  }
+  if (usePhase3Reuse) {
+    outConfig.phase3RotationCapResolved = phase3RotationCap
+  } else {
+    delete outConfig.phase3RotationCapResolved
+  }
+
   return {
-    config: { ...config },
+    config: outConfig,
     turns,
     script,
   }

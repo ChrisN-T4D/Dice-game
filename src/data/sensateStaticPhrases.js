@@ -1,117 +1,124 @@
 /**
- * Fixed phrase ids + text for sensate guided sessions (static WAV lookup + plan builder).
- * Partner labels use "Partner 1" / "Partner 2" so audio matches app defaults and stays static.
+ * Fixed phrase ids + text for sensate sessions (plan builder + static WAV when shipped).
+ * Partner labels use "Partner 1" / "Partner 2" so audio matches app defaults.
+ * The app only tries /audio/static/{voice}/{id}.wav for these lines in sensate mode (see getStaticPhraseIdForText staticPresetKind).
  */
 
 export const SENSATE_FIRST_TURN_TEXT =
-  'First turn. Partner 1 is giver, Partner 2 is receiver.'
+  'For this first stretch, Partner 1 is giving touch and Partner 2 is receiving.'
 
 export const SENSATE_FIRST_TURN_P2_GIVER_TEXT =
-  'First turn. Partner 2 is giver, Partner 1 is receiver.'
+  'For this first stretch, Partner 2 is giving touch and Partner 1 is receiving.'
+
+/** After a sensate touch block ends (no “time to switch”—switching is cued in the transition pause line). */
+export const SENSATE_TURN_COMPLETE_CUE = 'That turn is complete.'
+
+/**
+ * Replaces the generic duration line on transition turns: one minute to switch roles and settle before the role-switch script.
+ */
+export const SENSATE_TRANSITION_PAUSE_ABOUT_ONE_MINUTE =
+  'You have about one minute to switch who gives and who receives, and to settle before the next instructions.'
 
 /** @type {{ id: string, text: string }[]} */
 export const SENSATE_STATIC_PHRASES = [
   { id: 'sensate_first_turn_standard', text: SENSATE_FIRST_TURN_TEXT },
   { id: 'sensate_first_turn_p2_giver', text: SENSATE_FIRST_TURN_P2_GIVER_TEXT },
+  { id: 'sensate_turn_complete', text: SENSATE_TURN_COMPLETE_CUE },
+  { id: 'sensate_transition_pause_one_minute', text: SENSATE_TRANSITION_PAUSE_ABOUT_ONE_MINUTE },
+  // Timer lines — must match formatSensateBlockDurationSpeech(durationSec) exactly (sensate uses static WAV only).
+  { id: 'sensate_duration_15_min', text: 'This part is set for about 15 minutes.' },
+  { id: 'sensate_duration_10_min', text: 'This part is set for about 10 minutes.' },
+  { id: 'sensate_duration_6_min', text: 'This part is set for about 6 minutes.' },
+  { id: 'sensate_duration_5_min', text: 'This part is set for about 5 minutes.' },
+  { id: 'sensate_duration_4_min', text: 'This part is set for about 4 minutes.' },
+  { id: 'sensate_duration_3_min', text: 'This part is set for about 3 minutes.' },
   {
     id: 'sensate_intro_phase1_non_genital',
-    text: 'This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a fully consensual relationship only. Stop if there is discomfort, distress, or any sign of coercion. For personalized care, speak with a qualified professional. Phase one, non-genital mindful touch: you will hear one block at a time. Substitute anything that does not fit. Let us begin.',
+    text: 'Welcome to a sensate-style session: phase one, with mindful touch that stays non-genital. This is for adults in a fully consensual relationship. What you hear is not medical or therapy advice, and it does not replace care from a qualified clinician or therapist when you need that care. If you notice discomfort, distress, or anything that feels like coercion, pause or stop together. When you are ready, settle somewhere private, put phones aside, and adjust the temperature and lighting so you can see each other easily. Undress only as far as it feels right today. Many couples keep this simple, without music or candles, so attention can rest on touch and sensation; use whatever honestly helps you both stay present. Either of you can pause or stop at any time. You can treat this as a full session on its own or as one phase-one visit among others on different days. You will hear one short block at a time. Let us begin.',
   },
   {
     id: 'sensate_intro_phase1_genital',
-    text: 'This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a fully consensual relationship only. Stop if there is pain, distress, or coercion. See a clinician before genital touch if you have untreated pain or new symptoms. Phase one with breasts and genitals included, still non-demand. Let us begin.',
+    text: 'Welcome to a sensate-style session: phase one, with whole-body touch that can include breasts and genitals. This is for adults in a fully consensual relationship. What you hear is not medical or therapy advice, and it does not replace professional care when you need it. If you feel pain, distress, or coercion, pause or stop together. If you have untreated genital pain or new symptoms, speak with a clinician before adding genital touch. When you are ready, settle into a calm, private space. Put devices away, choose a temperature that feels easy, and dress or undress for your own comfort, knowing either of you may pause or stop at any time. There is no pressure to perform or to respond in a particular way. Some people practice non-genital sessions first; others use this format on its own, and both are fine. You can stop after this visit or plan another phase-one session on another day. You will hear one short block at a time. Let us begin.',
   },
   {
     id: 'sensate_intro_lotion',
-    text: 'This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. Patch test lotion and lubricant if you have sensitive skin; warm products before use. Stop if there is irritation or distress. Let us begin.',
+    text: 'Welcome to a sensate-style session that uses lotion, oil, and lubricant where those suit your bodies. This is for adults in a fully consensual relationship. What you hear is not medical or therapy advice, and it does not replace care from a qualified professional when you need it. If your skin is sensitive, patch-test products first, and warm them in your hands before you use them. Stop if you feel irritation or distress. Keep towels within reach. Use products you already trust on your skin; this is quiet exploration, not decorating a scene. You can use this as a full practice on its own or alongside other phase-one sessions whenever you choose. You will hear one short block at a time. Let us begin.',
   },
   {
     id: 'sensate_intro_mutual',
-    text: 'This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. If simultaneous touch feels overwhelming, return to turn-taking. Stop for any distress. Mutual touching segment. Let us begin.',
+    text: 'This segment is sensate-style mutual touch for adults in a consensual relationship. It is not medical or therapy advice and does not replace professional support. If touching each other at the same time feels overwhelming, return to turn-taking. Stop if either of you feels distressed. Let us begin.',
   },
   {
     id: 'sensate_intro_phase2_comm',
-    text: 'This is a sensate focus style session for education only; it is not medical or therapy advice. Adults in a consensual relationship only. Phase two style communication belongs after solid phase one practice; if feedback increases pressure, return to silent sensory focus. Let us begin.',
+    text: 'This is a sensate-style session that adds short, gentle communication for adults in a consensual relationship. It is not medical or therapy advice and does not replace therapy when you need it. This kind of phase-two sharing usually works best after you are steady with quiet phase-one sensing; if talking ramps up pressure, shift back to silent focus. Let us begin.',
   },
   // --- Phase 1 non-genital turns ---
   {
-    id: 'sensate_p1ng_t1',
-    text: 'Set the space: private, phones away, comfortable temperature, some light. Undress to your comfort. Skip music and candles for this practice. Agree you can pause or stop anytime.',
-  },
-  {
     id: 'sensate_p1ng_t2',
-    text: 'Partner 1 touches Partner 2. Use hands and fingers only. Explore from head to toe, front and back. Leave breasts, chest, and genitals untouched. Touch for your own interest in temperature, pressure, and texture—not to produce a response. Partner 2 notices sensations where touched; move Partner 1’s hand only for discomfort.',
+    text: 'Partner 1 is giving touch, and Partner 2 is receiving. Partner 1, use your hands and fingers only, moving from head to toe, front and back, while leaving breasts, chest, and genitals untouched. Let your attention wander through temperature, pressure, and texture for your own curiosity, not to pull a particular response from Partner 2. Partner 2, notice what you feel where you are touched, and guide Partner 1’s hand only if something is uncomfortable.',
   },
   {
     id: 'sensate_p1ng_t3',
-    text: 'Partner 1, when you are ready, say switch aloud. Exchange roles calmly.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_p1ng_t3_p2',
-    text: 'Partner 2, when you are ready, say switch aloud. Exchange roles calmly.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_p1ng_t4',
-    text: 'Partner 2 touches Partner 1 the same way: hands and fingers only, full body except breasts, chest, and genitals. Touch for your own sensory curiosity. Partner 1 notices sensations and guides only for discomfort.',
+    text: 'Partner 2 gives touch, and Partner 1 receives: hands and fingers only, over the whole body except breasts, chest, and genitals. Partner 2, follow your own sensory curiosity. Partner 1, notice what you feel, and guide only for discomfort.',
   },
   {
     id: 'sensate_p1ng_t5',
-    text: 'Closing. Dress when you like. Optionally note what you sensed, what distracted you, and how it felt to refocus. This app does not replace a therapist.',
+    text: 'Time is up. This guided session is complete. You can stop and dress, continue without the app, or open another guided session. If it helps, you might each share briefly what you sensed, what pulled your attention away, and what it was like to come back to the touch. As a reminder, this app is not a substitute for working with a therapist.',
   },
   // --- Phase 1 genital included ---
   {
-    id: 'sensate_p1g_t1',
-    text: 'Same calm environment as before: private, devices away, comfortable. Undress to comfort. Agree on pausing or stopping anytime.',
-  },
-  {
     id: 'sensate_p1g_t2',
-    text: 'Partner 1 touches Partner 2. Whole body including breasts and genitals, hands and fingers. Do not dwell longer on genitals than on other areas. Touch for your own sense of temperature, pressure, and texture. Partner 2 notices sensations; if arousal appears, simply notice it without chasing or suppressing. Hand-riding is optional for gentle guidance.',
+    text: 'Partner 1 is giving touch, and Partner 2 is receiving. Partner 1, use your hands and fingers over the whole body, including breasts and genitals, letting attention move so you are not parked only on the most charged spots. Stay curious about temperature, pressure, and texture. Partner 2, let sensations come and go; if arousal shows up, you can notice it without chasing it or shutting it down. Optional hand-riding is fine for gentle guidance.',
   },
   {
     id: 'sensate_p1g_t3',
-    text: 'Partner 1, say switch when ready. Exchange roles.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_p1g_t3_p2',
-    text: 'Partner 2, say switch when ready. Exchange roles.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_p1g_t4',
-    text: 'Partner 2 touches Partner 1 with the same rules: full body including breasts and genitals, even attention, non-demand curiosity, noticing arousal without goals. Hand-riding optional.',
+    text: 'Partner 2 gives touch, and Partner 1 receives: full body including breasts and genitals, attention spread evenly, gentle curiosity, and room to notice arousal without making it the point of the exercise. Hand-riding stays optional if it helps.',
   },
   {
     id: 'sensate_p1g_t5',
-    text: 'Closing. Dress if you wish. Jot sensations or distractions if helpful. Seek professional support for pain or strong anxiety.',
+    text: 'Time is up. This guided session is complete. You can stop and dress, continue without the app, or open another guided session. A few notes about sensations or distractions can help some people make sense of what happened. If this kind of touch brings ongoing pain or strong anxiety, consider reaching out to a professional for support. As a reminder, this app is not a substitute for working with a therapist.',
   },
   // --- Lotion / lubricant ---
   {
-    id: 'sensate_lo_t1',
-    text: 'Prepare towels. Warm lotion or oil and water-based lubricant in your hands first. Use products you tolerate; this is exploration, not romance staging.',
-  },
-  {
     id: 'sensate_lo_t2',
-    text: 'Partner 1 touches Partner 2. Use lotion or oil on body and lubricant where appropriate for genital contact, same non-demand attitude: notice how the medium changes temperature, pressure, and glide. Partner 2 tracks the new sensations. No performance goals.',
+    text: 'Partner 1 is giving touch, and Partner 2 is receiving. Partner 1, use lotion or oil on the body and lubricant where genital contact is part of your plan. Keep a calm, curious attitude. Notice how slip and glide change temperature, pressure, and texture. Partner 2, ride those sensations without trying to perform. There is nothing here to get right.',
   },
   {
     id: 'sensate_lo_t3',
-    text: 'Partner 1, say switch when ready.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_lo_t3_p2',
-    text: 'Partner 2, say switch when ready.',
+    text: 'You are switching roles for the second round of touch in this session: whoever was receiving will give, and whoever was giving will receive. If you are already repositioned, tap Skip turn to hear the next instructions. If you want more time, use what remains of this pause to settle. The next prompt begins when the timer ends.',
   },
   {
     id: 'sensate_lo_t4',
-    text: 'Partner 2 touches Partner 1 the same way with warmed products. Stay curious about texture and glide, not outcome.',
+    text: 'Partner 2 gives touch, and Partner 1 receives, with warmed lotion, oil, or lubricant as needed, staying curious about texture and glide rather than about any particular outcome.',
   },
   {
     id: 'sensate_lo_t5',
-    text: 'Closing. Wipe off if needed. Note what felt different in your skin attention today.',
+    text: 'Time is up. This guided session is complete. You can stop and dress, continue without the app, or open another guided session. As you finish, wipe off if you need to. If you like, name one thing that felt different in how you paid attention to your skin today. As a reminder, this app is not a substitute for working with a therapist.',
   },
   // --- Mutual ---
   {
     id: 'sensate_mu_t1',
-    text: 'Settle in the same private, distraction-free space. You will both touch at once—no single giver or receiver.',
+    text: 'Settle in the same private, distraction-free space. You will both touch at once, with no single giver or receiver.',
   },
   {
     id: 'sensate_mu_t2',
@@ -119,16 +126,16 @@ export const SENSATE_STATIC_PHRASES = [
   },
   {
     id: 'sensate_mu_t3',
-    text: 'Wind down when you both agree. Briefly share one sensory observation each if you want—information, not pressure. Professional guidance helps if old patterns rush back.',
+    text: 'Wind down when you both agree. Briefly share one sensory observation each if you want: information, not pressure. Professional guidance helps if old patterns rush back.',
   },
   // --- Phase 2 communication ---
   {
     id: 'sensate_p2_t1',
-    text: 'Begin with a few minutes of phase one style touch: each person notices their own sensations without chatting.',
+    text: 'Begin with a few minutes of phase-one-style touch: each person notices their own sensations without chatting.',
   },
   {
     id: 'sensate_p2_t2',
-    text: 'Still in slow touch, add short phrases about what feels pleasant or connecting—offered as information, not as a demand on the other person.',
+    text: 'Still in slow touch, add short phrases about what feels pleasant or connecting, offered as information, not as a demand on the other person.',
   },
   {
     id: 'sensate_p2_t3',
@@ -140,7 +147,7 @@ export const SENSATE_STATIC_PHRASES = [
   },
   {
     id: 'sensate_p2_t5',
-    text: 'Closing. Check in kindly. Phase two works best after steady phase one skills; consider discussing this session with a qualified therapist.',
+    text: 'Closing. Check in kindly. Phase two works best after steady phase-one skills; consider discussing this session with a qualified therapist.',
   },
 ]
 

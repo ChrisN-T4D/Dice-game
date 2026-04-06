@@ -23,7 +23,7 @@ export function useAppBodyClasses({ session, prefs, showAdmin, showMainContent }
     { immediate: true }
   )
   watch(
-    () => session.uiMode === 'guided' && showMainContent.value,
+    () => (session.uiMode === 'guided' || session.uiMode === 'sensate') && showMainContent.value,
     (isGuided) => {
       document.body.classList.toggle('guided-mode', isGuided)
     },

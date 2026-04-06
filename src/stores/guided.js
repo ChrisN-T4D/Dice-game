@@ -321,6 +321,13 @@ export const useGuidedStore = defineStore('guided', {
         if (onEnd) onEnd()
       }
     },
+    /**
+     * Sensate scripted playback uses only pre-baked blobs for plan lines (no live synthesis).
+     * When blobs are active, missing clips skip straight to onEnd instead of Kokoro/browser.
+     */
+    sensateSkipLiveTtsFallback() {
+      return this.sessionPlan?.kind === 'sensate' && this.preGeneratedBlobs != null
+    },
     /** Play one phrase: use pre-generated blob if set and ready, else TTS. Falls back to TTS when blob is null/not ready so turn description always plays. */
     safeSpeak(phrase, onEnd) {
       phrase = phrase != null ? normalizeParenthesesForTts(slashToAndForTts(String(phrase))) : ''
@@ -332,6 +339,10 @@ export const useGuidedStore = defineStore('guided', {
           this._devLog('phrase_start', phrase, { source: 'kokoro' })
           const onPlaybackFailed = (reason) => {
             this._devLog('playback_failed', phrase, { source: 'kokoro', reason: reason || 'unknown' })
+            if (this.sensateSkipLiveTtsFallback()) {
+              if (onEnd) onEnd()
+              return
+            }
             if (this.speakRef && phrase) {
               this.pendingSpeech = { phrase, onEnd }
               this.speakRef(phrase, this._speakOpts(phrase, onEnd))
@@ -360,6 +371,10 @@ export const useGuidedStore = defineStore('guided', {
                 this._devLog('phrase_start', phrase, { source: 'kokoro' })
                 const onPlaybackFailed = (reason) => {
                   this._devLog('playback_failed', phrase, { source: 'kokoro', reason: reason || 'unknown' })
+                  if (this.sensateSkipLiveTtsFallback()) {
+                    if (onEnd) onEnd()
+                    return
+                  }
                   if (this.speakRef && phrase) {
                     this.pendingSpeech = { phrase, onEnd }
                     this.speakRef(phrase, this._speakOpts(phrase, onEnd))
@@ -373,7 +388,7 @@ export const useGuidedStore = defineStore('guided', {
               } else {
                 this.markPreGeneratedSlotConsumed(idx)
                 this.preGeneratedIndex = idx + 1
-                if (this.speakRef && phrase) {
+                if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
                   this.pendingSpeech = { phrase, onEnd }
                   this.speakRef(phrase, this._speakOpts(phrase, onEnd))
                 } else if (onEnd) onEnd()
@@ -382,7 +397,7 @@ export const useGuidedStore = defineStore('guided', {
               clearInterval(iv)
               this.markPreGeneratedSlotConsumed(idx)
               this.preGeneratedIndex = idx + 1
-              if (this.speakRef && phrase) {
+              if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
                 this.pendingSpeech = { phrase, onEnd }
                 this.speakRef(phrase, this._speakOpts(phrase, onEnd))
               } else if (onEnd) onEnd()
@@ -392,7 +407,7 @@ export const useGuidedStore = defineStore('guided', {
         }
         this.markPreGeneratedSlotConsumed(this.preGeneratedIndex)
         this.preGeneratedIndex++
-        if (this.speakRef && phrase) {
+        if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
           this.pendingSpeech = { phrase, onEnd }
           this.speakRef(phrase, this._speakOpts(phrase, onEnd))
           return
@@ -401,6 +416,10 @@ export const useGuidedStore = defineStore('guided', {
         return
       }
       if (!this.speakRef) {
+        if (onEnd) onEnd()
+        return
+      }
+      if (this.sensateSkipLiveTtsFallback()) {
         if (onEnd) onEnd()
         return
       }
@@ -589,7 +608,7 @@ export const useGuidedStore = defineStore('guided', {
       const sessionStore = useSessionStore()
       sessionStore.setPhase(startPhase)
       sessionStore.setRollCount(0)
-      sessionStore.uiMode = 'guided'
+      sessionStore.uiMode = this.sessionPlan?.kind === 'sensate' ? 'sensate' : 'guided'
       sessionStore.isGuidedMode = true
       sessionStore.showLanding = false
 
@@ -603,7 +622,7 @@ export const useGuidedStore = defineStore('guided', {
 
       // Preload intro and fixed phrases immediately so they're ready; worker won't block.
       const prepAtStart = this.preparePhraseRef
-      if (prepAtStart) {
+      if (prepAtStart && this.sessionPlan?.kind !== 'sensate') {
         const vid = this.sessionKokoroVoiceId?.trim() || undefined
         const runPrep = (phrase) => prepAtStart(phrase, undefined, vid)
         runPrep(intro)
@@ -806,7 +825,7 @@ export const useGuidedStore = defineStore('guided', {
       // sends generate and caches the blob; when we speak() the same text we play from cache immediately.
       // Instruction and clothing first (longest); then transition phrases.
       const prep = this.preparePhraseRef
-      if (prep) {
+      if (prep && this.sessionPlan?.kind !== 'sensate') {
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         prep(firstTurnPhrase)
@@ -876,7 +895,7 @@ export const useGuidedStore = defineStore('guided', {
         this.clearBreakTimer()
         this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
         const prep = this.preparePhraseRef
-        if (prep) {
+        if (prep && this.sessionPlan?.kind !== 'sensate') {
           if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
           if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
           prep(SETTLE_INTO_POSITION_TEXT)
@@ -897,7 +916,7 @@ export const useGuidedStore = defineStore('guided', {
         this.clearBreakTimer()
         this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
         const prep = this.preparePhraseRef
-        if (prep) {
+        if (prep && this.sessionPlan?.kind !== 'sensate') {
           prep(nextTurnPhrase)
           if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
           if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
@@ -998,7 +1017,7 @@ export const useGuidedStore = defineStore('guided', {
       this.breakCountdown = AFTER_NEXT_TURN_SEC
       this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
       const prep = this.preparePhraseRef
-      if (prep) {
+      if (prep && this.sessionPlan?.kind !== 'sensate') {
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
         prep(SETTLE_INTO_POSITION_TEXT)
@@ -1032,7 +1051,8 @@ export const useGuidedStore = defineStore('guided', {
       // If next blob is turn-begins (we're one ahead), speak ease-in via TTS only so we don't consume it
       const nextBlobIsTurnBegins = scriptPhrase && TURN_BEGINS_TEXTS.includes(scriptPhrase)
       if (this.speakRef) {
-        if (nextBlobIsTurnBegins) {
+        // Sensate uses only pre-baked blobs for these cues; avoid live TTS here so playback stays aligned with script indices.
+        if (nextBlobIsTurnBegins && this.sessionPlan?.kind !== 'sensate') {
           this.pendingSpeech = { phrase: easeInPhrase, onEnd: startCountdown }
           this._devLog('phrase_start', easeInPhrase, { source: 'kokoro' })
           this.speakRef(easeInPhrase, this._speakOpts(easeInPhrase, startCountdown))
@@ -1043,7 +1063,7 @@ export const useGuidedStore = defineStore('guided', {
         startCountdown()
       }
       const prep = this.preparePhraseRef
-      if (prep) prepAll(prep, TURN_BEGINS_TEXTS)
+      if (prep && this.sessionPlan?.kind !== 'sensate') prepAll(prep, TURN_BEGINS_TEXTS)
     },
 
     tickClothingWindow() {
@@ -1097,7 +1117,8 @@ export const useGuidedStore = defineStore('guided', {
         this.preGeneratedIndex = 0
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick(SESSION_COMPLETE_PHRASES)
-        if (this.speakRef) this.safeSpeak(phrase)
+        // Closing line is not part of the fixed sensate script; allow Kokoro/static as for guided cues.
+        if (this.speakRef) this.speakRef(phrase, { ...this._speakOpts(phrase, () => {}), staticPresetKind: 'guided' })
         return
       }
       // Last turn of phase: insert end-of-phase then next phase (turn instruction → settle in → 15s → start phrase …)
@@ -1228,6 +1249,26 @@ export const useGuidedStore = defineStore('guided', {
       this.inClothingWindow = false
       this.stopSpeakRef?.()
       this.pendingSpeech = null
+      // Sensate: each turn maps to a contiguous slice of script/blobs — jump to the next turn’s first clip so skip doesn’t desync playback.
+      if (this.sessionPlan?.kind === 'sensate') {
+        const plan = this.sessionPlan
+        const turns = plan.turns
+        if (turns?.length) {
+          if (this.totalTurnsInSession <= 0) {
+            const first = turns[0]?.scriptIndexStart
+            if (typeof first === 'number') this.preGeneratedIndex = first
+          } else {
+            const t = this.totalTurnsInSession - 1
+            if (t >= 0 && t < turns.length) {
+              if (t + 1 < turns.length) {
+                this.preGeneratedIndex = turns[t + 1].scriptIndexStart
+              } else {
+                this.preGeneratedIndex = plan.script.length
+              }
+            }
+          }
+        }
+      }
       this.phaseTimeRemaining -= this.turnTimeRemaining
       this.totalTimeRemaining -= this.turnTimeRemaining
       this.turnTimeRemaining = 0

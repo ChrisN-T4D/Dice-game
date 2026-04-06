@@ -67,7 +67,7 @@
       </div>
       <div class="phase3-compare">
         <div class="compare-block compare-image">
-          <h3 class="compare-heading">Image — {{ currentPosition }}</h3>
+          <h3 class="compare-heading">Image: {{ currentPosition }}</h3>
           <div class="image-and-tags">
             <div class="image-wrap">
             <img

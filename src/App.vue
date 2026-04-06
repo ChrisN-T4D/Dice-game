@@ -14,27 +14,46 @@
       @choose="onChooseMode"
     />
 
-    <div v-show="showMainContent" class="page" :class="{ 'page-bg-fiery-heart': prefs?.backgroundImage === '1', 'guided-mode': session.uiMode === 'guided' }">
+    <div v-show="showMainContent" class="page" :class="{ 'page-bg-fiery-heart': prefs?.backgroundImage === '1', 'guided-mode': session.uiMode === 'guided' || session.uiMode === 'sensate' }">
+      <AppMenuSidebar
+        :open="appMenuOpen"
+        :current-mode="session.uiMode"
+        @close="appMenuOpen = false"
+        @home="onAppMenuHome"
+        @go-freeplay="onAppMenuGoFreePlay"
+        @go-guided="onAppMenuGoGuided"
+        @go-sensate="onAppMenuGoSensate"
+        @open-preferences="onAppMenuOpenPreferences"
+      />
       <PreferencesSidebar :open="preferencesOpen" @close="preferencesOpen = false" @show-onboarding="openOnboardingAgain" @show-favorites="openFavoritesModal" />
       <FavoritesModal />
 
       <!-- Card 1: Header -->
       <div class="card card-header-panel">
-        <button type="button" class="hamburger-menu-btn" title="Open preferences" aria-label="Open preferences" @click="preferencesOpen = true">☰</button>
+        <button type="button" class="hamburger-menu-btn" title="Open menu" aria-label="Open menu" @click="appMenuOpen = true">☰</button>
         <h1 role="button" tabindex="0" class="card-header-title" title="Between Us" @click="onTitleClick" @keydown.enter.space.prevent="onTitleClick">Between Us</h1>
         <button type="button" class="play-mode-in-header" :aria-expanded="playModeExpanded" aria-controls="play-mode-options" :aria-label="playModeExpanded ? 'Collapse play mode' : 'Expand play mode'" @click="playModeExpanded = !playModeExpanded">
-          <span class="play-mode-in-header-label">{{ session.uiMode === 'freeplay' ? 'Dice game' : session.uiMode === 'guided' ? 'Guided Mode' : 'Choose mode' }}</span>
+          <span class="play-mode-in-header-label">{{
+            session.uiMode === 'freeplay'
+              ? 'Dice game'
+              : session.uiMode === 'guided'
+                ? 'Guided mode'
+                : session.uiMode === 'sensate'
+                  ? 'Sensate-style sessions'
+                  : 'Choose mode'
+          }}</span>
           <span class="play-mode-in-header-chevron" aria-hidden="true">{{ playModeExpanded ? '▲' : '▼' }}</span>
         </button>
         <div v-show="playModeExpanded" id="play-mode-options" class="play-mode-row" role="region" aria-label="Play mode options">
           <div class="row">
-            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'freeplay' }" @click="session.uiMode = 'freeplay'">Dice game</button>
-            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'guided' }" @click="onGuidedModeClick">Guided Mode</button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'freeplay' }" @click="onFreePlayModeClick">Dice game</button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'guided' }" @click="onGuidedModeClick">Guided mode</button>
+            <button type="button" class="secondary" :class="{ 'preset-selected': session.uiMode === 'sensate' }" @click="onSensateModeClick">Sensate-style</button>
           </div>
         </div>
       </div>
 
-      <!-- Card 1b: Step bar (portal target — wizard teleports its progress bar here, hidden when empty) -->
+      <!-- Card 1b: Step bar (portal target: wizard teleports its progress bar here, hidden when empty) -->
       <div id="step-bar-portal" class="card card-step-bar-panel"></div>
 
       <!-- Card 2: Main content (scrollable, fills remaining space) -->
@@ -49,11 +68,13 @@
           <FreePlayView />
           <SummaryOverlay :open="summaryOpen" @close="summaryOpen = false" />
         </template>
-        <GuidedModeView v-else-if="session.uiMode === 'guided'" />
-        <p v-else class="choose-mode-prompt">Choose <strong>Dice game</strong> or <strong>Guided Mode</strong> above to start.</p>
+        <GuidedModeView v-else-if="session.uiMode === 'guided' || session.uiMode === 'sensate'" />
+        <p v-else class="choose-mode-prompt">
+          Choose <strong>Dice game</strong>, <strong>Guided mode</strong> (dice-based setup), or <strong>Sensate-style</strong> above to start.
+        </p>
       </div>
 
-      <!-- Card 3: Bottom navigation (portal target — components teleport their nav here) -->
+      <!-- Card 3: Bottom navigation (portal target: components teleport their nav here) -->
       <div id="bottom-nav-portal" class="card card-nav-panel"></div>
     </div>
     </template>
@@ -81,6 +102,7 @@ import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
 import { useDebouncedAppPersistence } from '@/composables/useDebouncedAppPersistence'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
+import AppMenuSidebar from '@/components/AppMenuSidebar.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
 import GuidedModeView from '@/components/GuidedModeView.vue'
 import FavoritesModal from '@/components/FavoritesModal.vue'
@@ -107,7 +129,7 @@ const showOnboarding = computed(() => !profile.onboardingComplete || showOnboard
 const showLandingAfterOnboarding = computed(
   () => profile.onboardingComplete && !showOnboardingAgain.value && session.showLanding
 )
-const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | null – when set, show main UI during tour step 3
+const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | 'sensate' | null – when set, show main UI during tour step 3
 const showMainContent = computed(
   () => (profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding) || tourPreviewMode.value !== null
 )
@@ -118,7 +140,10 @@ watch(showMainContent, (show) => {
 function onTourPreview(mode) {
   tourPreviewMode.value = mode
   if (mode) {
-    session.$patch({ uiMode: mode, isGuidedMode: mode === 'guided' })
+    session.$patch({
+      uiMode: mode,
+      isGuidedMode: mode === 'guided' || mode === 'sensate',
+    })
   }
 }
 
@@ -131,19 +156,29 @@ function onOnboardingComplete() {
 
 function openOnboardingAgain() {
   preferencesOpen.value = false
+  appMenuOpen.value = false
   showOnboardingAgain.value = true
 }
 
 function openFavoritesModal() {
   preferencesOpen.value = false
+  appMenuOpen.value = false
   favoritesStore.openModal()
 }
 
 function updateShowAdmin() {
   showAdmin.value = window.location.hash === '#admin'
 }
+const appMenuOpen = ref(false)
 const preferencesOpen = ref(false)
 const playModeExpanded = ref(false)
+
+watch(preferencesOpen, (open) => {
+  if (open) appMenuOpen.value = false
+})
+watch(appMenuOpen, (open) => {
+  if (open) preferencesOpen.value = false
+})
 let titleClickCount = 0
 let titleClickResetTimer = null
 function onTitleClick() {
@@ -170,9 +205,49 @@ function onChooseMode(mode) {
   }
 }
 
+function onFreePlayModeClick() {
+  session.$patch({ uiMode: 'freeplay', isGuidedMode: false })
+}
+
 function onGuidedModeClick() {
   if (guided.sessionComplete) guided.resetAfterSessionComplete()
-  session.uiMode = 'guided'
+  session.$patch({ uiMode: 'guided', isGuidedMode: true })
+}
+
+function onSensateModeClick() {
+  if (guided.sessionComplete) guided.resetAfterSessionComplete()
+  session.$patch({ uiMode: 'sensate', isGuidedMode: true })
+}
+
+function closeAppMenuAndCollapsePlayMode() {
+  appMenuOpen.value = false
+  playModeExpanded.value = false
+}
+
+function onAppMenuHome() {
+  closeAppMenuAndCollapsePlayMode()
+  session.showLandingModal()
+}
+
+function onAppMenuGoFreePlay() {
+  closeAppMenuAndCollapsePlayMode()
+  onFreePlayModeClick()
+}
+
+function onAppMenuGoGuided() {
+  closeAppMenuAndCollapsePlayMode()
+  onGuidedModeClick()
+}
+
+function onAppMenuGoSensate() {
+  closeAppMenuAndCollapsePlayMode()
+  onSensateModeClick()
+}
+
+function onAppMenuOpenPreferences() {
+  appMenuOpen.value = false
+  playModeExpanded.value = false
+  preferencesOpen.value = true
 }
 
 function goToNextPhase() {

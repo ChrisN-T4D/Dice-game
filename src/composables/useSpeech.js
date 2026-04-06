@@ -610,17 +610,17 @@ export function useSpeech() {
 
   /**
    * Generate audio for one phrase and return the blob (or null for empty text).
-   * Uses pre-generated static WAV for intro when available (e.g. intro_no_clothing_1..9); else Kokoro.
+   * Guided: static WAV when the line matches a shared cue, else Kokoro. Sensate: static WAV only (no Kokoro).
    * @param {string} text
    * @param {(ev: { phase: string, size?: number, message?: string, textSnippet?: string }) => void} [onDetail] - optional callback for dev log (request/blob/error/timeout)
    */
-  async function generatePhraseToBlob(text, onDetail, voiceIdOverride) {
+  async function generatePhraseToBlob(text, onDetail, voiceIdOverride, staticPresetKind = 'guided') {
     const cleaned = cleanTextForSpeech(text)
     if (!cleaned) return null
     const voiceId = (voiceIdOverride && String(voiceIdOverride).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
 
     // Use pre-generated static WAV only for the selected voice (never fall back to another voice)
-    const phraseId = getStaticPhraseIdForText(cleaned)
+    const phraseId = getStaticPhraseIdForText(cleaned, { staticPresetKind })
     if (phraseId && voiceId) {
       try {
         const res = await fetch(getStaticAudioUrl(phraseId, voiceId))
@@ -630,6 +630,12 @@ export function useSpeech() {
           return new Blob([buf], { type: 'audio/wav' })
         }
       } catch (_) {}
+    }
+
+    // Sensate sessions use shipped static WAVs only (no Kokoro generation for script audio).
+    if (staticPresetKind === 'sensate') {
+      onDetail?.({ phase: 'sensate_static_missing' })
+      return null
     }
 
     const provider = ttsProvider.value
@@ -682,20 +688,22 @@ export function useSpeech() {
    * Optional onPhraseDetail(phraseIndex, event) is called for each phrase with worker/static detail for the dev log.
    * Empty phrases yield null in the array; playback should skip null (call onEnd immediately).
    * Local-first: in-browser Kokoro worker when `kokoroAvailable`; otherwise guided audio cannot be generated server-side — use Browser voices in preferences.
+   * Sensate: only fetches static WAVs (no Kokoro); missing files yield null blobs.
    */
   async function generateSessionAudio(phrases, onProgress, onPhraseDetail, genOptions = {}) {
     if (!Array.isArray(phrases)) return []
     const total = phrases.length
     const voiceId = (genOptions.voiceId && String(genOptions.voiceId).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
+    const staticPresetKind = genOptions.staticPresetKind === 'sensate' ? 'sensate' : 'guided'
 
-    if (!kokoroAvailable) {
+    if (!kokoroAvailable && staticPresetKind !== 'sensate') {
       throw new Error('Guided voice on this device: switch to Browser voices in Preferences (☰ → Voice) to hear prompts, or use another browser where Kokoro runs in the app.')
     }
 
     const blobs = []
     for (let i = 0; i < total; i++) {
       const detailCb = onPhraseDetail ? (ev) => onPhraseDetail(i, ev) : undefined
-      const blob = await generatePhraseToBlob(phrases[i], detailCb, voiceId)
+      const blob = await generatePhraseToBlob(phrases[i], detailCb, voiceId, staticPresetKind)
       blobs.push(blob)
       if (onProgress) onProgress(i + 1, total)
       if (i < total - 1) {
@@ -706,16 +714,38 @@ export function useSpeech() {
   }
 
   /**
+   * Kokoro-JS (Node) cannot synthesize voice id `af`; we ship static WAVs under af_nicole only.
+   * Browser live TTS still uses /voices/af.bin for "Default (F)".
+   */
+  function staticVoiceDirForUrl(voiceId) {
+    const v = voiceId && String(voiceId).trim()
+    if (!v) return null
+    if (v === 'af') return 'af_nicole'
+    return v
+  }
+
+  /**
    * URL for a pre-generated static WAV (e.g. /audio/static/af_nicole/voice_test.wav).
    * Caller should fetch and play; if 404, fall back to TTS.
    */
   function getStaticAudioUrl(phraseId, voiceId) {
     if (!phraseId || !voiceId) return null
-    return `/audio/static/${voiceId}/${phraseId}.wav`
+    const dir = staticVoiceDirForUrl(voiceId)
+    if (!dir) return null
+    return `/audio/static/${dir}/${phraseId}.wav`
   }
 
   function speak(text, options = {}) {
-    const { force = false, onEnd, cacheForReplay = false, forceTtsMode, onSource, onPlaybackFailed, voiceId: voiceIdOption } = options
+    const {
+      force = false,
+      onEnd,
+      cacheForReplay = false,
+      forceTtsMode,
+      onSource,
+      onPlaybackFailed,
+      voiceId: voiceIdOption,
+      staticPresetKind = 'guided',
+    } = options
     if (!force && !voiceEnabled.value) {
       if (onEnd) onEnd()
       return
@@ -742,8 +772,8 @@ export function useSpeech() {
       })
       return
     }
-    // Prefer pre-generated static WAV when this phrase has one (e.g. intro, next_turn, session_complete)
-    const phraseId = getStaticPhraseIdForText(cleaned)
+    // Prefer pre-generated static WAV when this phrase has one (sensate preset lines only try static in sensate sessions)
+    const phraseId = getStaticPhraseIdForText(cleaned, { staticPresetKind })
     if (phraseId && voiceId) {
       fetch(getStaticAudioUrl(phraseId, voiceId))
         .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))
@@ -757,9 +787,19 @@ export function useSpeech() {
             })
             return
           }
+          if (staticPresetKind === 'sensate') {
+            if (onEnd) onEnd()
+            return
+          }
           proceedWithTts()
         })
-        .catch(() => proceedWithTts())
+        .catch(() => {
+          if (staticPresetKind === 'sensate') {
+            if (onEnd) onEnd()
+            return
+          }
+          proceedWithTts()
+        })
       return
     }
     proceedWithTts()

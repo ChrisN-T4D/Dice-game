@@ -38,6 +38,7 @@
           <template v-else>{{ guided.sessionPlan.turns.length }} turns. Reroll any turn or confirm to generate audio.</template>
         </p>
         <p v-if="sensateFirstToucherNote" class="guided-review-sensate-meta">{{ sensateFirstToucherNote }}</p>
+        <p v-if="phase3PlanSummary" class="guided-review-sensate-meta">{{ phase3PlanSummary }}</p>
         <div class="guided-review-list">
           <div
             v-for="(t, idx) in guided.sessionPlan.turns"
@@ -98,6 +99,35 @@ const sensateFirstToucherNote = computed(() => {
   if (pref === 'random') return `First toucher (random): ${who}.`
   if (pref === 1 || pref === 2) return `First toucher (your choice): ${who}.`
   return `First toucher: ${who}.`
+})
+
+const phase3PlanSummary = computed(() => {
+  const plan = guided.sessionPlan
+  if (!plan || plan.kind === 'sensate') return ''
+  const c = plan.config
+  if (!c) return ''
+  if (c.phase3PositionMode === 'reuse_rotate') {
+    const n = typeof c.phase3RotationCapResolved === 'number' ? c.phase3RotationCapResolved : null
+    if (n != null) {
+      return `Phase 3: two turns per position so each partner leads once, up to ${n} compatible positions in the rotation, new activity each turn.`
+    }
+    return `Phase 3: two turns per position so each partner leads once, cycling compatible positions, new activity each turn.`
+  }
+  if (c.phase3PositionMode === 'reuse_multi') {
+    const n =
+      typeof c.phase3RotationCapResolved === 'number'
+        ? c.phase3RotationCapResolved
+        : typeof c.phase3MaxPositions === 'number'
+          ? c.phase3MaxPositions
+          : 4
+    const t = typeof c.phase3ResolvedTurnsPerSlot === 'number' ? c.phase3ResolvedTurnsPerSlot : null
+    const est = typeof c.phase3EstimatedTurnsInPhase === 'number' ? c.phase3EstimatedTurnsInPhase : null
+    if (t != null && est != null) {
+      return `Phase 3: up to ${n} positions in rotation, about ${t} turns per position (from ~${est} estimated Phase 3 turns), new activity each turn.`
+    }
+    return `Phase 3: up to ${n} positions in rotation; turns per position follow session length and rotation size, new activity each turn.`
+  }
+  return ''
 })
 </script>
 

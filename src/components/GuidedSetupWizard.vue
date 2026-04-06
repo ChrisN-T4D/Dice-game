@@ -1,5 +1,5 @@
 <template>
-  <div class="guided-setup-wizard" :class="{ 'wizard-step-10-active': step === 10 }">
+  <div class="guided-setup-wizard" :class="{ 'wizard-step-last-active': step === totalSteps }">
     <Teleport to="#step-bar-portal">
       <div class="wizard-progress-inner">
         <span class="wizard-progress-text">Step {{ step }} of {{ totalSteps }}</span>
@@ -10,13 +10,15 @@
     </Teleport>
     <div class="wizard-body">
 
-    <!-- Step 1: Phase distribution (compact so it fits without scrolling) -->
+    <!-- Step 1: Session timing (phase split, length, turns & pauses) -->
     <div v-show="step === 1" class="wizard-step active wizard-step-phase-distribution">
       <div class="wizard-step-header">
-        <div class="wizard-step-title">Phase time distribution</div>
-        <div class="wizard-step-description">How to split time across the three phases</div>
+        <div class="wizard-step-title">Session timing</div>
+        <div class="wizard-step-description">How long you play, how time is split across phases, and how turns are paced.</div>
       </div>
-      <div class="wizard-step-content">
+      <div class="wizard-step-content wizard-step-timing">
+        <div class="wizard-settings-category">Phase split</div>
+        <p class="wizard-settings-category-hint">Choose an option below, or pick Custom to set your own percentages.</p>
         <div class="wizard-options-card">
           <div class="row wrap">
             <button v-for="opt in phaseOptions" :key="opt.value" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.distributionMode === opt.value }" @click="selectPhaseOption(opt)">
@@ -25,36 +27,57 @@
             </button>
           </div>
         </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s1"
+            @click="toggleWizardExplain('s1')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s1 ? '▼' : '▶' }}</span>
+            Explain these options
+          </button>
+          <div v-show="wizardExplainOpen.s1" class="wizard-collapsible-panel">
+            <ul class="wizard-collapsible-list">
+              <li v-for="opt in phaseOptions" :key="'ex1-' + opt.value">
+                <strong>{{ opt.label }}:</strong> {{ opt.detail }}
+              </li>
+            </ul>
+          </div>
+        </div>
         <div v-if="config.distributionMode === 'custom'" class="custom-sliders custom-sliders-compact">
           <div class="row align-center"><label>Phase 1</label><span class="pct">{{ config.phasePercents[0] }}%</span><input v-model.number="config.phasePercents[0]" type="range" min="0" max="100" /></div>
           <div class="row align-center"><label>Phase 2</label><span class="pct">{{ config.phasePercents[1] }}%</span><input v-model.number="config.phasePercents[1]" type="range" min="0" max="100" /></div>
           <div class="row align-center"><label>Phase 3</label><span class="pct">{{ config.phasePercents[2] }}%</span><input v-model.number="config.phasePercents[2]" type="range" min="0" max="100" /></div>
         </div>
-      </div>
-    </div>
 
-    <!-- Step 2: Total time -->
-    <div v-show="step === 2" class="wizard-step active">
-      <div class="wizard-step-header">
-        <div class="wizard-step-title">Total session time</div>
-        <div class="wizard-step-description">How long should the session be?</div>
-      </div>
-      <div class="wizard-step-content">
+        <div class="wizard-settings-category">Session length</div>
         <div class="wizard-options-card">
           <div class="row wrap">
             <button v-for="m in [15, 30, 45, 60, 90, 120]" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.totalMinutes === m }" @click="config.totalMinutes = m">{{ m }} min</button>
           </div>
         </div>
-      </div>
-    </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s2"
+            @click="toggleWizardExplain('s2')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s2 ? '▼' : '▶' }}</span>
+            Explain these lengths
+          </button>
+          <div v-show="wizardExplainOpen.s2" class="wizard-collapsible-panel">
+            <ul class="wizard-collapsible-list">
+              <li><strong>15 min:</strong> Short structured session, good for a quick check-in.</li>
+              <li><strong>30–45 min:</strong> Common choices with room to settle in without a huge time commitment.</li>
+              <li><strong>60–90 min:</strong> Longer sessions when you want more turns and slower pacing.</li>
+              <li><strong>120 min:</strong> A full two-hour arc; phases still follow the split you chose above.</li>
+            </ul>
+          </div>
+        </div>
 
-    <!-- Step 3: Turn & Pause -->
-    <div v-show="step === 3" class="wizard-step active">
-      <div class="wizard-step-header">
-        <div class="wizard-step-title">Turn and pause</div>
-        <div class="wizard-step-description">Turn length and pause between turns</div>
-      </div>
-      <div class="wizard-step-content">
+        <div class="wizard-settings-category">Turns & pauses</div>
         <label>Turn duration</label>
         <div class="wizard-options-card">
           <div class="row wrap">
@@ -67,30 +90,104 @@
             <button v-for="s in pauseOptions" :key="s.v" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.pauseSeconds === s.v }" @click="config.pauseSeconds = s.v">{{ s.label }}</button>
           </div>
         </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s3"
+            @click="toggleWizardExplain('s3')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s3 ? '▼' : '▶' }}</span>
+            Explain turn length and pause
+          </button>
+          <div v-show="wizardExplainOpen.s3" class="wizard-collapsible-panel">
+            <p><strong>Turn duration</strong> is how long each partner’s active turn runs before you switch roles.</p>
+            <ul class="wizard-collapsible-list wizard-collapsible-list-tight">
+              <li><strong>1 min:</strong> Quick turns; more switches per phase.</li>
+              <li><strong>2 min:</strong> A balanced default for many sessions.</li>
+              <li><strong>3 min:</strong> Longer stretches in each role.</li>
+              <li><strong>5 min:</strong> Very slow turnover; fewer role changes in the same total time.</li>
+            </ul>
+            <p class="wizard-collapsible-panel-gap"><strong>Pause between turns</strong> adds optional quiet time so you can move, adjust, or check in.</p>
+            <ul class="wizard-collapsible-list wizard-collapsible-list-tight">
+              <li v-for="s in pauseOptions" :key="'ex3-' + s.v"><strong>{{ s.label }}:</strong> {{ s.detail }}</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Step 4: Session options (prompt detail, penetration, anal, vibrators) -->
-    <div v-show="step === 4" class="wizard-step active">
+    <!-- Step 2: Prompts & comfort -->
+    <div v-show="step === 2" class="wizard-step active wizard-step-prompts">
       <div class="wizard-step-header">
-        <div class="wizard-step-title">Session options</div>
-        <div class="wizard-step-description">Prompt style and content options for this session</div>
+        <div class="wizard-step-title">Prompts & comfort</div>
+        <div class="wizard-step-description">How prompts sound, what they can suggest, and areas to leave out.</div>
       </div>
       <div class="wizard-step-content wizard-step-options">
+        <div class="wizard-settings-category">Wording</div>
         <div class="wizard-option-row">
           <span class="wizard-option-label">Prompt detail</span>
           <div class="wizard-options-card">
             <div class="row wrap">
-              <button v-for="m in ['beginner', 'regular', 'expert']" :key="m" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.promptDetailMode === m }" :title="m === 'beginner' ? 'Full descriptions' : m === 'expert' ? 'Short prompts' : 'Medium pace'" @click="prefs.setPromptDetail(m)">{{ m.charAt(0).toUpperCase() + m.slice(1) }}</button>
+              <button
+                v-for="opt in promptDetailOptions"
+                :key="opt.id"
+                type="button"
+                class="secondary wizard-opt"
+                :class="{ 'preset-selected': prefs.promptDetailMode === opt.id }"
+                :title="opt.title"
+                @click="prefs.setPromptDetail(opt.id)"
+              >
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5prompt"
+              @click="toggleWizardExplain('s5prompt')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5prompt ? '▼' : '▶' }}</span>
+              Explain prompt detail levels
+            </button>
+            <div v-show="wizardExplainOpen.s5prompt" class="wizard-collapsible-panel">
+              <ul class="wizard-collapsible-list">
+                <li v-for="opt in promptDetailOptions" :key="'hint-' + opt.id">
+                  <strong>{{ opt.label }}:</strong> {{ opt.blurb }}
+                </li>
+              </ul>
             </div>
           </div>
         </div>
+        <div class="wizard-settings-category">What Phase 3 can suggest</div>
         <div class="wizard-option-row">
           <span class="wizard-option-label">Penetration</span>
           <div class="wizard-options-card">
             <div class="row">
               <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.penetrationPreference === 'prefer' }" @click="prefs.setPenetration('prefer')">Prefer penetration</button>
               <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': prefs.penetrationPreference === 'minimal' }" @click="prefs.setPenetration('minimal')">Minimal penetration</button>
+            </div>
+          </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5pen"
+              @click="toggleWizardExplain('s5pen')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5pen ? '▼' : '▶' }}</span>
+              Explain penetration options
+            </button>
+            <div v-show="wizardExplainOpen.s5pen" class="wizard-collapsible-panel">
+              <p>
+                <strong>Prefer penetration:</strong> Phase 3 prompts can favor intercourse-friendly suggestions more often, when your
+                other settings allow them.
+              </p>
+              <p class="wizard-collapsible-panel-gap">
+                <strong>Minimal penetration:</strong> Keeps penetration lighter and leans toward other kinds of touch and positions.
+              </p>
             </div>
           </div>
         </div>
@@ -102,6 +199,26 @@
               <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !prefs.analPositionsEnabled }" @click="prefs.analPositionsEnabled = false">No</button>
             </div>
           </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5anal"
+              @click="toggleWizardExplain('s5anal')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5anal ? '▼' : '▶' }}</span>
+              Explain anal-only positions
+            </button>
+            <div v-show="wizardExplainOpen.s5anal" class="wizard-collapsible-panel">
+              <p>
+                <strong>Yes:</strong> The plan can suggest positions that are specifically anal intercourse, separate from rear-entry
+                vaginal positions.
+              </p>
+              <p class="wizard-collapsible-panel-gap">
+                <strong>No:</strong> Those anal-only prompts are left out; other positions are unchanged.
+              </p>
+            </div>
+          </div>
         </div>
         <div class="wizard-option-row">
           <span class="wizard-option-label">Include vibrator/toy modifiers in Phase 3</span>
@@ -111,16 +228,52 @@
               <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !prefs.vibratorsPresent }" @click="prefs.vibratorsPresent = false">No</button>
             </div>
           </div>
-        </div>
-        <div class="wizard-option-row wizard-option-row-voice">
-          <span class="wizard-option-label">Voice for this session</span>
-          <div class="wizard-options-card">
-            <select v-model="config.kokoroVoiceId" class="wizard-select-voice" aria-label="Kokoro voice for guided session">
-              <option v-for="v in kokoroVoicesList" :key="v.id" :value="v.id">{{ v.name }}</option>
-            </select>
-            <p class="wizard-voice-hint">Used for Kokoro prompts and matching static phrase audio when available.</p>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5vibe"
+              @click="toggleWizardExplain('s5vibe')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5vibe ? '▼' : '▶' }}</span>
+              Explain toy modifiers
+            </button>
+            <div v-show="wizardExplainOpen.s5vibe" class="wizard-collapsible-panel">
+              <p>
+                <strong>Yes:</strong> Phase 3 can add optional vibrator or toy wording to some prompts when it fits the roll.
+              </p>
+              <p class="wizard-collapsible-panel-gap"><strong>No:</strong> Those toy-specific modifiers are skipped.</p>
+            </div>
           </div>
         </div>
+        <div class="wizard-settings-category">Voice</div>
+        <div class="wizard-option-row wizard-option-row-voice">
+          <span class="wizard-option-label">Voice for this session</span>
+          <div class="wizard-options-card wizard-options-card-voice">
+            <select v-model="config.kokoroVoiceId" class="wizard-select-voice" aria-label="Kokoro voice for guided session">
+              <option v-if="!kokoroVoicesList.length" :value="config.kokoroVoiceId">Default voice (list loading…)</option>
+              <option v-for="v in kokoroVoicesList" :key="v.id" :value="v.id">{{ v.name }}</option>
+            </select>
+          </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5voice"
+              @click="toggleWizardExplain('s5voice')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5voice ? '▼' : '▶' }}</span>
+              Explain voice selection
+            </button>
+            <div v-show="wizardExplainOpen.s5voice" class="wizard-collapsible-panel">
+              <p>
+                This voice is used when the app generates spoken prompts with Kokoro. When a line matches pre-recorded audio, the app
+                may use that clip instead when the voice lines up.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="wizard-settings-category">Comfort filters</div>
         <div class="wizard-option-row wizard-option-row-body">
           <span class="wizard-option-label">Avoid prompts involving…</span>
           <div class="wizard-body-exclude-grid">
@@ -155,12 +308,179 @@
               </div>
             </div>
           </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5body"
+              @click="toggleWizardExplain('s5body')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5body ? '▼' : '▶' }}</span>
+              Explain body-area filters
+            </button>
+            <div v-show="wizardExplainOpen.s5body" class="wizard-collapsible-panel">
+              <p>
+                Tap a region to exclude it from random rolls. <strong>When you are touching</strong> applies while you are the giver;
+                <strong>When you are touched</strong> applies while you are receiving. Selected areas are avoided in Phase 1 and 2
+                prompts; Phase 3 uses different rules but still respects your comfort choices where the app can.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 5: Clothing removal (enabled/disabled) – before partners -->
-    <div v-show="step === 5" class="wizard-step active">
+    <!-- Step 3: Intimacy positions + between-phase check-in -->
+    <div v-show="step === 3" class="wizard-step active wizard-step-phase3">
+      <div class="wizard-step-header">
+        <div class="wizard-step-title">Phases & intimacy flow</div>
+        <div class="wizard-step-description">Phase 3 position changes, and an optional pause between phases.</div>
+      </div>
+      <div class="wizard-step-content">
+        <div class="wizard-settings-category">Intimacy positions (Phase 3)</div>
+        <p class="wizard-settings-category-hint">How often the suggested physical position changes in the intimacy phase.</p>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s4"
+            @click="toggleWizardExplain('s4')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s4 ? '▼' : '▶' }}</span>
+            About Phase 3 and these choices
+          </button>
+          <div v-show="wizardExplainOpen.s4" class="wizard-collapsible-panel wizard-collapsible-panel-phase3">
+            <p>
+              Phase 3 is the intimacy phase. Prompts here emphasize partnered intercourse and direct genital pleasure, within the
+              prompt and comfort choices you set on the previous step.
+            </p>
+            <p>
+              You still take turns as giver and receiver, and each turn still gets fresh activity details. The choices below only
+              control how often the suggested body position changes.
+            </p>
+            <ul class="wizard-collapsible-list">
+              <li><strong>Every turn:</strong> A new suggested position whenever the turn changes.</li>
+              <li><strong>Every two turns:</strong> Same position for two turns so each partner leads once there, then advance.</li>
+              <li>
+                <strong>Several turns per position:</strong> Stay longer in each position; rotation size is set below, and turns per
+                position are estimated from your session length and phase split.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <label>When should the position change?</label>
+        <div class="wizard-options-card">
+          <div class="wizard-phase3-mode-col">
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': config.phase3PositionMode === 'each_turn' }"
+              @click="config.phase3PositionMode = 'each_turn'"
+            >
+              <span class="wizard-opt-label">Every turn</span>
+              <span class="wizard-opt-sub">Suggest a new position whenever the turn changes. This is the usual behavior.</span>
+            </button>
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': config.phase3PositionMode === 'reuse_rotate' }"
+              @click="config.phase3PositionMode = 'reuse_rotate'"
+            >
+              <span class="wizard-opt-label">Every two turns</span>
+              <span class="wizard-opt-sub">
+                Keep the same position for two turns so each partner can lead once in that position, then move on. Activity details
+                still change every turn.
+              </span>
+            </button>
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': config.phase3PositionMode === 'reuse_multi' }"
+              @click="config.phase3PositionMode = 'reuse_multi'"
+            >
+              <span class="wizard-opt-label">Several turns per position</span>
+              <span class="wizard-opt-sub">
+                Stay in one suggested position for several turns before moving to the next slot in the rotation. Activity details still
+                change every turn. How long you stay in each position is estimated from your total time, phase split, turn length, and
+                how many positions you allow below.
+              </span>
+            </button>
+          </div>
+        </div>
+        <template v-if="config.phase3PositionMode === 'reuse_multi'">
+          <label class="mt">How many positions in the Phase 3 rotation?</label>
+          <div class="wizard-options-card">
+            <div class="row wrap">
+              <button
+                v-for="n in phase3MaxPositionOptions"
+                :key="'p3max-' + n"
+                type="button"
+                class="secondary wizard-opt"
+                :class="{ 'preset-selected': config.phase3MaxPositions === n }"
+                @click="config.phase3MaxPositions = n"
+              >
+                {{ n }}
+              </button>
+            </div>
+          </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s4rot"
+              @click="toggleWizardExplain('s4rot')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s4rot ? '▼' : '▶' }}</span>
+              Explain rotation size
+            </button>
+            <div v-show="wizardExplainOpen.s4rot" class="wizard-collapsible-panel">
+              <p>
+                We pick up to this many compatible positions in random order, or fewer if your settings do not allow that many. When the
+                list ends, it starts over.
+              </p>
+              <p class="wizard-collapsible-panel-gap">
+                The app estimates how many turns fit in Phase 3 from your total session time, your phase time percentages, turn length,
+                and the fixed break between turns. It spreads those turns across this rotation size so each position lasts several turns
+                in a row (at least three when the numbers allow).
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <div class="wizard-settings-category wizard-settings-category-major">Between phases</div>
+        <p class="wizard-settings-category-hint">Pause between phases to check in with each other before continuing?</p>
+        <div class="wizard-options-card">
+          <div class="wizard-phase-checkin-actions wizard-phase-checkin-actions-inline">
+            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = true">Yes</button>
+            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': !config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = false">No</button>
+          </div>
+        </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s11"
+            @click="toggleWizardExplain('s11')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s11 ? '▼' : '▶' }}</span>
+            Explain phase check-in
+          </button>
+          <div v-show="wizardExplainOpen.s11" class="wizard-collapsible-panel">
+            <p>
+              <strong>Yes:</strong> After each phase ends, the session pauses so you can check in before you continue. You tap when you
+              are both ready.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>No:</strong> Phases flow into each other without that extra pause screen.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Steps 4–8: Clothing removal, both partners, and their clothing lists -->
+    <!-- Step 4: Clothing removal -->
+    <div v-show="step === 4" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Clothing removal</div>
         <div class="wizard-step-description">Clothing removal during Phase 1 & 2?</div>
@@ -172,11 +492,31 @@
             <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !config.clothingEnabled }" @click="config.clothingEnabled = false">Disabled</button>
           </div>
         </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s6"
+            @click="toggleWizardExplain('s6')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s6 ? '▼' : '▶' }}</span>
+            Explain clothing removal
+          </button>
+          <div v-show="wizardExplainOpen.s6" class="wizard-collapsible-panel">
+            <p>
+              <strong>Enabled:</strong> During Phase 1 and 2, some turns can include optional clothing removal prompts tied to items you
+              list for each partner.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Disabled:</strong> No removal prompts; you skip straight to partner and clothing item setup without that layer.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Step 6: Partner 1 -->
-    <div v-show="step === 6" class="wizard-step active wizard-step-partner">
+    <!-- Step 5: Partner 1 -->
+    <div v-show="step === 5" class="wizard-step active wizard-step-partner">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 1</div>
         <div class="wizard-step-description">Name, color, and anatomy</div>
@@ -202,18 +542,42 @@
             <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[1] === 'vulva' }" @click="config.partnerAnatomy[1] = 'vulva'">Vulva</button>
           </div>
         </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s7"
+            @click="toggleWizardExplain('s7')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s7 ? '▼' : '▶' }}</span>
+            Explain partner fields
+          </button>
+          <div v-show="wizardExplainOpen.s7" class="wizard-collapsible-panel">
+            <p>
+              <strong>Name</strong> is optional and is used in on-screen text and spoken prompts where the app substitutes partner
+              labels.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Color</strong> helps you tell partners apart in the UI during the session.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Anatomy</strong> steers which touch and Phase 3 position pools apply for that partner as receiver, so prompts match
+              your bodies.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Step 7: Partner 1 clothing -->
-    <div v-show="step === 7" class="wizard-step active">
+    <!-- Step 6: Partner 1 clothing -->
+    <div v-show="step === 6" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 1 – clothing</div>
-        <div class="wizard-step-description">Choose a preset, then add or remove items as you like.</div>
+        <div class="wizard-step-description">Pick a starting outfit, then add or remove items as you like.</div>
       </div>
       <div class="wizard-step-content">
         <template v-if="config.clothingEnabled">
-          <label>Preset</label>
+          <label>Starting outfit</label>
           <div class="wizard-options-card">
           <div class="row wrap clothing-presets">
             <button
@@ -231,7 +595,23 @@
           </div>
           </div>
           <div class="clothing-list-by-body mt">
-            <div class="clothing-list-intro">Choose a preset to add its items, then tap any item to turn it on or off. Grouped by body region (head to toe).</div>
+            <div class="wizard-collapsible">
+              <button
+                type="button"
+                class="wizard-collapsible-toggle"
+                :aria-expanded="!!wizardExplainOpen.s8"
+                @click="toggleWizardExplain('s8')"
+              >
+                <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s8 ? '▼' : '▶' }}</span>
+                How clothing selection works
+              </button>
+              <div v-show="wizardExplainOpen.s8" class="wizard-collapsible-panel">
+                <p>
+                  Choose a starting outfit to load a list, then tap any item to turn it on or off. The list is grouped by body region
+                  from head to toe so you can mirror what each partner is wearing.
+                </p>
+              </div>
+            </div>
             <div v-for="grp in fullClothingGroups" :key="'p1-full-' + grp.region" class="clothing-region">
               <div class="clothing-region-label">{{ grp.label }}</div>
               <div class="clothing-region-items">
@@ -250,12 +630,12 @@
             </div>
           </div>
         </template>
-        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 5 to choose items.</p>
+        <p v-else class="wizard-step-description">Clothing is disabled. Enable it on the clothing step to choose items.</p>
       </div>
     </div>
 
-    <!-- Step 8: Partner 2 -->
-    <div v-show="step === 8" class="wizard-step active wizard-step-partner">
+    <!-- Step 7: Partner 2 -->
+    <div v-show="step === 7" class="wizard-step active wizard-step-partner">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 2</div>
         <div class="wizard-step-description">Name, color, and anatomy</div>
@@ -281,18 +661,35 @@
             <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.partnerAnatomy[2] === 'vulva' }" @click="config.partnerAnatomy[2] = 'vulva'">Vulva</button>
           </div>
         </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.s9"
+            @click="toggleWizardExplain('s9')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s9 ? '▼' : '▶' }}</span>
+            Explain partner fields
+          </button>
+          <div v-show="wizardExplainOpen.s9" class="wizard-collapsible-panel">
+            <p>
+              Same as Partner 1: <strong>name</strong> for labels in text and audio, <strong>color</strong> for the UI, and
+              <strong>anatomy</strong> for which prompts and positions apply when this partner receives.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Step 9: Partner 2 clothing -->
-    <div v-show="step === 9" class="wizard-step active">
+    <!-- Step 8: Partner 2 clothing -->
+    <div v-show="step === 8" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Partner 2 – clothing</div>
-        <div class="wizard-step-description">Choose a preset, then add or remove items as you like.</div>
+        <div class="wizard-step-description">Pick a starting outfit, then add or remove items as you like.</div>
       </div>
       <div class="wizard-step-content">
         <template v-if="config.clothingEnabled">
-          <label>Preset</label>
+          <label>Starting outfit</label>
           <div class="wizard-options-card">
           <div class="row wrap clothing-presets">
             <button
@@ -310,7 +707,23 @@
           </div>
           </div>
           <div class="clothing-list-by-body mt">
-            <div class="clothing-list-intro">Choose a preset to add its items, then tap any item to turn it on or off. Grouped by body region (head to toe).</div>
+            <div class="wizard-collapsible">
+              <button
+                type="button"
+                class="wizard-collapsible-toggle"
+                :aria-expanded="!!wizardExplainOpen.s10"
+                @click="toggleWizardExplain('s10')"
+              >
+                <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s10 ? '▼' : '▶' }}</span>
+                How clothing selection works
+              </button>
+              <div v-show="wizardExplainOpen.s10" class="wizard-collapsible-panel">
+                <p>
+                  Same as Partner 1: a starting outfit loads a list; tap items to include or exclude them for removal prompts in Phase
+                  1 and 2.
+                </p>
+              </div>
+            </div>
             <div v-for="grp in fullClothingGroups" :key="'p2-full-' + grp.region" class="clothing-region">
               <div class="clothing-region-label">{{ grp.label }}</div>
               <div class="clothing-region-items">
@@ -329,23 +742,7 @@
             </div>
           </div>
         </template>
-        <p v-else class="wizard-step-description">Clothing is disabled. Enable it in step 5 to choose items.</p>
-      </div>
-    </div>
-
-    <!-- Step 10: Phase check-in option & Start -->
-    <div v-show="step === 10" class="wizard-step active wizard-step-phase-checkin">
-      <div class="wizard-phase-checkin-inner">
-        <div class="wizard-step-header">
-          <div class="wizard-step-title">Phase check-in</div>
-          <div class="wizard-step-description">Pause between phases to check in with each other before continuing?</div>
-        </div>
-        <div class="wizard-options-card">
-          <div class="wizard-phase-checkin-actions">
-            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = true">Yes</button>
-            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': !config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = false">No</button>
-          </div>
-        </div>
+        <p v-else class="wizard-step-description">Clothing is disabled. Enable it on the clothing step to choose items.</p>
       </div>
     </div>
     </div>
@@ -372,19 +769,55 @@ const props = defineProps({
   initialConfig: { type: Object, default: null },
 })
 
-const totalSteps = 10
+const totalSteps = 8
 const step = ref(1)
 const progressPercent = computed(() => (step.value / totalSteps) * 100)
+
+/** Collapsible “explain” panels default closed; keys are arbitrary per section. */
+const wizardExplainOpen = reactive({})
+function toggleWizardExplain(key) {
+  wizardExplainOpen[key] = !wizardExplainOpen[key]
+}
 
 const colors = ['#3b82f6', '#22d3ee', '#22c55e', '#a855f7', '#f59e0b', '#ef4444', '#f97316', '#ec4899', '#e5e7eb']
 
 const phaseOptions = [
-  { value: 'equal', label: 'Equal', sub: '33/33/34%' },
-  { value: 'phase1', label: 'Sensate-focused', sub: '50/30/20%' },
-  { value: 'phase2', label: 'A little spicy', sub: '30/40/30%' },
-  { value: 'phase3', label: 'Intimacy-focused', sub: '20/30/50%' },
-  { value: 'quickie', label: 'Quickie', sub: '10/30/60%' },
-  { value: 'custom', label: 'Custom', sub: 'Set your own' },
+  {
+    value: 'equal',
+    label: 'Equal',
+    sub: '33/33/34%',
+    detail: 'Splits time evenly across Phase 1 (slower attentive touch), Phase 2 (warmer exploration), and Phase 3 (intimacy).',
+  },
+  {
+    value: 'phase1',
+    label: 'Slow build',
+    sub: '50/30/20%',
+    detail: 'More time in Phase 1 for a slow build with calm, present-moment touch; less in Phase 3.',
+  },
+  {
+    value: 'phase2',
+    label: 'A little spicy',
+    sub: '30/40/30%',
+    detail: 'Emphasizes Phase 2 for building heat before moving into Phase 3.',
+  },
+  {
+    value: 'phase3',
+    label: 'Intimacy-focused',
+    sub: '20/30/50%',
+    detail: 'More of the session in Phase 3 when prompts focus on partnered intimacy.',
+  },
+  {
+    value: 'quickie',
+    label: 'Quickie',
+    sub: '10/30/60%',
+    detail: 'A shorter overall session with most of the remaining time in Phase 3.',
+  },
+  {
+    value: 'custom',
+    label: 'Custom',
+    sub: 'Set your own',
+    detail: 'Set your own percentages with the sliders. Aim for about 100% across the three phases.',
+  },
 ]
 
 const phasePercentsByMode = {
@@ -397,11 +830,34 @@ const phasePercentsByMode = {
 }
 
 const pauseOptions = [
-  { v: 0, label: 'None' },
-  { v: 10, label: '10 sec' },
-  { v: 15, label: '15 sec' },
-  { v: 30, label: '30 sec' },
-  { v: 60, label: '1 min' },
+  { v: 0, label: 'None', detail: 'Turns follow one after another with only the usual transition time.' },
+  { v: 10, label: '10 sec', detail: 'A short breath between turns.' },
+  { v: 15, label: '15 sec', detail: 'A little space to shift or reset before the next turn.' },
+  { v: 30, label: '30 sec', detail: 'More time to stretch, hydrate, or talk before continuing.' },
+  { v: 60, label: '1 min', detail: 'A full minute of pause between turns for a slower pace.' },
+]
+
+const phase3MaxPositionOptions = [1, 2, 3, 4, 5, 6, 7, 8]
+
+const promptDetailOptions = [
+  {
+    id: 'beginner',
+    label: 'Beginner',
+    title: 'Fuller prompts with more guidance',
+    blurb: 'Longer instructions and clearer wording, with gentle pacing cues so each step is easy to follow.',
+  },
+  {
+    id: 'regular',
+    label: 'Regular',
+    title: 'Balanced length and detail',
+    blurb: 'Medium detail and a steady pace. Works well as the default for most couples.',
+  },
+  {
+    id: 'expert',
+    label: 'Expert',
+    title: 'Shorter, quicker prompts',
+    blurb: 'Shorter lines and less explanation so you spend less time listening and move through turns faster.',
+  },
 ]
 
 const presetNames = Object.keys(clothingPresets)
@@ -474,6 +930,8 @@ const config = reactive({
   clothingListP2: [...clothingPresets.undergarmentsFemale],
   phaseCheckInEnabled: false,
   kokoroVoiceId: 'af_nicole',
+  phase3PositionMode: 'each_turn',
+  phase3MaxPositions: 4,
 })
 
 function selectPhaseOption(opt) {
@@ -557,6 +1015,14 @@ onMounted(() => {
     if (c.excludeWhenTouching) prefs.$patch({ excludeWhenTouching: mergeExcludePrefs(c.excludeWhenTouching) })
     if (c.excludeWhenTouched) prefs.$patch({ excludeWhenTouched: mergeExcludePrefs(c.excludeWhenTouched) })
     if (typeof c.vibratorsPresent === 'boolean') prefs.vibratorsPresent = c.vibratorsPresent
+    if (c.phase3PositionMode === 'reuse_rotate' || c.phase3PositionMode === 'reuse_multi') {
+      config.phase3PositionMode = c.phase3PositionMode
+    } else {
+      config.phase3PositionMode = 'each_turn'
+    }
+    const rawMax = c.phase3MaxPositions
+    config.phase3MaxPositions =
+      typeof rawMax === 'number' && rawMax >= 1 && rawMax <= 20 ? Math.round(rawMax) : 4
   } else {
     const kid = speech.kokoroVoiceId && typeof speech.kokoroVoiceId === 'object' && 'value' in speech.kokoroVoiceId
       ? speech.kokoroVoiceId.value
@@ -591,6 +1057,11 @@ function onStart() {
     excludeWhenTouching: mergeExcludePrefs(prefs.excludeWhenTouching),
     excludeWhenTouched: mergeExcludePrefs(prefs.excludeWhenTouched),
     vibratorsPresent: !!prefs.vibratorsPresent,
+    phase3PositionMode:
+      config.phase3PositionMode === 'reuse_rotate' || config.phase3PositionMode === 'reuse_multi'
+        ? config.phase3PositionMode
+        : 'each_turn',
+    phase3MaxPositions: Math.max(1, Math.min(20, Number(config.phase3MaxPositions) || 4)),
   })
 }
 </script>
@@ -605,8 +1076,8 @@ function onStart() {
   flex-direction: column;
   box-sizing: border-box;
 }
-/* When step 10 is active, wizard body centers phase-check-in vertically */
-.guided-setup-wizard.wizard-step-10-active .wizard-body {
+/* When the last step is active, wizard body centers phase-check-in vertically */
+.guided-setup-wizard.wizard-step-last-active .wizard-body {
   display: flex;
   justify-content: center;
 }
@@ -696,6 +1167,177 @@ function onStart() {
 }
 .wizard-step-title { font-family: var(--font-handwritten-title); font-size: clamp(1.5rem, 5vmin, 2.1rem); font-weight: 700; color: #e5e7eb; margin: 0; }
 .wizard-step-description { font-family: var(--font-handwritten-body); font-size: clamp(1rem, 2.8vmin, 1.25rem); font-weight: 400; color: #9ca3af; margin-top: 0.25rem; line-height: 1.5; }
+.wizard-settings-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  margin: 1.15rem 0 0.35rem;
+  width: 100%;
+  text-align: center;
+}
+.wizard-settings-category:first-child {
+  margin-top: 0;
+}
+.wizard-settings-category-major {
+  margin-top: 1.5rem;
+}
+.wizard-step-timing .wizard-settings-category:first-of-type {
+  margin-top: 0;
+}
+.wizard-settings-category-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0 0 0.5rem;
+  text-align: center;
+  max-width: 320px;
+}
+.wizard-step-options .wizard-settings-category {
+  margin-top: 1.25rem;
+}
+.wizard-step-options .wizard-settings-category:first-of-type {
+  margin-top: 0;
+}
+.wizard-phase-checkin-actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+.wizard-step-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0 0 0.5rem;
+  max-width: 320px;
+  text-align: center;
+}
+.wizard-collapsible {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 0.65rem;
+  text-align: left;
+  box-sizing: border-box;
+}
+.wizard-collapsible-phase-checkin {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+}
+.wizard-collapsible-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.45rem 0.55rem;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #93c5fd;
+  background: rgba(30, 58, 138, 0.22);
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.wizard-collapsible-toggle:hover {
+  background: rgba(30, 58, 138, 0.35);
+  color: #bfdbfe;
+}
+.wizard-collapsible-chevron {
+  font-size: 0.65rem;
+  opacity: 0.9;
+  width: 1rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  justify-content: center;
+}
+.wizard-collapsible-panel {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.65rem 0.65rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+}
+.wizard-collapsible-panel-phase3 {
+  max-width: min(400px, 100%);
+}
+.wizard-step-phase3 .wizard-step-header {
+  max-width: min(400px, 100%);
+}
+.wizard-step-phase3 .wizard-step-content {
+  max-width: min(400px, 100%);
+}
+.wizard-step-phase3 .wizard-step-content > label {
+  margin-top: 0.85rem;
+}
+.wizard-step-phase3 .wizard-step-content > label.mt {
+  margin-top: 1rem;
+}
+.wizard-options-card:has(.wizard-phase-checkin-actions-inline) {
+  padding: 0.85rem 0.75rem;
+}
+.wizard-collapsible-panel-gap {
+  margin-top: 0.5rem !important;
+}
+.wizard-collapsible-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+.wizard-collapsible-list-tight {
+  margin-top: 0.35rem;
+}
+.wizard-collapsible-list li {
+  margin-bottom: 0.4rem;
+}
+.wizard-collapsible-list li:last-child {
+  margin-bottom: 0;
+}
+.wizard-collapsible-list strong {
+  color: #cbd5e1;
+}
+.wizard-step-options .wizard-collapsible {
+  max-width: 100%;
+}
+.wizard-collapsible-panel p {
+  margin: 0;
+}
+.wizard-option-row .wizard-collapsible {
+  margin-top: 0.5rem;
+}
+.wizard-phase3-mode-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: stretch;
+}
+.wizard-phase3-mode-col .wizard-opt-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.wizard-phase3-mode-col .wizard-opt-stack .wizard-opt-sub {
+  text-align: center;
+  max-width: 100%;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
 .wizard-step-content {
   padding: 0.25rem 0 0.5rem;
   width: 100%;
@@ -757,7 +1399,7 @@ function onStart() {
 .wizard-step-phase-distribution .wizard-opt { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .wizard-step-phase-distribution .wizard-opt-label { font-weight: 600; }
 .wizard-step-phase-distribution .wizard-opt-sub { font-size: 0.8rem; color: #9ca3af; margin-top: 0.2rem; }
-.wizard-step-phase-distribution .custom-sliders-compact { margin-top: 0.5rem; gap: 0.25rem; max-width: 280px; }
+.wizard-step-phase-distribution .custom-sliders-compact { margin-top: 0.5rem; margin-bottom: 0.85rem; gap: 0.25rem; max-width: 280px; }
 .wizard-step-phase-distribution .custom-sliders-compact .row { margin-bottom: 0.25rem; gap: 0.35rem; }
 .wizard-step-phase-distribution .custom-sliders-compact label { font-size: 0.8rem; margin: 0; }
 
@@ -765,6 +1407,24 @@ function onStart() {
   gap: 1rem;
   align-items: stretch;
   text-align: left;
+}
+/* Wider column so two-column comfort filters are not squeezed into 320px */
+.wizard-step-prompts .wizard-step-header {
+  max-width: min(560px, 100%);
+}
+.wizard-step-prompts .wizard-step-content.wizard-step-options {
+  max-width: min(560px, 100%);
+}
+.wizard-option-row-body {
+  width: 100%;
+  align-self: stretch;
+}
+.wizard-options-card-voice {
+  padding: 0.5rem 0.65rem;
+}
+.wizard-options-card-voice .wizard-select-voice {
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .wizard-option-row {
   display: flex;
@@ -878,7 +1538,7 @@ function onStart() {
 }
 .wizard-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Step 9: Phase check-in – centered layout and large Yes/No buttons */
+/* Phase check-in – centered layout and large Yes/No buttons */
 .wizard-step-phase-checkin {
   flex: 1;
   width: 100%;

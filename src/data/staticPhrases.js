@@ -139,8 +139,8 @@ export function getPhaseCheckinTexts(phaseNum) {
   return PHASE_CHECKIN_PHRASES.slice(start, start + 3).map((p) => p.text)
 }
 
-/** All static phrases (id + text) for cooking: use static WAV when available, else generate. */
-const ALL_STATIC_PHRASES = [
+/** Guided/shared static phrases (intro, transitions, session end, etc.) — static WAV may be used in guided mode. */
+const ALL_GUIDED_STATIC_PHRASES = [
   { id: 'voice_test', text: 'This is a quick voice check.' },
   ...INTRO_STATIC_PHRASES,
   ...NEXT_TURN_PHRASES,
@@ -149,21 +149,25 @@ const ALL_STATIC_PHRASES = [
   ...SESSION_COMPLETE_STATIC,
   ...SETTLE_INTO_POSITION_PHRASES,
   ...PHASE_CHECKIN_PHRASES,
-  ...SENSATE_STATIC_PHRASES,
 ]
+
+/** Full list including sensate preset lines (ship WAVs per voice as they are generated). */
+const ALL_STATIC_PHRASES_WITH_SENSATE = [...ALL_GUIDED_STATIC_PHRASES, ...SENSATE_STATIC_PHRASES]
 
 function normalizeForMatch(text) {
   return text && typeof text === 'string' ? text.replace(/\s+/g, ' ').trim() : ''
 }
 
 /**
- * If the given text matches any pre-generated static phrase, return its phrase id.
- * Cooking uses this: if found, fetch /audio/static/{voiceId}/{phraseId}.wav; if 404, fall back to TTS.
+ * If the given text matches a phrase we may serve from /audio/static/{voice}/{id}.wav
+ * @param {object} [opts]
+ * @param {'guided'|'sensate'} [opts.staticPresetKind] - Guided: static WAV for shared cues (intros, transitions, etc.) plus Kokoro for variable prompts from user settings. Sensate: also includes fixed preset script lines (fully pre-baked audio; no Kokoro for those).
  */
-export function getStaticPhraseIdForText(text) {
+export function getStaticPhraseIdForText(text, opts = {}) {
   const normalized = normalizeForMatch(text)
   if (!normalized) return null
-  const found = ALL_STATIC_PHRASES.find((p) => normalizeForMatch(p.text) === normalized)
+  const list = opts.staticPresetKind === 'sensate' ? ALL_STATIC_PHRASES_WITH_SENSATE : ALL_GUIDED_STATIC_PHRASES
+  const found = list.find((p) => normalizeForMatch(p.text) === normalized)
   return found ? found.id : null
 }
 

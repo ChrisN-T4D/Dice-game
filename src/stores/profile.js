@@ -38,7 +38,7 @@ export const useProfileStore = defineStore('profile', {
       displayName: saved?.displayName ?? '',
       voiceLanguagePreference: saved?.voiceLanguagePreference ?? 'en-US',
       voiceGenderPreference: saved?.voiceGenderPreference ?? 'any',
-      suggestedFirstMode: saved?.suggestedFirstMode ?? null, // 'guided' | 'freeplay' | null
+      suggestedFirstMode: saved?.suggestedFirstMode ?? null, // 'guided' | 'sensate' | 'freeplay' | null
     connectionWalls: Array.isArray(saved?.connectionWalls) ? saved.connectionWalls : [], // e.g. ['anxieties', 'cant_relax']
     }
   },
@@ -57,7 +57,8 @@ export const useProfileStore = defineStore('profile', {
       persist(this)
     },
     setSuggestedFirstMode(mode) {
-      this.suggestedFirstMode = mode === 'guided' || mode === 'freeplay' ? mode : null
+      this.suggestedFirstMode =
+        mode === 'guided' || mode === 'sensate' || mode === 'freeplay' ? mode : null
       persist(this)
     },
     setConnectionWalls(walls) {
@@ -71,7 +72,13 @@ export const useProfileStore = defineStore('profile', {
         this.displayName = typeof saved.displayName === 'string' ? saved.displayName : ''
         if (['en-US', 'en-GB', 'any'].includes(saved.voiceLanguagePreference)) this.voiceLanguagePreference = saved.voiceLanguagePreference
         if (['female', 'male', 'any'].includes(saved.voiceGenderPreference)) this.voiceGenderPreference = saved.voiceGenderPreference
-        if (saved.suggestedFirstMode === 'guided' || saved.suggestedFirstMode === 'freeplay') this.suggestedFirstMode = saved.suggestedFirstMode
+        if (
+          saved.suggestedFirstMode === 'guided' ||
+          saved.suggestedFirstMode === 'sensate' ||
+          saved.suggestedFirstMode === 'freeplay'
+        ) {
+          this.suggestedFirstMode = saved.suggestedFirstMode
+        }
         if (Array.isArray(saved.connectionWalls)) this.connectionWalls = saved.connectionWalls.filter((w) => typeof w === 'string')
       }
     },

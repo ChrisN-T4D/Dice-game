@@ -45,7 +45,7 @@
     <div v-else-if="showSensateEntry" class="guided-wizard-wrap">
       <SensateGuidedEntry
         :resume-preset-id="sensateResumePresetId"
-        @choose-classic="onChooseClassicGuided"
+        @back-to-hub="onBackToHubFromSensate"
         @start-sensate="onSensateStart"
       />
     </div>
@@ -73,7 +73,6 @@ import GuidedReviewPlan from '@/components/guided/GuidedReviewPlan.vue'
 import GuidedCookingProgress from '@/components/guided/GuidedCookingProgress.vue'
 import GuidedReadyScreen from '@/components/guided/GuidedReadyScreen.vue'
 import SensateGuidedEntry from '@/components/guided/SensateGuidedEntry.vue'
-
 const session = useSessionStore()
 const guided = useGuidedStore()
 const sessionFavorites = useSessionFavoritesStore()
@@ -84,8 +83,8 @@ const guidedStep = ref(null) // 'review' | 'cooking' | 'start' | null
 const wizardInitialStep = ref(1)
 
 const wizardInitialConfig = ref(null)
-/** Default guided entry: sensate picker; user can switch to classic dice wizard. */
-const guidedEntryMode = ref('sensate')
+/** 'classic' | 'sensate': full guided wizard vs sensate preset entry (internal mode id). */
+const guidedEntryMode = ref('classic')
 const sensateResumePresetId = ref(null)
 const sessionFavoriteSaved = ref(false)
 const showSavedSessionsList = ref(false)
@@ -142,6 +141,7 @@ const cookingSubtext = computed(() => {
 
 function onWizardStart(config) {
   guidedEntryMode.value = 'classic'
+  session.uiMode = 'guided'
   pendingConfig.value = config
   guided.buildSessionPlanFromConfig(config)
   guidedStep.value = 'review'
@@ -149,11 +149,13 @@ function onWizardStart(config) {
   wizardInitialConfig.value = null
 }
 
-function onChooseClassicGuided() {
+function onBackToHubFromSensate() {
   guidedEntryMode.value = 'classic'
+  session.uiMode = 'guided'
 }
 
 function onSensateStart({ presetId, partnerNames, kokoroVoiceId, sensateFirstToucherPreference }) {
+  session.uiMode = 'sensate'
   sensateResumePresetId.value = null
   guided.buildSensatePlanFromPreset(presetId, {
     partnerNames,
@@ -161,9 +163,9 @@ function onSensateStart({ presetId, partnerNames, kokoroVoiceId, sensateFirstTou
     sensateFirstToucherPreference,
   })
   pendingConfig.value = guided.sessionPlan.config
-  guidedStep.value = 'review'
   wizardInitialStep.value = 1
   wizardInitialConfig.value = null
+  goToCookingFromPlan()
 }
 
 function onReviewBack() {
@@ -173,6 +175,7 @@ function onReviewBack() {
     guided.clearSessionPlan()
     pendingConfig.value = null
     guidedEntryMode.value = 'sensate'
+    session.uiMode = 'sensate'
     wizardInitialStep.value = 1
     wizardInitialConfig.value = null
     void nextTick(() => {
@@ -184,6 +187,8 @@ function onReviewBack() {
   guidedStep.value = null
   guided.clearSessionPlan()
   pendingConfig.value = null
+  guidedEntryMode.value = 'classic'
+  session.uiMode = 'guided'
   wizardInitialStep.value = 1
   wizardInitialConfig.value = null
 }
@@ -195,13 +200,14 @@ function onGoBackToPartnerSetup() {
     guided.clearSessionPlan()
     pendingConfig.value = null
     guidedEntryMode.value = 'sensate'
+    session.uiMode = 'sensate'
     void nextTick(() => {
       sensateResumePresetId.value = null
     })
     return
   }
   if (!pendingConfig.value) return
-  wizardInitialStep.value = 5
+  wizardInitialStep.value = 4
   wizardInitialConfig.value = pendingConfig.value
   guidedStep.value = null
 }
@@ -216,20 +222,28 @@ function saveSessionAsFavorite() {
 function loadSavedSession(fav) {
   if (!fav?.config) return
   pendingConfig.value = fav.config
+  showSavedSessionsList.value = false
   if (fav.config.sessionKind === 'sensate' && fav.config.sensatePresetId) {
     guidedEntryMode.value = 'sensate'
+    session.uiMode = 'sensate'
     guided.buildSensatePlanFromPreset(fav.config.sensatePresetId, fav.config)
-  } else {
-    guided.buildSessionPlanFromConfig(fav.config)
+    goToCookingFromPlan()
+    return
   }
+  guidedEntryMode.value = 'classic'
+  session.uiMode = 'guided'
+  guided.buildSessionPlanFromConfig(fav.config)
   guidedStep.value = 'review'
-  showSavedSessionsList.value = false
 }
 
-function onConfirmSession() {
+function goToCookingFromPlan() {
   guidedStep.value = 'cooking'
   cookingError.value = null
   startCooking()
+}
+
+function onConfirmSession() {
+  goToCookingFromPlan()
 }
 
 async function startCooking() {
@@ -240,15 +254,21 @@ async function startCooking() {
     cookingError.value = 'No session plan.'
     return
   }
-  cookingWaitingForModel.value = true
-  try {
-    await waitForWorkerReady()
-  } catch (e) {
+  const isSensatePlan = plan.kind === 'sensate'
+  // Sensate loads only static preset WAVs; guided mode needs the Kokoro worker for generated lines.
+  if (!isSensatePlan) {
+    cookingWaitingForModel.value = true
+    try {
+      await waitForWorkerReady()
+    } catch (e) {
+      cookingWaitingForModel.value = false
+      cookingError.value = e?.message || 'Voice not ready.'
+      return
+    }
     cookingWaitingForModel.value = false
-    cookingError.value = e?.message || 'Voice not ready.'
-    return
+  } else {
+    cookingWaitingForModel.value = false
   }
-  cookingWaitingForModel.value = false
   // Pre-generate intro + entire first turn via worker so there is ample audio to get into the session.
   // Ensure we always cook at least intro (script[0]) and the first turn's phrases (script[1]...).
   const firstTurnPhraseCount = plan.turns?.[0]?.phraseStrings?.length ?? 5
@@ -267,7 +287,10 @@ async function startCooking() {
   cookingProgressCurrent.value = 0
   guided.clearCookingLog()
   const cookVoiceId = plan.config?.kokoroVoiceId?.trim()
-  const cookGenOpts = cookVoiceId ? { voiceId: cookVoiceId } : {}
+  const cookGenOpts = {
+    ...(cookVoiceId ? { voiceId: cookVoiceId } : {}),
+    staticPresetKind: plan.kind === 'sensate' ? 'sensate' : 'guided',
+  }
   try {
     const initialBlobs = await generateSessionAudio(
       initialScript,
@@ -341,8 +364,20 @@ async function startCooking() {
 }
 
 function onCookingBack() {
-  guidedStep.value = 'review'
   cookingError.value = null
+  if (guided.sessionPlan?.kind === 'sensate') {
+    sensateResumePresetId.value = guided.sessionPlan.config.sensatePresetId
+    guidedStep.value = null
+    guided.clearSessionPlan()
+    pendingConfig.value = null
+    guidedEntryMode.value = 'sensate'
+    session.uiMode = 'sensate'
+    void nextTick(() => {
+      sensateResumePresetId.value = null
+    })
+    return
+  }
+  guidedStep.value = 'review'
 }
 
 function onCookingQuit() {
@@ -375,16 +410,31 @@ watch(guidedStep, (step) => {
   }
 })
 
-// When returning to guided mode (including on mount when uiMode is already 'guided'),
-// reset any completed session so the wizard shows instead of the end screen.
-// { immediate: true } ensures this fires on mount even when uiMode was already 'guided'
-// (e.g. user came from landing modal after endSession() unmounted this component).
-watch(() => session.uiMode, (mode) => {
-  if (mode === 'guided' && guided.sessionComplete) {
-    guided.resetAfterSessionComplete()
-    guidedStep.value = null
-  }
-}, { immediate: true })
+// When returning to guided or sensate (including on mount), reset completed sessions so setup shows.
+// When idle at entry, sync full guided wizard vs sensate from the header play mode.
+watch(
+  () => session.uiMode,
+  (mode, oldMode) => {
+    if ((mode === 'guided' || mode === 'sensate') && guided.sessionComplete) {
+      guided.resetAfterSessionComplete()
+      guidedStep.value = null
+    }
+    const atEntry =
+      guided.totalSeconds === 0 &&
+      !guided.sessionComplete &&
+      guidedStep.value == null &&
+      !guided.sessionPlan
+    if (atEntry) {
+      const isInitial = oldMode === undefined
+      const switched = oldMode !== undefined && oldMode !== mode
+      if (isInitial || switched) {
+        if (mode === 'sensate') guidedEntryMode.value = 'sensate'
+        else if (mode === 'guided') guidedEntryMode.value = 'classic'
+      }
+    }
+  },
+  { immediate: true }
+)
 watch(() => guided.requestShowWizard, (show) => {
   if (show) {
     guidedStep.value = null
@@ -398,10 +448,20 @@ function onStartBack() {
   guidedStep.value = 'cooking'
 }
 
+function guidedStaticPresetKind() {
+  return guided.sessionPlan?.kind === 'sensate' ? 'sensate' : 'guided'
+}
+
 function onStartSession() {
   if (!pendingConfig.value || !guided.preGeneratedBlobs) return
   unlockAudio()
-  guided.setSpeak((text, opts) => speak(text, { ...opts, force: true }))
+  guided.setSpeak((text, opts) =>
+    speak(text, {
+      ...opts,
+      force: true,
+      staticPresetKind: opts.staticPresetKind ?? guidedStaticPresetKind(),
+    })
+  )
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
   guided.setPlayPreGeneratedBlob((blob, onEnd, onPlaybackFailed) => playBlob(blob, onEnd, onPlaybackFailed))
@@ -428,7 +488,13 @@ function endSession() {
 
 onMounted(() => {
   warmupWorker() // start loading voice model as soon as user enters Guided Mode
-  guided.setSpeak((text, opts) => speak(text, { ...opts, force: true }))
+  guided.setSpeak((text, opts) =>
+    speak(text, {
+      ...opts,
+      force: true,
+      staticPresetKind: opts.staticPresetKind ?? guidedStaticPresetKind(),
+    })
+  )
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
   // Start loading the voice worker as soon as they enter the guided wizard so it's ready by cooking

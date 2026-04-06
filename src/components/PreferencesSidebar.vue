@@ -84,10 +84,10 @@
               aria-label="Select voice"
               :disabled="kokoroLoading"
             >
-              <option value="">— Choose voice —</option>
+              <option value="">Choose voice</option>
               <template v-if="kokoroSupported">
                 <option v-for="v in kokoroVoicesList" :key="'k-' + v.id" :value="'kokoro:' + v.id">{{ v.name }}</option>
-                <option disabled>——— Browser (English) ———</option>
+                <option disabled>Browser (English)</option>
               </template>
               <option v-for="v in browserVoicesList" :key="'b-' + (v.voiceURI || v.name)" :value="'browser:' + (v.voiceURI || '')">{{ v.name }} (Browser)</option>
             </select>

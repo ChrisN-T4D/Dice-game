@@ -20,11 +20,11 @@ export function loadState(sessionStore, preferencesStore, guidedStore) {
     if (typeof state.rollCount === 'number' && state.rollCount >= 0) {
       sessionStore.setRollCount(state.rollCount)
     }
-    if (state.uiMode === 'guided' || state.uiMode === 'freeplay') {
+    if (state.uiMode === 'guided' || state.uiMode === 'sensate' || state.uiMode === 'freeplay') {
       sessionStore.uiMode = state.uiMode
-      sessionStore.isGuidedMode = state.uiMode === 'guided'
+      sessionStore.isGuidedMode = state.uiMode === 'guided' || state.uiMode === 'sensate'
     }
-    if (state.uiMode === 'guided' && state.guided && guidedStore) {
+    if ((state.uiMode === 'guided' || state.uiMode === 'sensate') && state.guided && guidedStore) {
       guidedStore.hydrateFromSaved(state.guided)
     }
 

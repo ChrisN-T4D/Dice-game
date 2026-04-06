@@ -178,7 +178,7 @@ function buildClothingText(howNum) {
     const item1 = pickRandomItem()
     let item2 = pickRandomItem()
     while (item2 === item1) item2 = pickRandomItem()
-    return `${prefix}: ${item1} and ${item2} — ${method}`
+    return `${prefix}: ${item1} and ${item2}: ${method}`
   }
   const item = pickRandomItem()
   if (method) return `${prefix} ${item} ${method}`

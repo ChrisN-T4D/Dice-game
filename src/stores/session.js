@@ -6,7 +6,7 @@ export const useSessionStore = defineStore('session', {
     rollCount: 0,
     maxPhase: 3,
     showLanding: true,
-    uiMode: null, // 'guided' | 'freeplay'
+    uiMode: null, // 'guided' | 'sensate' | 'freeplay'
     isGuidedMode: false,
   }),
   getters: {
@@ -31,7 +31,7 @@ export const useSessionStore = defineStore('session', {
     },
     startSession(mode) {
       this.uiMode = mode
-      this.isGuidedMode = mode === 'guided'
+      this.isGuidedMode = mode === 'guided' || mode === 'sensate'
       this.showLanding = false
     },
     showLandingModal() {

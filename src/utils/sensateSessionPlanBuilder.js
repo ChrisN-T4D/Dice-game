@@ -1,23 +1,34 @@
 /**
- * Builds scripted sensate session plans compatible with guided review, cooking, and playback.
+ * Builds scripted sensate session plans compatible with cooking and playback.
+ * Audio is fully pre-baked per phrase (static WAV per script line); users only skip ahead in the moment.
+ * Each turn’s phrases are contiguous in `plan.script` / preGeneratedBlobs; `scriptIndexStart` marks where that turn’s audio begins for skip alignment.
  */
 import { normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
-import { NEXT_TURN_TEXTS, EASE_IN_TEXTS, TURN_BEGINS_TEXTS } from '@/data/staticPhrases'
+import { EASE_IN_TEXTS, TURN_BEGINS_TEXTS } from '@/data/staticPhrases'
 import {
   SENSATE_PHRASE_BY_ID,
   SENSATE_FIRST_TURN_TEXT,
   SENSATE_FIRST_TURN_P2_GIVER_TEXT,
+  SENSATE_TURN_COMPLETE_CUE,
+  SENSATE_TRANSITION_PAUSE_ABOUT_ONE_MINUTE,
 } from '@/data/sensateStaticPhrases'
 import { getSensatePresetById } from '@/data/sensatePresets'
 import { mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 
-/** Fixed transition lines so static WAV lookup matches (same as index 0 in static phrase sets). */
-const NEXT_FIXED = NEXT_TURN_TEXTS[0]
+/** Ease-in / turn-begins match guided static index 0 for shared WAVs. Between-turn cue is sensate-only (see SENSATE_TURN_COMPLETE_CUE). */
 const EASE_FIXED = EASE_IN_TEXTS[0]
 const BEGINS_FIXED = TURN_BEGINS_TEXTS[0]
 
 /**
- * @typedef {{ instructionId: string, durationSec: number, currentPartner: number, receiver: number }} SensateTurnSpec
+ * @typedef {{
+ *   instructionId: string,
+ *   durationSec: number,
+ *   currentPartner: number,
+ *   receiver: number,
+ *   transitionOnly?: boolean,
+ *   skipLeadLine?: boolean,
+ *   closingOnly?: boolean,
+ * }} SensateTurnSpec
  */
 
 /**
@@ -30,39 +41,139 @@ export function resolveSensateFirstToucher(preference) {
 }
 
 /**
- * Turn-taking Phase 1 presets: env → touch block A → switch → touch block B → close.
- * When first giver is Partner 2, order is env → block B → switch (P2) → block A → close.
+ * Turn-taking Phase 1 presets: touch block A → switch → touch block B → close.
+ * Setup (space, phones, clothing) is folded into each preset’s intro phrase.
+ * When first giver is Partner 2, order is block B → switch (P2) → block A → close.
  */
 const REVERSIBLE_SPECS = {
   phase1_non_genital: {
     introPhraseId: 'sensate_intro_phase1_non_genital',
-    env: { instructionId: 'sensate_p1ng_t1', durationSec: 180, currentPartner: 1, receiver: 2 },
-    touchP1toP2: { instructionId: 'sensate_p1ng_t2', durationSec: 600, currentPartner: 1, receiver: 2 },
-    switchP1: { instructionId: 'sensate_p1ng_t3', durationSec: 120, currentPartner: 1, receiver: 2 },
-    switchP2: { instructionId: 'sensate_p1ng_t3_p2', durationSec: 120, currentPartner: 2, receiver: 1 },
-    touchP2toP1: { instructionId: 'sensate_p1ng_t4', durationSec: 600, currentPartner: 2, receiver: 1 },
-    closeAfterP2Last: { instructionId: 'sensate_p1ng_t5', durationSec: 180, currentPartner: 2, receiver: 1 },
-    closeAfterP1Last: { instructionId: 'sensate_p1ng_t5', durationSec: 180, currentPartner: 1, receiver: 2 },
+    touchP1toP2: {
+      instructionId: 'sensate_p1ng_t2',
+      durationSec: 600,
+      currentPartner: 1,
+      receiver: 2,
+    },
+    switchP1: {
+      instructionId: 'sensate_p1ng_t3',
+      durationSec: 60,
+      currentPartner: 1,
+      receiver: 2,
+      transitionOnly: true,
+    },
+    switchP2: {
+      instructionId: 'sensate_p1ng_t3_p2',
+      durationSec: 60,
+      currentPartner: 2,
+      receiver: 1,
+      transitionOnly: true,
+    },
+    touchP2toP1: {
+      instructionId: 'sensate_p1ng_t4',
+      durationSec: 600,
+      currentPartner: 2,
+      receiver: 1,
+    },
+    closeAfterP2Last: {
+      instructionId: 'sensate_p1ng_t5',
+      durationSec: 180,
+      currentPartner: 2,
+      receiver: 1,
+      closingOnly: true,
+    },
+    closeAfterP1Last: {
+      instructionId: 'sensate_p1ng_t5',
+      durationSec: 180,
+      currentPartner: 1,
+      receiver: 2,
+      closingOnly: true,
+    },
   },
   phase1_genital_included: {
     introPhraseId: 'sensate_intro_phase1_genital',
-    env: { instructionId: 'sensate_p1g_t1', durationSec: 180, currentPartner: 1, receiver: 2 },
-    touchP1toP2: { instructionId: 'sensate_p1g_t2', durationSec: 600, currentPartner: 1, receiver: 2 },
-    switchP1: { instructionId: 'sensate_p1g_t3', durationSec: 120, currentPartner: 1, receiver: 2 },
-    switchP2: { instructionId: 'sensate_p1g_t3_p2', durationSec: 120, currentPartner: 2, receiver: 1 },
-    touchP2toP1: { instructionId: 'sensate_p1g_t4', durationSec: 600, currentPartner: 2, receiver: 1 },
-    closeAfterP2Last: { instructionId: 'sensate_p1g_t5', durationSec: 180, currentPartner: 2, receiver: 1 },
-    closeAfterP1Last: { instructionId: 'sensate_p1g_t5', durationSec: 180, currentPartner: 1, receiver: 2 },
+    touchP1toP2: {
+      instructionId: 'sensate_p1g_t2',
+      durationSec: 600,
+      currentPartner: 1,
+      receiver: 2,
+    },
+    switchP1: {
+      instructionId: 'sensate_p1g_t3',
+      durationSec: 60,
+      currentPartner: 1,
+      receiver: 2,
+      transitionOnly: true,
+    },
+    switchP2: {
+      instructionId: 'sensate_p1g_t3_p2',
+      durationSec: 60,
+      currentPartner: 2,
+      receiver: 1,
+      transitionOnly: true,
+    },
+    touchP2toP1: {
+      instructionId: 'sensate_p1g_t4',
+      durationSec: 600,
+      currentPartner: 2,
+      receiver: 1,
+    },
+    closeAfterP2Last: {
+      instructionId: 'sensate_p1g_t5',
+      durationSec: 180,
+      currentPartner: 2,
+      receiver: 1,
+      closingOnly: true,
+    },
+    closeAfterP1Last: {
+      instructionId: 'sensate_p1g_t5',
+      durationSec: 180,
+      currentPartner: 1,
+      receiver: 2,
+      closingOnly: true,
+    },
   },
   phase1_lotion: {
     introPhraseId: 'sensate_intro_lotion',
-    env: { instructionId: 'sensate_lo_t1', durationSec: 180, currentPartner: 1, receiver: 2 },
-    touchP1toP2: { instructionId: 'sensate_lo_t2', durationSec: 600, currentPartner: 1, receiver: 2 },
-    switchP1: { instructionId: 'sensate_lo_t3', durationSec: 120, currentPartner: 1, receiver: 2 },
-    switchP2: { instructionId: 'sensate_lo_t3_p2', durationSec: 120, currentPartner: 2, receiver: 1 },
-    touchP2toP1: { instructionId: 'sensate_lo_t4', durationSec: 600, currentPartner: 2, receiver: 1 },
-    closeAfterP2Last: { instructionId: 'sensate_lo_t5', durationSec: 180, currentPartner: 2, receiver: 1 },
-    closeAfterP1Last: { instructionId: 'sensate_lo_t5', durationSec: 180, currentPartner: 1, receiver: 2 },
+    touchP1toP2: {
+      instructionId: 'sensate_lo_t2',
+      durationSec: 600,
+      currentPartner: 1,
+      receiver: 2,
+    },
+    switchP1: {
+      instructionId: 'sensate_lo_t3',
+      durationSec: 60,
+      currentPartner: 1,
+      receiver: 2,
+      transitionOnly: true,
+    },
+    switchP2: {
+      instructionId: 'sensate_lo_t3_p2',
+      durationSec: 60,
+      currentPartner: 2,
+      receiver: 1,
+      transitionOnly: true,
+    },
+    touchP2toP1: {
+      instructionId: 'sensate_lo_t4',
+      durationSec: 600,
+      currentPartner: 2,
+      receiver: 1,
+    },
+    closeAfterP2Last: {
+      instructionId: 'sensate_lo_t5',
+      durationSec: 180,
+      currentPartner: 2,
+      receiver: 1,
+      closingOnly: true,
+    },
+    closeAfterP1Last: {
+      instructionId: 'sensate_lo_t5',
+      durationSec: 180,
+      currentPartner: 1,
+      receiver: 2,
+      closingOnly: true,
+    },
   },
 }
 
@@ -90,16 +201,41 @@ const FIXED_PRESET_SPECS = {
 
 /**
  * @param {keyof typeof REVERSIBLE_SPECS} presetId
- * @param {1 | 2} firstGiver - who does the first long touch block after env
+ * @param {1 | 2} firstGiver - who does the first long touch block
  * @returns {SensateTurnSpec[]}
  */
 function buildReversibleTurnSpecs(presetId, firstGiver) {
   const R = REVERSIBLE_SPECS[presetId]
   if (!R) throw new Error(`Not a reversible sensate preset: ${presetId}`)
   if (firstGiver === 1) {
-    return [R.env, R.touchP1toP2, R.switchP1, R.touchP2toP1, R.closeAfterP2Last]
+    return [R.touchP1toP2, R.switchP1, R.touchP2toP1, R.closeAfterP2Last]
   }
-  return [R.env, R.touchP2toP1, R.switchP2, R.touchP1toP2, R.closeAfterP1Last]
+  return [R.touchP2toP1, R.switchP2, R.touchP1toP2, R.closeAfterP1Last]
+}
+
+/**
+ * Spoken cue for the timer length of one sensate block (matches durationSec on each turn).
+ * @param {number} durationSec
+ * @returns {string}
+ */
+export function formatSensateBlockDurationSpeech(durationSec) {
+  const s = Math.max(0, Math.round(Number(durationSec) || 0))
+  if (s === 0) {
+    return 'There is no fixed timer for this part.'
+  }
+  if (s < 60) {
+    return s === 1
+      ? 'This part is set for about one second.'
+      : `This part is set for about ${s} seconds.`
+  }
+  const minutes = s / 60
+  if (Number.isInteger(minutes)) {
+    if (minutes === 1) return 'This part is set for about one minute.'
+    return `This part is set for about ${minutes} minutes.`
+  }
+  const rounded = Math.round(minutes)
+  if (rounded === 1) return 'This part is set for about one minute.'
+  return `This part is set for about ${rounded} minutes.`
 }
 
 function getIntroAndTurnSpecs(presetId, firstGiver) {
@@ -117,21 +253,38 @@ function getIntroAndTurnSpecs(presetId, firstGiver) {
   throw new Error(`Unknown sensate preset: ${presetId}`)
 }
 
-function pushSensateTurnScript(script, instructionRaw, { firstTurn, firstGiver }) {
+function pushSensateTurnScript(
+  script,
+  instructionRaw,
+  { firstTurn, firstGiver, durationSec, transitionOnly, skipLeadLine, closingOnly }
+) {
+  const inst = instructionRaw ? normalizeParenthesesForTts(slashToAndForTts(instructionRaw)) : ''
+
+  if (closingOnly) {
+    if (inst) script.push(inst)
+    return
+  }
+
   if (firstTurn) {
     script.push(firstGiver === 2 ? SENSATE_FIRST_TURN_P2_GIVER_TEXT : SENSATE_FIRST_TURN_TEXT)
-  } else {
-    script.push(NEXT_FIXED)
+  } else if (!skipLeadLine) {
+    script.push(SENSATE_TURN_COMPLETE_CUE)
   }
-  const inst = instructionRaw ? normalizeParenthesesForTts(slashToAndForTts(instructionRaw)) : ''
+
+  const durationSpeech = transitionOnly
+    ? SENSATE_TRANSITION_PAUSE_ABOUT_ONE_MINUTE
+    : formatSensateBlockDurationSpeech(durationSec)
+  script.push(normalizeParenthesesForTts(durationSpeech))
   if (inst) script.push(inst)
-  script.push(EASE_FIXED)
-  script.push(BEGINS_FIXED)
+  if (!transitionOnly) {
+    script.push(EASE_FIXED)
+    script.push(BEGINS_FIXED)
+  }
 }
 
 /**
  * @param {string} presetId - key in PRESET_SPECS / sensatePresets
- * @param {object} config - partnerNames, partnerAnatomy, kokoroVoiceId; sensateFirstToucherPreference 'random'|1|2
+ * @param {object} config - partnerAnatomy, kokoroVoiceId; partnerNames usually empty (fixed Partner 1/2 in script+audio); sensateFirstToucherPreference 'random'|1|2
  * @returns {{ kind: 'sensate', config: object, turns: object[], script: string[] }}
  */
 export function buildSensateSessionPlan(presetId, config) {
@@ -201,12 +354,21 @@ export function buildSensateSessionPlan(presetId, config) {
     }
     turnIndex++
     const phraseStart = script.length
-    pushSensateTurnScript(script, instructionRaw, { firstTurn: i === 0, firstGiver })
+    pushSensateTurnScript(script, instructionRaw, {
+      firstTurn: i === 0,
+      firstGiver,
+      durationSec: t.durationSec,
+      transitionOnly: t.transitionOnly === true,
+      skipLeadLine: t.skipLeadLine === true,
+      closingOnly: t.closingOnly === true,
+    })
     const instruction = instructionRaw ? normalizeParenthesesForTts(slashToAndForTts(instructionRaw)) : ''
 
     turns.push({
       phase: 1,
       turnIndex,
+      /** Index into plan.script / preGeneratedBlobs for this turn’s first phrase (intro is always index 0). */
+      scriptIndexStart: phraseStart,
       currentPartner: t.currentPartner,
       receiver: t.receiver,
       locationRoll: 0,

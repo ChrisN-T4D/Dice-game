@@ -66,17 +66,6 @@
                   <div class="mode-buttons">
                     <button
                       type="button"
-                      class="mode-button guided"
-                      :class="{ 'tour-explained': tourExplainedGuided }"
-                      @click="onTourModeClick('guided')"
-                    >
-                      <div class="mode-button-title">⏱️ Guided Mode</div>
-                      <div class="mode-button-desc">
-                        Inspired by sensate focus therapy: set a total time and move through phased, timed turns (where, what, then position) with optional voice prompts.
-                      </div>
-                    </button>
-                    <button
-                      type="button"
                       class="mode-button freeplay"
                       :class="{ 'tour-explained': tourExplainedFreeplay }"
                       @click="onTourModeClick('freeplay')"
@@ -84,6 +73,28 @@
                       <div class="mode-button-title">🎲 Dice game</div>
                       <div class="mode-button-desc">
                         Roll dice for location, action, and (in Phase 3) position. No timer; you set the pace.
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      class="mode-button guided"
+                      :class="{ 'tour-explained': tourExplainedGuided }"
+                      @click="onTourModeClick('guided')"
+                    >
+                      <div class="mode-button-title">⏱️ Guided mode</div>
+                      <div class="mode-button-desc">
+                        Total time, turn length, and phased prompts (where, what, position) with optional voice.
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      class="mode-button sensate"
+                      :class="{ 'tour-explained': tourExplainedSensate }"
+                      @click="onTourModeClick('sensate')"
+                    >
+                      <div class="mode-button-title">🌿 Sensate-style sessions</div>
+                      <div class="mode-button-desc">
+                        Scripted presets with fixed blocks: phase-one style touch, transitions, and closings.
                       </div>
                     </button>
                   </div>
@@ -94,7 +105,8 @@
                   <div class="tour-mock-fill onboarding-tour-ui-freeplay">
                     <div class="play-mode-row tour-highlight-active">
                       <button type="button" class="secondary">Dice game</button>
-                      <button type="button" class="secondary">Guided Mode</button>
+                      <button type="button" class="secondary">Guided mode</button>
+                      <button type="button" class="secondary">Sensate-style</button>
                     </div>
                     <div class="toolbar-row">
                       <button type="button" class="secondary small">Next phase</button>
@@ -129,7 +141,8 @@
                   <div class="tour-mock-fill onboarding-tour-ui-guided">
                     <div class="play-mode-row tour-highlight-active">
                       <button type="button" class="secondary">Dice game</button>
-                      <button type="button" class="secondary preset-selected">Guided Mode</button>
+                      <button type="button" class="secondary preset-selected">Guided mode</button>
+                      <button type="button" class="secondary">Sensate-style</button>
                     </div>
                     <div class="tour-guided-center">
                       <div class="tour-guided-action-timer">
@@ -326,23 +339,36 @@ const stepsBodyStyle = ref({})
 /** Step 3 overlay tour: user clicks landing buttons, we show real main UI + overlay */
 const tourExplainedFreeplay = ref(false)
 const tourExplainedGuided = ref(false)
-const tourLastClicked = ref(null) // 'freeplay' | 'guided' | null
+const tourExplainedSensate = ref(false)
+const tourLastClicked = ref(null) // 'freeplay' | 'guided' | 'sensate' | null
 const tourShowingMain = computed(() => step.value === 3 && !!tourLastClicked.value)
 const tourOverlayTitle = computed(() => {
-  if (tourLastClicked.value === 'guided') return '⏱️ Guided Mode'
+  if (tourLastClicked.value === 'guided') return '⏱️ Guided mode'
+  if (tourLastClicked.value === 'sensate') return '🌿 Sensate-style sessions'
   if (tourLastClicked.value === 'freeplay') return '🎲 Dice game'
   return 'Try the modes'
 })
 const tourOverlayDesc = computed(() => {
-  if (tourLastClicked.value === 'guided') return 'Timed, phased turns with optional voice prompts. You\'ll set partner names, total time, and turn length, then the app guides you through where → what → position.'
-  if (tourLastClicked.value === 'freeplay') return 'Roll dice for location, action, and (in Phase 3) position. No timer—you set the pace. Optional Read aloud and clothing prompts.'
-  return 'Click either button above to see what it does. Then continue to finish setup.'
+  if (tourLastClicked.value === 'guided') {
+    return 'Timed guided session: partner names, total time, and turn length, then where → what → position with optional voice.'
+  }
+  if (tourLastClicked.value === 'sensate') {
+    return 'Choose a scripted preset, then voice (and who touches first when offered). Fixed Partner 1 / Partner 2 in script and audio—no name fields, separate from the timed guided wizard.'
+  }
+  if (tourLastClicked.value === 'freeplay') {
+    return 'Roll dice for location, action, and (in Phase 3) position. No timer: you set the pace. Optional Read aloud and clothing prompts.'
+  }
+  return 'Click a mode above to see its interface. Then continue to finish setup.'
 })
 function onTourModeClick(mode) {
   tourLastClicked.value = mode
   if (mode === 'freeplay') tourExplainedFreeplay.value = true
-  else tourExplainedGuided.value = true
-  session.$patch({ uiMode: mode, isGuidedMode: mode === 'guided' })
+  else if (mode === 'guided') tourExplainedGuided.value = true
+  else if (mode === 'sensate') tourExplainedSensate.value = true
+  session.$patch({
+    uiMode: mode,
+    isGuidedMode: mode === 'guided' || mode === 'sensate',
+  })
   emit('tour-preview', mode)
 }
 function continueTourToSetup() {
@@ -351,6 +377,7 @@ function continueTourToSetup() {
   tourLastClicked.value = null
   tourExplainedFreeplay.value = false
   tourExplainedGuided.value = false
+  tourExplainedSensate.value = false
   emit('tour-preview', null)
   step.value = 4
 }
@@ -358,6 +385,7 @@ function backToTourModeChoice() {
   tourLastClicked.value = null
   tourExplainedFreeplay.value = false
   tourExplainedGuided.value = false
+  tourExplainedSensate.value = false
   emit('tour-preview', null)
 }
 const displayName = ref(profile.displayName || '')
@@ -509,6 +537,7 @@ function goNext() {
     tourLastClicked.value = null
     tourExplainedFreeplay.value = false
     tourExplainedGuided.value = false
+    tourExplainedSensate.value = false
     emit('tour-preview', null)
   }
   step.value = Math.min(totalSteps, step.value + 1)
@@ -1079,6 +1108,10 @@ function finish() {
   background: rgba(34, 197, 94, 0.1);
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
 }
+.mode-button.sensate.tour-explained {
+  border-color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.12);
+}
 .mode-button.guided.tour-explained {
   border-color: rgba(168, 85, 247, 0.7);
   background: rgba(168, 85, 247, 0.1);
@@ -1490,6 +1523,7 @@ function finish() {
 }
 .tour-landing-buttons .mode-button.freeplay { border-left: 4px solid #22c55e; }
 .tour-landing-buttons .mode-button.guided { border-left: 4px solid #a855f7; }
+.tour-landing-buttons .mode-button.sensate { border-left: 4px solid #2dd4bf; }
 /* Exact copy of Dice game UI (same structure/classes as App + FreePlayView) */
 .onboarding-tour-ui-freeplay .play-mode-row { margin-bottom: 0.5rem; }
 .onboarding-tour-ui-freeplay .toolbar-row { margin-bottom: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: center; }

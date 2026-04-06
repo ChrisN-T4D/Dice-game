@@ -29,14 +29,14 @@ export const SENSATE_PRESETS = [
     id: 'mutual_touching',
     techniqueId: 'SF_MUTUAL_TOUCHING',
     title: 'Mutual touching',
-    blurb: 'Touch each other at once—no single giver. Skip kissing and oral sex for this round.',
+    blurb: 'Touch each other at once, with no single giver. Skip kissing and oral sex for this round.',
     supportsFirstToucherChoice: false,
   },
   {
     id: 'phase2_communication',
     techniqueId: 'SF_PHASE2_PARTNER_COMMUNICATION',
     title: 'Phase 2: Gentle communication',
-    blurb: 'Slow touch plus short, informational sharing—after you are solid with silent Phase 1 style work.',
+    blurb: 'Slow touch plus short, informational sharing, after you are solid with silent Phase 1 style work.',
     supportsFirstToucherChoice: false,
   },
 ]

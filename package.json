@@ -11,6 +11,8 @@
     "download-kokoro-model": "node scripts/download-kokoro-model.js",
     "list-music": "node scripts/list-music.js",
     "generate-static-wavs": "node scripts/generate-static-wavs.js",
+    "generate-static-sensate-phase1-non-genital": "node scripts/generate-static-wavs.js --local --sensate-preset phase1_non_genital --skip-existing",
+    "generate-static-sensate-phase1-genital-included": "node scripts/generate-static-wavs.js --local --sensate-preset phase1_genital_included --skip-existing",
     "generate-voice-test-wavs": "node scripts/generate-voice-test-wavs.js",
     "generate-static-intro-no-clothing": "node scripts/generate-static-intro-no-clothing.js",
     "generate-static-intro-with-clothing": "node scripts/generate-static-intro-with-clothing.js",

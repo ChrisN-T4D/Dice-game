@@ -2,7 +2,7 @@
   <div class="sensate-entry">
     <Teleport to="#bottom-nav-portal">
       <div v-if="screen === 'pick'" class="sensate-entry-nav">
-        <button type="button" class="secondary sensate-nav-btn" @click="$emit('choose-classic')">Classic dice setup</button>
+        <button type="button" class="secondary sensate-nav-btn" @click="$emit('back-to-hub')">Guided setup</button>
         <button type="button" class="primary sensate-nav-btn" :disabled="!selectedPresetId" @click="screen = 'setup'">
           Continue
         </button>
@@ -15,11 +15,12 @@
     <div v-if="screen === 'pick'" class="sensate-entry-inner">
       <h2 class="sensate-title">Sensate-style sessions</h2>
       <p class="sensate-disclaimer">
-        For adults in consensual relationships only. This is educational, not medical or therapy advice—not a substitute for
-        professional assessment. Stop if there is discomfort, distress, coercion, or pain. For pain or new symptoms, see a
-        clinician before intimate touch exercises.
+        These sessions are for adults in consensual relationships only. This is not medical advice or therapy, and it does not
+        replace care from a qualified professional when you need it. Pause or stop together if you notice discomfort, distress,
+        coercion, or pain. If you have new or ongoing symptoms, especially pain, see a clinician before you use guided touch
+        exercises like these.
       </p>
-      <p class="sensate-hint">Pick a scripted session, then enter partner labels and voice. Or use classic dice-based guided setup.</p>
+      <p class="sensate-hint">Pick a scripted session, then choose voice and any options on the next screen.</p>
       <ul class="sensate-preset-list">
         <li v-for="p in SENSATE_PRESETS" :key="p.id">
           <button
@@ -38,14 +39,9 @@
     <div v-else class="sensate-entry-inner">
       <h2 class="sensate-title">Session setup</h2>
       <p class="sensate-setup-summary">{{ selectedPreset?.title }}</p>
-      <label class="sensate-label">
-        <span>Partner 1 name (optional)</span>
-        <input v-model.trim="partner1" type="text" class="sensate-input" maxlength="40" autocomplete="nickname" />
-      </label>
-      <label class="sensate-label">
-        <span>Partner 2 name (optional)</span>
-        <input v-model.trim="partner2" type="text" class="sensate-input" maxlength="40" autocomplete="nickname" />
-      </label>
+      <p class="sensate-audio-note">
+        Audio is fully pre-baked for this script (Partner 1 / Partner 2 only). You can still skip ahead during a turn from the session screen.
+      </p>
       <label class="sensate-label">
         <span>Voice for this session</span>
         <select v-model="kokoroVoiceId" class="sensate-select" aria-label="Kokoro voice for guided session">
@@ -67,8 +63,7 @@
           <span>Partner 2 is the first toucher</span>
         </label>
       </fieldset>
-      <p class="sensate-voice-hint">Audio uses fixed “Partner 1 / Partner 2” wording for static files; names are for your screen only.</p>
-      <button type="button" class="primary sensate-start-btn" :disabled="!selectedPresetId" @click="emitStart">Review session</button>
+      <button type="button" class="primary sensate-start-btn" :disabled="!selectedPresetId" @click="emitStart">Prepare session</button>
     </div>
   </div>
 </template>
@@ -83,13 +78,11 @@ const props = defineProps({
   resumePresetId: { type: String, default: null },
 })
 
-const emit = defineEmits(['choose-classic', 'start-sensate'])
+const emit = defineEmits(['back-to-hub', 'start-sensate'])
 
 const screen = ref('pick')
 const selectedPresetId = ref(null)
-const partner1 = ref('')
-const partner2 = ref('')
-/** 'random' | '1' | '2' — only used when preset supports first toucher choice */
+/** 'random' | '1' | '2': only used when preset supports first toucher choice */
 const firstToucherPreference = ref('random')
 
 const speech = useSpeech()
@@ -125,7 +118,7 @@ function emitStart() {
     : 'random'
   emit('start-sensate', {
     presetId: selectedPresetId.value,
-    partnerNames: { 1: partner1.value, 2: partner2.value },
+    partnerNames: { 1: '', 2: '' },
     kokoroVoiceId: kokoroVoiceId.value?.trim() || 'af_nicole',
     sensateFirstToucherPreference: pref,
   })
@@ -233,10 +226,11 @@ function emitStart() {
   color: #c4b5fd;
   font-weight: 500;
 }
-.sensate-voice-hint {
+.sensate-audio-note {
   margin: 0;
   font-size: 0.8rem;
-  color: #6b7280;
+  line-height: 1.4;
+  color: #9ca3af;
 }
 .sensate-start-btn {
   margin-top: 0.5rem;

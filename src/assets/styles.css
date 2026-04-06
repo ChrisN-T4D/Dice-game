@@ -452,9 +452,51 @@ body.app-main-visible .app-root .page {
 }
 .hamburger-menu-btn:hover { background: rgba(2,6,23,1); }
 
+/* Left app menu (hamburger) */
+.app-menu-sidebar {
+  position: fixed; top: 0; left: 0; width: min(95vw, 360px); max-width: 100%; height: 100vh;
+  height: 100dvh;
+  background: rgba(2,6,23,0.98); backdrop-filter: blur(20px); z-index: 1001; overflow-y: auto;
+  border-right: 1px solid #475569; padding: clamp(0.75rem, 4vw, 1.25rem); box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.3s ease-in-out, visibility 0.3s;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 380px) {
+  .app-menu-sidebar { width: 100%; padding: 1rem; }
+}
+.app-menu-sidebar.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+.app-menu-overlay {
+  position: fixed; inset: 0; min-width: 100%; min-height: 100dvh; min-height: 100vh;
+  background: rgba(0,0,0,0.7); z-index: 1000; backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.app-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.app-menu-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #475569;
+}
+.app-menu-close-btn {
+  background: transparent; border: none; color: #e5e7eb; font-size: 1.5rem;
+  cursor: pointer; padding: 0.35rem 0.5rem; line-height: 1; min-height: 44px;
+}
+
+/* Preferences panel opens from the right; z-index above app menu so it can stack if needed */
 .preferences-sidebar {
   position: fixed; top: 0; right: 0; width: min(95vw, 400px); max-width: 100%; height: 100vh;
-  background: rgba(2,6,23,0.98); backdrop-filter: blur(20px); z-index: 1001; overflow-y: auto;
+  height: 100dvh;
+  background: rgba(2,6,23,0.98); backdrop-filter: blur(20px); z-index: 1101; overflow-y: auto;
   border-left: 1px solid #475569; padding: clamp(0.75rem, 4vw, 1.25rem); box-shadow: -4px 0 20px rgba(0,0,0,0.5);
   transform: translateX(100%);
   visibility: hidden;
@@ -470,7 +512,7 @@ body.app-main-visible .app-root .page {
 }
 .preferences-sidebar-overlay {
   position: fixed; inset: 0; min-width: 100%; min-height: 100dvh; min-height: 100vh;
-  background: rgba(0,0,0,0.7); z-index: 1000; backdrop-filter: blur(2px);
+  background: rgba(0,0,0,0.7); z-index: 1100; backdrop-filter: blur(2px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -656,6 +698,7 @@ input[type="number"] {
 }
 .mode-button:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(59,130,246,0.2); }
 .mode-button.guided:hover { border-color: #a855f7; background: rgba(168,85,247,0.1); box-shadow: 0 10px 25px rgba(168,85,247,0.2); }
+.mode-button.sensate:hover { border-color: #2dd4bf; background: rgba(45,212,191,0.1); box-shadow: 0 10px 25px rgba(45,212,191,0.2); }
 .mode-button-title { font-size: clamp(1.25rem, 3.2vmin, 1.6rem); margin-bottom: 0.5rem; color: #e5e7eb; }
 .mode-button-desc { font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; line-height: 1.5; }
 @media (max-width: 480px) {

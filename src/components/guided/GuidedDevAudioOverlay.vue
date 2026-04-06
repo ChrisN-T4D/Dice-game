@@ -39,7 +39,7 @@
             <span class="guided-dev-time">{{ entry.time }}</span>
             <span class="guided-dev-type">{{ entry.type }}</span>
             <span v-if="entry.type === 'step'" class="guided-dev-step">→ {{ entry.text }}</span>
-            <span v-if="entry.type === 'phrase_start'" class="guided-dev-source" :class="entry.source || 'unknown'">{{ entry.source === 'kokoro' ? 'Kokoro' : entry.source === 'browser' ? 'Browser' : '—' }}</span>
+            <span v-if="entry.type === 'phrase_start'" class="guided-dev-source" :class="entry.source || 'unknown'">{{ entry.source === 'kokoro' ? 'Kokoro' : entry.source === 'browser' ? 'Browser' : '?' }}</span>
             <span v-if="entry.type === 'playback_failed'" class="guided-dev-fail">fail: {{ entry.reason || 'unknown' }}</span>
             <span v-if="entry.duration != null" class="guided-dev-duration">({{ entry.duration }}s)</span>
             <span v-if="entry.text && entry.type !== 'step'" class="guided-dev-text">{{ entry.text }}</span>

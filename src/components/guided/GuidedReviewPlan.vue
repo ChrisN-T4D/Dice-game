@@ -40,7 +40,10 @@
           <h2 class="guided-review-title">Review your session</h2>
           <p class="guided-review-lead">
             <template v-if="isSensatePlan">{{ guided.sessionPlan.turns.length }} scripted turns. Confirm to prepare audio.</template>
-            <template v-else>{{ guided.sessionPlan.turns.length }} turns. Reroll any turn or confirm to generate audio.</template>
+            <template v-else>
+              {{ guided.sessionPlan.turns.length }} turns. Each card splits <strong>where / position</strong> and <strong>what / modifier</strong>; use
+              <strong>Reroll where</strong>, <strong>Reroll action</strong>, or <strong>Reroll turn</strong> to adjust. Confirm when ready to generate audio.
+            </template>
           </p>
           <p v-if="sensateFirstToucherNote" class="guided-review-meta">{{ sensateFirstToucherNote }}</p>
           <p v-if="phase3PlanSummary" class="guided-review-meta">{{ phase3PlanSummary }}</p>
@@ -57,27 +60,30 @@
               <div class="guided-review-card-top">
                 <span class="guided-review-badge">#{{ row.t.turnIndex }}</span>
                 <span v-if="!isSensatePlan" class="guided-review-roles">{{ roleLine(row.t) }}</span>
-                <div v-if="!isSensatePlan" class="guided-review-reroll-group">
-                  <button
-                    type="button"
-                    class="secondary small guided-review-reroll"
-                    :disabled="!canRerollLocation(row.t)"
-                    :title="!canRerollLocation(row.t) ? 'Location reroll is only available when Phase 3 suggests a new position each turn.' : 'Reroll where / position only'"
-                    @click="guided.rerollTurnPartial(row.idx, 'location')"
-                  >
-                    Reroll where
-                  </button>
-                  <button
-                    type="button"
-                    class="secondary small guided-review-reroll"
-                    title="Reroll action / modifier only"
-                    @click="guided.rerollTurnPartial(row.idx, 'action')"
-                  >
-                    Reroll action
-                  </button>
-                  <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(row.idx)">
-                    Reroll turn
-                  </button>
+                <div v-if="!isSensatePlan" class="guided-review-reroll-wrap">
+                  <span class="guided-review-reroll-label">Adjust this turn</span>
+                  <div class="guided-review-reroll-group">
+                    <button
+                      type="button"
+                      class="secondary small guided-review-reroll"
+                      :disabled="!canRerollLocation(row.t)"
+                      :title="!canRerollLocation(row.t) ? 'Location reroll is only available when Phase 3 suggests a new position each turn.' : 'Reroll where / position only'"
+                      @click="guided.rerollTurnPartial(row.idx, 'location')"
+                    >
+                      Reroll where
+                    </button>
+                    <button
+                      type="button"
+                      class="secondary small guided-review-reroll"
+                      title="Reroll action / modifier only"
+                      @click="guided.rerollTurnPartial(row.idx, 'action')"
+                    >
+                      Reroll action
+                    </button>
+                    <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(row.idx)">
+                      Reroll turn
+                    </button>
+                  </div>
                 </div>
               </div>
               <div v-if="row.t.clothing" class="guided-review-clothing">
@@ -325,9 +331,11 @@ function reviewWhat(t) {
 .guided-review-card-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem 0.5rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.45);
 }
 .guided-review-badge {
   font-weight: 800;
@@ -345,8 +353,23 @@ function reviewWhat(t) {
   flex: 1;
   min-width: 0;
 }
-.guided-review-reroll-group {
+.guided-review-reroll-wrap {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+.guided-review-reroll-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+.guided-review-reroll-group {
+  margin-left: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -355,12 +378,13 @@ function reviewWhat(t) {
 }
 .guided-review-reroll {
   margin-left: 0;
+  border-color: rgba(167, 139, 250, 0.45);
 }
 .guided-review-two-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-top: 0.35rem;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
 }
 @media (max-width: 480px) {
   .guided-review-two-cards {
@@ -368,11 +392,17 @@ function reviewWhat(t) {
   }
 }
 .guided-review-subcard {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(71, 85, 105, 0.65);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
+  border: 1px solid rgba(129, 140, 248, 0.35);
   border-radius: 0.45rem;
-  padding: 0.45rem 0.5rem;
+  padding: 0.5rem 0.55rem;
   min-width: 0;
+}
+.guided-review-subcard:first-child {
+  border-left: 4px solid #60a5fa;
+}
+.guided-review-subcard:last-child {
+  border-left: 4px solid #e879f9;
 }
 .guided-review-subcard-label {
   display: block;
@@ -380,13 +410,14 @@ function reviewWhat(t) {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: #c4b5fd;
   margin-bottom: 0.25rem;
 }
 .guided-review-subcard-body {
-  font-size: 0.86rem;
-  color: #e2e8f0;
-  line-height: 1.35;
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  line-height: 1.4;
+  font-weight: 500;
 }
 .guided-review-clothing {
   display: flex;

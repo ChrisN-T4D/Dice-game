@@ -72,6 +72,15 @@
         </div>
         <p v-if="!voiceOn" class="read-aloud-hint">Turn voice on to use Read aloud.</p>
         <template v-else>
+          <p
+            v-if="showKokoroPreparingHint"
+            class="voice-preparing-hint"
+            role="status"
+          >
+            <template v-if="kokoroWarmupErr">{{ kokoroWarmupErr }}</template>
+            <template v-else-if="kokoroModelLoadingNow">Preparing voice…</template>
+            <template v-else>Preparing voice… the first read aloud may take a few seconds on this device.</template>
+          </p>
           <button
             v-if="!readAloudPlaying"
             type="button"
@@ -96,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSpeech } from '@/composables/useSpeech'
@@ -108,6 +117,21 @@ const session = useSessionStore()
 const prefs = usePreferencesStore()
 const speech = useSpeech()
 
+function unwrapSpeechRef(r) {
+  return r && typeof r === 'object' && 'value' in r ? r.value : r
+}
+
+const ttsProviderVal = computed(() => unwrapSpeechRef(speech.ttsProvider))
+const kokoroReadyVal = computed(() => unwrapSpeechRef(speech.kokoroReady))
+const kokoroModelLoadingNow = computed(() => unwrapSpeechRef(speech.kokoroModelLoading))
+const kokoroWarmupErr = computed(() => unwrapSpeechRef(speech.kokoroWarmupError))
+
+const showKokoroPreparingHint = computed(() => {
+  if (ttsProviderVal.value !== 'kokoro') return false
+  if (!prefs.voiceEnabled) return false
+  return !kokoroReadyVal.value
+})
+
 const voiceOn = computed(() => !!prefs.voiceEnabled)
 
 function setDiceVoice(on) {
@@ -118,8 +142,8 @@ function setDiceVoice(on) {
 }
 
 const readAloudLoading = computed(() => {
-  const provider = (speech.ttsProvider && speech.ttsProvider.value) ?? speech.ttsProvider
-  const kokoro = (speech.kokoroModelLoading && speech.kokoroModelLoading.value) ?? speech.kokoroModelLoading
+  const provider = ttsProviderVal.value
+  const kokoro = kokoroModelLoadingNow.value
   return provider === 'kokoro' && !!kokoro
 })
 
@@ -140,6 +164,20 @@ const lastWhere = ref('')
 const lastWhat = ref('')
 const lastInstruction = ref('')
 const lastClothing = ref('')
+
+watch(
+  () => [
+    !!(lastInstruction.value || lastClothing.value),
+    prefs.voiceEnabled,
+    ttsProviderVal.value,
+    kokoroReadyVal.value,
+  ],
+  ([hasOut, ve, prov, ready]) => {
+    if (!hasOut || !ve || prov !== 'kokoro' || ready) return
+    speech.warmupWorker()
+  },
+  { immediate: true }
+)
 
 function rollPhase12() {
   const r = randomRollsForPhase(session.phase)
@@ -246,6 +284,12 @@ function pauseReadAloud() {
 .read-aloud-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-top: 0.5rem; }
 .read-aloud-voice-toggle { margin: 0; }
 .read-aloud-hint { margin: 0; font-size: 0.85rem; color: #94a3b8; }
+.voice-preparing-hint {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  color: #a5b4fc;
+  line-height: 1.35;
+}
 .output-block {
   margin-top: 0;
   padding: 0.75rem;

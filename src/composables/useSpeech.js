@@ -1097,6 +1097,7 @@ export function useSpeech() {
     kokoroVoicesListForLocale,
     kokoroModelLoading,
     kokoroReady,
+    kokoroWarmupError,
     ttsWorkerProgress,
     waitingForKokoroReady,
     kokoroAvailable,

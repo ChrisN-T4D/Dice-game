@@ -273,6 +273,48 @@
             </div>
           </div>
         </div>
+        <div class="wizard-settings-category">Phase 3 position energy (this session)</div>
+        <div class="wizard-option-row">
+          <span class="wizard-option-label">How bold can position ideas be?</span>
+          <div class="wizard-options-card">
+            <div class="row wrap">
+              <button
+                type="button"
+                class="secondary wizard-opt"
+                :class="{ 'preset-selected': config.positionIntensity === 'bed_only' }"
+                @click="config.positionIntensity = 'bed_only'"
+              >
+                Calmer / bed-focused
+              </button>
+              <button
+                type="button"
+                class="secondary wizard-opt"
+                :class="{ 'preset-selected': config.positionIntensity === 'more_physical' }"
+                @click="config.positionIntensity = 'more_physical'"
+              >
+                Full variety
+              </button>
+            </div>
+          </div>
+          <div class="wizard-collapsible">
+            <button
+              type="button"
+              class="wizard-collapsible-toggle"
+              :aria-expanded="!!wizardExplainOpen.s5p3intensity"
+              @click="toggleWizardExplain('s5p3intensity')"
+            >
+              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s5p3intensity ? '▼' : '▶' }}</span>
+              Explain position energy
+            </button>
+            <div v-show="wizardExplainOpen.s5p3intensity" class="wizard-collapsible-panel">
+              <p>
+                The catalog tags each pose as low, medium, or high effort. <strong>Calmer / bed-focused</strong> skips higher-effort
+                shapes such as standing, carrying, and heavy balance work. <strong>Full variety</strong> allows those when rolls and your
+                other comfort settings fit. Only affects <strong>Phase 3</strong>; sensate-style sessions use their own script.
+              </p>
+            </div>
+          </div>
+        </div>
         <div class="wizard-settings-category">Comfort filters</div>
         <div class="wizard-option-row wizard-option-row-body">
           <span class="wizard-option-label">Avoid prompts involving…</span>
@@ -358,7 +400,7 @@
             </p>
             <p>
               You still take turns as giver and receiver, and each turn still gets fresh activity details. The choices on this step
-              control how often the suggested body position changes. (How bold positions can be is set on the <strong>Clothing removal</strong> step.)
+              control how often the suggested body position changes. (How bold positions can be is set on <strong>Prompts & comfort</strong>.)
             </p>
             <ul class="wizard-collapsible-list">
               <li><strong>Every turn:</strong> A new suggested position whenever the turn changes.</li>
@@ -485,59 +527,9 @@
     <div v-show="step === 4" class="wizard-step active">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Clothing removal</div>
-        <div class="wizard-step-description">
-          Phase 3 position intensity for this session, then whether clothing-removal prompts can appear in Phases 1 and 2.
-        </div>
+        <div class="wizard-step-description">Clothing removal during Phase 1 & 2?</div>
       </div>
       <div class="wizard-step-content">
-        <div class="wizard-settings-category wizard-settings-category-major">Phase 3 position intensity (this session)</div>
-        <p class="wizard-settings-category-hint">
-          How bold can suggested positions be in the intimacy phase? Calmer stays closer to the bed; full variety can include standing,
-          carrying, and other higher-effort ideas when rolls allow. (Sensate-style sessions use their own script.)
-        </p>
-        <div class="wizard-option-row">
-          <span class="wizard-option-label">Choose one</span>
-          <div class="wizard-options-card">
-            <div class="row wrap">
-              <button
-                type="button"
-                class="secondary wizard-opt"
-                :class="{ 'preset-selected': config.positionIntensity === 'bed_only' }"
-                @click="config.positionIntensity = 'bed_only'"
-              >
-                Calmer / bed-focused
-              </button>
-              <button
-                type="button"
-                class="secondary wizard-opt"
-                :class="{ 'preset-selected': config.positionIntensity === 'more_physical' }"
-                @click="config.positionIntensity = 'more_physical'"
-              >
-                Full variety
-              </button>
-            </div>
-          </div>
-          <div class="wizard-collapsible">
-            <button
-              type="button"
-              class="wizard-collapsible-toggle"
-              :aria-expanded="!!wizardExplainOpen.s4p3intensity"
-              @click="toggleWizardExplain('s4p3intensity')"
-            >
-              <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s4p3intensity ? '▼' : '▶' }}</span>
-              Explain position intensity
-            </button>
-            <div v-show="wizardExplainOpen.s4p3intensity" class="wizard-collapsible-panel">
-              <p>
-                The catalog tags each pose by effort level. <strong>Calmer / bed-focused</strong> skips positions that usually need
-                standing, carrying, or heavy balance. <strong>Full variety</strong> keeps the full compatible pool. This only affects
-                Phase 3; Phases 1 and 2 use touch and activity prompts.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="wizard-settings-category">Clothing removal during Phase 1 &amp; 2</div>
         <div class="wizard-options-card">
           <div class="row">
             <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.clothingEnabled }" @click="config.clothingEnabled = true">Enabled</button>

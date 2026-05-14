@@ -207,7 +207,7 @@ function onGoBackToPartnerSetup() {
     return
   }
   if (!pendingConfig.value) return
-  wizardInitialStep.value = 4
+  wizardInitialStep.value = 3
   wizardInitialConfig.value = pendingConfig.value
   guidedStep.value = null
 }

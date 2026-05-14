@@ -334,9 +334,63 @@
     <div v-show="step === 3" class="wizard-step active wizard-step-phase3">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Phases & intimacy flow</div>
-        <div class="wizard-step-description">Phase 3 position changes, and an optional pause between phases.</div>
+        <div class="wizard-step-description">
+          How physically demanding Phase 3 positions can be, how often the suggested position changes, and an optional pause between
+          phases.
+        </div>
       </div>
       <div class="wizard-step-content">
+        <div class="wizard-settings-category wizard-settings-category-major">Phase 3 position intensity (this session)</div>
+        <p class="wizard-settings-category-hint">
+          For <strong>this guided session</strong>, how bold should Phase 3 position suggestions be? For example: mostly lying together
+          on the bed vs. including standing, wheelbarrow-style, or other higher-effort poses. (Sensate-style sessions use their own
+          script and do not use this setting.)
+        </p>
+        <div class="wizard-options-card">
+          <div class="wizard-phase3-mode-col">
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': config.positionIntensity === 'bed_only' }"
+              @click="config.positionIntensity = 'bed_only'"
+            >
+              <span class="wizard-opt-label">Calmer / bed-focused</span>
+              <span class="wizard-opt-sub">Skips positions that usually need standing, carrying, or heavy balance and strength.</span>
+            </button>
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': config.positionIntensity === 'more_physical' }"
+              @click="config.positionIntensity = 'more_physical'"
+            >
+              <span class="wizard-opt-label">Full variety</span>
+              <span class="wizard-opt-sub">All compatible positions can appear, including more athletic options when the roll calls for them.</span>
+            </button>
+          </div>
+        </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.sP3effort"
+            @click="toggleWizardExplain('sP3effort')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.sP3effort ? '▼' : '▶' }}</span>
+            Explain Phase 3 effort
+          </button>
+          <div v-show="wizardExplainOpen.sP3effort" class="wizard-collapsible-panel">
+            <p>
+              This only affects <strong>Phase 3</strong> position suggestions. Phases 1 and 2 use touch and activity prompts, not the
+              position catalog.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Calmer / bed-focused</strong> keeps suggestions closer to lying, kneeling on the bed, and similar lower-effort
+              shapes. <strong>Full variety</strong> can include standing, wheelbarrow-style, and other higher-effort ideas when they fit
+              your other comfort settings.
+            </p>
+          </div>
+        </div>
+
         <div class="wizard-settings-category">Intimacy positions (Phase 3)</div>
         <p class="wizard-settings-category-hint">How often the suggested physical position changes in the intimacy phase.</p>
         <div class="wizard-collapsible">
@@ -355,8 +409,8 @@
               prompt and comfort choices you set on the previous step.
             </p>
             <p>
-              You still take turns as giver and receiver, and each turn still gets fresh activity details. The choices below only
-              control how often the suggested body position changes.
+              You still take turns as giver and receiver, and each turn still gets fresh activity details. The choices on this step
+              control how physically demanding position suggestions can be and how often the suggested body position changes.
             </p>
             <ul class="wizard-collapsible-list">
               <li><strong>Every turn:</strong> A new suggested position whenever the turn changes.</li>
@@ -446,56 +500,6 @@
             </div>
           </div>
         </template>
-
-        <div class="wizard-settings-category wizard-settings-category-major">Phase 3 physical effort</div>
-        <p class="wizard-settings-category-hint">
-          When suggesting intimacy positions, favor calmer bed- and surface-based options, or allow more demanding poses (standing,
-          balance, strength).
-        </p>
-        <div class="wizard-options-card">
-          <div class="wizard-phase3-mode-col">
-            <button
-              type="button"
-              class="secondary wizard-opt wizard-opt-stack"
-              :class="{ 'preset-selected': prefs.positionIntensity === 'bed_only' }"
-              @click="prefs.setPositionIntensity('bed_only')"
-            >
-              <span class="wizard-opt-label">Calmer / bed-focused</span>
-              <span class="wizard-opt-sub">Skips positions that usually need standing, carrying, or heavy balance and strength.</span>
-            </button>
-            <button
-              type="button"
-              class="secondary wizard-opt wizard-opt-stack"
-              :class="{ 'preset-selected': prefs.positionIntensity === 'more_physical' }"
-              @click="prefs.setPositionIntensity('more_physical')"
-            >
-              <span class="wizard-opt-label">Full variety</span>
-              <span class="wizard-opt-sub">All compatible positions can appear, including more athletic options when the roll calls for them.</span>
-            </button>
-          </div>
-        </div>
-        <div class="wizard-collapsible">
-          <button
-            type="button"
-            class="wizard-collapsible-toggle"
-            :aria-expanded="!!wizardExplainOpen.sP3effort"
-            @click="toggleWizardExplain('sP3effort')"
-          >
-            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.sP3effort ? '▼' : '▶' }}</span>
-            Explain Phase 3 effort
-          </button>
-          <div v-show="wizardExplainOpen.sP3effort" class="wizard-collapsible-panel">
-            <p>
-              This only affects <strong>Phase 3</strong> position suggestions. Phases 1 and 2 use touch and activity prompts, not the
-              position catalog.
-            </p>
-            <p class="wizard-collapsible-panel-gap">
-              <strong>Calmer / bed-focused</strong> keeps suggestions closer to lying, kneeling on the bed, and similar lower-effort
-              shapes. <strong>Full variety</strong> can include standing, wheelbarrow-style, and other higher-effort ideas when they fit
-              your other comfort settings.
-            </p>
-          </div>
-        </div>
 
         <div class="wizard-settings-category wizard-settings-category-major">Between phases</div>
         <p class="wizard-settings-category-hint">Pause between phases to check in with each other before continuing?</p>
@@ -982,6 +986,8 @@ const config = reactive({
   kokoroVoiceId: 'af_nicole',
   phase3PositionMode: 'each_turn',
   phase3MaxPositions: 4,
+  /** 'bed_only' | 'more_physical' — Phase 3 position pool for this guided session (wheelbarrow/standing vs calmer). */
+  positionIntensity: 'more_physical',
 })
 
 function selectPhaseOption(opt) {
@@ -1066,7 +1072,9 @@ onMounted(() => {
     if (c.excludeWhenTouched) prefs.$patch({ excludeWhenTouched: mergeExcludePrefs(c.excludeWhenTouched) })
     if (typeof c.vibratorsPresent === 'boolean') prefs.vibratorsPresent = c.vibratorsPresent
     if (c.positionIntensity === 'bed_only' || c.positionIntensity === 'more_physical') {
-      prefs.positionIntensity = c.positionIntensity
+      config.positionIntensity = c.positionIntensity
+    } else {
+      config.positionIntensity = prefs.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical'
     }
     if (c.phase3PositionMode === 'reuse_rotate' || c.phase3PositionMode === 'reuse_multi') {
       config.phase3PositionMode = c.phase3PositionMode
@@ -1081,6 +1089,7 @@ onMounted(() => {
       ? speech.kokoroVoiceId.value
       : speech.kokoroVoiceId
     if (kid && typeof kid === 'string' && kid.trim()) config.kokoroVoiceId = kid.trim()
+    config.positionIntensity = prefs.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical'
   }
   if (props.initialStep >= 1 && props.initialStep <= totalSteps) {
     step.value = props.initialStep
@@ -1093,6 +1102,8 @@ function onStart() {
     config.totalMinutes = 15
     config.turnMinutes = 1
   }
+  const positionIntensity = config.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical'
+  prefs.setPositionIntensity(positionIntensity)
   emit('start', {
     totalMinutes: config.totalMinutes,
     turnMinutes: config.turnMinutes,
@@ -1110,7 +1121,7 @@ function onStart() {
     excludeWhenTouching: mergeExcludePrefs(prefs.excludeWhenTouching),
     excludeWhenTouched: mergeExcludePrefs(prefs.excludeWhenTouched),
     vibratorsPresent: !!prefs.vibratorsPresent,
-    positionIntensity: prefs.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical',
+    positionIntensity,
     phase3PositionMode:
       config.phase3PositionMode === 'reuse_rotate' || config.phase3PositionMode === 'reuse_multi'
         ? config.phase3PositionMode
@@ -1327,6 +1338,9 @@ function onStart() {
 }
 .wizard-step-phase3 .wizard-step-header {
   max-width: min(400px, 100%);
+}
+.wizard-step-phase3 {
+  justify-content: flex-start;
 }
 .wizard-step-phase3 .wizard-step-content {
   max-width: min(400px, 100%);

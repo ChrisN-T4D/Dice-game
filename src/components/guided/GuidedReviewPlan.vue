@@ -146,8 +146,8 @@ const positionIntensitySummary = computed(() => {
   const plan = guided.sessionPlan
   if (!plan || plan.kind === 'sensate') return ''
   const pi = plan.config?.positionIntensity
-  if (pi === 'bed_only') return 'Phase 3 effort: calmer / bed-focused (standing-heavy positions excluded).'
-  return 'Phase 3 effort: full variety (including more athletic positions when suggested).'
+  if (pi === 'bed_only') return 'This session — Phase 3 positions: calmer / bed-focused (standing-heavy ideas excluded).'
+  return 'This session — Phase 3 positions: full variety (including more athletic suggestions when rolled).'
 })
 
 const turnsByPhase = computed(() => {

@@ -45,12 +45,43 @@ function getAudioContextForUnlock() {
 }
 
 /**
- * Unlock audio on user gesture (e.g. Start session) so subsequent blob play() is not blocked.
- * Call this from a click handler before starting guided mode.
+ * Resume Web Audio, browser speech synthesis, and the current guided blob element after
+ * screen lock / tab backgrounding (call from visibilitychange or pageshow as needed).
  */
+export function resumeGuidedAudioEnvironment() {
+  if (typeof window === 'undefined') return
+  try {
+    const ctx = getAudioContextForUnlock()
+    if (ctx && ctx.state === 'suspended') void ctx.resume()
+  } catch (_) {}
+  try {
+    if (window.speechSynthesis) window.speechSynthesis.resume()
+  } catch (_) {}
+  const a = currentExternalAudio
+  if (a && a.paused && !a.ended) {
+    const p = a.play()
+    if (p && typeof p.catch === 'function') p.catch(() => {})
+  }
+}
+
+/**
+ * Unlock audio on user gesture (e.g. Start session) so subsequent blob play() is not blocked.
+ * Registers a one-time visibility listener so Web Audio / HTMLMediaElement resume after screen lock.
+ */
+let audioVisibilityResumeInstalled = false
+function installAudioVisibilityResume() {
+  if (audioVisibilityResumeInstalled || typeof document === 'undefined') return
+  audioVisibilityResumeInstalled = true
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return
+    resumeGuidedAudioEnvironment()
+  })
+}
+
 function unlockAudio() {
   const ctx = getAudioContextForUnlock()
   if (ctx && ctx.state === 'suspended') ctx.resume()
+  installAudioVisibilityResume()
 }
 
 /** Web Worker for TTS generation (Kokoro) so the main thread stays responsive. */
@@ -301,6 +332,13 @@ export function useSpeech() {
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
     currentExternalAudio = audio
+    installAudioVisibilityResume()
+    try {
+      audio.setAttribute('playsinline', '')
+      audio.setAttribute('webkit-playsinline', 'true')
+      audio.playsInline = true
+      audio.preload = 'auto'
+    } catch (_) {}
     audio.playbackRate = Math.max(0.5, Math.min(2, voiceRate.value))
     let ended = false
     let timeoutId = null

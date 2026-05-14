@@ -447,6 +447,56 @@
           </div>
         </template>
 
+        <div class="wizard-settings-category wizard-settings-category-major">Phase 3 physical effort</div>
+        <p class="wizard-settings-category-hint">
+          When suggesting intimacy positions, favor calmer bed- and surface-based options, or allow more demanding poses (standing,
+          balance, strength).
+        </p>
+        <div class="wizard-options-card">
+          <div class="wizard-phase3-mode-col">
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': prefs.positionIntensity === 'bed_only' }"
+              @click="prefs.setPositionIntensity('bed_only')"
+            >
+              <span class="wizard-opt-label">Calmer / bed-focused</span>
+              <span class="wizard-opt-sub">Skips positions that usually need standing, carrying, or heavy balance and strength.</span>
+            </button>
+            <button
+              type="button"
+              class="secondary wizard-opt wizard-opt-stack"
+              :class="{ 'preset-selected': prefs.positionIntensity === 'more_physical' }"
+              @click="prefs.setPositionIntensity('more_physical')"
+            >
+              <span class="wizard-opt-label">Full variety</span>
+              <span class="wizard-opt-sub">All compatible positions can appear, including more athletic options when the roll calls for them.</span>
+            </button>
+          </div>
+        </div>
+        <div class="wizard-collapsible">
+          <button
+            type="button"
+            class="wizard-collapsible-toggle"
+            :aria-expanded="!!wizardExplainOpen.sP3effort"
+            @click="toggleWizardExplain('sP3effort')"
+          >
+            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.sP3effort ? '▼' : '▶' }}</span>
+            Explain Phase 3 effort
+          </button>
+          <div v-show="wizardExplainOpen.sP3effort" class="wizard-collapsible-panel">
+            <p>
+              This only affects <strong>Phase 3</strong> position suggestions. Phases 1 and 2 use touch and activity prompts, not the
+              position catalog.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Calmer / bed-focused</strong> keeps suggestions closer to lying, kneeling on the bed, and similar lower-effort
+              shapes. <strong>Full variety</strong> can include standing, wheelbarrow-style, and other higher-effort ideas when they fit
+              your other comfort settings.
+            </p>
+          </div>
+        </div>
+
         <div class="wizard-settings-category wizard-settings-category-major">Between phases</div>
         <p class="wizard-settings-category-hint">Pause between phases to check in with each other before continuing?</p>
         <div class="wizard-options-card">
@@ -1015,6 +1065,9 @@ onMounted(() => {
     if (c.excludeWhenTouching) prefs.$patch({ excludeWhenTouching: mergeExcludePrefs(c.excludeWhenTouching) })
     if (c.excludeWhenTouched) prefs.$patch({ excludeWhenTouched: mergeExcludePrefs(c.excludeWhenTouched) })
     if (typeof c.vibratorsPresent === 'boolean') prefs.vibratorsPresent = c.vibratorsPresent
+    if (c.positionIntensity === 'bed_only' || c.positionIntensity === 'more_physical') {
+      prefs.positionIntensity = c.positionIntensity
+    }
     if (c.phase3PositionMode === 'reuse_rotate' || c.phase3PositionMode === 'reuse_multi') {
       config.phase3PositionMode = c.phase3PositionMode
     } else {
@@ -1057,6 +1110,7 @@ function onStart() {
     excludeWhenTouching: mergeExcludePrefs(prefs.excludeWhenTouching),
     excludeWhenTouched: mergeExcludePrefs(prefs.excludeWhenTouched),
     vibratorsPresent: !!prefs.vibratorsPresent,
+    positionIntensity: prefs.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical',
     phase3PositionMode:
       config.phase3PositionMode === 'reuse_rotate' || config.phase3PositionMode === 'reuse_multi'
         ? config.phase3PositionMode

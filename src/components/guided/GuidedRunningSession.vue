@@ -75,17 +75,40 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
-import { useSpeech } from '@/composables/useSpeech'
+import { useSpeech, resumeGuidedAudioEnvironment } from '@/composables/useSpeech'
+import { useScreenWakeLock } from '@/composables/useScreenWakeLock'
 import GuidedDevAudioOverlay from '@/components/guided/GuidedDevAudioOverlay.vue'
+
+useScreenWakeLock()
 
 const session = useSessionStore()
 const guided = useGuidedStore()
 const favorites = useFavoritesStore()
 const { waitingForKokoroReady } = useSpeech()
+
+function onGuidedForeground() {
+  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+  resumeGuidedAudioEnvironment()
+  guided.onDocumentVisible()
+}
+
+function onPageShow(e) {
+  if (e.persisted) onGuidedForeground()
+}
+
+onMounted(() => {
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onGuidedForeground)
+  if (typeof window !== 'undefined') window.addEventListener('pageshow', onPageShow)
+})
+
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onGuidedForeground)
+  if (typeof window !== 'undefined') window.removeEventListener('pageshow', onPageShow)
+})
 
 const GUIDED_CIRCLE_GIF = '/GIFS/placidplace-loading-23091_512.gif'
 

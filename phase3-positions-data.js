@@ -369,22 +369,35 @@ function getPhase3PositionFocusPartner(positionNumber, anatomy1, anatomy2) {
   return 1; // neutral: default to partner 1
 }
 
+/** Remove standing / heavy-effort position numbers when user chose calmer Phase 3. */
+function filterPhase3PoolForBedOnlyPreference(pool) {
+  if (!pool || pool.length === 0) return pool;
+  const blocked = new Set(PHASE3_MORE_PHYSICAL_POSITION_NUMBERS);
+  const filtered = pool.filter((n) => !blocked.has(n));
+  return filtered.length > 0 ? filtered : [...pool];
+}
+
 /**
  * Position numbers (1–155) suitable for a given receiver anatomy in Phase 3.
  * Includes positions where focusAnatomy matches the receiver OR is neutral (both / unspecified).
- * Used so that as turns alternate (partner 1 vs 2 as receiver), positions focus on that partner's genital stimulation.
  * @param {string} anatomy - 'vulva' or 'penis' (receiver's anatomy)
+ * @param {string} [positionIntensity] - 'more_physical' (default) | 'bed_only'
  * @returns {number[]} position numbers to choose from
  */
-function getPhase3PositionNumbersForReceiverAnatomy(anatomy) {
+function getPhase3PositionNumbersForReceiverAnatomy(anatomy, positionIntensity) {
   const target = (anatomy || '').toLowerCase();
-  if (target !== 'vulva' && target !== 'penis') return Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+  const intensity = positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical';
+  const full = () => Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+  if (target !== 'vulva' && target !== 'penis') {
+    return intensity === 'bed_only' ? filterPhase3PoolForBedOnlyPreference(full()) : full();
+  }
   const out = [];
   for (let n = 1; n <= PHASE3_POSITION_COUNT; n++) {
     const focus = getPhase3PositionFocusAnatomy(n);
     if (focus === target || focus === 'neutral') out.push(n);
   }
-  return out.length > 0 ? out : Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+  const base = out.length > 0 ? out : full();
+  return intensity === 'bed_only' ? filterPhase3PoolForBedOnlyPreference(base) : base;
 }
 
 // ESM export for Vue/Vite (Node scripts read this file as text, so no change for them)

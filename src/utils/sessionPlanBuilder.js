@@ -8,6 +8,7 @@ import {
   clothingTable,
   removeClothingItem,
   getClothingRemovalComplexityMultiplier,
+  computeClothingMilestoneInterval,
 } from '@/data/clothing'
 import {
   SESSION_COMPLETE_PHRASES,
@@ -49,12 +50,12 @@ function shuffleInPlace(arr, rng) {
 }
 
 /** Positions that appear in both partners' Phase 3 pools so the same position can span several turns when reuse modes are on. */
-function phase3PositionsEligibleForReuse(partnerAnatomy) {
+function phase3PositionsEligibleForReuse(partnerAnatomy, positionIntensity) {
   const a1 = (partnerAnatomy[1] || 'penis').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
   const a2 = (partnerAnatomy[2] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
-  const pool1 = getPhase3PositionNumbersForReceiverAnatomy(a1)
+  const pool1 = getPhase3PositionNumbersForReceiverAnatomy(a1, positionIntensity)
   if (a1 === a2) return [...pool1]
-  const set2 = new Set(getPhase3PositionNumbersForReceiverAnatomy(a2))
+  const set2 = new Set(getPhase3PositionNumbersForReceiverAnatomy(a2, positionIntensity))
   const inter = pool1.filter((n) => set2.has(n))
   return inter.length > 0 ? inter : [...pool1]
 }
@@ -90,6 +91,7 @@ export function buildSessionPlan(config, seed) {
     vibratorsPresent = true,
     phase3PositionMode = 'each_turn',
     phase3MaxPositions = 4,
+    positionIntensity = 'more_physical',
   } = config
 
   const excludeWhenTouching = mergeExcludePrefs(_exTouch)
@@ -106,12 +108,14 @@ export function buildSessionPlan(config, seed) {
   let clothingItemsP2 = clothingEnabled ? [...clothingListP2] : []
   const totalItems = clothingItemsP1.length + clothingItemsP2.length
   const phase12Sec = phaseSeconds[0] + phaseSeconds[1]
-  const cycleSec = turnSeconds + pauseSeconds
-  const estimatedTurns = cycleSec > 0 ? Math.floor(phase12Sec / cycleSec) : 0
-  const clothingMilestoneInterval =
-    clothingEnabled && totalItems > 0 && estimatedTurns > 0
-      ? Math.max(1, Math.floor((Math.max(1, Math.floor(estimatedTurns * 0.9)) * 0.9) / totalItems))
-      : 3
+  const clothingMilestoneInterval = computeClothingMilestoneInterval(
+    phase12Sec,
+    turnSeconds,
+    pauseSeconds,
+    clothingEnabled,
+    clothingListP1,
+    clothingListP2
+  )
 
   const partnerName = (num) => (partnerNames[num]?.trim() || `Partner ${num}`)
 
@@ -144,7 +148,7 @@ export function buildSessionPlan(config, seed) {
   let phase3EligibleList = []
   let phase3RotationCap = 1
   if (usePhase3Reuse) {
-    phase3EligibleList = phase3PositionsEligibleForReuse(partnerAnatomy)
+    phase3EligibleList = phase3PositionsEligibleForReuse(partnerAnatomy, positionIntensity)
     if (phase3PositionMode === 'reuse_rotate') {
       phase3RotationCap = Math.max(1, Math.min(20, phase3EligibleList.length))
     } else {
@@ -230,7 +234,7 @@ export function buildSessionPlan(config, seed) {
         loc = phase3ReusePlan[phase3ReuseSlot % phase3ReusePlan.length]
       } else {
         const receiverAnatomyVal = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
-        const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal)
+        const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal, positionIntensity)
         loc = pool[Math.floor(rng() * pool.length)]
       }
       const mod = rollPhase3ModifierWithVibratorRule(rng, distributionMode, !!vibratorsPresent)

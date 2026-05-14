@@ -11,6 +11,7 @@
       <p class="landing-subtitle">
         Discovering intimacy together. Dice game, guided mode (timed turns and voice), or scripted sensate-style sessions.
       </p>
+      <SessionDisplaySleepTip />
       <div class="mode-buttons">
         <button
           type="button"
@@ -52,6 +53,7 @@
 
 <script setup>
 import { usePreferencesStore } from '@/stores/preferences'
+import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 
 defineProps({
   show: { type: Boolean, default: true },
@@ -67,6 +69,10 @@ function choose(mode) {
 </script>
 
 <style scoped>
+/* Tighter stack: global .landing-subtitle uses a large bottom margin for mode buttons alone */
+.landing-subtitle {
+  margin-bottom: 1rem;
+}
 .suggested-badge {
   font-size: 0.7rem; font-weight: 600; color: #22c55e; margin-left: 0.35rem;
   display: inline-block;

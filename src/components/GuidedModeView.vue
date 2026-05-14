@@ -455,6 +455,16 @@ function guidedStaticPresetKind() {
 function onStartSession() {
   if (!pendingConfig.value || !guided.preGeneratedBlobs) return
   unlockAudio()
+  try {
+    if (typeof navigator !== 'undefined' && navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
+      const isSensate = guided.sessionPlan?.kind === 'sensate'
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: isSensate ? 'Sensate session' : 'Guided session',
+        artist: 'Between Us',
+      })
+      navigator.mediaSession.playbackState = 'playing'
+    }
+  } catch (_) {}
   guided.setSpeak((text, opts) =>
     speak(text, {
       ...opts,

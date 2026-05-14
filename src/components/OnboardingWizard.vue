@@ -63,6 +63,7 @@
                   <p class="landing-subtitle">
                     Discovering intimacy together. Click a mode below to see its interface, then continue.
                   </p>
+                  <SessionDisplaySleepTip />
                   <div class="mode-buttons">
                     <button
                       type="button"
@@ -319,6 +320,7 @@ import { useProfileStore } from '@/stores/profile'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSessionStore } from '@/stores/session'
 import { useSpeech } from '@/composables/useSpeech'
+import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 
 const props = defineProps({
   show: { type: Boolean, default: true },
@@ -1040,6 +1042,7 @@ function finish() {
   min-height: 100%;
   box-sizing: border-box;
 }
+.tour-landing-inner .landing-subtitle { margin-bottom: 1rem; }
 .tour-landing-inner .mode-buttons { margin-bottom: 0; }
 .tour-overlay-wrap {
   position: absolute;

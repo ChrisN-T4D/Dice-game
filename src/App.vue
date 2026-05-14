@@ -69,9 +69,12 @@
           <SummaryOverlay :open="summaryOpen" @close="summaryOpen = false" />
         </template>
         <GuidedModeView v-else-if="session.uiMode === 'guided' || session.uiMode === 'sensate'" />
-        <p v-else class="choose-mode-prompt">
-          Choose <strong>Dice game</strong>, <strong>Guided mode</strong> (dice-based setup), or <strong>Sensate-style</strong> above to start.
-        </p>
+        <div v-else class="choose-mode-stack">
+          <SessionDisplaySleepTip />
+          <p class="choose-mode-prompt">
+            Choose <strong>Dice game</strong>, <strong>Guided mode</strong> (dice-based setup), or <strong>Sensate-style</strong> above to start.
+          </p>
+        </div>
       </div>
 
       <!-- Card 3: Bottom navigation (portal target: components teleport their nav here) -->
@@ -102,6 +105,7 @@ import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
 import { useDebouncedAppPersistence } from '@/composables/useDebouncedAppPersistence'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
+import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 import AppMenuSidebar from '@/components/AppMenuSidebar.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
 import GuidedModeView from '@/components/GuidedModeView.vue'
@@ -280,6 +284,11 @@ onUnmounted(() => {
 
 <style scoped>
 .app-root { min-height: 100vh; }
+.choose-mode-stack {
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+}
 .choose-mode-prompt { margin: 0; color: #9ca3af; font-size: 0.95rem; text-align: center; }
 
 /* Header card: grid layout without the old card-header wrapper */

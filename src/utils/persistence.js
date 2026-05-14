@@ -57,6 +57,9 @@ export function loadState(sessionStore, preferencesStore, guidedStore) {
     if (state.partnerColor2) preferencesStore.$patch({ partnerColor2: state.partnerColor2 })
     if (state.partnerAnatomy1) preferencesStore.$patch({ partnerAnatomy1: state.partnerAnatomy1 })
     if (state.partnerAnatomy2) preferencesStore.$patch({ partnerAnatomy2: state.partnerAnatomy2 })
+    if (state.positionIntensity === 'bed_only' || state.positionIntensity === 'more_physical') {
+      preferencesStore.$patch({ positionIntensity: state.positionIntensity })
+    }
     if (state.excludeWhenTouching && typeof state.excludeWhenTouching === 'object') {
       preferencesStore.$patch({ excludeWhenTouching: { ...preferencesStore.excludeWhenTouching, ...state.excludeWhenTouching } })
     }
@@ -103,6 +106,7 @@ export function saveState(sessionStore, preferencesStore, guidedStore) {
       partnerColor2: preferencesStore.partnerColor2,
       partnerAnatomy1: preferencesStore.partnerAnatomy1,
       partnerAnatomy2: preferencesStore.partnerAnatomy2,
+      positionIntensity: preferencesStore.positionIntensity,
       voiceEnabled: preferencesStore.voiceEnabled,
       voiceSpeed: preferencesStore.voiceSpeed,
       excludeWhenTouching: preferencesStore.excludeWhenTouching,

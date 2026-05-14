@@ -11,6 +11,7 @@ import {
   clothingTable,
   removeClothingItem,
   getClothingRemovalComplexityMultiplier,
+  computeClothingMilestoneInterval,
 } from '@/data/clothing'
 import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
 import { buildSensateSessionPlan } from '@/utils/sensateSessionPlanBuilder'
@@ -53,8 +54,20 @@ function prepAll(prep, phrases) {
   })
 }
 
+function clearNavigatorMediaSession() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.mediaSession) {
+      navigator.mediaSession.playbackState = 'none'
+      navigator.mediaSession.metadata = null
+    }
+  } catch (_) {}
+}
+
 // Guard against rapid double-click on Skip turn
 let skipToNextTurnGuardUntil = 0
+
+/** When the tab is hidden, main-thread timers are throttled; short intervals + wall-clock steps keep countdowns accurate after wake. */
+const GUIDED_CLOCK_TICK_MS = 250
 
 // -----------------------------------------------------------------------------
 // Store definition
@@ -126,6 +139,11 @@ export const useGuidedStore = defineStore('guided', {
     breakTimerId: null,
     clothingWindowTimerId: null,
     phaseCheckInEnabled: false,
+
+    /** Wall-clock anchors so timers catch up after tab sleep / throttled intervals (screen off). */
+    _turnTickAnchorMs: null,
+    _breakTickAnchorMs: null,
+    _clothingTickAnchorMs: null,
 
     // Pre-generated session: plan (for review) and audio blobs (for playback)
     sessionPlan: null,
@@ -516,9 +534,11 @@ export const useGuidedStore = defineStore('guided', {
       } else {
         this.lastStartedConfig = null
       }
-      const usePreGeneratedBlobs = options.usePreGeneratedBlobs && Array.isArray(options.usePreGeneratedBlobs) && options.usePreGeneratedBlobs.length > 0
+      const blobArr = options.preGeneratedBlobs
+      const usePreGeneratedBlobs =
+        !!options.usePreGeneratedBlobs && Array.isArray(blobArr) && blobArr.length > 0
       if (usePreGeneratedBlobs) {
-        this.preGeneratedBlobs = options.usePreGeneratedBlobs
+        this.preGeneratedBlobs = blobArr
         this.preGeneratedIndex = 0
       }
       const {
@@ -561,16 +581,15 @@ export const useGuidedStore = defineStore('guided', {
       this.partnerAnatomy = { 1: (partnerAnatomy && partnerAnatomy[1]) || 'penis', 2: (partnerAnatomy && partnerAnatomy[2]) || 'vulva' }
       this.phaseCheckInEnabled = !!phaseCheckInEnabled
 
-      const totalItems = this.clothingItemsP1.length + this.clothingItemsP2.length
       const phase12Sec = this.phaseSeconds[0] + this.phaseSeconds[1]
-      const cycleSec = this.turnSeconds + this.pauseSeconds
-      const estimatedTurns = cycleSec > 0 ? Math.floor(phase12Sec / cycleSec) : 0
-      if (this.clothingEnabled && totalItems > 0 && estimatedTurns > 0) {
-        const targetTurns = Math.max(1, Math.floor(estimatedTurns * 0.9))
-        this.clothingMilestoneInterval = Math.max(1, Math.floor(targetTurns / totalItems))
-      } else {
-        this.clothingMilestoneInterval = 3
-      }
+      this.clothingMilestoneInterval = computeClothingMilestoneInterval(
+        phase12Sec,
+        this.turnSeconds,
+        this.pauseSeconds,
+        this.clothingEnabled,
+        this.clothingItemsP1,
+        this.clothingItemsP2
+      )
 
       this.totalTimeRemaining = this.totalSeconds
       this.turnTimeRemaining = 0
@@ -712,12 +731,22 @@ export const useGuidedStore = defineStore('guided', {
         }
         if (planTurn.clothing) {
           clothingRemoved = true
+          this.turnsSinceLastRemoval = 0
+          const arr = receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2
+          if (this.clothingEnabled && arr.length > 0) {
+            removeClothingItem(arr)
+            if (/Critical:\s*Remove\s*2\s*items|Remove\s*2\s*items/i.test(planTurn.clothing)) {
+              removeClothingItem(arr)
+            }
+          }
         }
       } else {
         const rng = Math.random
         if (phase === 3) {
           const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
-          const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy)
+          const posIntensity =
+            (this.lastStartedConfig && this.lastStartedConfig.positionIntensity) || 'more_physical'
+          const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomy, posIntensity)
           loc = pool[Math.floor(Math.random() * pool.length)]
           const mod = rollPhase3ModifierWithVibratorRule(rng, this.distributionMode, this.vibratorsPresent)
           actRoll = mod.actRoll
@@ -873,7 +902,8 @@ export const useGuidedStore = defineStore('guided', {
             this.inClothingWindow = true
             this.clothingWindowRemaining = clothingSec
             this.clearClothingWindowTimer()
-            this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), 1000)
+            this._clothingTickAnchorMs = Date.now()
+            this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), GUIDED_CLOCK_TICK_MS)
           }
           if (this.speakRef) this.safeSpeak(clothingText, onClothingSpoken)
           else onClothingSpoken()
@@ -893,7 +923,8 @@ export const useGuidedStore = defineStore('guided', {
         this.breakPhase = 'before_clothing'
         this.breakCountdown = AFTER_NEXT_TURN_SEC
         this.clearBreakTimer()
-        this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
+        this._breakTickAnchorMs = Date.now()
+        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
         const prep = this.preparePhraseRef
         if (prep && this.sessionPlan?.kind !== 'sensate') {
           if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
@@ -914,7 +945,8 @@ export const useGuidedStore = defineStore('guided', {
         this.breakPhase = 'next_turn'
         this.breakCountdown = AFTER_DONG_SEC
         this.clearBreakTimer()
-        this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
+        this._breakTickAnchorMs = Date.now()
+        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
         const prep = this.preparePhraseRef
         if (prep && this.sessionPlan?.kind !== 'sensate') {
           prep(nextTurnPhrase)
@@ -947,65 +979,74 @@ export const useGuidedStore = defineStore('guided', {
         clearInterval(this.breakTimerId)
         this.breakTimerId = null
       }
+      this._breakTickAnchorMs = null
     },
     clearTurnTimer() {
       if (this.turnTimerId) {
         clearInterval(this.turnTimerId)
         this.turnTimerId = null
       }
+      this._turnTickAnchorMs = null
     },
     clearClothingWindowTimer() {
       if (this.clothingWindowTimerId) {
         clearInterval(this.clothingWindowTimerId)
         this.clothingWindowTimerId = null
       }
+      this._clothingTickAnchorMs = null
     },
 
     tickBreak() {
       if (this.paused) return
-      this.breakCountdown--
-      this.phaseTimeRemaining--
-      this.totalTimeRemaining--
-      if (this.breakCountdown <= 0) {
-        this.clearBreakTimer()
-        const phase = this.breakPhase
-        this.breakPhase = 'none'
-        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-        if (phase === 'next_turn') {
-          // End-turn phrase ("Time to switch") → then next turn instructions
-          this._devLog('step', 'phrase: next_turn (switch)')
-          const phrase = pick(NEXT_TURN_TEXTS)
-          if (this.speakRef) this.safeSpeak(phrase, () => this.runAfterNextTurnFromTick())
-          else this.runAfterNextTurnFromTick()
-        } else if (phase === 'before_clothing') {
-          // Next turn: instruction (and clothing if any) → settle-in → 15s → start phrase
-          this._settleInStarted = false
-          this._easeInSpeakStarted = false
-          const instructionToSpeak = (this.currentPrompt.shortInstruction || this.currentPrompt.instruction).trim() || this.currentPrompt.instruction
-          const clothingText = this.currentPrompt.clothing
-          if (clothingText) {
-            this._devLog('step', 'phrase: clothing')
-            const onClothingSpoken = () => {
-              this.inClothingWindow = true
-              this.clothingWindowRemaining = this.clothingRemovalSeconds
-              this.clearClothingWindowTimer()
-              this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), 1000)
-            }
-            if (this.speakRef) this.safeSpeak(clothingText, onClothingSpoken)
-            else onClothingSpoken()
-          } else if (instructionToSpeak && this.speakRef) {
-            this._devLog('step', 'phrase: instruction')
-            this.safeSpeak(instructionToSpeak, () => { setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS) })
-          } else {
-            setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS)
+      const now = Date.now()
+      if (this._breakTickAnchorMs == null) this._breakTickAnchorMs = now
+      const elapsedMs = now - this._breakTickAnchorMs
+      let stepSec = Math.min(300, Math.floor(elapsedMs / 1000))
+      if (stepSec < 1) return
+      this._breakTickAnchorMs += stepSec * 1000
+      this.breakCountdown -= stepSec
+      this.phaseTimeRemaining -= stepSec
+      this.totalTimeRemaining -= stepSec
+      if (this.breakCountdown > 0) return
+      this.clearBreakTimer()
+      const phase = this.breakPhase
+      this.breakPhase = 'none'
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+      if (phase === 'next_turn') {
+        // End-turn phrase ("Time to switch") → then next turn instructions
+        this._devLog('step', 'phrase: next_turn (switch)')
+        const phrase = pick(NEXT_TURN_TEXTS)
+        if (this.speakRef) this.safeSpeak(phrase, () => this.runAfterNextTurnFromTick())
+        else this.runAfterNextTurnFromTick()
+      } else if (phase === 'before_clothing') {
+        // Next turn: instruction (and clothing if any) → settle-in → 15s → start phrase
+        this._settleInStarted = false
+        this._easeInSpeakStarted = false
+        const instructionToSpeak = (this.currentPrompt.shortInstruction || this.currentPrompt.instruction).trim() || this.currentPrompt.instruction
+        const clothingText = this.currentPrompt.clothing
+        if (clothingText) {
+          this._devLog('step', 'phrase: clothing')
+          const onClothingSpoken = () => {
+            this.inClothingWindow = true
+            this.clothingWindowRemaining = this.clothingRemovalSeconds
+            this.clearClothingWindowTimer()
+            this._clothingTickAnchorMs = Date.now()
+            this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), GUIDED_CLOCK_TICK_MS)
           }
-        } else if (phase === 'settle_in') {
-          // 15s countdown finished → start phrase ("Whenever you're ready") → turn timer
-          this._devLog('step', 'phrase: turn_begins')
-          const phrase = pick(TURN_BEGINS_TEXTS)
-          if (this.speakRef) this.safeSpeak(phrase, () => this.startTurnTimer())
-          else this.startTurnTimer()
+          if (this.speakRef) this.safeSpeak(clothingText, onClothingSpoken)
+          else onClothingSpoken()
+        } else if (instructionToSpeak && this.speakRef) {
+          this._devLog('step', 'phrase: instruction')
+          this.safeSpeak(instructionToSpeak, () => { setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS) })
+        } else {
+          setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS)
         }
+      } else if (phase === 'settle_in') {
+        // 15s countdown finished → start phrase ("Whenever you're ready") → turn timer
+        this._devLog('step', 'phrase: turn_begins')
+        const phrase = pick(TURN_BEGINS_TEXTS)
+        if (this.speakRef) this.safeSpeak(phrase, () => this.startTurnTimer())
+        else this.startTurnTimer()
       }
     },
 
@@ -1015,7 +1056,8 @@ export const useGuidedStore = defineStore('guided', {
       this.clearBreakTimer()
       this.breakPhase = 'before_clothing'
       this.breakCountdown = AFTER_NEXT_TURN_SEC
-      this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
+      this._breakTickAnchorMs = Date.now()
+      this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
       const prep = this.preparePhraseRef
       if (prep && this.sessionPlan?.kind !== 'sensate') {
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
@@ -1036,7 +1078,8 @@ export const useGuidedStore = defineStore('guided', {
         this._devLog('step', `settle_in_countdown ${settleSec}s`)
         this.breakPhase = 'settle_in'
         this.breakCountdown = settleSec
-        this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
+        this._breakTickAnchorMs = Date.now()
+        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
       }
       if (this._easeInSpeakStarted) {
         startCountdown()
@@ -1067,18 +1110,24 @@ export const useGuidedStore = defineStore('guided', {
     },
 
     tickClothingWindow() {
-      this.clothingWindowRemaining--
-      this.phaseTimeRemaining--
-      this.totalTimeRemaining--
-      if (this.clothingWindowRemaining <= 0) {
-        this.clearClothingWindowTimer()
-        this.inClothingWindow = false
-        const instructionToSpeak = (this.currentPrompt.shortInstruction || this.currentPrompt.instruction).trim() || this.currentPrompt.instruction
-        if (instructionToSpeak && this.speakRef) {
-          this.safeSpeak(instructionToSpeak, () => { setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS) })
-        } else {
-          setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS)
-        }
+      if (this.paused) return
+      const now = Date.now()
+      if (this._clothingTickAnchorMs == null) this._clothingTickAnchorMs = now
+      const elapsedMs = now - this._clothingTickAnchorMs
+      let stepSec = Math.min(300, Math.floor(elapsedMs / 1000))
+      if (stepSec < 1) return
+      this._clothingTickAnchorMs += stepSec * 1000
+      this.clothingWindowRemaining -= stepSec
+      this.phaseTimeRemaining -= stepSec
+      this.totalTimeRemaining -= stepSec
+      if (this.clothingWindowRemaining > 0) return
+      this.clearClothingWindowTimer()
+      this.inClothingWindow = false
+      const instructionToSpeak = (this.currentPrompt.shortInstruction || this.currentPrompt.instruction).trim() || this.currentPrompt.instruction
+      if (instructionToSpeak && this.speakRef) {
+        this.safeSpeak(instructionToSpeak, () => { setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS) })
+      } else {
+        setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS)
       }
     },
 
@@ -1088,17 +1137,23 @@ export const useGuidedStore = defineStore('guided', {
       this.clearClothingWindowTimer()
       this.inClothingWindow = false
       this.breakPhase = 'turn'
-      this.turnTimerId = setInterval(() => this.tickTurn(), 1000)
+      this._turnTickAnchorMs = Date.now()
+      this.turnTimerId = setInterval(() => this.tickTurn(), GUIDED_CLOCK_TICK_MS)
     },
 
     tickTurn() {
       if (this.paused) return
-      this.turnTimeRemaining--
-      this.phaseTimeRemaining--
-      this.totalTimeRemaining--
-      if (this.turnTimeRemaining <= 0) {
-        this.completeTurn()
-      }
+      const now = Date.now()
+      if (this._turnTickAnchorMs == null) this._turnTickAnchorMs = now
+      const elapsedMs = now - this._turnTickAnchorMs
+      let stepSec = Math.min(300, Math.floor(elapsedMs / 1000))
+      if (stepSec < 1) return
+      this._turnTickAnchorMs += stepSec * 1000
+      this.turnTimeRemaining -= stepSec
+      this.phaseTimeRemaining -= stepSec
+      this.totalTimeRemaining -= stepSec
+      if (this.turnTimeRemaining > 0) return
+      this.completeTurn()
     },
 
     completeTurn() {
@@ -1115,6 +1170,7 @@ export const useGuidedStore = defineStore('guided', {
         this.stopSpeakRef?.()
         this.preGeneratedBlobs = null
         this.preGeneratedIndex = 0
+        clearNavigatorMediaSession()
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick(SESSION_COMPLETE_PHRASES)
         // Closing line is not part of the fixed sensate script; allow Kokoro/static as for guided cues.
@@ -1142,6 +1198,7 @@ export const useGuidedStore = defineStore('guided', {
         this.stopSpeakRef?.()
         this.preGeneratedBlobs = null
         this.preGeneratedIndex = 0
+        clearNavigatorMediaSession()
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick(SESSION_COMPLETE_PHRASES)
         if (this.speakRef) this.safeSpeak(phrase)
@@ -1158,6 +1215,7 @@ export const useGuidedStore = defineStore('guided', {
         this.stopSpeakRef?.()
         this.preGeneratedBlobs = null
         this.preGeneratedIndex = 0
+        clearNavigatorMediaSession()
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
         const phrase = pick(SESSION_COMPLETE_PHRASES)
         if (this.speakRef) this.safeSpeak(phrase)
@@ -1189,9 +1247,23 @@ export const useGuidedStore = defineStore('guided', {
       this.advanceGuidedPhase()
     },
 
+    /**
+     * When the tab becomes visible again, timers may have been frozen for a long interval.
+     * Run one wall-clock tick for whichever countdown is active so the session catches up immediately.
+     */
+    onDocumentVisible() {
+      if (this.paused || this.sessionComplete) return
+      if (this.turnTimerId) this.tickTurn()
+      else if (this.clothingWindowTimerId) this.tickClothingWindow()
+      else if (this.breakTimerId) this.tickBreak()
+    },
+
     pause() {
       this.paused = true
       this._devLog('pause')
+      this._turnTickAnchorMs = null
+      this._breakTickAnchorMs = null
+      this._clothingTickAnchorMs = null
       try { this.stopSpeakRef?.() } catch (_) {}
       // Keep pendingSpeech so resume() can replay the current phrase
       this.clearTurnTimer()
@@ -1213,11 +1285,14 @@ export const useGuidedStore = defineStore('guided', {
       }
       // Always re-establish timers so countdown continues (with or without pending speech)
       if (this.breakPhase !== 'none' && this.breakCountdown > 0) {
-        this.breakTimerId = setInterval(() => this.tickBreak(), 1000)
+        this._breakTickAnchorMs = Date.now()
+        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
       } else if (this.inClothingWindow && this.clothingWindowRemaining > 0) {
-        this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), 1000)
+        this._clothingTickAnchorMs = Date.now()
+        this.clothingWindowTimerId = setInterval(() => this.tickClothingWindow(), GUIDED_CLOCK_TICK_MS)
       } else if (this.breakPhase === 'turn' && this.turnTimeRemaining > 0) {
-        this.turnTimerId = setInterval(() => this.tickTurn(), 1000)
+        this._turnTickAnchorMs = Date.now()
+        this.turnTimerId = setInterval(() => this.tickTurn(), GUIDED_CLOCK_TICK_MS)
       }
     },
 
@@ -1236,6 +1311,7 @@ export const useGuidedStore = defineStore('guided', {
       this.sessionComplete = true
       this.totalSeconds = 0
       useSessionStore().isGuidedMode = false
+      clearNavigatorMediaSession()
     },
 
     skipToNextTurn() {

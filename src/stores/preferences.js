@@ -50,6 +50,9 @@ export const usePreferencesStore = defineStore('preferences', {
     setPenetration(pref) {
       if (['prefer', 'minimal'].includes(pref)) this.penetrationPreference = pref
     },
+    setPositionIntensity(pref) {
+      if (pref === 'bed_only' || pref === 'more_physical') this.positionIntensity = pref
+    },
     setBackgroundImage(value) {
       this.backgroundImage = value
     },

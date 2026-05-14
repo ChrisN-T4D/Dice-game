@@ -124,6 +124,23 @@ function getRemovalPriority(item) {
 }
 
 /**
+ * Turns between optional clothing-removal prompts in Phases 1–2.
+ * Must stay in sync with sessionPlanBuilder and guided store.
+ */
+export function computeClothingMilestoneInterval(phase12Sec, turnSeconds, pauseSeconds, clothingEnabled, clothingListP1, clothingListP2) {
+  const p1 = Array.isArray(clothingListP1) ? clothingListP1.length : 0
+  const p2 = Array.isArray(clothingListP2) ? clothingListP2.length : 0
+  const totalItems = p1 + p2
+  const cycleSec = (Number(turnSeconds) || 0) + (Number(pauseSeconds) || 0)
+  const estimatedTurns = cycleSec > 0 ? Math.floor(Number(phase12Sec) / cycleSec) : 0
+  if (!clothingEnabled || totalItems <= 0 || estimatedTurns <= 0) return 3
+  return Math.max(
+    1,
+    Math.floor((Math.max(1, Math.floor(estimatedTurns * 0.9)) * 0.9) / totalItems)
+  )
+}
+
+/**
  * Remove one item from the array (mutates). Returns removed item or null.
  */
 export function removeClothingItem(itemsArray) {

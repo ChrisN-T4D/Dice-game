@@ -62,25 +62,35 @@
       <div v-if="lastWhat" class="output-line"><strong>What:</strong> {{ lastWhat }}</div>
       <div v-if="lastClothing" class="output-line"><strong>Clothing:</strong> {{ lastClothing }}</div>
       <div v-if="lastInstruction" class="instruction-output">{{ lastInstruction }}</div>
-      <template v-if="(lastInstruction || lastClothing) && speech.canSpeak()">
-        <button
-          v-if="!readAloudPlaying"
-          type="button"
-          class="secondary small read-aloud-btn"
-          :disabled="readAloudLoading"
-          @click="readAloud"
-        >
-          {{ readAloudLoading ? 'Loading voice…' : 'Read aloud' }}
-        </button>
-        <button
-          v-else
-          type="button"
-          class="secondary small read-aloud-btn"
-          @click="pauseReadAloud"
-        >
-          Pause
-        </button>
-      </template>
+      <div v-if="(lastInstruction || lastClothing) && speech.canSpeak()" class="read-aloud-row">
+        <div class="pref-toggle pref-voice-enable read-aloud-voice-toggle">
+          <span class="pref-toggle-label">Voice</span>
+          <div class="row">
+            <button type="button" class="secondary small" :class="{ 'preset-selected': voiceOn }" @click="setDiceVoice(true)">On</button>
+            <button type="button" class="secondary small" :class="{ 'preset-selected': !voiceOn }" @click="setDiceVoice(false)">Off</button>
+          </div>
+        </div>
+        <p v-if="!voiceOn" class="read-aloud-hint">Turn voice on to use Read aloud.</p>
+        <template v-else>
+          <button
+            v-if="!readAloudPlaying"
+            type="button"
+            class="secondary small read-aloud-btn"
+            :disabled="readAloudLoading"
+            @click="readAloud"
+          >
+            {{ readAloudLoading ? 'Loading voice…' : 'Read aloud' }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="secondary small read-aloud-btn"
+            @click="pauseReadAloud"
+          >
+            Pause
+          </button>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -88,13 +98,24 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
+import { usePreferencesStore } from '@/stores/preferences'
 import { useSpeech } from '@/composables/useSpeech'
 import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
 import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST } from 'phase3-data'
 import { clothingTable, getClothingItemsByBody } from '@/data/clothing'
 
 const session = useSessionStore()
+const prefs = usePreferencesStore()
 const speech = useSpeech()
+
+const voiceOn = computed(() => !!prefs.voiceEnabled)
+
+function setDiceVoice(on) {
+  prefs.$patch({ voiceEnabled: !!on })
+  if (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) {
+    speech.voiceEnabled.value = !!on
+  }
+}
 
 const readAloudLoading = computed(() => {
   const provider = (speech.ttsProvider && speech.ttsProvider.value) ?? speech.ttsProvider
@@ -197,6 +218,7 @@ function submitClothing() {
 }
 
 function readAloud() {
+  if (!prefs.voiceEnabled) return
   const parts = [lastInstruction.value, lastClothing.value].filter(Boolean)
   if (!parts.length) return
   readAloudPlaying.value = true
@@ -221,6 +243,9 @@ function pauseReadAloud() {
 .roll-grid-single { grid-template-columns: 1fr; max-width: 10rem; }
 .roll-grid-single .roll-col { gap: 0.6rem; }
 .section-title { margin: 0 0 0.6rem; font-size: 1rem; font-weight: 700; color: #a855f7; text-align: center; }
+.read-aloud-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-top: 0.5rem; }
+.read-aloud-voice-toggle { margin: 0; }
+.read-aloud-hint { margin: 0; font-size: 0.85rem; color: #94a3b8; }
 .output-block {
   margin-top: 0;
   padding: 0.75rem;

@@ -13,7 +13,7 @@ import {
   getClothingRemovalComplexityMultiplier,
   computeClothingMilestoneInterval,
 } from '@/data/clothing'
-import { buildSessionPlan } from '@/utils/sessionPlanBuilder'
+import { buildSessionPlan, computePartialRerollTurn, createSeededRng } from '@/utils/sessionPlanBuilder'
 import { buildSensateSessionPlan } from '@/utils/sensateSessionPlanBuilder'
 import { getSuggestedTurnSecondsFromPrompt } from './guided/promptParsing.js'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
@@ -485,6 +485,24 @@ export const useGuidedStore = defineStore('guided', {
       const oldLen = oldTurn.phraseStrings?.length ?? 0
       plan.turns[turnIndex] = newTurn
       plan.script.splice(scriptStart, oldLen, ...(newTurn.phraseStrings ?? []))
+    },
+    rerollTurnPartial(turnIndex, mode) {
+      if (!this.sessionPlan || this.sessionPlan.kind === 'sensate') return
+      if (mode !== 'location' && mode !== 'action') return
+      const plan = this.sessionPlan
+      const oldTurn = plan.turns[turnIndex]
+      if (!oldTurn) return
+      const rng = createSeededRng(Date.now())
+      const updated = computePartialRerollTurn(oldTurn, plan.config, mode, rng)
+      if (!updated) return
+      const scriptStart =
+        1 +
+        plan.turns
+          .slice(0, turnIndex)
+          .reduce((acc, tt) => acc + (tt.phraseStrings?.length ?? 0), 0)
+      const oldLen = oldTurn.phraseStrings?.length ?? 0
+      plan.turns[turnIndex] = { ...oldTurn, ...updated }
+      plan.script.splice(scriptStart, oldLen, ...(updated.phraseStrings ?? []))
     },
     rerollAll() {
       if (!this.sessionPlan || this.sessionPlan.kind === 'sensate') return

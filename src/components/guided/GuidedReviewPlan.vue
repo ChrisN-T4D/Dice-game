@@ -57,18 +57,42 @@
               <div class="guided-review-card-top">
                 <span class="guided-review-badge">#{{ row.t.turnIndex }}</span>
                 <span v-if="!isSensatePlan" class="guided-review-roles">{{ roleLine(row.t) }}</span>
-                <button
-                  v-if="!isSensatePlan"
-                  type="button"
-                  class="secondary small guided-review-reroll"
-                  @click="guided.rerollTurn(row.idx)"
-                >
-                  Reroll
-                </button>
+                <div v-if="!isSensatePlan" class="guided-review-reroll-group">
+                  <button
+                    type="button"
+                    class="secondary small guided-review-reroll"
+                    :disabled="!canRerollLocation(row.t)"
+                    :title="!canRerollLocation(row.t) ? 'Location reroll is only available when Phase 3 suggests a new position each turn.' : 'Reroll where / position only'"
+                    @click="guided.rerollTurnPartial(row.idx, 'location')"
+                  >
+                    Reroll where
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary small guided-review-reroll"
+                    title="Reroll action / modifier only"
+                    @click="guided.rerollTurnPartial(row.idx, 'action')"
+                  >
+                    Reroll action
+                  </button>
+                  <button type="button" class="secondary small guided-review-reroll" @click="guided.rerollTurn(row.idx)">
+                    Reroll turn
+                  </button>
+                </div>
               </div>
               <div v-if="row.t.clothing" class="guided-review-clothing">
                 <span class="guided-review-clothing-label">Clothing</span>
                 <span class="guided-review-clothing-text">{{ row.t.clothing }}</span>
+              </div>
+              <div class="guided-review-two-cards">
+                <div class="guided-review-subcard">
+                  <span class="guided-review-subcard-label">{{ row.t.phase === 3 ? 'Position' : 'Where' }}</span>
+                  <div class="guided-review-subcard-body">{{ reviewWhere(row.t) }}</div>
+                </div>
+                <div class="guided-review-subcard">
+                  <span class="guided-review-subcard-label">{{ row.t.phase === 3 ? 'Modifier' : 'What' }}</span>
+                  <div class="guided-review-subcard-body">{{ reviewWhat(row.t) }}</div>
+                </div>
               </div>
               <div v-if="row.t.instruction" class="guided-review-instruction">{{ row.t.instruction }}</div>
             </li>
@@ -83,6 +107,8 @@
 import { computed } from 'vue'
 import { useGuidedStore } from '@/stores/guided'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
+import { phase3Modifiers } from '@/data/tables'
+import { getPhase3PositionName } from 'phase3-data'
 
 defineProps({
   showSavedList: { type: Boolean, required: true },
@@ -172,6 +198,28 @@ function roleLine(t) {
     if (r === 1 || r === 2) return `P${g} → P${r}`
   }
   return ''
+}
+
+function canRerollLocation(t) {
+  if (t.phase !== 3) return true
+  const mode = guided.sessionPlan?.config?.phase3PositionMode
+  return mode === 'each_turn'
+}
+
+function reviewWhere(t) {
+  if (t.phase === 3 && typeof t.locationRoll === 'number') {
+    const name = getPhase3PositionName(t.locationRoll)
+    if (name) return name
+  }
+  return t.where || ''
+}
+
+function reviewWhat(t) {
+  if (t.phase === 3 && typeof t.actionRoll === 'number') {
+    const mod = phase3Modifiers[t.actionRoll]
+    if (mod) return mod
+  }
+  return t.what || ''
 }
 </script>
 
@@ -297,8 +345,48 @@ function roleLine(t) {
   flex: 1;
   min-width: 0;
 }
-.guided-review-reroll {
+.guided-review-reroll-group {
   margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+.guided-review-reroll {
+  margin-left: 0;
+}
+.guided-review-two-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+@media (max-width: 480px) {
+  .guided-review-two-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.guided-review-subcard {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(71, 85, 105, 0.65);
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.5rem;
+  min-width: 0;
+}
+.guided-review-subcard-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+.guided-review-subcard-body {
+  font-size: 0.86rem;
+  color: #e2e8f0;
+  line-height: 1.35;
 }
 .guided-review-clothing {
   display: flex;
@@ -323,6 +411,7 @@ function roleLine(t) {
   line-height: 1.35;
 }
 .guided-review-instruction {
+  margin-top: 0.5rem;
   font-size: 0.88rem;
   color: #cbd5e1;
   line-height: 1.45;

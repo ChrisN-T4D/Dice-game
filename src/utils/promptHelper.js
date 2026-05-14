@@ -4,7 +4,7 @@
  * Uses admin edits (merged) when present so in-app edits apply in play.
  */
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
-import { PHASE3_POSITIONS_LIST } from 'phase3-data'
+import { PHASE3_POSITIONS_LIST, getPhase3PositionName } from 'phase3-data'
 import { mergePhase3Entry, mergePhase12Table } from '@/utils/adminEdits'
 
 // -----------------------------------------------------------------------------
@@ -44,10 +44,11 @@ function withAnatomy(text, giverAnatomy, receiverAnatomy) {
 
 /** For phase 3 review: label for the position (name only, no position numbers or image refs). */
 function phase3PositionLabel(entry, pos) {
-  if (!entry || !entry.name || typeof entry.name !== 'string') return 'This position'
+  const fallback = () => getPhase3PositionName(pos) || 'This position'
+  if (!entry || !entry.name || typeof entry.name !== 'string') return fallback()
   const name = entry.name.trim()
-  if (!name) return 'This position'
-  if (/^Position\s*\d+/i.test(name) || /no reference image|\.png|image\s*\d+/i.test(name)) return 'This position'
+  if (!name) return fallback()
+  if (/^Position\s*\d+/i.test(name) || /no reference image|\.png|image\s*\d+/i.test(name)) return fallback()
   return name
 }
 

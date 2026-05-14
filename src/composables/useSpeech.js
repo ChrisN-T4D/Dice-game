@@ -91,6 +91,9 @@ let ttsNextId = 0
 /** Unwatch for kokoroReady when we're waiting to send generate; cleared in stop() so we don't send after stop. */
 let waitForReadyUnwatch = null
 
+/** Incremented on each new speak(); stale async callbacks bail out before playing. */
+let speakGeneration = 0
+
 /** Observed max generation time (ms); used to refine estimates. */
 let maxObservedTtsMs = 0
 
@@ -773,6 +776,39 @@ export function useSpeech() {
     return `/audio/static/${dir}/${phraseId}.wav`
   }
 
+  /** Stop HTML audio, Web Audio buffer, browser speech, and cancel in-flight Kokoro jobs without invoking phrase onEnd (Pause / new line replaces old). */
+  function cancelPlaybackAndSpeechPending() {
+    if (currentWebAudioSource) {
+      try {
+        currentWebAudioSource.stop()
+      } catch (_) {}
+      currentWebAudioSource = null
+    }
+    if (currentExternalAudio) {
+      currentExternalAudio.onended = null
+      currentExternalAudio.onerror = null
+      currentExternalAudio.pause()
+      currentExternalAudio.src = ''
+      currentExternalAudio = null
+    }
+    if (isSupported()) window.speechSynthesis.cancel()
+    ttsPending.forEach((p) => {
+      if (p.timeoutId != null) clearTimeout(p.timeoutId)
+      if (p.loadingRef) p.loadingRef.value = false
+      p.cancelled = true
+      if (typeof p.resolve === 'function') {
+        try {
+          p.resolve(null)
+        } catch (_) {}
+      } else if (typeof p.onReady === 'function' && typeof p.onEnd !== 'function') {
+        try {
+          p.onReady()
+        } catch (_) {}
+      }
+    })
+    ttsPending.clear()
+  }
+
   function speak(text, options = {}) {
     const {
       force = false,
@@ -798,6 +834,9 @@ export function useSpeech() {
       if (onEnd) onEnd()
       return
     }
+    speakGeneration += 1
+    const myGeneration = speakGeneration
+    cancelPlaybackAndSpeechPending()
     const baseVoiceId = provider === 'kokoro' ? (kokoroVoiceId.value?.trim() || 'af_nicole') : (kokoroVoiceId.value?.trim() || DEFAULT_STATIC_VOICE_ID)
     const voiceId = (voiceIdOption && String(voiceIdOption).trim()) || baseVoiceId
     const cacheKey = voiceId ? `${provider}:${voiceId}:${cleaned}` : null
@@ -805,6 +844,7 @@ export function useSpeech() {
       window.speechSynthesis?.cancel?.()
       onSource?.('kokoro')
       playBlob(testReplayCache[cacheKey], onEnd, (reason) => {
+        if (myGeneration !== speakGeneration) return
         onPlaybackFailed?.(reason)
         speakWithBrowser(cleaned, onEnd)
       })
@@ -816,10 +856,12 @@ export function useSpeech() {
       fetch(getStaticAudioUrl(phraseId, voiceId))
         .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))
         .then((blob) => {
+          if (myGeneration !== speakGeneration) return
           if (blob) {
             window.speechSynthesis?.cancel?.()
             onSource?.('kokoro')
             playBlob(blob, onEnd, (reason) => {
+              if (myGeneration !== speakGeneration) return
               onPlaybackFailed?.(reason)
               speakWithBrowser(cleaned, onEnd)
             })
@@ -832,6 +874,7 @@ export function useSpeech() {
           proceedWithTts()
         })
         .catch(() => {
+          if (myGeneration !== speakGeneration) return
           if (staticPresetKind === 'sensate') {
             if (onEnd) onEnd()
             return
@@ -931,21 +974,8 @@ export function useSpeech() {
       waitForReadyUnwatch()
       waitForReadyUnwatch = null
     }
-    if (currentExternalAudio) {
-      currentExternalAudio.onended = null
-      currentExternalAudio.onerror = null
-      currentExternalAudio.pause()
-      currentExternalAudio.src = ''
-      currentExternalAudio = null
-    }
-    if (isSupported()) window.speechSynthesis.cancel()
-    // Clear pending Kokoro requests so late-arriving blobs don't play and UI (e.g. testVoicePlaying) gets onEnd
-    ttsPending.forEach((p) => {
-      if (p.timeoutId != null) clearTimeout(p.timeoutId)
-      if (p.loadingRef) p.loadingRef.value = false
-      if (p.onEnd) p.onEnd()
-    })
-    ttsPending.clear()
+    speakGeneration += 1
+    cancelPlaybackAndSpeechPending()
   }
 
   async function getEdgeVoices() {

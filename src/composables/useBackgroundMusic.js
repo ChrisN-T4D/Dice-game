@@ -11,6 +11,8 @@ export function useBackgroundMusic(prefs) {
   let currentPlaylistId = null
   /** Currently playing selection (track id or playlist id); used to avoid restarting when Play is clicked again. */
   let currentSelection = null
+  /** Avoid ended + timeupdate both advancing the playlist in the same tick. */
+  let playlistAdvanceLock = false
 
   function applyVolume() {
     if (!audio) return
@@ -24,11 +26,28 @@ export function useBackgroundMusic(prefs) {
     if (audio) {
       audio.pause()
       audio.removeEventListener('ended', onTrackEnded)
+      audio.removeEventListener('timeupdate', onPlaylistTimeupdate)
       audio.src = ''
       audio = null
     }
     currentPlaylistId = null
     currentSelection = null
+    playlistAdvanceLock = false
+  }
+
+  function onPlaylistTimeupdate() {
+    if (!audio || !currentPlaylistId || playlistAdvanceLock) return
+    const d = audio.duration
+    if (!Number.isFinite(d) || d <= 0) return
+    if (audio.currentTime < d - 0.35) return
+    playlistAdvanceLock = true
+    try {
+      audio.removeEventListener('timeupdate', onPlaylistTimeupdate)
+      audio.removeEventListener('ended', onTrackEnded)
+      playNextInPlaylist()
+    } finally {
+      playlistAdvanceLock = false
+    }
   }
 
   function playTrack(filename) {
@@ -37,10 +56,36 @@ export function useBackgroundMusic(prefs) {
     const encoded = encodeURIComponent(String(filename))
     const src = `${base.replace(/\/$/, '')}/music/${encoded}.mp3`
     audio = new Audio(src)
-    audio.addEventListener('error', () => { audio = null; if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(false) })
+    audio.loop = false
+    const isPlaylist = !!currentPlaylistId
+    const onAudioError = () => {
+      const plId = currentPlaylistId
+      audio = null
+      if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(false)
+      if (plId) {
+        const pl = getPlaylistById(plId)
+        if (pl && pl.trackIds.length) {
+          const n = pl.trackIds.length
+          playlistTrackIndex = (playlistTrackIndex - 1 + n) % n
+          playNextInPlaylist()
+        }
+      }
+    }
+    audio.addEventListener('error', onAudioError)
     applyVolume()
-    audio.play().catch(() => { if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(false); audio = null })
-    audio.addEventListener('playing', () => { if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(true) }, { once: true })
+    const p = audio.play()
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {
+        onAudioError()
+      })
+    }
+    audio.addEventListener('playing', () => {
+      if (prefs?.setBackgroundMusicPlaying) prefs.setBackgroundMusicPlaying(true)
+    }, { once: true })
+    if (isPlaylist) {
+      audio.addEventListener('ended', onTrackEnded)
+      audio.addEventListener('timeupdate', onPlaylistTimeupdate)
+    }
   }
 
   function playNextInPlaylist() {
@@ -49,17 +94,27 @@ export function useBackgroundMusic(prefs) {
     if (audio) {
       audio.pause()
       audio.removeEventListener('ended', onTrackEnded)
+      audio.removeEventListener('timeupdate', onPlaylistTimeupdate)
       audio.src = ''
     }
     const trackIndex = playlistTrackIndex % playlist.trackIds.length
     const trackId = playlist.trackIds[trackIndex]
     playlistTrackIndex = (trackIndex + 1) % playlist.trackIds.length
     playTrack(trackId)
-    if (audio) audio.addEventListener('ended', onTrackEnded)
   }
 
   function onTrackEnded() {
-    playNextInPlaylist()
+    if (!currentPlaylistId || playlistAdvanceLock) return
+    playlistAdvanceLock = true
+    try {
+      if (audio) {
+        audio.removeEventListener('timeupdate', onPlaylistTimeupdate)
+        audio.removeEventListener('ended', onTrackEnded)
+      }
+      playNextInPlaylist()
+    } finally {
+      playlistAdvanceLock = false
+    }
   }
 
   function play(selection) {
@@ -70,7 +125,6 @@ export function useBackgroundMusic(prefs) {
     if (audio && currentSelection === selection) return
     stop()
     currentSelection = selection
-    // setBackgroundMusicPlaying(true) is set in playTrack when 'playing' fires so rapid Play/Pause stays in sync
 
     const playlist = getPlaylistById(selection)
     if (playlist) {
@@ -83,6 +137,7 @@ export function useBackgroundMusic(prefs) {
     // Single track: loop this file
     playTrack(selection)
     if (audio) {
+      audio.removeEventListener('timeupdate', onPlaylistTimeupdate)
       audio.loop = true
     }
   }

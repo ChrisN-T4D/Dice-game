@@ -23,7 +23,7 @@ import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExc
 // -----------------------------------------------------------------------------
 // Seeded RNG (LCG) for deterministic plans
 // -----------------------------------------------------------------------------
-function createSeededRng(seed) {
+export function createSeededRng(seed) {
   let state = typeof seed === 'number' && Number.isInteger(seed) ? seed : (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
   return function random() {
     state = (state * 1664525 + 1013904223) >>> 0
@@ -176,45 +176,6 @@ export function buildSessionPlan(config, seed) {
   const intro = pick(clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS, rng)
   script.push(intro)
 
-  const pushTurnPhrases = (turnData) => {
-    const { phase: p, giver, receiver, prompt, clothingText, extendedTime, firstTurn } = turnData
-    const giverName = partnerName(giver)
-    const receiverName = partnerName(receiver)
-    const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
-    const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
-
-    if (firstTurn) {
-      const firstTurnPhrase =
-        p === 3
-          ? pick(
-              [
-                `First turn. ${giverName} leads, ${receiverName} follows.`,
-                `Kicking off. ${giverName} leads, ${receiverName} follows.`,
-                `Here we go. ${giverName} leads, ${receiverName} follows.`,
-                `Starting with ${giverName} leading and ${receiverName} following.`,
-              ],
-              rng
-            )
-          : pick(
-              [
-                `First turn. ${giverName} is giver, ${receiverName} is receiver.`,
-                `Kicking off. ${giverName} gives, ${receiverName} receives.`,
-                `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
-                `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
-              ],
-              rng
-            )
-      script.push(firstTurnPhrase)
-    } else {
-      script.push(pick(NEXT_TURN_TEXTS, rng))
-    }
-    if (clothingText) script.push(normalizeParenthesesForTts(slashToAndForTts(clothingText)))
-    const instructionForTts = prompt.shortInstruction || prompt.instruction
-    if (instructionForTts) script.push(instructionForTts)
-    script.push(pick(EASE_IN_TEXTS, rng))
-    script.push(pick(TURN_BEGINS_TEXTS, rng))
-  }
-
   while (totalTimeRemaining > 0 && phase <= 3) {
     turnIndex++
     const receiver = currentPartner === 1 ? 2 : 1
@@ -300,17 +261,20 @@ export function buildSessionPlan(config, seed) {
       extendedTime,
       phraseStrings: [],
     }
-    const phraseStartIndex = script.length
-    pushTurnPhrases({
+    const phraseCfg = { partnerNames, partnerAnatomy, distributionMode, vibratorsPresent }
+    const { phraseStrings } = buildTurnPhraseStringsOnly(rng, phraseCfg, {
       phase,
       giver: currentPartner,
       receiver,
-      prompt,
-      clothingText: clothingText || undefined,
+      locationRoll: loc,
+      actionRoll,
       extendedTime,
+      clothingText: clothingText || undefined,
       firstTurn: firstTurnOfSession || firstTurnOfPhase3,
+      precomputedPrompt: prompt,
     })
-    turnRecord.phraseStrings = script.slice(phraseStartIndex)
+    for (const s of phraseStrings) script.push(s)
+    turnRecord.phraseStrings = phraseStrings
     turns.push(turnRecord)
 
     if (phase === 3 && usePhase3Reuse && phase3ReusePlan?.length) {
@@ -381,5 +345,148 @@ export function buildSessionPlan(config, seed) {
     config: outConfig,
     turns,
     script,
+  }
+}
+
+/**
+ * Build phrase strings for a single turn (matches pushTurnPhrases order in buildSessionPlan).
+ * @param {() => number} rng
+ * @param {object} config - same shape as buildSessionPlan config (partnerNames, partnerAnatomy, distributionMode, vibratorsPresent)
+ * @param {object} params
+ */
+export function buildTurnPhraseStringsOnly(rng, config, params) {
+  const {
+    phase: p,
+    giver,
+    receiver,
+    locationRoll: loc,
+    actionRoll,
+    extendedTime,
+    clothingText,
+    firstTurn,
+    precomputedPrompt,
+  } = params
+  const { partnerNames = { 1: '', 2: '' }, partnerAnatomy = { 1: 'penis', 2: 'vulva' } } = config
+  const partnerName = (num) => (partnerNames[num]?.trim() || `Partner ${num}`)
+  const giverName = partnerName(giver)
+  const receiverName = partnerName(receiver)
+  let prompt = precomputedPrompt
+  if (!prompt) {
+    const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
+    const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
+    prompt = getPromptText(p, loc, actionRoll, giver, receiver, partnerNamesMap, partnerAnatomyMap)
+    if (extendedTime) {
+      const ext = p === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
+      prompt = { ...prompt, what: prompt.what + ext, instruction: prompt.instruction + ext }
+    }
+  }
+  const chunk = []
+  if (firstTurn) {
+    const firstTurnPhrase =
+      p === 3
+        ? pick(
+            [
+              `First turn. ${giverName} leads, ${receiverName} follows.`,
+              `Kicking off. ${giverName} leads, ${receiverName} follows.`,
+              `Here we go. ${giverName} leads, ${receiverName} follows.`,
+              `Starting with ${giverName} leading and ${receiverName} following.`,
+            ],
+            rng
+          )
+        : pick(
+            [
+              `First turn. ${giverName} is giver, ${receiverName} is receiver.`,
+              `Kicking off. ${giverName} gives, ${receiverName} receives.`,
+              `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
+              `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
+            ],
+            rng
+          )
+    chunk.push(firstTurnPhrase)
+  } else {
+    chunk.push(pick(NEXT_TURN_TEXTS, rng))
+  }
+  if (clothingText) chunk.push(normalizeParenthesesForTts(slashToAndForTts(clothingText)))
+  const instructionForTts = prompt.shortInstruction || prompt.instruction
+  if (instructionForTts) chunk.push(instructionForTts)
+  chunk.push(pick(EASE_IN_TEXTS, rng))
+  chunk.push(pick(TURN_BEGINS_TEXTS, rng))
+  return { prompt, phraseStrings: chunk }
+}
+
+/**
+ * @param {'location'|'action'} mode
+ * @returns {null | { locationRoll, actionRoll, extendedTime, where, what, instruction, shortInstruction, clothing, phraseStrings }}
+ */
+export function computePartialRerollTurn(turn, config, mode, rng) {
+  const excludeWhenTouching = mergeExcludePrefs(config.excludeWhenTouching)
+  const excludeWhenTouched = mergeExcludePrefs(config.excludeWhenTouched)
+  const distributionMode = config.distributionMode || 'equal'
+  const vibratorsPresent = config.vibratorsPresent !== false
+  const positionIntensity = config.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical'
+  const partnerAnatomy = config.partnerAnatomy || { 1: 'penis', 2: 'vulva' }
+
+  let loc = turn.locationRoll
+  let actRoll = turn.actionRoll
+  let extendedTime = !!turn.extendedTime
+
+  if (mode === 'location') {
+    if (turn.phase === 3 && config.phase3PositionMode !== 'each_turn') return null
+    if (turn.phase === 3) {
+      const receiverAnatomyVal = (partnerAnatomy[turn.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+      const pool = getPhase3PositionNumbersForReceiverAnatomy(receiverAnatomyVal, positionIntensity)
+      if (!pool.length) return null
+      loc = pool[Math.floor(rng() * pool.length)]
+    } else {
+      const r = rollPhase12WithExclusions(turn.phase, rng, distributionMode, excludeWhenTouching, excludeWhenTouched)
+      loc = r.loc
+    }
+  } else {
+    if (turn.phase === 3) {
+      const mod = rollPhase3ModifierWithVibratorRule(rng, distributionMode, !!vibratorsPresent)
+      actRoll = mod.actRoll
+      extendedTime = mod.extendedTime
+    } else {
+      const r = rollPhase12WithExclusions(turn.phase, rng, distributionMode, excludeWhenTouching, excludeWhenTouched)
+      actRoll = r.actRoll
+      extendedTime = r.extendedTime
+    }
+  }
+
+  const partnerName = (num) => (config.partnerNames?.[num]?.trim() || `Partner ${num}`)
+  const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
+  const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
+  const prompt = getPromptText(turn.phase, loc, actRoll, turn.currentPartner, turn.receiver, partnerNamesMap, partnerAnatomyMap)
+  if (extendedTime) {
+    const ext =
+      turn.phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
+    prompt.what += ext
+    prompt.instruction += ext
+  }
+
+  const firstTurn = turn.turnIndex === 1
+  const clothingText = turn.clothing || ''
+  const { phraseStrings } = buildTurnPhraseStringsOnly(rng, config, {
+    phase: turn.phase,
+    giver: turn.currentPartner,
+    receiver: turn.receiver,
+    locationRoll: loc,
+    actionRoll,
+    extendedTime: false,
+    clothingText: clothingText || undefined,
+    firstTurn,
+    precomputedPrompt: prompt,
+  })
+
+  return {
+    locationRoll: loc,
+    actionRoll,
+    extendedTime,
+    where: prompt.where,
+    what: prompt.what,
+    instruction: prompt.instruction,
+    shortInstruction: prompt.shortInstruction || prompt.instruction,
+    clothing: clothingText || prompt.clothing || '',
+    phraseStrings,
   }
 }

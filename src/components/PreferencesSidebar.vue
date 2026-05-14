@@ -67,13 +67,6 @@
       <div class="pref-block pref-sep pref-voice">
         <label class="pref-label">Voice (read aloud)</label>
         <div class="pref-voice-row">
-          <div class="pref-toggle pref-voice-enable">
-            <span class="pref-toggle-label">Enable voice</span>
-            <div class="row">
-              <button type="button" class="secondary small" :class="{ 'preset-selected': voiceEnabled }" @click="setVoiceEnabled(true)">Yes</button>
-              <button type="button" class="secondary small" :class="{ 'preset-selected': !voiceEnabled }" @click="setVoiceEnabled(false)">No</button>
-            </div>
-          </div>
           <div class="pref-voice-select-wrap">
             <label class="pref-sublabel">Voice model selection:</label>
             <p class="pref-engine-notice">{{ kokoroSupported ? 'Kokoro (runs in browser; Safari uses WASM).' : 'Browser voices only.' }}</p>
@@ -121,6 +114,28 @@
           </div>
         </div>
       </div>
+      <div class="pref-block pref-sep pref-block-stack">
+        <label class="pref-label">Default Phase 3 position intensity</label>
+        <p class="pref-hint">Used when you start a new guided session. The wizard can override this per session.</p>
+        <div class="row">
+          <button
+            type="button"
+            class="secondary small"
+            :class="{ 'preset-selected': prefs.positionIntensity === 'bed_only' }"
+            @click="prefs.setPositionIntensity('bed_only')"
+          >
+            Calmer / bed-focused
+          </button>
+          <button
+            type="button"
+            class="secondary small"
+            :class="{ 'preset-selected': prefs.positionIntensity === 'more_physical' }"
+            @click="prefs.setPositionIntensity('more_physical')"
+          >
+            Full variety
+          </button>
+        </div>
+      </div>
       <p class="preferences-version" aria-hidden="true">v{{ appVersion }}</p>
     </div>
   </aside>
@@ -151,7 +166,6 @@ function onMusicChange(value) {
   prefs.playBackgroundMusicNow(normalized)
 }
 
-const voiceEnabled = computed(() => (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) ? speech.voiceEnabled.value : !!speech.voiceEnabled)
 const kokoroLoading = false
 const testVoicePlaying = ref(false)
 const modelDownloading = computed(() => {
@@ -202,12 +216,6 @@ function playTestVoice() {
 function stopTestVoice() {
   speech.stop()
   testVoicePlaying.value = false
-}
-function setVoiceEnabled(v) {
-  if (speech.voiceEnabled && typeof speech.voiceEnabled === 'object' && 'value' in speech.voiceEnabled) {
-    speech.voiceEnabled.value = v
-  }
-  prefs.$patch({ voiceEnabled: !!v })
 }
 watch(
   () => typeof speech.voiceRate === 'object' && 'value' in speech.voiceRate ? speech.voiceRate.value : speech.voiceRate,

@@ -202,7 +202,7 @@
     <!-- Voice generating test -->
     <section v-show="activeTab === 'voice-test'" class="admin-section" role="tabpanel">
       <h3>Voice generating test</h3>
-      <p class="admin-hint">Voice runs locally in the browser (Kokoro). Submit a phrase to test. Ensure voice is enabled in main app preferences and the Kokoro model is in <code>public/models/</code> (<code>npm run download-kokoro-model</code>).</p>
+      <p class="admin-hint">Voice runs locally in the browser (Kokoro). Submit a phrase to test. Turn voice on in the Dice game output (or Preferences speed/voice test) if you hear nothing, and ensure the Kokoro model is in <code>public/models/</code> (<code>npm run download-kokoro-model</code>).</p>
       <div class="admin-voice-test">
         <div class="admin-voice-test-phrase-wrap">
           <label class="admin-voice-test-label" for="admin-voice-phrase">Phrase</label>

@@ -16,6 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Vite + ONNX WASM + Docker layers can exhaust the default ubuntu-latest disk during image build.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: false
+          swap-storage: true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -38,4 +50,5 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha
+          # mode=min writes a smaller GHA cache than default (less disk pressure on the runner).
+          cache-to: type=gha,mode=min

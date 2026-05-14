@@ -335,7 +335,7 @@ async function startCooking() {
     // Brief pause so the user sees "All N phrases ready. Opening session…" and 100% before the next screen
     await new Promise((r) => setTimeout(r, 1200))
     guidedStep.value = 'start'
-    warmupWorker()
+    if (plan.kind !== 'sensate') warmupWorker()
     // Background: generate remaining phrases and fill blobs at correct indices
     if (endIndex < fullLength) {
       ;(async () => {
@@ -475,7 +475,7 @@ function onStartSession() {
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
   guided.setPlayPreGeneratedBlob((blob, onEnd, onPlaybackFailed) => playBlob(blob, onEnd, onPlaybackFailed))
-  warmupWorker()
+  if (guided.sessionPlan?.kind !== 'sensate') warmupWorker()
   guided.startGuidedModeWithPreGenerated(pendingConfig.value, guided.preGeneratedBlobs)
   guidedStep.value = null
   pendingConfig.value = null
@@ -497,7 +497,8 @@ function endSession() {
 }
 
 onMounted(() => {
-  warmupWorker() // start loading voice model as soon as user enters Guided Mode
+  // Classic guided uses Kokoro for cooking; sensate uses static WAVs only — skip heavy ONNX/WASM warmup on mobile.
+  if (session.uiMode === 'guided') warmupWorker()
   guided.setSpeak((text, opts) =>
     speak(text, {
       ...opts,
@@ -507,8 +508,6 @@ onMounted(() => {
   )
   guided.setStopSpeak(stopSpeech)
   guided.setPreparePhrase(preparePhrase)
-  // Start loading the voice worker as soon as they enter the guided wizard so it's ready by cooking
-  warmupWorker()
 })
 
 onUnmounted(() => {

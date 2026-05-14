@@ -98,7 +98,6 @@ import { useProfileStore } from '@/stores/profile'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { loadState, saveState } from '@/utils/persistence'
-import { whenIdle } from '@/utils/whenIdle'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
 import { useSpeech } from '@/composables/useSpeech'
 import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
@@ -108,13 +107,14 @@ import OnboardingWizard from '@/components/OnboardingWizard.vue'
 import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 import AppMenuSidebar from '@/components/AppMenuSidebar.vue'
 import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
-import GuidedModeView from '@/components/GuidedModeView.vue'
 import FavoritesModal from '@/components/FavoritesModal.vue'
 import TimerBar from '@/components/TimerBar.vue'
 import SummaryOverlay from '@/components/SummaryOverlay.vue'
 const AdminView = defineAsyncComponent(() => import('@/views/AdminView.vue'))
 
 const FreePlayView = defineAsyncComponent(() => import('@/components/FreePlayView.vue'))
+
+const GuidedModeView = defineAsyncComponent(() => import('@/components/GuidedModeView.vue'))
 
 const session = useSessionStore()
 const profile = useProfileStore()
@@ -124,7 +124,7 @@ const favoritesStore = useFavoritesStore()
 const { play: playBackgroundMusic, stop: stopBackgroundMusic } = useBackgroundMusic(prefs)
 prefs.setPlayBackgroundMusic(playBackgroundMusic)
 prefs.setStopBackgroundMusic(stopBackgroundMusic)
-const { warmupWorker, syncVoiceFromStorage } = useSpeech()
+const { syncVoiceFromStorage } = useSpeech()
 
 const showAdmin = ref(false)
 const showOnboardingAgain = ref(false)
@@ -137,10 +137,6 @@ const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | 'sensate' | null â€
 const showMainContent = computed(
   () => (profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding) || tourPreviewMode.value !== null
 )
-// Start loading the voice model as soon as main content is shown (e.g. after refresh or landing dismiss)
-watch(showMainContent, (show) => {
-  if (show) warmupWorker()
-}, { immediate: true })
 function onTourPreview(mode) {
   tourPreviewMode.value = mode
   if (mode) {
@@ -272,9 +268,6 @@ onMounted(() => {
   profile.load()
   loadState(session, prefs, guided)
   syncVoiceFromStorage()
-  // Start loading the Kokoro model in the worker as soon as the page opens so it's ready for cooking
-  warmupWorker()
-  whenIdle(() => warmupWorker(), { timeout: 3000 })
 })
 onUnmounted(() => {
   window.removeEventListener('hashchange', updateShowAdmin)

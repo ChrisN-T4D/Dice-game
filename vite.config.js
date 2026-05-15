@@ -7,9 +7,30 @@ import fs from 'node:fs'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
 
-export default defineConfig({
-  /** Relative base so `index.html` loads `./assets/…` — works at site root and on subpaths (e.g. GitHub Pages). */
-  base: './',
+/**
+ * GitHub Pages project URL is https://<user>.github.io/<repo>/ — relative base "./"
+ * breaks when the site is opened as …/Dice-game (no trailing slash): ./assets resolves to /assets.
+ * Use an absolute base matching this repo name. Override for root deploy: `vite build --base /`
+ * or `npm run build -- --base /`.
+ */
+const DEFAULT_SITE_BASE = '/Dice-game/'
+
+function normalizeExplicitBase(raw) {
+  const s = String(raw).trim()
+  if (s === '/') return '/'
+  return s.endsWith('/') ? s : `${s}/`
+}
+
+export default defineConfig(({ mode }) => {
+  const explicitBase =
+    process.env.VITE_BASE !== undefined && String(process.env.VITE_BASE).trim() !== ''
+      ? normalizeExplicitBase(process.env.VITE_BASE)
+      : null
+  /** Dev server: keep "/" so http://localhost:3000/ works. Production build: repo subpath for GitHub Pages. */
+  const base = explicitBase ?? (mode === 'development' ? '/' : DEFAULT_SITE_BASE)
+
+  return {
+  base,
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version || '0.0.0'),
   },
@@ -120,4 +141,5 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
   },
+}
 })

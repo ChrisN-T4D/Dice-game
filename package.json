@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/copy-public-assets.js && node scripts/list-music.js && vite build",
+    "build:site-root": "node scripts/copy-public-assets.js && node scripts/list-music.js && vite build --base /",
     "preview": "vite preview",
     "download-onnx-wasm": "node scripts/download-onnx-wasm.js",
     "download-kokoro-model": "node scripts/download-kokoro-model.js",

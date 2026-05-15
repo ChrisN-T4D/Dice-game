@@ -9,7 +9,8 @@ RUN npm ci
 
 # Copy source and build
 COPY . .
-RUN npm run build
+# Root URL (e.g. Railway/nginx at /). Default `npm run build` uses /Dice-game/ for GitHub Pages.
+RUN npm run build:site-root
 
 # Production stage
 FROM nginx:alpine

@@ -473,8 +473,6 @@ export function useSpeech() {
    * Speak text using browser speechSynthesis (used as fallback when Kokoro fails).
    */
   function speakWithBrowser(cleaned, onEnd) {
-    // #region agent log
-    // #endregion
     if (!isSupported()) {
       if (onEnd) onEnd()
       return
@@ -503,8 +501,6 @@ export function useSpeech() {
       ttsWorker = new Worker(new URL('../workers/tts.worker.js', import.meta.url), { type: 'module' })
       ttsWorker.onmessage = (ev) => {
         const d = ev.data
-        // #region agent log
-        // #endregion
         if (d.type === 'ready') {
           kokoroReady.value = true
           kokoroModelLoading.value = false
@@ -828,9 +824,6 @@ export function useSpeech() {
     const cleaned = cleanTextForSpeech(text)
     const provider = ttsProvider.value
     const w = provider === 'kokoro' && kokoroAvailable ? getTtsWorker() : null
-    const branch = !cleaned ? 'empty' : (provider === 'kokoro' && w ? 'kokoro' : 'browser')
-    // #region agent log
-    // #endregion
     if (!cleaned) {
       if (onEnd) onEnd()
       return

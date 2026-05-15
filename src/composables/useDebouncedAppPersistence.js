@@ -24,9 +24,8 @@ export function useDebouncedAppPersistence(session, prefs, guided, saveStateFn, 
       () => prefs.partnerName2,
       () => prefs.voiceEnabled,
       () => prefs.voiceSpeed,
-      () => (guided.isActive ? guided.persistenceSnapshot : null),
+      () => (guided.isActive ? JSON.stringify(guided.persistenceSnapshot) : null),
     ],
-    scheduleSave,
-    { deep: true }
+    scheduleSave
   )
 }

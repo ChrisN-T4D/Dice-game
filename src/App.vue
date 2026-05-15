@@ -90,7 +90,7 @@
  * they use Pinia (session, guided, preferences, …). See docs/UI-AND-STATE-FLOW.md for navigation,
  * store ownership, and Teleport targets (#step-bar-portal, #bottom-nav-portal).
  */
-import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent, h } from 'vue'
 
 import { useSessionStore } from '@/stores/session'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -112,9 +112,29 @@ import TimerBar from '@/components/TimerBar.vue'
 import SummaryOverlay from '@/components/SummaryOverlay.vue'
 const AdminView = defineAsyncComponent(() => import('@/views/AdminView.vue'))
 
-const FreePlayView = defineAsyncComponent(() => import('@/components/FreePlayView.vue'))
+const asyncViewLoading = {
+  name: 'AsyncViewLoading',
+  render() {
+    return h('p', {
+      class: 'async-chunk-fallback',
+      role: 'status',
+    }, 'Loading this screen…')
+  },
+}
 
-const GuidedModeView = defineAsyncComponent(() => import('@/components/GuidedModeView.vue'))
+const FreePlayView = defineAsyncComponent({
+  loader: () => import('@/components/FreePlayView.vue'),
+  loadingComponent: asyncViewLoading,
+  delay: 150,
+  timeout: 120000,
+})
+
+const GuidedModeView = defineAsyncComponent({
+  loader: () => import('@/components/GuidedModeView.vue'),
+  loadingComponent: asyncViewLoading,
+  delay: 150,
+  timeout: 120000,
+})
 
 const session = useSessionStore()
 const profile = useProfileStore()
@@ -277,6 +297,13 @@ onUnmounted(() => {
 
 <style scoped>
 .app-root { min-height: 100vh; }
+.async-chunk-fallback {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
 .choose-mode-stack {
   max-width: 28rem;
   margin: 0 auto;

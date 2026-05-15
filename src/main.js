@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-import './registerPublicCssVars.js'
 import './assets/styles.css'
 
 /**

@@ -134,6 +134,10 @@ export default defineConfig(({ mode }) => {
   worker: {
     format: 'es',
   },
+  build: {
+    /** Avoid parallel modulepreload of several chunks on first paint (helps low-RAM phones). */
+    modulePreload: false,
+  },
   server: {
     port: 3000,
     headers: {

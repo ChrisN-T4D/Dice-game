@@ -319,7 +319,6 @@ import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSessionStore } from '@/stores/session'
-import { useSpeech } from '@/composables/useSpeech'
 import { publicPath } from '@/utils/publicPath'
 import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 
@@ -332,7 +331,6 @@ const emit = defineEmits(['complete', 'tour-preview'])
 const profile = useProfileStore()
 const prefs = usePreferencesStore()
 const session = useSessionStore()
-const speech = useSpeech()
 const onboardingIntroImageSrc = publicPath('/Images/manuelajaeger-hotel-1749602_1920.jpg')
 const totalSteps = 6
 const step = ref(1)

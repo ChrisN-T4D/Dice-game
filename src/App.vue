@@ -25,7 +25,13 @@
         @go-sensate="onAppMenuGoSensate"
         @open-preferences="onAppMenuOpenPreferences"
       />
-      <PreferencesSidebar :open="preferencesOpen" @close="preferencesOpen = false" @show-onboarding="openOnboardingAgain" @show-favorites="openFavoritesModal" />
+      <PreferencesSidebar
+        v-if="preferencesOpen"
+        :open="preferencesOpen"
+        @close="preferencesOpen = false"
+        @show-onboarding="openOnboardingAgain"
+        @show-favorites="openFavoritesModal"
+      />
       <FavoritesModal />
 
       <!-- Card 1: Header -->
@@ -99,14 +105,12 @@ import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { loadState, saveState } from '@/utils/persistence'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
-import { useSpeech } from '@/composables/useSpeech'
 import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
 import { useDebouncedAppPersistence } from '@/composables/useDebouncedAppPersistence'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
 import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 import AppMenuSidebar from '@/components/AppMenuSidebar.vue'
-import PreferencesSidebar from '@/components/PreferencesSidebar.vue'
 import FavoritesModal from '@/components/FavoritesModal.vue'
 import TimerBar from '@/components/TimerBar.vue'
 import SummaryOverlay from '@/components/SummaryOverlay.vue'
@@ -136,6 +140,13 @@ const GuidedModeView = defineAsyncComponent({
   timeout: 120000,
 })
 
+const PreferencesSidebar = defineAsyncComponent({
+  loader: () => import('@/components/PreferencesSidebar.vue'),
+  loadingComponent: asyncViewLoading,
+  delay: 50,
+  timeout: 120000,
+})
+
 const session = useSessionStore()
 const profile = useProfileStore()
 const prefs = usePreferencesStore()
@@ -144,7 +155,6 @@ const favoritesStore = useFavoritesStore()
 const { play: playBackgroundMusic, stop: stopBackgroundMusic } = useBackgroundMusic(prefs)
 prefs.setPlayBackgroundMusic(playBackgroundMusic)
 prefs.setStopBackgroundMusic(stopBackgroundMusic)
-const { syncVoiceFromStorage } = useSpeech()
 
 const showAdmin = ref(false)
 const showOnboardingAgain = ref(false)
@@ -287,7 +297,11 @@ onMounted(() => {
   updateBodyClass()
   profile.load()
   loadState(session, prefs, guided)
-  syncVoiceFromStorage()
+  void import('@/composables/useSpeech')
+    .then((m) => {
+      m.useSpeech().syncVoiceFromStorage()
+    })
+    .catch(() => {})
 })
 onUnmounted(() => {
   window.removeEventListener('hashchange', updateShowAdmin)

@@ -46,7 +46,7 @@ export async function loadKokoroOrt(options = {}) {
     const modelUrl = `${baseUrl}/onnx/model_quantized.onnx`
     const [res, _] = await Promise.all([
       cachedFetch(modelUrl),
-      ensureTokenizerReady(),
+      ensureTokenizerReady(baseUrl),
     ])
     if (!res.ok) throw new Error(`Model not found: ${modelUrl}`)
     const modelBuffer = await res.arrayBuffer()

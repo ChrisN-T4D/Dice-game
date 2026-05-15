@@ -66,6 +66,7 @@ import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useSessionFavoritesStore } from '@/stores/sessionFavorites'
 import { useSpeech } from '@/composables/useSpeech'
+import { publicPath } from '@/utils/publicPath'
 import GuidedSetupWizard from '@/components/GuidedSetupWizard.vue'
 import GuidedRunningSession from '@/components/guided/GuidedRunningSession.vue'
 import GuidedSessionComplete from '@/components/guided/GuidedSessionComplete.vue'
@@ -99,9 +100,9 @@ const cookingPhraseLabels = ref([])
 const cookingKokoroFallback = ref(null)
 
 const cookingGifs = [
-  '/GIFS/agp_studios-audio-22831_512.gif',
-  '/GIFS/dakernet-to-write-6621_512.gif',
-  '/GIFS/acatxio-procedural-generation-11379_512%20(1).gif',
+  publicPath('/GIFS/agp_studios-audio-22831_512.gif'),
+  publicPath('/GIFS/dakernet-to-write-6621_512.gif'),
+  publicPath('/GIFS/acatxio-procedural-generation-11379_512%20(1).gif'),
 ]
 const cookingLabels = ['recording....', 'writing....', 'compiling....']
 const cookingStepIndex = ref(0)

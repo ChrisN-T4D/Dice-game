@@ -18,9 +18,28 @@
 
 const KOKORO_LOAD_TIMEOUT_MS = 5 * 60 * 1000
 const KOKORO_MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
-const MODEL_CONFIG_URL = `/models/${KOKORO_MODEL_ID}/config.json`
-const MODEL_ONNX_URL = `/models/${KOKORO_MODEL_ID}/onnx/model_quantized.onnx`
-const MODEL_VOICE_URL = `/models/${KOKORO_MODEL_ID}/voices/af_nicole.bin`
+
+/**
+ * Production worker script lives at …/assets/tts.worker-*.js; strip that to get the app path prefix
+ * so /models/* resolves under GitHub Pages (e.g. /Dice-game/models/…) instead of site root.
+ */
+function getKokoroPackageBaseUrl() {
+  try {
+    const u = new URL(self.location.href)
+    const m = u.pathname.match(/^(.*)\/assets\/[^/]+\.(js|mjs)$/i)
+    if (!m) return `/models/${KOKORO_MODEL_ID}`
+    const dir = m[1] === '' ? '' : m[1]
+    const pathPrefix = dir === '' ? '/' : dir.endsWith('/') ? dir : `${dir}/`
+    return `${u.origin}${pathPrefix}models/${KOKORO_MODEL_ID}`
+  } catch (_) {
+    return `/models/${KOKORO_MODEL_ID}`
+  }
+}
+
+const KOKORO_PACKAGE_BASE = getKokoroPackageBaseUrl()
+const MODEL_CONFIG_URL = `${KOKORO_PACKAGE_BASE}/config.json`
+const MODEL_ONNX_URL = `${KOKORO_PACKAGE_BASE}/onnx/model_quantized.onnx`
+const MODEL_VOICE_URL = `${KOKORO_PACKAGE_BASE}/voices/af_nicole.bin`
 
 /** Max pending generate requests; keeps memory and backlog under control (e.g. for iOS). Increased so cooking many phrases at once does not hit "queue full". */
 const MAX_QUEUE_SIZE = 8
@@ -117,7 +136,7 @@ function ensureKokoroLoaded() {
     await checkModelFilesExist()
     const { loadKokoroOrt } = await import('../tts/kokoroOrt/index.js')
     try {
-      await withTimeout(loadKokoroOrt(), KOKORO_LOAD_TIMEOUT_MS, 'Kokoro model')
+      await withTimeout(loadKokoroOrt({ baseUrl: KOKORO_PACKAGE_BASE }), KOKORO_LOAD_TIMEOUT_MS, 'Kokoro model')
     } catch (e) {
       throw new Error(normalizeLoadError(e))
     }
@@ -133,7 +152,7 @@ async function runKokoro(text, voiceId) {
   await ensureKokoroLoaded()
   const { generate } = await import('../tts/kokoroOrt/index.js')
   const voice = voiceId || 'af_nicole'
-  const blob = await generate(text, { voice })
+  const blob = await generate(text, { voice, baseUrl: KOKORO_PACKAGE_BASE })
   if (!blob || !(blob instanceof Blob) || blob.size < 100) {
     throw new Error('Kokoro produced empty or invalid audio. Ensure the model and voice files are fully downloaded.')
   }
@@ -144,7 +163,7 @@ async function runKokoroFromIpa(phonemizedIpa, voiceId) {
   await ensureKokoroLoaded()
   const { generateFromIpa } = await import('../tts/kokoroOrt/index.js')
   const voice = voiceId || 'af_nicole'
-  const blob = await generateFromIpa(phonemizedIpa, { voice })
+  const blob = await generateFromIpa(phonemizedIpa, { voice, baseUrl: KOKORO_PACKAGE_BASE })
   if (!blob || !(blob instanceof Blob) || blob.size < 100) {
     throw new Error('Kokoro produced empty or invalid audio from IPA.')
   }
@@ -155,7 +174,7 @@ async function runKokoroFromTokenIds(tokenIds, voiceId) {
   await ensureKokoroLoaded()
   const { generateFromTokenIds } = await import('../tts/kokoroOrt/index.js')
   const voice = voiceId || 'af_nicole'
-  const blob = await generateFromTokenIds(tokenIds, { voice })
+  const blob = await generateFromTokenIds(tokenIds, { voice, baseUrl: KOKORO_PACKAGE_BASE })
   if (!blob || !(blob instanceof Blob) || blob.size < 100) {
     throw new Error('Kokoro produced empty or invalid audio from token IDs.')
   }

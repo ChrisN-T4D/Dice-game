@@ -38,7 +38,7 @@
         <div ref="step2Ref" class="wizard-step wizard-step-intro" :class="{ active: step === 2 }">
           <div class="wizard-step-content wizard-step-intro-content">
             <img
-              src="/Images/manuelajaeger-hotel-1749602_1920.jpg"
+              :src="onboardingIntroImageSrc"
               alt=""
               class="onboarding-intro-image"
               @load="step === 2 && updateStep2BodyHeight()"
@@ -320,6 +320,7 @@ import { useProfileStore } from '@/stores/profile'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSessionStore } from '@/stores/session'
 import { useSpeech } from '@/composables/useSpeech'
+import { publicPath } from '@/utils/publicPath'
 import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 
 const props = defineProps({
@@ -332,6 +333,7 @@ const profile = useProfileStore()
 const prefs = usePreferencesStore()
 const session = useSessionStore()
 const speech = useSpeech()
+const onboardingIntroImageSrc = publicPath('/Images/manuelajaeger-hotel-1749602_1920.jpg')
 const totalSteps = 6
 const step = ref(1)
 const wizardStepsBodyRef = ref(null)
@@ -573,7 +575,7 @@ function finish() {
   overflow: hidden;
 }
 .onboarding-modal .onboarding-content.card-bg-fiery-heart {
-  background-image: linear-gradient(to bottom, rgba(2,6,23,0.4) 0%, rgba(2,6,23,0.65) 50%, rgba(2,6,23,0.85) 100%), url('/Background/fiery-heart.jpg');
+  background-image: linear-gradient(to bottom, rgba(2,6,23,0.4) 0%, rgba(2,6,23,0.65) 50%, rgba(2,6,23,0.85) 100%), var(--pub-url-bg-fiery, url('/Background/fiery-heart.jpg'));
   background-size: cover;
   background-position: center;
 }
@@ -729,7 +731,7 @@ function finish() {
   min-height: 70vh;
   /* Fill scroll area so fiery heart extends to edges in all browsers (e.g. Chromium) */
   height: 100%;
-  background-image: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.25) 45%, rgba(2, 6, 23, 0.85) 100%), url('/Background/fiery-heart.jpg');
+  background-image: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.25) 45%, rgba(2, 6, 23, 0.85) 100%), var(--pub-url-bg-fiery, url('/Background/fiery-heart.jpg'));
   background-size: cover;
   background-position: center;
 }
@@ -824,7 +826,7 @@ function finish() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.25) 45%, rgba(2, 6, 23, 0.85) 100%), url('/Background/fiery-heart.jpg');
+  background-image: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.25) 45%, rgba(2, 6, 23, 0.85) 100%), var(--pub-url-bg-fiery, url('/Background/fiery-heart.jpg'));
   background-size: cover;
   background-position: center;
   pointer-events: none;

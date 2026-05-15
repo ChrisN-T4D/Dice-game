@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
 import { getStaticPhraseIdForText, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
+import { publicPath } from '@/utils/publicPath'
 
 /** Lazy-load phonemize so espeak-ng runs on main thread (reliable); worker then only runs ONNX. */
 let phonemizeFn = null
@@ -773,7 +774,7 @@ export function useSpeech() {
     if (!phraseId || !voiceId) return null
     const dir = staticVoiceDirForUrl(voiceId)
     if (!dir) return null
-    return `/audio/static/${dir}/${phraseId}.wav`
+    return publicPath(`/audio/static/${dir}/${phraseId}.wav`)
   }
 
   /** Stop HTML audio, Web Audio buffer, browser speech, and cancel in-flight Kokoro jobs without invoking phrase onEnd (Pause / new line replaces old). */

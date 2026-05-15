@@ -6,18 +6,27 @@
 import { cachedFetch } from './cachedFetch.js'
 
 const MODEL_ID = 'Kokoro-82M-v1.0-ONNX'
-const TOKENIZER_URL = `/models/${MODEL_ID}/tokenizer.json`
 
 let vocab = null
 let allowedChars = null
 let loadPromise = null
+/** @type {string | null} */
+let loadedPackageBase = null
 
-async function ensureLoaded() {
-  if (vocab && allowedChars) return
-  if (loadPromise) return loadPromise
+async function ensureLoaded(packageBaseUrl) {
+  const base = packageBaseUrl || `/models/${MODEL_ID}`
+  if (vocab && allowedChars && loadedPackageBase === base) return
+  if (loadPromise && loadedPackageBase === base) return loadPromise
+  if (loadedPackageBase !== base) {
+    vocab = null
+    allowedChars = null
+    loadPromise = null
+  }
+  loadedPackageBase = base
   loadPromise = (async () => {
-    const res = await cachedFetch(TOKENIZER_URL)
-    if (!res.ok) throw new Error(`Tokenizer not found: ${TOKENIZER_URL}`)
+    const tokenizerUrl = `${base.replace(/\/$/, '')}/tokenizer.json`
+    const res = await cachedFetch(tokenizerUrl)
+    if (!res.ok) throw new Error(`Tokenizer not found: ${tokenizerUrl}`)
     const data = await res.json()
     vocab = data?.model?.vocab
     if (!vocab) throw new Error('Invalid tokenizer.json: missing model.vocab')
@@ -43,9 +52,12 @@ export function tokenize(phonemes) {
   return normalized.split('').map((c) => vocab[c] ?? 0)
 }
 
-/** Pre-load tokenizer (call during model warmup). */
-export async function ensureTokenizerReady() {
-  return ensureLoaded()
+/**
+ * Pre-load tokenizer (call during model warmup).
+ * @param {string} [packageBaseUrl] - Same as Kokoro `baseUrl`, e.g. `https://host/repo/models/Kokoro-82M-v1.0-ONNX`
+ */
+export async function ensureTokenizerReady(packageBaseUrl) {
+  return ensureLoaded(packageBaseUrl)
 }
 
 /**

@@ -57,6 +57,7 @@
 import { ref, computed, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { getPhase3PositionName } from 'phase3-data'
+import { publicPath } from '@/utils/publicPath'
 
 const favorites = useFavoritesStore()
 
@@ -67,7 +68,7 @@ function getPositionName(n) {
 const positionImageSrc = computed(() => {
   const n = favorites.positionImageModal.positionNumber
   if (!n) return ''
-  return '/Position References/position ' + n + '.png'
+  return publicPath('/Position References/position ' + n + '.png')
 })
 
 const positionImageError = ref(false)

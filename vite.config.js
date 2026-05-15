@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
 
 export default defineConfig({
+  /** Relative base so `index.html` loads `./assets/…` — works at site root and on subpaths (e.g. GitHub Pages). */
+  base: './',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version || '0.0.0'),
   },

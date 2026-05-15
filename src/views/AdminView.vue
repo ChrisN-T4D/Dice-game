@@ -274,6 +274,7 @@ import {
   getPhase3PositionImagePath,
   getPhase3PositionFocusAnatomy,
 } from 'phase3-data'
+import { publicPath } from '@/utils/publicPath'
 import {
   mergePhase3Entry,
   savePhase3Entry,
@@ -473,7 +474,9 @@ function resetPhase3ToBase() {
 }
 const imagePath = computed(() => {
   if (PHASE3_NO_IMAGE_POSITION_NUMBERS.includes(currentPosition.value)) return ''
-  return '/' + getPhase3PositionImagePath(currentPosition.value)
+  const rel = getPhase3PositionImagePath(currentPosition.value)
+  if (!rel) return ''
+  return publicPath(`/${rel}`)
 })
 
 // -----------------------------------------------------------------------------

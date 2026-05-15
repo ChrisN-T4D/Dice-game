@@ -80,6 +80,7 @@ import { useSessionStore } from '@/stores/session'
 import { useGuidedStore } from '@/stores/guided'
 import { useFavoritesStore } from '@/stores/favorites'
 import { useSpeech, resumeGuidedAudioEnvironment } from '@/composables/useSpeech'
+import { publicPath } from '@/utils/publicPath'
 import { useScreenWakeLock } from '@/composables/useScreenWakeLock'
 import GuidedDevAudioOverlay from '@/components/guided/GuidedDevAudioOverlay.vue'
 
@@ -110,7 +111,7 @@ onBeforeUnmount(() => {
   if (typeof window !== 'undefined') window.removeEventListener('pageshow', onPageShow)
 })
 
-const GUIDED_CIRCLE_GIF = '/GIFS/placidplace-loading-23091_512.gif'
+const GUIDED_CIRCLE_GIF = publicPath('/GIFS/placidplace-loading-23091_512.gif')
 
 const showDevOverlay = ref(false)
 let circleClickCount = 0

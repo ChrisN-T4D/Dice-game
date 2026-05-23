@@ -3,7 +3,7 @@ import { watch } from 'vue'
 /**
  * Sync document.body classes for phase theme, background image, admin, main visibility, guided mode.
  */
-export function useAppBodyClasses({ session, prefs, showAdmin, showMainContent }) {
+export function useAppBodyClasses({ session, prefs, showAdmin, showMainContent, showModeLanding }) {
   function updateBodyClass() {
     if (typeof document === 'undefined') return
     document.body.classList.remove('phase-1', 'phase-2', 'phase-3', 'bg-image-1', 'bg-image-2')
@@ -26,6 +26,13 @@ export function useAppBodyClasses({ session, prefs, showAdmin, showMainContent }
     () => (session.uiMode === 'guided' || session.uiMode === 'sensate') && showMainContent.value,
     (isGuided) => {
       document.body.classList.toggle('guided-mode', isGuided)
+    },
+    { immediate: true }
+  )
+  watch(
+    () => showModeLanding?.value === true,
+    (landing) => {
+      document.body.classList.toggle('landing-visible', landing)
     },
     { immediate: true }
   )

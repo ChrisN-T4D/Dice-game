@@ -1,10 +1,9 @@
 <template>
   <div
-    class="landing-modal"
+    class="landing-modal landing-page"
     :class="{ hidden: !show }"
-    role="dialog"
+    role="main"
     aria-labelledby="landingTitle"
-    aria-modal="true"
   >
     <div class="landing-content" :class="{ 'card-bg-fiery-heart': prefs.backgroundImage === '1' }">
       <h1 id="landingTitle" class="landing-title">Between Us</h1>
@@ -71,7 +70,10 @@ function choose(mode) {
 <style scoped>
 /* Tighter stack: global .landing-subtitle uses a large bottom margin for mode buttons alone */
 .landing-subtitle {
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.75rem, 2vh, 1rem);
+}
+.landing-page .session-display-sleep-tip {
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
 }
 .suggested-badge {
   font-size: 0.7rem; font-weight: 600; color: #22c55e; margin-left: 0.35rem;

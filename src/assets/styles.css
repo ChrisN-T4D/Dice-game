@@ -629,15 +629,50 @@ input[type="number"] {
 .summary-section:last-of-type { margin-bottom: 0; }
 .summary-section .section-subtitle { margin: 0 0 0.25rem; }
 
-/* Landing modal – light overlay so body background (Fiery hearts) is clearly visible */
+/* Landing page – full viewport mode picker (Dice / Guided / Sensate) */
+body.landing-visible {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+body.landing-visible #app {
+  height: 100%;
+  min-height: 100dvh;
+}
 .landing-modal {
-  position: fixed; inset: 0; background: rgba(2,6,23,0.28); backdrop-filter: blur(4px); z-index: 10000;
-  display: flex; align-items: center; justify-content: center; padding: 1rem;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  background: rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(4px);
 }
 .landing-modal.hidden { display: none; }
 .landing-content {
-  background: linear-gradient(135deg, #020617 0%, #0f172a 100%); border-radius: 1rem; padding: 3rem 2rem;
-  max-width: 600px; width: 100%; border: 2px solid #334155; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: min(600px, 100%);
+  margin: auto 0;
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+  border-radius: 1rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+  border: 2px solid #334155;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
 }
 .page-bg-fiery-heart {
   background-image: linear-gradient(to bottom, rgba(2,6,23,0.3) 0%, rgba(2,6,23,0.55) 60%, rgba(2,6,23,0.8) 100%), url('../Background/fiery-heart.jpg');
@@ -691,10 +726,11 @@ input[type="number"] {
   text-align: center; font-size: clamp(1.75rem, 5vmin, 2.25rem); margin-bottom: 1rem;
   background: linear-gradient(to right, #60a5fa, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.landing-subtitle { text-align: center; font-size: clamp(0.95rem, 2.2vmin, 1.1rem); color: #9ca3af; margin-bottom: 3rem; line-height: 1.5; }
-.mode-buttons { display: grid; gap: 1.5rem; margin-bottom: 2rem; }
+.landing-subtitle { text-align: center; font-size: clamp(0.95rem, 2.2vmin, 1.1rem); color: #9ca3af; margin-bottom: clamp(1rem, 3vh, 2rem); line-height: 1.5; }
+.mode-buttons { display: grid; gap: clamp(0.75rem, 2vh, 1.25rem); margin-bottom: 0; }
 .mode-button {
-  background: rgba(2,6,23,0.5); border: 2px solid #334155; border-radius: 0.75rem; padding: 2rem 1.5rem;
+  background: rgba(2,6,23,0.5); border: 2px solid #334155; border-radius: 0.75rem;
+  padding: clamp(1rem, 2.5vh, 1.75rem) clamp(0.85rem, 3vw, 1.5rem);
   cursor: pointer; transition: all 0.3s ease; text-align: left;
 }
 .mode-button:hover { border-color: #60a5fa; background: rgba(59,130,246,0.1); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(59,130,246,0.2); }
@@ -703,11 +739,23 @@ input[type="number"] {
 .mode-button-title { font-size: clamp(1.25rem, 3.2vmin, 1.6rem); margin-bottom: 0.5rem; color: #e5e7eb; }
 .mode-button-desc { font-size: clamp(0.9rem, 2.2vmin, 1.05rem); color: #9ca3af; line-height: 1.5; }
 @media (max-width: 480px) {
-  .landing-content { padding: 2rem 1.5rem; }
   .landing-title,
   .card-header h1 { font-size: clamp(1.5rem, 5vmin, 1.85rem); }
-  .mode-button { padding: 1.5rem 1rem; }
   .mode-button-title { font-size: clamp(1.1rem, 3.2vmin, 1.35rem); }
+}
+@media (max-height: 720px) {
+  .landing-content { padding: 1rem clamp(0.85rem, 3vw, 1.25rem); }
+  .landing-title { margin-bottom: 0.5rem; }
+  .landing-subtitle { margin-bottom: 0.75rem; font-size: 0.9rem; }
+  .mode-buttons { gap: 0.6rem; }
+  .mode-button { padding: 0.85rem 0.75rem; }
+  .mode-button-title { font-size: 1.05rem; margin-bottom: 0.25rem; }
+  .mode-button-desc { font-size: 0.85rem; line-height: 1.35; }
+  .landing-modal .session-display-sleep-tip {
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.75rem;
+  }
+  .landing-modal .session-display-sleep-tip__body { font-size: 0.8rem; }
 }
 
 /* Wizard */

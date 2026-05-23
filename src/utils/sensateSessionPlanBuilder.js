@@ -4,20 +4,18 @@
  * Each turn’s phrases are contiguous in `plan.script` / preGeneratedBlobs; `scriptIndexStart` marks where that turn’s audio begins for skip alignment.
  */
 import { normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
-import { EASE_IN_TEXTS, TURN_BEGINS_TEXTS } from '@/data/staticPhrases'
+import { EASE_IN_TEXTS, formatTurnStartDirective } from '@/data/staticPhrases'
+import { formatHomeTransition, getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
 import {
   SENSATE_PHRASE_BY_ID,
   SENSATE_FIRST_TURN_TEXT,
   SENSATE_FIRST_TURN_P2_GIVER_TEXT,
-  SENSATE_TURN_COMPLETE_CUE,
   SENSATE_TRANSITION_PAUSE_ABOUT_ONE_MINUTE,
 } from '@/data/sensateStaticPhrases'
 import { getSensatePresetById } from '@/data/sensatePresets'
 import { mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 
-/** Ease-in / turn-begins match guided static index 0 for shared WAVs. Between-turn cue is sensate-only (see SENSATE_TURN_COMPLETE_CUE). */
 const EASE_FIXED = EASE_IN_TEXTS[0]
-const BEGINS_FIXED = TURN_BEGINS_TEXTS[0]
 
 /**
  * @typedef {{
@@ -256,7 +254,7 @@ function getIntroAndTurnSpecs(presetId, firstGiver) {
 function pushSensateTurnScript(
   script,
   instructionRaw,
-  { firstTurn, firstGiver, durationSec, transitionOnly, skipLeadLine, closingOnly }
+  { firstTurn, firstGiver, durationSec, transitionOnly, skipLeadLine, closingOnly, homePositionId, currentPartner, receiver }
 ) {
   const inst = instructionRaw ? normalizeParenthesesForTts(slashToAndForTts(instructionRaw)) : ''
 
@@ -268,7 +266,7 @@ function pushSensateTurnScript(
   if (firstTurn) {
     script.push(firstGiver === 2 ? SENSATE_FIRST_TURN_P2_GIVER_TEXT : SENSATE_FIRST_TURN_TEXT)
   } else if (!skipLeadLine) {
-    script.push(SENSATE_TURN_COMPLETE_CUE)
+    script.push(formatHomeTransition(homePositionId))
   }
 
   const durationSpeech = transitionOnly
@@ -278,7 +276,15 @@ function pushSensateTurnScript(
   if (inst) script.push(inst)
   if (!transitionOnly) {
     script.push(EASE_FIXED)
-    script.push(BEGINS_FIXED)
+    const giver = `Partner ${currentPartner}`
+    const recv = `Partner ${receiver}`
+    const { text: turnStart } = formatTurnStartDirective({
+      giver,
+      receiver: recv,
+      where: 'Sensate focus',
+      phase: 1,
+    })
+    script.push(turnStart)
   }
 }
 
@@ -333,6 +339,7 @@ export function buildSensateSessionPlan(presetId, config) {
     sessionKind: 'sensate',
     sensatePresetId: presetId,
     sensateTechniqueId: preset.techniqueId,
+    homePositionId: config.homePositionId || getDefaultHomePosition().id,
     ...(preset.supportsFirstToucherChoice === true
       ? {
           sensateFirstToucherPreference:
@@ -361,6 +368,9 @@ export function buildSensateSessionPlan(presetId, config) {
       transitionOnly: t.transitionOnly === true,
       skipLeadLine: t.skipLeadLine === true,
       closingOnly: t.closingOnly === true,
+      homePositionId: mergedConfig.homePositionId,
+      currentPartner: t.currentPartner,
+      receiver: t.receiver,
     })
     const instruction = instructionRaw ? normalizeParenthesesForTts(slashToAndForTts(instructionRaw)) : ''
 

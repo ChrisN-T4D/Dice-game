@@ -155,13 +155,14 @@ function onBackToHubFromSensate() {
   session.uiMode = 'guided'
 }
 
-function onSensateStart({ presetId, partnerNames, kokoroVoiceId, sensateFirstToucherPreference }) {
+function onSensateStart({ presetId, partnerNames, kokoroVoiceId, sensateFirstToucherPreference, homePositionId }) {
   session.uiMode = 'sensate'
   sensateResumePresetId.value = null
   guided.buildSensatePlanFromPreset(presetId, {
     partnerNames,
     kokoroVoiceId,
     sensateFirstToucherPreference,
+    homePositionId,
   })
   pendingConfig.value = guided.sessionPlan.config
   wizardInitialStep.value = 1

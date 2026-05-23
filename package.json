@@ -26,6 +26,7 @@
     "generate-all": "node scripts/run-generate-sequence.js",
     "check-static-wavs": "node scripts/check-static-wavs.js",
     "generate-static-script-review": "node scripts/generate-static-script-review.js",
+    "generate-prompt-catalog": "node scripts/generate-spoken-prompt-catalog.js",
     "pack-audio-assets": "node scripts/pack-audio-assets.js",
     "test:kokoro-ort": "node scripts/test-kokoro-ort.js",
     "compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",

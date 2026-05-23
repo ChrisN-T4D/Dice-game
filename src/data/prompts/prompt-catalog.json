@@ -1,0 +1,235 @@
+{
+  "generatedAt": "2026-05-23T16:12:35.546Z",
+  "homePositions": [
+    {
+      "id": "side_by_side_neutral",
+      "name": "Side by side",
+      "isAppDefault": true
+    },
+    {
+      "id": "spooning_neutral",
+      "name": "Spooning",
+      "isAppDefault": false
+    },
+    {
+      "id": "face_to_face_seated",
+      "name": "Face to face seated",
+      "isAppDefault": false
+    },
+    {
+      "id": "lying_head_to_head",
+      "name": "Lying head to head",
+      "isAppDefault": false
+    }
+  ],
+  "staticGroups": {
+    "voice_test": {
+      "count": 1,
+      "ids": [
+        "voice_test"
+      ]
+    },
+    "intro_no_clothing": {
+      "count": 9,
+      "ids": [
+        "intro_no_clothing_1",
+        "intro_no_clothing_2",
+        "intro_no_clothing_3",
+        "intro_no_clothing_4",
+        "intro_no_clothing_5",
+        "intro_no_clothing_6",
+        "intro_no_clothing_7",
+        "intro_no_clothing_8",
+        "intro_no_clothing_9"
+      ]
+    },
+    "intro_with_clothing": {
+      "count": 9,
+      "ids": [
+        "intro_with_clothing_1",
+        "intro_with_clothing_2",
+        "intro_with_clothing_3",
+        "intro_with_clothing_4",
+        "intro_with_clothing_5",
+        "intro_with_clothing_6",
+        "intro_with_clothing_7",
+        "intro_with_clothing_8",
+        "intro_with_clothing_9"
+      ]
+    },
+    "home_transition": {
+      "count": 4,
+      "ids": [
+        "home_transition_side_by_side_neutral",
+        "home_transition_spooning_neutral",
+        "home_transition_face_to_face_seated",
+        "home_transition_lying_head_to_head"
+      ]
+    },
+    "turn_start_directive": {
+      "count": 6,
+      "ids": [
+        "turn_start_directive_1",
+        "turn_start_directive_2",
+        "turn_start_directive_3",
+        "turn_start_directive_4",
+        "turn_start_directive_where_1",
+        "turn_start_directive_where_2"
+      ]
+    },
+    "ease_in": {
+      "count": 4,
+      "ids": [
+        "ease_in_1",
+        "ease_in_2",
+        "ease_in_3",
+        "ease_in_4"
+      ]
+    },
+    "session_complete": {
+      "count": 3,
+      "ids": [
+        "session_complete_1",
+        "session_complete_2",
+        "session_complete_3"
+      ]
+    },
+    "settle_into_position": {
+      "count": 4,
+      "ids": [
+        "settle_into_position_1",
+        "settle_into_position_2",
+        "settle_into_position_3",
+        "settle_into_position_4"
+      ]
+    },
+    "phase_checkin": {
+      "count": 9,
+      "ids": [
+        "phase_checkin_1",
+        "phase_checkin_2",
+        "phase_checkin_3",
+        "phase_checkin_4",
+        "phase_checkin_5",
+        "phase_checkin_6",
+        "phase_checkin_7",
+        "phase_checkin_8",
+        "phase_checkin_9"
+      ]
+    },
+    "sensate": {
+      "count": 38,
+      "ids": [
+        "sensate_first_turn_standard",
+        "sensate_first_turn_p2_giver",
+        "sensate_turn_complete",
+        "sensate_transition_pause_one_minute",
+        "sensate_duration_15_min",
+        "sensate_duration_10_min",
+        "sensate_duration_6_min",
+        "sensate_duration_5_min",
+        "sensate_duration_4_min",
+        "sensate_duration_3_min",
+        "sensate_intro_phase1_non_genital",
+        "sensate_intro_phase1_genital",
+        "sensate_intro_lotion",
+        "sensate_intro_mutual",
+        "sensate_intro_phase2_comm",
+        "sensate_p1ng_t2",
+        "sensate_p1ng_t3",
+        "sensate_p1ng_t3_p2",
+        "sensate_p1ng_t4",
+        "sensate_p1ng_t5",
+        "sensate_p1g_t2",
+        "sensate_p1g_t3",
+        "sensate_p1g_t3_p2",
+        "sensate_p1g_t4",
+        "sensate_p1g_t5",
+        "sensate_lo_t2",
+        "sensate_lo_t3",
+        "sensate_lo_t3_p2",
+        "sensate_lo_t4",
+        "sensate_lo_t5",
+        "sensate_mu_t1",
+        "sensate_mu_t2",
+        "sensate_mu_t3",
+        "sensate_p2_t1",
+        "sensate_p2_t2",
+        "sensate_p2_t3",
+        "sensate_p2_t4",
+        "sensate_p2_t5"
+      ]
+    }
+  },
+  "turnStartDirectives": {
+    "count": 6,
+    "ids": [
+      "turn_start_directive_1",
+      "turn_start_directive_2",
+      "turn_start_directive_3",
+      "turn_start_directive_4",
+      "turn_start_directive_where_1",
+      "turn_start_directive_where_2"
+    ]
+  },
+  "phase12": {
+    "phase1Locations": 20,
+    "phase1Actions": 20,
+    "phase2Locations": 20,
+    "phase2Actions": 20
+  },
+  "sensateStatic": {
+    "count": 38,
+    "ids": [
+      "sensate_first_turn_standard",
+      "sensate_first_turn_p2_giver",
+      "sensate_turn_complete",
+      "sensate_transition_pause_one_minute",
+      "sensate_duration_15_min",
+      "sensate_duration_10_min",
+      "sensate_duration_6_min",
+      "sensate_duration_5_min",
+      "sensate_duration_4_min",
+      "sensate_duration_3_min",
+      "sensate_intro_phase1_non_genital",
+      "sensate_intro_phase1_genital",
+      "sensate_intro_lotion",
+      "sensate_intro_mutual",
+      "sensate_intro_phase2_comm",
+      "sensate_p1ng_t2",
+      "sensate_p1ng_t3",
+      "sensate_p1ng_t3_p2",
+      "sensate_p1ng_t4",
+      "sensate_p1ng_t5",
+      "sensate_p1g_t2",
+      "sensate_p1g_t3",
+      "sensate_p1g_t3_p2",
+      "sensate_p1g_t4",
+      "sensate_p1g_t5",
+      "sensate_lo_t2",
+      "sensate_lo_t3",
+      "sensate_lo_t3_p2",
+      "sensate_lo_t4",
+      "sensate_lo_t5",
+      "sensate_mu_t1",
+      "sensate_mu_t2",
+      "sensate_mu_t3",
+      "sensate_p2_t1",
+      "sensate_p2_t2",
+      "sensate_p2_t3",
+      "sensate_p2_t4",
+      "sensate_p2_t5"
+    ]
+  },
+  "promptTree": [
+    "guided/first-turn-intros.js",
+    "guided/session-static.js",
+    "guided/turn-start-directives.js",
+    "phase12/phase-tables.js",
+    "phase3/positions.js",
+    "PROMPT-CATALOG.md",
+    "README.md",
+    "sensate/static-phrases.js",
+    "transitions/home-positions.js"
+  ]
+}

@@ -72,9 +72,13 @@ export function loadState(sessionStore, preferencesStore, guidedStore) {
       (state.phase && state.phase > 1) ||
       sessionStore.uiMode
 
-    // Show landing only when there's no progress; if there is progress, go straight to main content.
+    // Mode picker is the landing page when there's no saved session progress.
     if (hasProgress) {
       sessionStore.showLanding = false
+    } else {
+      sessionStore.showLanding = true
+      sessionStore.uiMode = null
+      sessionStore.isGuidedMode = false
     }
 
     if (!hasProgress) return false

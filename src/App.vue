@@ -9,7 +9,7 @@
       @tour-preview="onTourPreview"
     />
     <LandingModal
-      :show="showLandingAfterOnboarding"
+      :show="showModeLanding"
       :suggested-mode="profile.suggestedFirstMode"
       @choose="onChooseMode"
     />
@@ -75,12 +75,6 @@
           <SummaryOverlay :open="summaryOpen" @close="summaryOpen = false" />
         </template>
         <GuidedModeView v-else-if="session.uiMode === 'guided' || session.uiMode === 'sensate'" />
-        <div v-else class="choose-mode-stack">
-          <SessionDisplaySleepTip />
-          <p class="choose-mode-prompt">
-            Choose <strong>Dice game</strong>, <strong>Guided mode</strong> (dice-based setup), or <strong>Sensate-style</strong> above to start.
-          </p>
-        </div>
       </div>
 
       <!-- Card 3: Bottom navigation (portal target: components teleport their nav here) -->
@@ -92,7 +86,7 @@
 
 <script setup>
 /**
- * Root shell: admin hash, onboarding → landing → main. Game views do not receive props from here;
+ * Root shell: admin hash, onboarding → mode landing (Dice / Guided / Sensate) → main. Game views do not receive props from here;
  * they use Pinia (session, guided, preferences, …). See docs/UI-AND-STATE-FLOW.md for navigation,
  * store ownership, and Teleport targets (#step-bar-portal, #bottom-nav-portal).
  */
@@ -109,7 +103,6 @@ import { useAppBodyClasses } from '@/composables/useAppBodyClasses'
 import { useDebouncedAppPersistence } from '@/composables/useDebouncedAppPersistence'
 import LandingModal from '@/components/LandingModal.vue'
 import OnboardingWizard from '@/components/OnboardingWizard.vue'
-import SessionDisplaySleepTip from '@/components/SessionDisplaySleepTip.vue'
 import AppMenuSidebar from '@/components/AppMenuSidebar.vue'
 import FavoritesModal from '@/components/FavoritesModal.vue'
 import TimerBar from '@/components/TimerBar.vue'
@@ -160,12 +153,20 @@ const showAdmin = ref(false)
 const showOnboardingAgain = ref(false)
 
 const showOnboarding = computed(() => !profile.onboardingComplete || showOnboardingAgain.value)
-const showLandingAfterOnboarding = computed(
-  () => profile.onboardingComplete && !showOnboardingAgain.value && session.showLanding
-)
 const tourPreviewMode = ref(null) // 'freeplay' | 'guided' | 'sensate' | null – when set, show main UI during tour step 3
+/** Full-screen mode picker (Dice / Guided / Sensate) — default home after onboarding. */
+const showModeLanding = computed(
+  () =>
+    profile.onboardingComplete &&
+    !showOnboardingAgain.value &&
+    tourPreviewMode.value === null &&
+    (session.showLanding || !session.uiMode)
+)
 const showMainContent = computed(
-  () => (profile.onboardingComplete && !showOnboardingAgain.value && !session.showLanding) || tourPreviewMode.value !== null
+  () =>
+    profile.onboardingComplete &&
+    !showOnboardingAgain.value &&
+    (tourPreviewMode.value !== null || !showModeLanding.value)
 )
 function onTourPreview(mode) {
   tourPreviewMode.value = mode
@@ -224,7 +225,7 @@ function onTitleClick() {
 const summaryOpen = ref(false)
 const pageVisible = ref(typeof document !== 'undefined' ? !document.hidden : true)
 
-const { updateBodyClass } = useAppBodyClasses({ session, prefs, showAdmin, showMainContent })
+const { updateBodyClass } = useAppBodyClasses({ session, prefs, showAdmin, showMainContent, showModeLanding })
 useDebouncedAppPersistence(session, prefs, guided, saveState)
 
 function onChooseMode(mode) {
@@ -318,13 +319,6 @@ onUnmounted(() => {
   color: #94a3b8;
   font-size: 0.95rem;
 }
-.choose-mode-stack {
-  max-width: 28rem;
-  margin: 0 auto;
-  width: 100%;
-}
-.choose-mode-prompt { margin: 0; color: #9ca3af; font-size: 0.95rem; text-align: center; }
-
 /* Header card: grid layout without the old card-header wrapper */
 .card-header-panel {
   display: grid;

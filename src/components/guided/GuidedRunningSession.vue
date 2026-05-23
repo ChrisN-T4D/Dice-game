@@ -34,6 +34,10 @@
         <span class="guided-total-timer">Total {{ formatTime(guided.totalTimeRemaining) }}</span>
       </div>
     </div>
+    <div v-if="guided.transitionDirective" class="guided-block guided-transition-box" role="status">
+      <p class="guided-transition-label">Between directions</p>
+      <p class="guided-transition-text">{{ guided.transitionDirective }}</p>
+    </div>
     <div v-if="guided.currentPrompt.instruction || guided.currentPrompt.clothing" class="guided-block guided-output guided-instruction-box">
       <div v-if="guided.currentPrompt.instruction" class="instruction-output instruction-fluid">{{ guided.currentPrompt.instruction }}</div>
       <div v-if="guided.currentPrompt.clothing" class="output-line clothing-line"><strong>Clothing:</strong> {{ guided.currentPrompt.clothing }}</div>
@@ -239,6 +243,24 @@ function onCircleClick() {
   border-radius: 0.5rem;
   border: 1px solid #334155;
   background: rgba(2,6,23,0.5);
+}
+.guided-transition-box {
+  border-color: #475569;
+  margin-bottom: 0.5rem;
+}
+.guided-transition-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+.guided-transition-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #cbd5e1;
 }
 .output-line { margin-bottom: 0.35rem; }
 .output-line:last-of-type { margin-bottom: 0; }

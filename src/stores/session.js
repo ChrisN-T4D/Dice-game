@@ -36,6 +36,8 @@ export const useSessionStore = defineStore('session', {
     },
     showLandingModal() {
       this.showLanding = true
+      this.uiMode = null
+      this.isGuidedMode = false
     },
     resetSession() {
       this.phase = 1

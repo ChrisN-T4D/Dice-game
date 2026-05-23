@@ -18,7 +18,6 @@ import { buildSensateSessionPlan } from '@/utils/sensateSessionPlanBuilder'
 import { getSuggestedTurnSecondsFromPrompt } from './guided/promptParsing.js'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 import {
-  AFTER_DONG_SEC,
   AFTER_INSTRUCTION_TO_SETTLE_MS,
   AFTER_NEXT_TURN_SEC,
   SETTLE_IN_SEC,
@@ -29,12 +28,17 @@ import {
   SESSION_COMPLETE_PHRASES,
   INTRO_NO_CLOTHING_VARIANTS,
   INTRO_WITH_CLOTHING_VARIANTS,
-  NEXT_TURN_TEXTS,
-  TURN_BEGINS_TEXTS,
   EASE_IN_TEXTS,
   SETTLE_INTO_POSITION_TEXT,
   getPhaseCheckinTexts,
+  formatHomeTransition,
+  formatFirstTurnIntro,
+  formatTurnStartDirective,
+  TURN_START_DIRECTIVE_WAV_PHRASES,
 } from '@/data/staticPhrases'
+import { getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
+
+const TURN_START_DIRECTIVE_TEXTS = TURN_START_DIRECTIVE_WAV_PHRASES.map((p) => p.text)
 
 // -----------------------------------------------------------------------------
 // Helpers (fixed phrase prep); timing constants in ./guided/constants.js; prompt parsing in ./guided/promptParsing.js
@@ -42,7 +46,7 @@ import {
 // Canonical session order (no duplicates, no extra phrases):
 // 1. Intro phrase → (optional) "Kicking off" / first-turn intro
 // 2. Turn 1: instruction (and clothing if any) → settle-in phrase → 15s → start phrase → turn timer
-// 3. End-turn phrase ("Time to switch") → [AFTER_DONG_SEC] → next turn instructions (instruction + clothing if any) → settle-in → 15s → start phrase → turn
+// 3. Return to home default (spoken) → brief buffer → next instruction (+ clothing) → settle-in → 15s → turn-start directive → turn
 // 4. Repeat until last turn of phase
 // 5. End of phase: phase check-in or "Phase N complete" → advance to next phase
 // 6. Next phase: turn instruction → settle-in → 15s → start phrase → ... until session complete
@@ -93,6 +97,9 @@ export const useGuidedStore = defineStore('guided', {
     vibratorsPresent: true,
     /** Kokoro voice id for this session; empty = use global preference at speak time. */
     sessionKokoroVoiceId: '',
+    /** Home position id for between-segment transitions (wizard). */
+    homePositionId: getDefaultHomePosition().id,
+    transitionDirective: '',
 
     // Running state
     turnsSinceLastRemoval: 0,
@@ -177,7 +184,7 @@ export const useGuidedStore = defineStore('guided', {
     },
     currentActionLabel() {
       if (this.inClothingWindow) return 'Removing clothes'
-      if (this.breakPhase === 'next_turn') return 'Time to switch'
+      if (this.transitionDirective) return 'Return to default'
       if (this.breakPhase === 'before_clothing') return 'Switching'
       if (this.breakPhase === 'settle_in') return 'Settle into position'
       if (this.breakPhase === 'turn' || this.turnTimeRemaining > 0) return 'Turn'
@@ -236,6 +243,8 @@ export const useGuidedStore = defineStore('guided', {
         breakCountdown: this.breakCountdown,
         firstTurnOfSession: this.firstTurnOfSession,
         firstTurnOfPhase3: this.firstTurnOfPhase3,
+        homePositionId: this.homePositionId,
+        transitionDirective: this.transitionDirective,
         currentPrompt: { ...this.currentPrompt },
       }
     },
@@ -283,6 +292,8 @@ export const useGuidedStore = defineStore('guided', {
       this.breakCountdown = Math.max(0, Number(snapshot.breakCountdown) || 0)
       this.firstTurnOfSession = !!snapshot.firstTurnOfSession
       this.firstTurnOfPhase3 = !!snapshot.firstTurnOfPhase3
+      if (snapshot.homePositionId) this.homePositionId = snapshot.homePositionId
+      this.transitionDirective = typeof snapshot.transitionDirective === 'string' ? snapshot.transitionDirective : ''
       if (snapshot.currentPrompt && typeof snapshot.currentPrompt === 'object') {
         this.currentPrompt = { where: '', what: '', instruction: '', shortInstruction: '', clothing: '', extendedTime: false, locationRoll: 0, actionRoll: 0, ...snapshot.currentPrompt }
       }
@@ -316,7 +327,7 @@ export const useGuidedStore = defineStore('guided', {
       })
     },
     /** Options for speakRef; use browser TTS for short cues (ease-in, turn-begins) so fallback is instant. */
-    _speakOpts(phrase, onEnd) {
+    _speakOpts(phrase, onEnd, extra = {}) {
       const voiceId = this.sessionKokoroVoiceId?.trim?.() || null
       const base = {
         force: true,
@@ -324,8 +335,13 @@ export const useGuidedStore = defineStore('guided', {
         onSource: (s) => this._devLog('phrase_start', phrase, { source: s }),
         onPlaybackFailed: (reason) => this._devLog('playback_failed', phrase, { source: 'kokoro', reason }),
         ...(voiceId ? { voiceId } : {}),
+        ...(extra.phraseId ? { phraseId: extra.phraseId } : {}),
       }
-      const shortCue = phrase && (EASE_IN_TEXTS.includes(phrase) || TURN_BEGINS_TEXTS.includes(phrase))
+      const shortCue =
+        phrase &&
+        (EASE_IN_TEXTS.includes(phrase) ||
+          TURN_START_DIRECTIVE_TEXTS.includes(phrase) ||
+          (extra.phraseId && String(extra.phraseId).startsWith('turn_start_directive')))
       return shortCue ? { ...base, forceTtsMode: 'browser' } : base
     },
     /** Wrap onEnd so it runs only once (prevents duplicate phrase_end from stale audio handlers). */
@@ -347,7 +363,7 @@ export const useGuidedStore = defineStore('guided', {
       return this.sessionPlan?.kind === 'sensate' && this.preGeneratedBlobs != null
     },
     /** Play one phrase: use pre-generated blob if set and ready, else TTS. Falls back to TTS when blob is null/not ready so turn description always plays. */
-    safeSpeak(phrase, onEnd) {
+    safeSpeak(phrase, onEnd, extra = {}) {
       phrase = phrase != null ? normalizeParenthesesForTts(slashToAndForTts(String(phrase))) : ''
       if (this.preGeneratedBlobs != null && this.playPreGeneratedBlob != null && this.preGeneratedIndex < this.preGeneratedBlobs.length) {
         let blob = this.preGeneratedBlobs[this.preGeneratedIndex]
@@ -363,7 +379,7 @@ export const useGuidedStore = defineStore('guided', {
             }
             if (this.speakRef && phrase) {
               this.pendingSpeech = { phrase, onEnd }
-              this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+              this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
             } else if (onEnd) onEnd()
           }
           try {
@@ -377,7 +393,11 @@ export const useGuidedStore = defineStore('guided', {
           const idx = this.preGeneratedIndex
           const start = Date.now()
           // Short cues (settle-in, turn-begins): don't wait long so we don't add a big pause
-          const isShortCue = phrase && (EASE_IN_TEXTS.includes(phrase) || TURN_BEGINS_TEXTS.includes(phrase))
+          const isShortCue =
+            phrase &&
+            (EASE_IN_TEXTS.includes(phrase) ||
+              TURN_START_DIRECTIVE_TEXTS.includes(phrase) ||
+              (extra.phraseId && String(extra.phraseId).startsWith('turn_start_directive')))
           const WAIT_MS = isShortCue ? 600 : 3000
           const iv = setInterval(() => {
             blob = this.preGeneratedBlobs[idx]
@@ -395,7 +415,7 @@ export const useGuidedStore = defineStore('guided', {
                   }
                   if (this.speakRef && phrase) {
                     this.pendingSpeech = { phrase, onEnd }
-                    this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+                    this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
                   } else if (onEnd) onEnd()
                 }
                 try {
@@ -408,7 +428,7 @@ export const useGuidedStore = defineStore('guided', {
                 this.preGeneratedIndex = idx + 1
                 if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
                   this.pendingSpeech = { phrase, onEnd }
-                  this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+                  this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
                 } else if (onEnd) onEnd()
               }
             } else if (Date.now() - start > WAIT_MS) {
@@ -417,7 +437,7 @@ export const useGuidedStore = defineStore('guided', {
               this.preGeneratedIndex = idx + 1
               if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
                 this.pendingSpeech = { phrase, onEnd }
-                this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+                this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
               } else if (onEnd) onEnd()
             }
           }, 200)
@@ -427,7 +447,7 @@ export const useGuidedStore = defineStore('guided', {
         this.preGeneratedIndex++
         if (this.speakRef && phrase && !this.sensateSkipLiveTtsFallback()) {
           this.pendingSpeech = { phrase, onEnd }
-          this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+          this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
           return
         }
         if (onEnd) onEnd()
@@ -442,7 +462,7 @@ export const useGuidedStore = defineStore('guided', {
         return
       }
       this.pendingSpeech = { phrase, onEnd }
-      this.speakRef(phrase, this._speakOpts(phrase, onEnd))
+      this.speakRef(phrase, this._speakOpts(phrase, onEnd, extra))
     },
 
     setSessionPlan(plan) {
@@ -576,8 +596,11 @@ export const useGuidedStore = defineStore('guided', {
         excludeWhenTouched: cfgExTouched,
         vibratorsPresent: cfgVibrators,
         kokoroVoiceId: cfgVoiceId,
+        homePositionId: cfgHomeId,
       } = config
 
+      this.homePositionId = cfgHomeId || getDefaultHomePosition().id
+      this.transitionDirective = ''
       this.excludeWhenTouching = mergeExcludePrefs(cfgExTouch)
       this.excludeWhenTouched = mergeExcludePrefs(cfgExTouched)
       this.vibratorsPresent = cfgVibrators !== false
@@ -663,9 +686,9 @@ export const useGuidedStore = defineStore('guided', {
         const vid = this.sessionKokoroVoiceId?.trim() || undefined
         const runPrep = (phrase) => prepAtStart(phrase, undefined, vid)
         runPrep(intro)
-        prepAll(runPrep, NEXT_TURN_TEXTS)
-        prepAll(runPrep, TURN_BEGINS_TEXTS)
+        prepAll(runPrep, TURN_START_DIRECTIVE_TEXTS)
         prepAll(runPrep, EASE_IN_TEXTS)
+        runPrep(formatHomeTransition(this.homePositionId))
         prepAll(runPrep, SESSION_COMPLETE_PHRASES)
         runPrep(SETTLE_INTO_POSITION_TEXT)
       }
@@ -851,33 +874,23 @@ export const useGuidedStore = defineStore('guided', {
 
       const giverName = this.partnerName(giver)
       const receiverName = this.partnerName(receiver)
-      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-      const nextTurnPhrase = pick(NEXT_TURN_TEXTS)
-      const firstTurnPhrase = phase === 3
-        ? pick([
-            `First turn. ${giverName} leads, ${receiverName} follows.`,
-            `Kicking off. ${giverName} leads, ${receiverName} follows.`,
-            `Here we go. ${giverName} leads, ${receiverName} follows.`,
-            `Starting with ${giverName} leading and ${receiverName} following.`,
-          ])
-        : pick([
-            `First turn. ${giverName} is giver, ${receiverName} is receiver.`,
-            `Kicking off. ${giverName} gives, ${receiverName} receives.`,
-            `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
-            `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
-          ])
-      const turnBeginsPhrase = pick(TURN_BEGINS_TEXTS)
+      const firstTurnPhrase = formatFirstTurnIntro(phase, giverName, receiverName)
+      const homeTransitionPhrase = formatHomeTransition(this.homePositionId)
+      const { text: turnBeginsPhrase } = formatTurnStartDirective({
+        giver: giverName,
+        receiver: receiverName,
+        where: this.currentPrompt.where,
+        phase,
+      })
 
-      // Preload TTS in the worker so audio is ready when needed. Worker runs in background; preparePhrase
-      // sends generate and caches the blob; when we speak() the same text we play from cache immediately.
-      // Instruction and clothing first (longest); then transition phrases.
       const prep = this.preparePhraseRef
       if (prep && this.sessionPlan?.kind !== 'sensate') {
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         prep(firstTurnPhrase)
-        prepAll(prep, NEXT_TURN_TEXTS)
-        prepAll(prep, TURN_BEGINS_TEXTS)
+        prep(homeTransitionPhrase)
+        prep(turnBeginsPhrase)
+        prepAll(prep, TURN_START_DIRECTIVE_TEXTS)
         prepAll(prep, EASE_IN_TEXTS)
         if (this.phaseCheckInEnabled) {
           const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
@@ -903,6 +916,7 @@ export const useGuidedStore = defineStore('guided', {
 
       // Order: [clothing if any] → instruction → settle-in phrase → 15s → start phrase (via runSettleIn → runSettleInFromTick → tickBreak settle_in)
       const runClothingThenInstruction = () => {
+        this.transitionDirective = ''
         this._settleInStarted = false
         this._easeInSpeakStarted = false
         this.breakPhase = 'none'
@@ -936,46 +950,26 @@ export const useGuidedStore = defineStore('guided', {
         }
       }
 
-      // After "Time to switch": short countdown then play next turn's instruction/clothing → settle-in → 15s → start phrase
       const runAfterNextTurn = () => {
-        this.breakPhase = 'before_clothing'
-        this.breakCountdown = AFTER_NEXT_TURN_SEC
-        this.clearBreakTimer()
-        this._breakTickAnchorMs = Date.now()
-        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
-        const prep = this.preparePhraseRef
-        if (prep && this.sessionPlan?.kind !== 'sensate') {
-          if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
-          if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
-          prep(SETTLE_INTO_POSITION_TEXT)
-          prepAll(prep, TURN_BEGINS_TEXTS)
+        if (AFTER_NEXT_TURN_SEC > 0) {
+          this.breakPhase = 'before_clothing'
+          this.breakCountdown = AFTER_NEXT_TURN_SEC
+          this.clearBreakTimer()
+          this._breakTickAnchorMs = Date.now()
+          this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
+        } else {
+          this.runAfterNextTurnFromTick()
         }
       }
 
-      const runAfterDong = () => {
-        if (this.speakRef) this.safeSpeak(nextTurnPhrase, runAfterNextTurn)
-        else runAfterNextTurn()
+      const runHomeThenNext = () => {
+        this._devLog('step', 'phrase: home_transition')
+        this.transitionDirective = homeTransitionPhrase
+        const afterHome = () => runAfterNextTurn()
+        if (this.speakRef) this.safeSpeak(homeTransitionPhrase, afterHome)
+        else afterHome()
       }
 
-      // End-turn: show "Time to switch" countdown, then runAfterNextTurn → next turn instruction → settle-in → 15s → start phrase
-      const startNextTurnCountdown = () => {
-        this._devLog('step', 'next_turn_countdown')
-        this.breakPhase = 'next_turn'
-        this.breakCountdown = AFTER_DONG_SEC
-        this.clearBreakTimer()
-        this._breakTickAnchorMs = Date.now()
-        this.breakTimerId = setInterval(() => this.tickBreak(), GUIDED_CLOCK_TICK_MS)
-        const prep = this.preparePhraseRef
-        if (prep && this.sessionPlan?.kind !== 'sensate') {
-          prep(nextTurnPhrase)
-          if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
-          if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
-          prep(SETTLE_INTO_POSITION_TEXT)
-          prepAll(prep, TURN_BEGINS_TEXTS)
-        }
-      }
-
-      // First turn of session or first turn of phase 3: [optional first-turn intro] → turn instruction → settle in → 15s → start phrase → turn
       const useFirstTurnPhrase = this.firstTurnOfSession || this.firstTurnOfPhase3
       if (useFirstTurnPhrase) {
         this.firstTurnOfSession = false
@@ -988,7 +982,7 @@ export const useGuidedStore = defineStore('guided', {
           else runClothingThenInstruction()
         }
       } else {
-        startNextTurnCountdown()
+        runHomeThenNext()
       }
     },
 
@@ -1029,14 +1023,7 @@ export const useGuidedStore = defineStore('guided', {
       this.clearBreakTimer()
       const phase = this.breakPhase
       this.breakPhase = 'none'
-      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-      if (phase === 'next_turn') {
-        // End-turn phrase ("Time to switch") → then next turn instructions
-        this._devLog('step', 'phrase: next_turn (switch)')
-        const phrase = pick(NEXT_TURN_TEXTS)
-        if (this.speakRef) this.safeSpeak(phrase, () => this.runAfterNextTurnFromTick())
-        else this.runAfterNextTurnFromTick()
-      } else if (phase === 'before_clothing') {
+      if (phase === 'before_clothing') {
         // Next turn: instruction (and clothing if any) → settle-in → 15s → start phrase
         this._settleInStarted = false
         this._easeInSpeakStarted = false
@@ -1060,16 +1047,24 @@ export const useGuidedStore = defineStore('guided', {
           setTimeout(() => this.runSettleInFromTick(), AFTER_INSTRUCTION_TO_SETTLE_MS)
         }
       } else if (phase === 'settle_in') {
-        // 15s countdown finished → start phrase ("Whenever you're ready") → turn timer
-        this._devLog('step', 'phrase: turn_begins')
-        const phrase = pick(TURN_BEGINS_TEXTS)
-        if (this.speakRef) this.safeSpeak(phrase, () => this.startTurnTimer())
+        this._devLog('step', 'phrase: turn_start_directive')
+        const giverName = this.partnerName(this.currentPartner)
+        const receiverName = this.partnerName(this.receiver)
+        const sessionStore = useSessionStore()
+        const { text: phrase, id: turnStartId } = formatTurnStartDirective({
+          giver: giverName,
+          receiver: receiverName,
+          where: this.currentPrompt.where,
+          phase: sessionStore.phase,
+        })
+        if (this.speakRef) this.safeSpeak(phrase, () => this.startTurnTimer(), { phraseId: turnStartId })
         else this.startTurnTimer()
       }
     },
 
     // After end-turn phrase: start countdown; when it hits 0, tickBreak(before_clothing) plays instruction → settle-in → 15s → start phrase
     runAfterNextTurnFromTick() {
+      this.transitionDirective = ''
       this._devLog('step', 'before_clothing_countdown')
       this.clearBreakTimer()
       this.breakPhase = 'before_clothing'
@@ -1081,7 +1076,7 @@ export const useGuidedStore = defineStore('guided', {
         if (this.currentPrompt.clothing) prep(this.currentPrompt.clothing)
         if (this.currentPrompt.instruction) prep(this.currentPrompt.instruction)
         prep(SETTLE_INTO_POSITION_TEXT)
-        prepAll(prep, TURN_BEGINS_TEXTS)
+        prepAll(prep, TURN_START_DIRECTIVE_TEXTS)
       }
     },
 
@@ -1110,7 +1105,11 @@ export const useGuidedStore = defineStore('guided', {
       const easeInPhrase =
         scriptPhrase && EASE_IN_TEXTS.includes(scriptPhrase) ? scriptPhrase : pick(EASE_IN_TEXTS)
       // If next blob is turn-begins (we're one ahead), speak ease-in via TTS only so we don't consume it
-      const nextBlobIsTurnBegins = scriptPhrase && TURN_BEGINS_TEXTS.includes(scriptPhrase)
+      const nextBlobIsTurnBegins =
+        scriptPhrase &&
+        (TURN_START_DIRECTIVE_TEXTS.includes(scriptPhrase) ||
+          scriptPhrase.includes('follow the on-screen prompt') ||
+          scriptPhrase.includes('begin what is shown'))
       if (this.speakRef) {
         // Sensate uses only pre-baked blobs for these cues; avoid live TTS here so playback stays aligned with script indices.
         if (nextBlobIsTurnBegins && this.sessionPlan?.kind !== 'sensate') {
@@ -1124,7 +1123,7 @@ export const useGuidedStore = defineStore('guided', {
         startCountdown()
       }
       const prep = this.preparePhraseRef
-      if (prep && this.sessionPlan?.kind !== 'sensate') prepAll(prep, TURN_BEGINS_TEXTS)
+      if (prep && this.sessionPlan?.kind !== 'sensate') prepAll(prep, TURN_START_DIRECTIVE_TEXTS)
     },
 
     tickClothingWindow() {

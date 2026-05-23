@@ -124,6 +124,33 @@
         <div class="wizard-step-description">How prompts sound, what they can suggest, and areas to leave out.</div>
       </div>
       <div class="wizard-step-content wizard-step-options">
+        <div class="wizard-settings-category">Default home between directions</div>
+        <p class="wizard-settings-category-hint">
+          Between prompts you will return to this neutral position (spoken aloud). Star your favorites.
+        </p>
+        <div class="wizard-options-card home-position-list">
+          <button
+            v-for="home in HOME_POSITIONS"
+            :key="home.id"
+            type="button"
+            class="secondary wizard-opt home-position-opt"
+            :class="{ 'preset-selected': config.homePositionId === home.id }"
+            @click="selectHome(home.id)"
+          >
+            <span class="wizard-opt-label">{{ home.name }}</span>
+            <span
+              type="button"
+              class="home-fav-star"
+              :class="{ favorited: homeStore.isFavorite(home.id) }"
+              role="button"
+              tabindex="0"
+              :aria-label="homeStore.isFavorite(home.id) ? 'Remove from favorites' : 'Add to favorites'"
+              @click.stop="homeStore.toggleFavorite(home.id)"
+              @keydown.enter.space.prevent.stop="homeStore.toggleFavorite(home.id)"
+            >{{ homeStore.isFavorite(home.id) ? '★' : '☆' }}</span>
+          </button>
+        </div>
+
         <div class="wizard-settings-category">Wording</div>
         <div class="wizard-option-row">
           <span class="wizard-option-label">Prompt detail</span>
@@ -804,6 +831,8 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { clothingPresets, getClothingEmoji, getClothingItemsByBody, groupClothingByBodyRegion, sortClothingByBodyRegion } from '@/data/clothing'
+import { HOME_POSITIONS, getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
+import { useHomePositionsStore } from '@/stores/homePositions'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSpeech } from '@/composables/useSpeech'
 import { EXCLUDE_BODY_KEYS, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
@@ -930,7 +959,13 @@ function presetLabel(key) {
 const fullClothingGroups = groupClothingByBodyRegion(getClothingItemsByBody())
 
 const prefs = usePreferencesStore()
+const homeStore = useHomePositionsStore()
 const speech = useSpeech()
+
+function selectHome(id) {
+  config.homePositionId = id
+  homeStore.setSessionHome(id)
+}
 
 const excludeBodyKeys = EXCLUDE_BODY_KEYS
 const bodyExcludeLabels = {
@@ -978,6 +1013,7 @@ const config = reactive({
   phase3MaxPositions: 4,
   /** 'bed_only' | 'more_physical' — Phase 3 position pool for this guided session (wheelbarrow/standing vs calmer). */
   positionIntensity: 'more_physical',
+  homePositionId: getDefaultHomePosition().id,
 })
 
 function selectPhaseOption(opt) {
@@ -1034,6 +1070,8 @@ function presetIcon(presetKey) {
 const emit = defineEmits(['start'])
 
 onMounted(() => {
+  homeStore.load()
+  config.homePositionId = homeStore.sessionHomeId || getDefaultHomePosition().id
   if (props.initialConfig) {
     const c = props.initialConfig
     config.totalMinutes = c.totalMinutes ?? 30
@@ -1058,6 +1096,7 @@ onMounted(() => {
       const v = String(c.kokoroVoiceId).trim()
       if (v) config.kokoroVoiceId = v
     }
+    if (c.homePositionId) config.homePositionId = c.homePositionId
     if (c.excludeWhenTouching) prefs.$patch({ excludeWhenTouching: mergeExcludePrefs(c.excludeWhenTouching) })
     if (c.excludeWhenTouched) prefs.$patch({ excludeWhenTouched: mergeExcludePrefs(c.excludeWhenTouched) })
     if (typeof c.vibratorsPresent === 'boolean') prefs.vibratorsPresent = c.vibratorsPresent
@@ -1117,7 +1156,9 @@ function onStart() {
         ? config.phase3PositionMode
         : 'each_turn',
     phase3MaxPositions: Math.max(1, Math.min(20, Number(config.phase3MaxPositions) || 4)),
+    homePositionId: config.homePositionId || getDefaultHomePosition().id,
   })
+  homeStore.setSessionHome(config.homePositionId)
 }
 </script>
 

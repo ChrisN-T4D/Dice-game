@@ -22,6 +22,7 @@ This app is a static Vue build served by **nginx** in [Dockerfile](../Dockerfile
 
 - **Admin password** (Admin screen) is stored in the browser (`localStorage`) in **plaintext**. It is only casual protection on a shared device; do not treat it as a high-assurance secret.
 - **Content-Security-Policy** is enforced by **nginx** in the Docker image ([nginx.conf.template](../nginx.conf.template)). Local `vite` dev does not use that file.
+- **`script-src` includes `'unsafe-eval'`** alongside `'wasm-unsafe-eval'`: in-browser voice (ONNX / related bundles) can call `eval` / `new Function` internally. This project’s own `src/` code does not use string eval. Removing `'unsafe-eval'` may break Kokoro or related paths in Chrome with CSP errors about “arbitrary strings as JavaScript.”
 - **Git / CI**: Never commit `.env`, keys, or `audio-assets.tar.gz` (see [.gitignore](../.gitignore)). This repo can run **gitleaks** in CI (see [`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml)).
 - **`npm audit`**: Run regularly on the repo.
 

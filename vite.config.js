@@ -125,7 +125,7 @@ export default defineConfig(({ mode }) => {
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      'phase3-data': fileURLToPath(new URL('./phase3-positions-data.js', import.meta.url)),
+      'phase3-data': fileURLToPath(new URL('./src/data/prompts/phase3/positions.js', import.meta.url)),
       // Stub Node "module" for browser so espeak-ng doesn't trigger externalize warning
       module: path.join(__dirname, 'src', 'tts', 'browser-module-stub.js'),
     },

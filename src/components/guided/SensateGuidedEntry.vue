@@ -63,6 +63,28 @@
           <span>Partner 2 is the first toucher</span>
         </label>
       </fieldset>
+      <div class="sensate-home-block">
+        <span class="sensate-label">Default home between directions</span>
+        <div class="sensate-home-list">
+          <button
+            v-for="home in HOME_POSITIONS"
+            :key="home.id"
+            type="button"
+            class="sensate-preset-card sensate-home-card"
+            :class="{ selected: homePositionId === home.id }"
+            @click="homePositionId = home.id; homeStore.setSessionHome(home.id)"
+          >
+            <span class="sensate-preset-title">{{ home.name }}</span>
+            <span
+              class="home-fav-star"
+              role="button"
+              tabindex="0"
+              @click.stop="homeStore.toggleFavorite(home.id)"
+              @keydown.enter.space.prevent.stop="homeStore.toggleFavorite(home.id)"
+            >{{ homeStore.isFavorite(home.id) ? '★' : '☆' }}</span>
+          </button>
+        </div>
+      </div>
       <button type="button" class="primary sensate-start-btn" :disabled="!selectedPresetId" @click="emitStart">Prepare session</button>
     </div>
   </div>
@@ -71,6 +93,8 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { SENSATE_PRESETS } from '@/data/sensatePresets'
+import { HOME_POSITIONS, getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
+import { useHomePositionsStore } from '@/stores/homePositions'
 import { useSpeech } from '@/composables/useSpeech'
 
 const props = defineProps({
@@ -85,6 +109,8 @@ const selectedPresetId = ref(null)
 /** 'random' | '1' | '2': only used when preset supports first toucher choice */
 const firstToucherPreference = ref('random')
 
+const homeStore = useHomePositionsStore()
+const homePositionId = ref(getDefaultHomePosition().id)
 const speech = useSpeech()
 const kokoroVoicesList = computed(() => speech.kokoroVoicesListForLocale?.value ?? [])
 const kokoroVoiceId = ref('af_nicole')
@@ -103,6 +129,8 @@ watch(
 )
 
 onMounted(() => {
+  homeStore.load()
+  homePositionId.value = homeStore.sessionHomeId || getDefaultHomePosition().id
   const raw = speech.kokoroVoiceId
   const kid = raw && typeof raw === 'object' && 'value' in raw ? raw.value : raw
   if (typeof kid === 'string' && kid.trim()) kokoroVoiceId.value = kid.trim()
@@ -121,6 +149,7 @@ function emitStart() {
     partnerNames: { 1: '', 2: '' },
     kokoroVoiceId: kokoroVoiceId.value?.trim() || 'af_nicole',
     sensateFirstToucherPreference: pref,
+    homePositionId: homePositionId.value,
   })
 }
 </script>

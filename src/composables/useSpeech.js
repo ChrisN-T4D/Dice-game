@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
-import { getStaticPhraseIdForText, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
+import { getStaticPhraseIdForText, getStaticPhraseIdById, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
 import { publicPath } from '@/utils/publicPath'
 
 /** Lazy-load phonemize so espeak-ng runs on main thread (reliable); worker then only runs ONNX. */
@@ -652,13 +652,14 @@ export function useSpeech() {
    * @param {string} text
    * @param {(ev: { phase: string, size?: number, message?: string, textSnippet?: string }) => void} [onDetail] - optional callback for dev log (request/blob/error/timeout)
    */
-  async function generatePhraseToBlob(text, onDetail, voiceIdOverride, staticPresetKind = 'guided') {
+  async function generatePhraseToBlob(text, onDetail, voiceIdOverride, staticPresetKind = 'guided', phraseIdOverride = null) {
     const cleaned = cleanTextForSpeech(text)
     if (!cleaned) return null
     const voiceId = (voiceIdOverride && String(voiceIdOverride).trim()) || (kokoroVoiceId.value?.trim() || 'af_nicole')
 
-    // Use pre-generated static WAV only for the selected voice (never fall back to another voice)
-    const phraseId = getStaticPhraseIdForText(cleaned, { staticPresetKind })
+  const phraseId =
+      (phraseIdOverride && getStaticPhraseIdById(phraseIdOverride)) ||
+      getStaticPhraseIdForText(cleaned, { staticPresetKind })
     if (phraseId && voiceId) {
       try {
         const res = await fetch(getStaticAudioUrl(phraseId, voiceId))
@@ -816,6 +817,7 @@ export function useSpeech() {
       onPlaybackFailed,
       voiceId: voiceIdOption,
       staticPresetKind = 'guided',
+      phraseId: phraseIdOption,
     } = options
     if (!force && !voiceEnabled.value) {
       if (onEnd) onEnd()
@@ -845,7 +847,9 @@ export function useSpeech() {
       return
     }
     // Prefer pre-generated static WAV when this phrase has one (sensate preset lines only try static in sensate sessions)
-    const phraseId = getStaticPhraseIdForText(cleaned, { staticPresetKind })
+    const phraseId =
+      (phraseIdOption && getStaticPhraseIdById(phraseIdOption)) ||
+      getStaticPhraseIdForText(cleaned, { staticPresetKind })
     if (phraseId && voiceId) {
       fetch(getStaticAudioUrl(phraseId, voiceId))
         .then((res) => (res.ok ? res.arrayBuffer().then((buf) => new Blob([buf], { type: 'audio/wav' })) : null))

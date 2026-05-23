@@ -20,12 +20,15 @@ const GROUP_LABELS = {
   voice_test: 'Voice test',
   intro_no_clothing: 'Intro (no clothing)',
   intro_with_clothing: 'Intro (with clothing)',
-  next_turn: 'Next turn / time to switch',
-  turn_begins: 'Turn begins',
+  home_transition: 'Home default (between directions)',
+  turn_start_directive: 'Turn-start directive',
   ease_in: 'Ease in / settle into position',
   session_complete: 'Session complete',
   settle_into_position: 'Settle into position',
   phase_checkin: 'Phase check-in',
+  sensate: 'Sensate static',
+  next_turn: 'Next turn / time to switch (legacy)',
+  turn_begins: 'Turn begins (legacy)',
 }
 
 function run() {
@@ -36,7 +39,7 @@ function run() {
     '',
     '**How to listen:** After running `npm run generate-static-wavs`, open `public/audio/static/af_nicole/` and play each file, or use the app in guided mode to hear phrases in context.',
     '',
-    '**To change wording:** Edit the phrase text in both `scripts/staticPhraseData.js` and `src/data/staticPhrases.js` (keep them in sync), then re-run `npm run generate-static-wavs` to regenerate WAVs.',
+    '**To change wording:** Edit phrases under `src/data/prompts/` (see `guided/session-static.js` and related files), then re-run `npm run generate-static-wavs` to regenerate WAVs.',
     '',
     '---',
     '',

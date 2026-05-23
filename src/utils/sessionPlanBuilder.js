@@ -14,10 +14,12 @@ import {
   SESSION_COMPLETE_PHRASES,
   INTRO_NO_CLOTHING_VARIANTS,
   INTRO_WITH_CLOTHING_VARIANTS,
-  NEXT_TURN_TEXTS,
-  TURN_BEGINS_TEXTS,
   EASE_IN_TEXTS,
+  formatHomeTransition,
+  formatFirstTurnIntro,
+  formatTurnStartDirective,
 } from '@/data/staticPhrases'
+import { getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
 
 // -----------------------------------------------------------------------------
@@ -92,6 +94,7 @@ export function buildSessionPlan(config, seed) {
     phase3PositionMode = 'each_turn',
     phase3MaxPositions = 4,
     positionIntensity = 'more_physical',
+    homePositionId = getDefaultHomePosition().id,
   } = config
 
   const excludeWhenTouching = mergeExcludePrefs(_exTouch)
@@ -267,11 +270,12 @@ export function buildSessionPlan(config, seed) {
       giver: currentPartner,
       receiver,
       locationRoll: loc,
-      actionRoll,
+      actionRoll: actRoll,
       extendedTime,
       clothingText: clothingText || undefined,
       firstTurn: firstTurnOfSession || firstTurnOfPhase3,
       precomputedPrompt: prompt,
+      homePositionId,
     })
     for (const s of phraseStrings) script.push(s)
     turnRecord.phraseStrings = phraseStrings
@@ -326,7 +330,7 @@ export function buildSessionPlan(config, seed) {
     currentPartner = currentPartner === 1 ? 2 : 1
   }
 
-  const outConfig = { ...config }
+  const outConfig = { ...config, homePositionId }
   delete outConfig.phase3TurnsPerPosition
   if (phase3PositionMode === 'reuse_multi') {
     outConfig.phase3ResolvedTurnsPerSlot = phase3TurnsPerSlot
@@ -381,36 +385,21 @@ export function buildTurnPhraseStringsOnly(rng, config, params) {
     }
   }
   const chunk = []
+  const homeId = params.homePositionId || getDefaultHomePosition().id
   if (firstTurn) {
-    const firstTurnPhrase =
-      p === 3
-        ? pick(
-            [
-              `First turn. ${giverName} leads, ${receiverName} follows.`,
-              `Kicking off. ${giverName} leads, ${receiverName} follows.`,
-              `Here we go. ${giverName} leads, ${receiverName} follows.`,
-              `Starting with ${giverName} leading and ${receiverName} following.`,
-            ],
-            rng
-          )
-        : pick(
-            [
-              `First turn. ${giverName} is giver, ${receiverName} is receiver.`,
-              `Kicking off. ${giverName} gives, ${receiverName} receives.`,
-              `Here we go. ${giverName} is giver, ${receiverName} is receiver.`,
-              `Starting with ${giverName} as giver and ${receiverName} as receiver.`,
-            ],
-            rng
-          )
-    chunk.push(firstTurnPhrase)
+    chunk.push(formatFirstTurnIntro(p, giverName, receiverName, rng))
   } else {
-    chunk.push(pick(NEXT_TURN_TEXTS, rng))
+    chunk.push(formatHomeTransition(homeId))
   }
   if (clothingText) chunk.push(normalizeParenthesesForTts(slashToAndForTts(clothingText)))
   const instructionForTts = prompt.shortInstruction || prompt.instruction
   if (instructionForTts) chunk.push(instructionForTts)
   chunk.push(pick(EASE_IN_TEXTS, rng))
-  chunk.push(pick(TURN_BEGINS_TEXTS, rng))
+  const { text: turnStart } = formatTurnStartDirective(
+    { giver: giverName, receiver: receiverName, where: prompt.where, phase: p },
+    rng
+  )
+  chunk.push(turnStart)
   return { prompt, phraseStrings: chunk }
 }
 
@@ -471,16 +460,17 @@ export function computePartialRerollTurn(turn, config, mode, rng) {
     giver: turn.currentPartner,
     receiver: turn.receiver,
     locationRoll: loc,
-    actionRoll,
+    actionRoll: actRoll,
     extendedTime: false,
     clothingText: clothingText || undefined,
     firstTurn,
     precomputedPrompt: prompt,
+    homePositionId: config.homePositionId || getDefaultHomePosition().id,
   })
 
   return {
     locationRoll: loc,
-    actionRoll,
+    actionRoll: actRoll,
     extendedTime,
     where: prompt.where,
     what: prompt.what,

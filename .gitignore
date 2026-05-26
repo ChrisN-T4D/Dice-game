@@ -1,6 +1,7 @@
 # Dependencies and build output (do not commit)
 node_modules/
 dist/
+server/db/anatomy.sqlite
 *.local
 
 # Environment and secrets (never commit)

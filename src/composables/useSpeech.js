@@ -2,6 +2,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { whenIdle } from '@/utils/whenIdle'
 import { getStaticPhraseIdForText, getStaticPhraseIdById, DEFAULT_STATIC_VOICE_ID } from '@/data/staticPhrases'
 import { publicPath } from '@/utils/publicPath'
+import { parseInstructionWithPauses } from '@/utils/instructionTts.js'
 
 /** Lazy-load phonemize so espeak-ng runs on main thread (reliable); worker then only runs ONNX. */
 let phonemizeFn = null
@@ -807,7 +808,57 @@ export function useSpeech() {
     ttsPending.clear()
   }
 
+  function speakWithPauseParts(parts, options = {}) {
+    const { onEnd } = options
+    let index = 0
+    let pauseTimer = null
+
+    function finish() {
+      if (pauseTimer) clearTimeout(pauseTimer)
+      if (onEnd) onEnd()
+    }
+
+    function next() {
+      if (index >= parts.length) {
+        finish()
+        return
+      }
+      const part = parts[index++]
+      if (part.type === 'pause') {
+        pauseTimer = setTimeout(next, (part.seconds || 7) * 1000)
+        return
+      }
+      speakRaw(part.text, { ...options, onEnd: next })
+    }
+
+    next()
+  }
+
   function speak(text, options = {}) {
+    const {
+      force = false,
+      onEnd,
+      cacheForReplay = false,
+      forceTtsMode,
+      onSource,
+      onPlaybackFailed,
+      voiceId: voiceIdOption,
+      staticPresetKind = 'guided',
+      phraseId: phraseIdOption,
+    } = options
+    if (!force && !voiceEnabled.value) {
+      if (onEnd) onEnd()
+      return
+    }
+    const pauseParts = parseInstructionWithPauses(text)
+    if (pauseParts.some((p) => p.type === 'pause')) {
+      speakWithPauseParts(pauseParts, options)
+      return
+    }
+    speakRaw(text, options)
+  }
+
+  function speakRaw(text, options = {}) {
     const {
       force = false,
       onEnd,

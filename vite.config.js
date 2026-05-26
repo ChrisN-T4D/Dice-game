@@ -140,6 +140,26 @@ export default defineConfig(({ mode }) => {
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
+        timeout: 8_000,
+        configure(proxy) {
+          proxy.on('error', (_err, _req, res) => {
+            if (res && !res.headersSent && typeof res.writeHead === 'function') {
+              res.writeHead(502, { 'Content-Type': 'application/json' })
+              res.end(
+                JSON.stringify({
+                  error: 'Anatomy API not reachable',
+                  hint: 'In another terminal run: npm run api:dev',
+                })
+              )
+            }
+          })
+        },
+      },
+    },
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',

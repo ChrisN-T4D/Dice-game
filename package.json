@@ -3,6 +3,9 @@
   "version": "0.8",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "node scripts/copy-public-assets.js && node scripts/list-music.js && vite build",
@@ -33,7 +36,19 @@
     "run-tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js",
     "debug:kokoro-ort": "node scripts/test-kokoro-ort.js",
     "debug:compare-tokenize": "node scripts/compare-tokenize-and-inspect-onnx.js",
-    "debug:tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js"
+    "debug:tokenize-path-onnx": "node scripts/run-tokenize-path-onnx-node.js",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:seed": "node scripts/seed-anatomy.mjs",
+    "validate:anatomy-profiles": "node scripts/validate-anatomy-profiles.mjs",
+    "audit:anatomy-profiles": "node scripts/audit-anatomy-profiles.mjs",
+    "actions:seed": "node scripts/seed-anatomy-actions.mjs",
+    "validate:anatomy-actions": "node scripts/validate-anatomy-actions.mjs",
+    "audit:anatomy-actions": "node scripts/audit-anatomy-actions.mjs",
+    "audit:anatomy-sequences": "node scripts/audit-anatomy-sequences.mjs",
+    "db:setup": "npm run db:migrate && npm run db:seed && npm run actions:seed",
+    "api:dev": "node server/src/index.js",
+    "api:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-port.ps1 3001",
+    "test:anatomy-api": "node scripts/test-anatomy-api.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.5.1",

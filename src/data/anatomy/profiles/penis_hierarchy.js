@@ -1,0 +1,136 @@
+import { makeZone } from './_makeZone.js'
+
+const M = ['male']
+
+export default {
+  penis: makeZone({
+    display_name: 'Penis',
+    description: 'External penile structure as a whole; shaft and glans share arousal but differ in touch preference.',
+    sensitivity: 'high',
+    sensitivity_score: 88,
+    orientations: M,
+    stimulation: {
+      erogenous_priority: 88,
+      sensitivity_to_pressure: 'high',
+      sensitivity_to_friction: 'high',
+      sensitivity_to_teeth: 'low',
+      sensitivity_to_mouth: 'medium',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['stroke', 'circle', 'pressure'],
+  }),
+  penis_glans: makeZone({
+    display_name: 'Penis glans',
+    description:
+      'Head of the penis; densely sensitive, especially on the underside and corona. Responds intensely to wet warmth, light friction, and focused circles.',
+    sensitivity: 'high',
+    sensitivity_score: 96,
+    orientations: M,
+    topology: {
+      surface_area: 'small',
+      shape: 'convex',
+      contact_extent: 'modest',
+      typical_contact_fu: 2,
+      max_contact_fu: 3,
+      curvature: 'pronounced',
+      flexibility: 'flexible',
+      depth: 'shallow',
+    },
+    stimulation: {
+      erogenous_priority: 98,
+      sensitivity_to_pressure: 'medium',
+      sensitivity_to_friction: 'high',
+      sensitivity_to_teeth: 'low',
+      sensitivity_to_mouth: 'high',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['circle', 'stroke', 'kiss'],
+    tickle: { tickle_sensitivity: 'low' },
+  }),
+  penis_shaft: makeZone({
+    display_name: 'Penis shaft',
+    description:
+      'Length of the penis; enjoys wrapping hand strokes, firm gripping, and lube-assisted sliding from base to tip.',
+    sensitivity: 'high',
+    sensitivity_score: 82,
+    orientations: M,
+    topology: { surface_area: 'medium', shape: 'convex' },
+    stimulation: {
+      erogenous_priority: 82,
+      sensitivity_to_pressure: 'high',
+      sensitivity_to_friction: 'high',
+      sensitivity_to_teeth: 'low',
+      sensitivity_to_mouth: 'medium',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['stroke', 'pressure'],
+  }),
+  foreskin: makeZone({
+    display_name: 'Foreskin',
+    description:
+      'Mobile skin covering the glans when present; silky inner surface that loves rolling, sliding, and oral attention.',
+    sensitivity: 'high',
+    sensitivity_score: 85,
+    orientations: M,
+    topology: { flexibility: 'flexible' },
+    stimulation: {
+      erogenous_priority: 86,
+      sensitivity_to_friction: 'high',
+      sensitivity_to_mouth: 'high',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['stroke', 'circle', 'kiss'],
+    musculoskeletal: { skin_thickness: 'medium', skin_texture: 'fine' },
+  }),
+  frenulum: makeZone({
+    display_name: 'Frenulum',
+    description:
+      'V-shaped band on the underside of the glans; one of the most acute pleasure points on the penis. Light touch goes a long way.',
+    sensitivity: 'high',
+    sensitivity_score: 98,
+    orientations: M,
+    topology: { surface_area: 'small', shape: 'concave' },
+    stimulation: {
+      erogenous_priority: 99,
+      sensitivity_to_pressure: 'medium',
+      sensitivity_to_friction: 'high',
+      sensitivity_to_teeth: 'low',
+      sensitivity_to_mouth: 'high',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['circle', 'stroke', 'kiss'],
+  }),
+  urethral_meatus: makeZone({
+    display_name: 'Urethral meatus',
+    description: 'Opening at the tip; delicate. Avoid harsh friction; incidental contact during oral or stroking is usually enough.',
+    sensitivity: 'medium',
+    sensitivity_score: 70,
+    orientations: M,
+    topology: { surface_area: 'small', depth: 'shallow' },
+    stimulation: {
+      erogenous_priority: 65,
+      sensitivity_to_friction: 'medium',
+      sensitivity_to_teeth: 'low',
+      sensitivity_to_mouth: 'medium',
+      sensitivity_to_hand: 'low',
+    },
+    techniques: ['stroke'],
+  }),
+  bulb_of_penis: makeZone({
+    display_name: 'Bulb of penis',
+    description:
+      'Internal erectile bulb behind the base; felt as fullness between the legs. Responds to deep palm pressure at the perineum.',
+    sensitivity: 'medium',
+    sensitivity_score: 68,
+    orientations: M,
+    topology: { depth: 'deep', surface_area: 'medium' },
+    stimulation: {
+      erogenous_priority: 70,
+      sensitivity_to_pressure: 'high',
+      sensitivity_to_friction: 'low',
+      sensitivity_to_mouth: 'low',
+      sensitivity_to_hand: 'high',
+    },
+    techniques: ['pressure'],
+  }),
+}

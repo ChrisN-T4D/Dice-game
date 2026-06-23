@@ -1,0 +1,47 @@
+{
+  "technique_id": "SURPRISE_PLEASURE_OF_UNEXPECTED",
+  "name": "Surprise — The Pleasure of the Unexpected",
+  "receiver_anatomy": "female",
+  "category": "variety",
+  "summary": "Variety keeps sensation exciting—65–76% of women prefer non-repetitive stimulation at some stage of arousal. Surprise means alternating between different pleasurable variations to keep the body guessing, not throwing in unrelated distractions.",
+  "detailed_description": "OMGYES describes two approaches to surprise: constant surprise (make every motion different from the last) and set surprise (repeat a motion a few times to build, then switch before it gets predictable). Surprise is about varied pleasurable moves, not random 'zingers.' An important exception: once the approach begins and an orgasm is building, many prefer to drop the surprise and stay consistent with one motion.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Start from a move that already works for the receiver.",
+    "2. Choose an approach: constant surprise (vary every repetition) or set surprise (build then switch).",
+    "3. Vary by shape, location, and/or speed/rhythm—keep changes pleasurable, not jarring.",
+    "4. Use a signal so you know when the receiver is getting close.",
+    "5. When the orgasm starts building (the approach), drop the surprise and hold one consistent motion."
+  ],
+  "safety_notes": [
+    "Surprise means alternating pleasurable variations, not unrelated or distracting touches mid-flow.",
+    "Stop varying and stay consistent once orgasm is building unless told otherwise.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["surprise", "variety", "unpredictable", "anti-habituation", "clitoral"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Surprise (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "65–76% of women prefer non-repetitive stimulation at some stage of arousal; testimonials from Sonya."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "SURPRISE_CONSTANT",
+      "SURPRISE_SET"
+    ],
+    "key_statistic": "65–76% of women prefer non-repetitive stimulation at some stage of arousal.",
+    "practical_tips": {
+      "signal_system": "Agree on a cue (e.g. 'getting close!') so the giver knows when to stop switching and stay consistent.",
+      "timing_balance": "More intense motions work best in short bursts; gentler or indirect moves can repeat longer without feeling repetitive.",
+      "not_random_zingers": "Surprise is alternating pleasurable variations, not introducing unrelated distractions mid-flow."
+    },
+    "approach_exception": "Once orgasm starts building, many prefer one consistent motion over continued surprise."
+  }
+}

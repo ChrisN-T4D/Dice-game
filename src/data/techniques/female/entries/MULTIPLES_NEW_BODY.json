@@ -1,0 +1,36 @@
+{
+  "technique_id": "MULTIPLES_NEW_BODY",
+  "name": "Multiples — A Whole New Body After Orgasm",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Pretend you or your partner woke up in a completely new body after the first orgasm—fresh skin with entirely new likes and dislikes—and start from scratch to discover what feels good now. Used by about 47% of women who experience multiples.",
+  "detailed_description": "This mindset technique treats the post-orgasm body as different from the pre-orgasm one. Immediately after climax the clit can be painful to touch, so you explore as if discovering preferences for the first time. Once the initial oversensitivity fades, a modified version of the techniques that worked for the first orgasm often works again.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. After the first orgasm, mentally reset—treat the body as brand new.",
+    "2. Avoid the clit at the moment of peak oversensitivity (it can hurt).",
+    "3. Explore gently from scratch to learn what feels good now.",
+    "4. Once oversensitivity fades, reintroduce a modified, gentler version of what worked the first time.",
+    "5. Build toward a second orgasm from there."
+  ],
+  "safety_notes": [
+    "Don't touch the clit directly during peak post-orgasm sensitivity.",
+    "Let the receiver's current responses guide you, not the pre-orgasm map."
+  ],
+  "tags": ["multiples", "new-body", "mindset", "rediscovery", "post-orgasm"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Multiples (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Used by ~47% of women who experience multiples."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "MULTIPLES_SECOND_ORGASM",
+    "usage_stat": "Used by about 47% of women who experience multiples."
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "technique_id": "ORGASM_CERVICAL_DEEP_END",
+  "name": "Cervical / Deep-End Orgasm (Belly Orgasm)",
+  "receiver_anatomy": "female",
+  "category": "orgasm",
+  "summary": "A distinct climax from deep vaginal stimulation—especially sustained contact at the deep end—not the same as G-spot or clitoral orgasm. OMGYES reports about 15% of women have discovered this type; technique and patience matter more than force.",
+  "detailed_description": "Often called a \"belly orgasm\": tension releases from deep in the gut or abdomen and spreads outward toward chest, throat, and face—internally rooted rather than starting at the external clitoris. Most who have not enjoyed it yet may be using the wrong motion: lifting off between contacts, piston-style in-out pounding, or thumping. About 12% of women who enjoy deep-end pleasure still dislike jerking piston action. Success favors continuous contact, rocking, pulsing, or massaging with steady pressure through the whole cycle—lighter, deliberate touch on inner walls rather than slamming. Mastery usually takes repeated sessions across changing mood, energy, and stress levels.",
+  "body_areas": ["cervix", "deep vagina", "abdomen", "vaginal fornix"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Ensure high arousal and lubrication before deep contact; never rush to full depth.",
+    "2. Maintain continuous contact—do not lift off and re-touch in short intervals; resets break the build.",
+    "3. Use rocking, pulsing, or massaging motions with steady pressure held through each cycle.",
+    "4. Avoid thumping, banging, or fast piston in-out unless the receiver explicitly enjoys that.",
+    "5. Stay gentle and controlled on inner walls; depth alone does not create pleasure without the right pressure curve.",
+    "6. Repeat across sessions; note what pressure, angle, and depth work on a given day."
+  ],
+  "safety_notes": [
+    "Deep pounding often causes cervical pain—stop immediately if sharp or bruising sensation occurs.",
+    "Cervical contact should be invited and gentle; never punch or ram depth.",
+    "Not all bodies enjoy deep stimulation; absence of this orgasm type is normal."
+  ],
+  "tags": ["orgasm", "cervical", "deep-end", "belly-orgasm", "internal", "sustained-contact"],
+  "related_zone_ids": ["cervix", "vagina", "vaginal_anterior_wall", "vaginal_posterior_wall"],
+  "references": [
+    {
+      "title": "OMGYES — Different Kinds of Orgasm (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "~15% of women report discovering deep-end pleasure sufficient for this orgasm type; ~12% of deep-end enjoyers dislike piston-style motion."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORGASM_TYPES_VARIED_EXPERIENCE",
+    "sensation_profile": "Deep abdominal release spreading upward; unlike external clitoral spread.",
+    "prevalence_note": "15% have discovered deep-end pleasure alone sufficient for this orgasm type (OMGYES research).",
+    "motions_to_avoid": ["lifting off between strokes", "fast piston in-out", "thumping or slamming"]
+  }
+}

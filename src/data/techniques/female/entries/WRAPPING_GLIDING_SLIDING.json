@@ -1,0 +1,35 @@
+{
+  "technique_id": "WRAPPING_GLIDING_SLIDING",
+  "name": "Wrapping — Gliding and Sliding (Taut vs. Loose)",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Two ways to wrap for movement: hold the fabric taut so the vibrator glides while the fabric stays fixed, or keep the fabric loose so it slides against the skin for a softer sensation.",
+  "detailed_description": "How you hold the fabric changes the feel. Taut fabric stays fixed in place while the vibrator glides over its surface—more direct and controlled. Loose fabric is free to slide against the skin, adding a softer, shifting sensation. Add generous lube with silky fabrics if friction is too much, or hold the fabric taut if a spot becomes uncomfortable.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Choose taut: hold the fabric fixed and let the vibrator glide over it.",
+    "2. Or choose loose: let the fabric slide freely against the skin for a softer feel.",
+    "3. Move the toy to find the right glide and pressure.",
+    "4. Add lube with silky fabric if there's too much friction.",
+    "5. Switch to holding the fabric taut if a spot feels uncomfortable."
+  ],
+  "safety_notes": [
+    "Manage friction with lube or by switching taut/loose.",
+    "Stop if fabric drags painfully on skin."
+  ],
+  "tags": ["wrapping", "gliding", "sliding", "taut", "loose", "vibrator", "friction"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC",
+    "modes": [
+      { "id": "taut", "name": "Taut fabric", "description": "Fabric stays fixed; vibrator glides over it." },
+      { "id": "loose", "name": "Loose fabric", "description": "Fabric slides against the skin for a softer sensation." }
+    ]
+  }
+}

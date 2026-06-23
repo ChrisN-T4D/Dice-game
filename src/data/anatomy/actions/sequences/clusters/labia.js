@@ -84,7 +84,7 @@ export default [
     name: 'Labia sweep to perineum',
     cues: [
       'stroke the outer lips from front to back with your palm',
-      'hold steady palm pressure on the perineum',
+      'press in and ease off with the palm on the perineum',
     ],
     techniques: ['stroke', 'pressure'],
     stimulators: ['palm', 'palm'],

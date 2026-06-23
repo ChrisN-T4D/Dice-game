@@ -1,0 +1,36 @@
+{
+  "technique_id": "STAGING_BUILDING_DESIRE",
+  "name": "Staging — Building Desire / Warmup",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "The first and longest stage: soft, slow teasing touch entirely away from the clit to spark desire before any direct stimulation. Warm up the body emotionally and physically on wider zones first.",
+  "detailed_description": "This warmup is usually the longest part of the sequence, taking several minutes depending on the individual. Begin away from the vulva—inner thighs, belly, navel, mons pubis, surrounding labia—rather than the lips or clit. Introduce light pressure on broad zones so the receiver becomes comfortable and ready for direct attention later. Starting at full force here can cause discomfort or shock and set the session back.",
+  "body_areas": ["inner thighs", "belly", "navel", "mons pubis", "labia"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Begin with soft, slow teasing touch entirely away from the clit.",
+    "2. Touch inner thighs, belly, navel, mons pubis, and surrounding labia—not the lips or clit yet.",
+    "3. Warm up emotionally as well as physically before direct genital stimulation.",
+    "4. Slowly introduce light pressure across wider zones.",
+    "5. Take your time—this is typically the longest stage; let desire build before moving on."
+  ],
+  "safety_notes": [
+    "Avoid going straight to full-force direct touch; it can cause discomfort and desensitize.",
+    "Match duration to the individual's sensitivity; do not rush the warmup."
+  ],
+  "tags": ["staging", "warmup", "building-desire", "teasing", "away-from-clit"],
+  "related_zone_ids": ["mons_pubis", "labia_majora", "inner_thighs"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 1,
+    "typical_timing": "Longest stage; several minutes depending on the individual."
+  }
+}

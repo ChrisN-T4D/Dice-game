@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Anatomy Map — Vulva (parametric SVG proof)</title>
+<style>
+  :root {
+    --bg: #efe6db;
+    --panel: #f7f0e8;
+    --stroke: #e2d6c8;
+    --text: #3b3138;
+    --text-dim: #7c7068;
+    --text-faint: #ab9f93;
+    --accent: #d07ab0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 2px; font-weight: 600; }
+  .sub { color: var(--text-dim); margin: 0 0 18px; font-size: 13px; }
+  .sub code { background: #00000040; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .stage { background: var(--panel); border: 1px solid var(--stroke); border-radius: 12px; padding: 16px; }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .metric-btn {
+    background: transparent; color: var(--text-dim); border: 1px solid var(--stroke);
+    padding: 5px 11px; border-radius: 999px; cursor: pointer; font-size: 12px; transition: .15s;
+  }
+  .metric-btn:hover { color: var(--text); border-color: #4a4a57; }
+  .metric-btn.active { background: var(--accent); color: #1a1014; border-color: var(--accent); font-weight: 600; }
+  svg { display: block; }
+  .zone-outline { fill: transparent; stroke: #a85b42; cursor: pointer; stroke-linejoin: round; stroke-linecap: round; transition: stroke-width .12s, stroke .12s; }
+  .zone-outline:hover { stroke: #5e3326; stroke-width: 1.9; }
+  .zone-outline.selected { stroke: #7c2f52; stroke-width: 2.3; }
+  .zone-hit { fill: transparent; stroke: none; cursor: pointer; transition: stroke-width .12s, stroke .12s; }
+  .zone-hit:hover { stroke: #5e3326; stroke-width: 1.4; }
+  .zone-hit.selected { stroke: #7c2f52; stroke-width: 1.7; }
+  .zone-label { fill: var(--text-dim); font-size: 10px; pointer-events: none; user-select: none; }
+  .decor { fill: none; stroke: #b27a5c; stroke-width: 0.9; opacity: .75; pointer-events: none; stroke-linecap: round; }
+  .leader { stroke: #cdbfb0; stroke-width: 1; pointer-events: none; }
+  .bodyline { fill: none; stroke: #b07a5e; stroke-width: 1.3; opacity: .8; stroke-linecap: round; pointer-events: none; }
+  .anchor { fill: none; stroke: #6f5a4e; stroke-width: 1.4; pointer-events: none; }
+  .anchor-dot { fill: #6f5a4e; pointer-events: none; }
+  .anchor-leader { stroke: #cdbfb0; stroke-width: 1; pointer-events: none; }
+  .anchor-label { fill: #6f5a4e; font-size: 10px; font-style: italic; pointer-events: none; user-select: none; }
+  .legend { margin-top: 14px; }
+  .legend-bar { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#f0e2d6,#f0a878,#e87aa8,#b86ad0,#8a3ec8); }
+  .legend-row { display: flex; justify-content: space-between; color: var(--text-faint); font-size: 11px; margin-top: 4px; }
+  .panel { background: var(--panel); border: 1px solid var(--stroke); border-radius: 12px; padding: 18px; width: 320px; min-height: 200px; }
+  .panel h2 { margin: 0 0 2px; font-size: 17px; }
+  .panel .desc { color: var(--text-dim); font-size: 13px; margin: 8px 0 16px; }
+  .scoregrid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+  .scoregrid .k { color: var(--text-dim); font-size: 12px; }
+  .scoregrid .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bar { height: 6px; background: #00000050; border-radius: 3px; overflow: hidden; grid-column: 1 / -1; margin-top: -2px; margin-bottom: 4px; }
+  .bar > span { display: block; height: 100%; border-radius: 3px; }
+  .channels { margin-top: 16px; }
+  .channels .ch { display: grid; grid-template-columns: 70px 1fr 34px; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .channels .ch .lbl { color: var(--text-dim); font-size: 12px; }
+  .channels .ch .track { height: 6px; background: #00000050; border-radius: 3px; overflow: hidden; }
+  .channels .ch .track > span { display: block; height: 100%; }
+  .channels .ch .num { text-align: right; font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .tag { background: #00000040; border: 1px solid var(--stroke); color: var(--text-dim); padding: 3px 9px; border-radius: 999px; font-size: 11px; }
+  .empty { color: var(--text-faint); font-size: 13px; }
+  .foot { color: var(--text-faint); font-size: 11px; margin-top: 18px; max-width: 720px; }
+</style>
+</head>
+<body>
+  <h1>Vulva sensitivity map — parametric SVG proof</h1>
+  <p class="sub">
+    Shapes are drawn from code (no art asset); the watercolor glow + color are computed live from the real
+    zone profiles in <code>src/data/anatomy/profiles/</code>. Click a zone for detail. Switch the metric to re-tint.
+  </p>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="controls" id="controls"></div>
+      <svg id="map" viewBox="-90 -150 580 870" width="452" height="678" role="img" aria-label="Vulva anatomy map">
+        <defs>
+          <radialGradient id="skin" cx="50%" cy="32%" r="74%">
+            <stop offset="0%" stop-color="#f0d2b6" />
+            <stop offset="55%" stop-color="#e0b288" />
+            <stop offset="100%" stop-color="#cf9968" />
+          </radialGradient>
+          <radialGradient id="navelg" cx="50%" cy="38%" r="62%">
+            <stop offset="0%" stop-color="#0e6a72" />
+            <stop offset="100%" stop-color="#36b0bb" />
+          </radialGradient>
+          <radialGradient id="anusg" cx="50%" cy="44%" r="64%">
+            <stop offset="0%" stop-color="#7c2942" />
+            <stop offset="100%" stop-color="#c66b84" />
+          </radialGradient>
+          <filter id="bodyblur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="9" />
+          </filter>
+          <filter id="shadeblur" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+          <filter id="soft" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+        </defs>
+        <g id="bodyLayer" filter="url(#bodyblur)"></g>
+        <g id="shadeLayer" filter="url(#shadeblur)"></g>
+        <g id="glowLayer" filter="url(#soft)"></g>
+        <g id="decorLayer"></g>
+        <g id="lineLayer"></g>
+        <g id="structLayer"></g>
+        <g id="labelLayer"></g>
+      </svg>
+      <div class="legend">
+        <div class="legend-bar"></div>
+        <div class="legend-row"><span>0</span><span id="legendName">Sensitivity score</span><span>100</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="empty">Click a zone to see its profile.</div>
+    </div>
+  </div>
+
+  <p class="foot">
+    Throwaway proof of approach E (programmatic line-art + data-driven glow). The body geometry is schematic and
+    parametric — in production these coordinates become the <code>anatomy/maps/</code> overlay keyed to each
+    <code>zone_id</code>, and the same heat function drives a full-body view.
+  </p>
+
+<script>
+// --- real data lifted from the profile files -------------------------------
+const LVL = { low: 30, medium: 60, high: 90 };
+
+const ZONES = [
+  // --- surrounding body (drawn first => sits behind the vulva) --------------
+  { id: 'inner_thigh_l', name: 'Inner thigh',
+    desc: 'Soft inner leg sweeping from the groin toward the knee; highly erogenous — feather strokes, kisses, and warm breath that tease inward toward the genitals.',
+    sensitivity: 80, arousal: 82, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['stroke','kiss','circle'], sw: 1.1, glowScale: 0.32, glowW: 20, group:'inner_thighs',
+    shape: { t:'path', d:'M30 -160 C-12 -70 -50 80 -62 252 C-54 410 70 520 196 562 C152 470 130 352 130 236 C129 130 102 -56 30 -160 Z' },
+    lx:24, ly:360, tx:-44, ty:320 },
+  { id: 'inner_thigh_r', name: 'Inner thigh',
+    desc: 'Soft inner leg sweeping from the groin toward the knee; highly erogenous — feather strokes, kisses, and warm breath that tease inward toward the genitals.',
+    sensitivity: 80, arousal: 82, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['stroke','kiss','circle'], sw: 1.1, glowScale: 0.32, glowW: 20, group:'inner_thighs',
+    shape: { t:'path', d:'M370 -160 C412 -70 450 80 462 252 C454 410 330 520 204 562 C248 470 270 352 270 236 C271 130 298 -56 370 -160 Z' } },
+
+  { id: 'groin_l', name: 'Groin crease',
+    desc: 'Heated crease where thigh meets the pelvis; nerve-rich transition zone savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity: 82, arousal: 82, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'medium', hand:'high' },
+    techniques: ['stroke','circle','kiss'], sw: 1.0, glowScale: 0.6, group:'groin',
+    shape: { t:'path', d:'M138 232 C134 132 110 -46 48 -150 C66 -138 96 -30 128 132 C132 166 136 200 142 232 Z' },
+    lx:44, ly:16, tx:94, ty:32 },
+  { id: 'groin_r', name: 'Groin crease',
+    desc: 'Heated crease where thigh meets the pelvis; nerve-rich transition zone savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity: 82, arousal: 82, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'medium', hand:'high' },
+    techniques: ['stroke','circle','kiss'], sw: 1.0, glowScale: 0.6, group:'groin',
+    shape: { t:'path', d:'M262 232 C266 132 290 -46 352 -150 C334 -138 304 -30 272 132 C268 166 264 200 258 232 Z' } },
+
+  { id: 'mons_pubis', name: 'Mons pubis',
+    desc: 'Soft padded mound above the vulva. Pleasurable when kneaded, rubbed in slow circles, or kissed through hair or skin.',
+    sensitivity: 65, arousal: 62, ch: { pressure:'medium', friction:'medium', teeth:'low', mouth:'medium', hand:'high' },
+    techniques: ['pressure','circle','stroke'], sw: 1.1, glowScale: 0.95,
+    shape: { t:'path', d:'M200 62 C156 66 126 104 120 176 C124 184 276 184 280 176 C274 104 244 66 200 62 Z' },
+    lx:92, ly:120, tx:150, ty:122 },
+
+  { id: 'labia_majora', name: 'Labia majora (outer lips)',
+    desc: 'Outer cushioned lips; warm and plush for kneading, palm rubs, and slow sucking along the full length.',
+    sensitivity: 65, arousal: 66, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'medium', hand:'high' },
+    techniques: ['pressure','circle','stroke','kiss'], sw: 1.2, glowScale: 0.5,
+    shape: { t:'path', d:'M132 178 C120 228 116 296 120 356 C126 422 146 466 170 496 C183 506 217 506 230 496 C254 466 274 422 280 356 C284 296 280 228 268 178 C264 186 136 186 132 178 Z' },
+    lx:92, ly:330, tx:122, ty:340 },
+
+  { id: 'perineum', name: 'Perineum',
+    desc: 'Bridge of skin between genitals and anus. Often arousing with firm palm pressure, slow strokes, and warm breath along the midline.',
+    sensitivity: 70, arousal: 72, ch: { pressure:'high', friction:'medium', teeth:'low', mouth:'medium', hand:'high' },
+    techniques: ['pressure','stroke','circle'], sw: 1.1, glowScale: 0.6,
+    shape: { t:'path', d:'M168 500 C183 510 217 510 232 500 C240 524 226 552 200 570 C176 552 162 524 168 500 Z' },
+    lx:308, ly:556, tx:226, ty:552 },
+
+  { id: 'vestibular_bulbs_l', name: 'Vestibular bulbs',
+    desc: 'Swollen tissue beside the opening during arousal; full and soft — responds to firm cupped pressure, slow circles, and deep suction at the entrance.',
+    sensitivity: 82, arousal: 80, ch: { pressure:'high', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','pressure','stroke','kiss'], sw: 1.3, glowScale: 0.7, glowW: 9, hidden: true,
+    shape: { t:'path', d:'M177 268 C155 296 156 378 179 414 C190 378 190 300 177 268 Z' },
+    group:'vestibular_bulbs' },
+  { id: 'vestibular_bulbs_r', name: 'Vestibular bulbs',
+    desc: 'Swollen tissue beside the opening during arousal; full and soft — responds to firm cupped pressure, slow circles, and deep suction at the entrance.',
+    sensitivity: 82, arousal: 80, ch: { pressure:'high', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','pressure','stroke','kiss'], sw: 1.3, glowScale: 0.7, glowW: 9, hidden: true,
+    shape: { t:'path', d:'M223 268 C245 296 244 378 221 414 C210 378 210 300 223 268 Z' },
+    group:'vestibular_bulbs' },
+
+  { id: 'vestibule', name: 'Vestibule',
+    desc: 'Warm hollow between the labia that bridges external and internal play. Enjoys soft oral attention and cupped hand warmth.',
+    sensitivity: 84, arousal: 86, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['kiss','circle','stroke'], sw: 1.3, glowScale: 0.45, hidden: true,
+    shape: { t:'path', d:'M200 236 C180 248 172 300 174 342 C176 396 186 432 200 454 C214 432 224 396 226 342 C228 300 220 248 200 236 Z' },
+    lx:308, ly:300, tx:226, ty:300 },
+
+  { id: 'labia_minora', name: 'Labia minora (inner lips)',
+    desc: 'Thin inner folds framing the opening; velvety and responsive to soft strokes, parting, and wet kisses along each edge.',
+    sensitivity: 88, arousal: 88, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','stroke','kiss'], sw: 1.6, glowScale: 0.9,
+    shape: { t:'path', d:'M200 212 C172 204 154 230 158 262 C160 286 176 302 161 322 C148 344 161 372 178 402 C188 430 196 448 200 462 C204 448 212 430 222 402 C239 372 252 344 239 322 C224 302 240 286 242 260 C246 228 228 204 200 212 Z' },
+    lx:92, ly:252, tx:160, ty:280 },
+
+  { id: 'vaginal_introitus', name: 'Vaginal introitus',
+    desc: 'Entrance to the vagina; rim where inner and outer tissues meet. Sensitive to circling touch, wet kisses, and careful finger pressure.',
+    sensitivity: 86, arousal: 88, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','kiss','stroke'], sw: 1.4, glowScale: 0.6,
+    shape: { t:'path', d:'M200 322 C213 342 213 400 200 424 C187 400 187 342 200 322 Z' },
+    lx:308, ly:398, tx:212, ty:376 },
+
+  { id: 'clitoral_hood', name: 'Clitoral hood',
+    desc: 'Soft fold over the glans; pliable skin that loves feather strokes, wet kisses along the edge, and gentle circles without direct pressure on the tip.',
+    sensitivity: 68, arousal: 70, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','stroke','kiss'], sw: 1.2, glowScale: 0.7,
+    shape: { t:'path', d:'M200 172 C182 176 176 200 186 228 C191 242 209 242 215 228 C225 200 218 176 200 172 Z' },
+    lx:308, ly:178, tx:216, ty:202 },
+
+  { id: 'clitoral_glans', name: 'Clitoral glans',
+    desc: 'Small rounded tip; the primary focus for many partners. Responds exquisitely to light circles, warm breath, and soft oral attention — avoid teeth and harsh pressure.',
+    sensitivity: 96, arousal: 96, ch: { pressure:'medium', friction:'high', teeth:'low', mouth:'high', hand:'high' },
+    techniques: ['circle','stroke','kiss'], sw: 1.4, glowScale: 0.85,
+    shape: { t:'ellipse', cx:200, cy:226, rx:8.5, ry:11 },
+    lx:308, ly:228, tx:209.5, ty:226 },
+];
+
+// Non-interactive line detail so it reads as a stylized vulva
+const DECOR = [
+  // inner labia frills (wispy, slightly asymmetric like the reference)
+  'M186 256 C180 300 186 354 198 446',            // left inner crease
+  'M214 256 C220 300 214 356 202 446',            // right inner crease
+  'M194 228 C180 252 178 282 189 312',            // left little fold
+  'M206 228 C220 252 222 282 211 312',            // right little fold
+  'M196 446 C198 454 199 458 200 462',            // frills converge low
+  'M205 446 C203 454 202 458 200 462',            // lower midline cleft toward perineum
+  'M200 462 C201 502 200 524 200 548',            // continues to perineum
+  'M193 312 C197 317 204 317 208 312',            // urethral dimple above the introitus
+  'M152 204 C134 256 133 334 156 402',            // left majora→minora inner fold
+  'M248 204 C266 256 267 334 244 402',            // right majora→minora inner fold
+  'M150 168 C151 150 168 138 196 136',            // soft mons crease, left
+  'M250 168 C249 150 232 138 204 136',            // soft mons crease, right
+];
+
+const METRICS = [
+  { id: 'sensitivity', label: 'Sensitivity', get: z => z.sensitivity },
+  { id: 'arousal', label: 'Arousal priority', get: z => z.arousal },
+  { id: 'pressure', label: 'Pressure', get: z => LVL[z.ch.pressure] },
+  { id: 'friction', label: 'Friction', get: z => LVL[z.ch.friction] },
+  { id: 'mouth', label: 'Mouth', get: z => LVL[z.ch.mouth] },
+  { id: 'hand', label: 'Hand', get: z => LVL[z.ch.hand] },
+];
+
+let currentMetric = METRICS[0];
+let selectedId = null;
+
+// --- color scale (peach -> pink -> purple, echoing OMGYES) -----------------
+const STOPS = [
+  { t: 0.00, c: [240, 226, 214] },
+  { t: 0.40, c: [240, 168, 120] },
+  { t: 0.65, c: [232, 122, 168] },
+  { t: 0.85, c: [184, 106, 208] },
+  { t: 1.00, c: [138,  62, 200] },
+];
+function heatColor(v) {
+  const t = Math.max(0, Math.min(1, v / 100));
+  for (let i = 1; i < STOPS.length; i++) {
+    if (t <= STOPS[i].t) {
+      const a = STOPS[i - 1], b = STOPS[i];
+      const k = (t - a.t) / (b.t - a.t);
+      const c = a.c.map((ac, j) => Math.round(ac + (b.c[j] - ac) * k));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+  }
+  const c = STOPS[STOPS.length - 1].c;
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+// --- build SVG -------------------------------------------------------------
+const SVGNS = 'http://www.w3.org/2000/svg';
+const bodyLayer = document.getElementById('bodyLayer');
+const shadeLayer = document.getElementById('shadeLayer');
+const glowLayer = document.getElementById('glowLayer');
+const decorLayer = document.getElementById('decorLayer');
+const lineLayer = document.getElementById('lineLayer');
+const structLayer = document.getElementById('structLayer');
+const labelLayer = document.getElementById('labelLayer');
+
+function makeShape(spec) {
+  let el;
+  if (spec.t === 'ellipse') {
+    el = document.createElementNS(SVGNS, 'ellipse');
+    el.setAttribute('cx', spec.cx); el.setAttribute('cy', spec.cy);
+    el.setAttribute('rx', spec.rx); el.setAttribute('ry', spec.ry);
+  } else if (spec.t === 'circle') {
+    el = document.createElementNS(SVGNS, 'circle');
+    el.setAttribute('cx', spec.cx); el.setAttribute('cy', spec.cy); el.setAttribute('r', spec.r);
+  } else {
+    el = document.createElementNS(SVGNS, 'path');
+    el.setAttribute('d', spec.d);
+  }
+  return el;
+}
+
+// --- body silhouette + cel shading (behind the zones) ----------------------
+// one continuous skin silhouette: belly across the top, both thighs sweeping up-and-out,
+// then flowing down and in to the buttocks at the bottom — all unbroken skin (no gaps).
+const BODY_SIL = 'M30 -160 C-12 -70 -50 80 -62 252 C-58 404 -38 556 34 656 C92 716 150 728 200 722 C250 728 308 716 366 656 C438 556 458 404 462 252 C450 80 412 -70 370 -160 L30 -160 Z';
+
+const BODY = [
+  { t:'path', d:BODY_SIL },
+];
+bodyLayer.setAttribute('opacity', '0.72');
+BODY.forEach(s => {
+  const el = makeShape(s);
+  el.setAttribute('fill', 'url(#skin)');
+  bodyLayer.appendChild(el);
+});
+
+// crisp contour lines that give the body hard boundaries
+const STRUCT = [
+  'M130 232 C129 132 104 -50 40 -156',            // left groin crease sweeping up-and-out
+  'M270 232 C271 132 296 -50 360 -156',           // right groin crease sweeping up-and-out
+  'M200 -60 C200 -20 200 14 200 50',              // pubic midline toward the mons
+];
+STRUCT.forEach(d => {
+  const p = document.createElementNS(SVGNS, 'path');
+  p.setAttribute('class', 'bodyline');
+  p.setAttribute('d', d);
+  structLayer.appendChild(p);
+});
+
+// landmark anchors to orient the viewer
+const ANCHORS = [
+  { type:'navel', x:200, y:-78, name:'Navel', color:'#1f9aa6', lx:262, ly:-78 },
+  { type:'dot',   x:200, y:373, r:3.5, name:'Vaginal opening', color:'#9a3a6a', lx:300, ly:355 },
+  { type:'anus',  x:200, y:606, name:'Anus', color:'#b8546e', lx:270, ly:606 },
+];
+ANCHORS.forEach(a => {
+  if (a.type === 'navel') {
+    // soft vertical navel dimple
+    const e = document.createElementNS(SVGNS, 'ellipse');
+    e.setAttribute('fill', 'url(#navelg)');
+    e.setAttribute('cx', a.x); e.setAttribute('cy', a.y); e.setAttribute('rx', 4.5); e.setAttribute('ry', 7);
+    structLayer.appendChild(e);
+  } else if (a.type === 'anus') {
+    // soft colored rosette (no radial spokes)
+    const outer = document.createElementNS(SVGNS, 'circle');
+    outer.setAttribute('fill', 'url(#anusg)');
+    outer.setAttribute('cx', a.x); outer.setAttribute('cy', a.y); outer.setAttribute('r', 7);
+    structLayer.appendChild(outer);
+    const ring = document.createElementNS(SVGNS, 'circle');
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', '#6e2238'); ring.setAttribute('stroke-width', 0.9); ring.setAttribute('opacity', 0.6);
+    ring.setAttribute('cx', a.x); ring.setAttribute('cy', a.y); ring.setAttribute('r', 3.4);
+    structLayer.appendChild(ring);
+  } else { // dot
+    const c = document.createElementNS(SVGNS, 'circle');
+    c.setAttribute('class', 'anchor-dot');
+    if (a.color) c.setAttribute('fill', a.color);
+    c.setAttribute('cx', a.x); c.setAttribute('cy', a.y); c.setAttribute('r', a.r);
+    structLayer.appendChild(c);
+  }
+  if (a.lx != null) {
+    const right = a.lx > a.x;
+    const off = (a.type === 'anus') ? 9 : (a.type === 'navel' ? 7 : (a.r + 3));
+    const ln = document.createElementNS(SVGNS, 'line');
+    ln.setAttribute('class', 'anchor-leader');
+    ln.setAttribute('x1', a.x + (right ? off : -off)); ln.setAttribute('y1', a.y);
+    ln.setAttribute('x2', a.lx + (right ? -5 : 5)); ln.setAttribute('y2', a.ly);
+    structLayer.appendChild(ln);
+    const t = document.createElementNS(SVGNS, 'text');
+    t.setAttribute('class', 'anchor-label');
+    if (a.color) t.setAttribute('fill', a.color);
+    t.setAttribute('x', a.lx); t.setAttribute('y', a.ly + 3);
+    t.setAttribute('text-anchor', right ? 'start' : 'end');
+    t.textContent = a.name;
+    structLayer.appendChild(t);
+  }
+});
+
+const HI = '#fff3e2', SH = '#a86f4c';
+const SHADE = [
+  // soft highlights on the rounded mounds
+  { t:'ellipse', cx:200, cy:116, rx:60, ry:38, fill:HI, op:0.20 },   // mons
+  { t:'ellipse', cx:150, cy:300, rx:26, ry:82, fill:HI, op:0.14 },   // left majora
+  { t:'ellipse', cx:250, cy:300, rx:26, ry:82, fill:HI, op:0.14 },   // right majora
+  { t:'ellipse', cx:-18, cy:230, rx:120, ry:270, fill:HI, op:0.13 }, // left thigh mass
+  { t:'ellipse', cx:418, cy:230, rx:120, ry:270, fill:HI, op:0.13 }, // right thigh mass
+  { t:'ellipse', cx:118, cy:648, rx:118, ry:96, fill:HI, op:0.12 }, // left buttock cheek
+  { t:'ellipse', cx:282, cy:648, rx:118, ry:96, fill:HI, op:0.12 }, // right buttock cheek
+  // core shadows in the creases
+  { t:'ellipse', cx:200, cy:188, rx:90, ry:16, fill:SH, op:0.32 },   // mons↔majora fold
+  { t:'path', d:'M130 232 C129 132 104 -50 44 -150', stroke:SH, sw:12, op:0.24 }, // left groin crease (up-out)
+  { t:'path', d:'M270 232 C271 132 296 -50 356 -150', stroke:SH, sw:12, op:0.24 }, // right groin crease (up-out)
+  { t:'path', d:'M108 240 C102 318 110 420 150 512', stroke:SH, sw:12, op:0.26 }, // left labia↔thigh valley
+  { t:'path', d:'M292 240 C298 318 290 420 250 512', stroke:SH, sw:12, op:0.26 }, // right labia↔thigh valley
+  { t:'path', d:'M200 448 C201 500 200 540 200 568', stroke:SH, sw:11, op:0.32 }, // central cleft
+  { t:'path', d:'M200 566 C200 624 200 676 200 730', stroke:SH, sw:18, op:0.32 }, // gluteal cleft (perineum → between cheeks)
+  { t:'path', d:'M58 612 C112 588 158 586 198 596', stroke:SH, sw:12, op:0.20 }, // left thigh↔buttock crease
+  { t:'path', d:'M342 612 C288 588 242 586 202 596', stroke:SH, sw:12, op:0.20 }, // right thigh↔buttock crease
+];
+SHADE.forEach(s => {
+  const el = makeShape(s);
+  if (s.fill) { el.setAttribute('fill', s.fill); } else { el.setAttribute('fill', 'none'); }
+  if (s.stroke) {
+    el.setAttribute('stroke', s.stroke);
+    el.setAttribute('stroke-width', s.sw || 10);
+    el.setAttribute('stroke-linecap', 'round');
+  }
+  el.setAttribute('opacity', s.op);
+  shadeLayer.appendChild(el);
+});
+
+DECOR.forEach(d => {
+  const p = document.createElementNS(SVGNS, 'path');
+  p.setAttribute('class', 'decor');
+  p.setAttribute('d', d);
+  decorLayer.appendChild(p);
+});
+
+ZONES.forEach(z => {
+  const glow = makeShape(z.shape);
+  glow.setAttribute('id', 'glow-' + z.id);
+  glow.setAttribute('stroke', 'none');
+  glowLayer.appendChild(glow);
+
+  const out = makeShape(z.shape);
+  out.setAttribute('class', z.hidden ? 'zone-hit' : 'zone-outline');
+  out.setAttribute('id', 'out-' + z.id);
+  out.setAttribute('stroke-width', z.sw || 1.4);
+  out.setAttribute('pointer-events', 'all');
+  out.addEventListener('click', () => select(z.id));
+  out.addEventListener('mouseenter', () => { if (!selectedId) renderPanel(z); });
+  lineLayer.appendChild(out);
+
+  if (z.lx != null) {
+    const ln = document.createElementNS(SVGNS, 'path');
+    ln.setAttribute('class', 'leader');
+    const midx = z.lx < 200 ? z.lx + 6 : z.lx - 6;
+    ln.setAttribute('d', `M${midx} ${z.ly - 3} L${z.tx} ${z.ty}`);
+    labelLayer.appendChild(ln);
+
+    const dot = document.createElementNS(SVGNS, 'circle');
+    dot.setAttribute('class', 'leader');
+    dot.setAttribute('cx', z.tx); dot.setAttribute('cy', z.ty); dot.setAttribute('r', 1.8);
+    dot.setAttribute('fill', '#45454f');
+    labelLayer.appendChild(dot);
+
+    const t = document.createElementNS(SVGNS, 'text');
+    t.setAttribute('class', 'zone-label');
+    t.setAttribute('x', z.lx); t.setAttribute('y', z.ly);
+    t.setAttribute('text-anchor', z.lx < 200 ? 'end' : (z.lx > 200 ? 'start' : 'middle'));
+    t.textContent = z.name.replace(/ \(.*\)/, '');
+    labelLayer.appendChild(t);
+  }
+});
+
+function paint() {
+  ZONES.forEach(z => {
+    const v = currentMetric.get(z);
+    const glow = document.getElementById('glow-' + z.id);
+    glow.setAttribute('fill', heatColor(v));
+    glow.setAttribute('opacity', ((0.24 + 0.20 * (v / 100)) * (z.glowScale || 1)).toFixed(3));
+  });
+  document.getElementById('legendName').textContent = currentMetric.label + ' (0–100)';
+}
+
+// --- controls --------------------------------------------------------------
+const controls = document.getElementById('controls');
+METRICS.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'metric-btn' + (m.id === currentMetric.id ? ' active' : '');
+  b.textContent = m.label;
+  b.addEventListener('click', () => {
+    currentMetric = m;
+    [...controls.children].forEach(c => c.classList.remove('active'));
+    b.classList.add('active');
+    paint();
+    if (selectedId) renderPanel(ZONES.find(z => z.id === selectedId));
+  });
+  controls.appendChild(b);
+});
+
+// --- selection + panel -----------------------------------------------------
+function select(id) {
+  selectedId = id;
+  const target = ZONES.find(z => z.id === id);
+  const grp = target.group;
+  ZONES.forEach(z => {
+    const on = z.id === id || (grp && z.group === grp);
+    document.getElementById('out-' + z.id).classList.toggle('selected', on);
+  });
+  renderPanel(target);
+}
+
+function bar(v) {
+  return `<div class="bar"><span style="width:${v}%;background:${heatColor(v)}"></span></div>`;
+}
+
+function renderPanel(z) {
+  const v = currentMetric.get(z);
+  const channels = [['pressure','Pressure'],['friction','Friction'],['mouth','Mouth'],['hand','Hand'],['teeth','Teeth']];
+  document.getElementById('panel').innerHTML = `
+    <h2>${z.name}</h2>
+    <div class="desc">${z.desc}</div>
+    <div class="scoregrid">
+      <span class="k">${currentMetric.label}</span><span class="v">${v}</span>
+      ${bar(v)}
+      <span class="k">Sensitivity score</span><span class="v">${z.sensitivity}</span>
+      <span class="k">Arousal priority</span><span class="v">${z.arousal}</span>
+    </div>
+    <div class="channels">
+      ${channels.map(([k,l]) => {
+        const cv = LVL[z.ch[k]];
+        return `<div class="ch"><span class="lbl">${l}</span>
+          <span class="track"><span style="width:${cv}%;background:${heatColor(cv)}"></span></span>
+          <span class="num">${z.ch[k]}</span></div>`;
+      }).join('')}
+    </div>
+    <div class="tags">${z.techniques.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+  `;
+}
+
+paint();
+</script>
+</body>
+</html>

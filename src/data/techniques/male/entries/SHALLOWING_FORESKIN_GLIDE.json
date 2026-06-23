@@ -1,0 +1,33 @@
+{
+  "technique_id": "SHALLOWING_FORESKIN_GLIDE",
+  "name": "Shallowing — Foreskin / Glans Dipping Glide",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Shallowing. Instead of going deep, the foreskin (or a slick grip) glides up and down over the glans, covering and uncovering the head on each slow pass and cycling through the most sensitive surface.",
+  "detailed_description": "Female Shallowing cycles through the entrance zone instead of going deep. The male analogue keeps stimulation at the head: the foreskin or a lubricated hand slides up to sheath the glans, then back to expose it, repeating shallow up/down passes. For circumcised anatomy the same effect comes from a slick grip gliding over the corona without long full-length strokes. The repeated covering/uncovering keeps attention on the richly nerved head rather than the shaft.",
+  "body_areas": ["foreskin", "glans", "corona"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Use lube so the glide stays smooth.",
+    "2. Slide the foreskin (or a slick grip) up to cover the glans.",
+    "3. Draw it back down to uncover the head.",
+    "4. Repeat slow, shallow up/down passes over the head and corona.",
+    "5. Keep the range short—dwell on the head rather than the whole shaft."
+  ],
+  "safety_notes": [
+    "Use enough lube so covering/uncovering never tugs uncomfortably.",
+    "Keep the head exposed gently; don't force a tight foreskin."
+  ],
+  "tags": ["shallowing", "foreskin", "glans", "dipping", "up-down", "manual", "male-variant"],
+  "related_zone_ids": ["foreskin", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Shallowing (Season Two)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Shallowing's shallow entrance cycling." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "SHALLOWING_RUBBING_UP_DOWN",
+    "homologue_mapping": "vaginal_introitus cycling → foreskin/glans covering-uncovering",
+    "best_for": "Keeping focus on the head with shallow, repeating glides."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "technique_id": "MULTIPLES_SECOND_ORGASM",
+  "name": "Multiples — Multiple Orgasms",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "After orgasm, most clits become super-sensitive—touch that felt good before can now hurt. This oversensitivity makes many women assume multiples aren't possible, but they often are if you treat the post-orgasm body as 'completely different' with new sensitivities and preferences.",
+  "detailed_description": "OMGYES groups paths to multiples into approaches that work around post-orgasm oversensitivity. About 47% who experience multiples treat the body as brand new and rediscover what works; about 53% use recovery-period methods (rewinding to warmup touch, or a still palm hug) before rebuilding. A lucky ~14% (one in seven) can have immediate multiples—either pushing through with the same motion or switching to fast indirect layering. Building a second orgasm usually means starting from what caused the first and modifying it: less direct touch, slower, lighter, fewer touches on the exposed clit. Most women cannot reach multiples, and that's normal—best treated as a zero-pressure experiment, often discovered through masturbation first.",
+  "body_areas": ["clitoris", "clitoral hood", "labia", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Expect post-orgasm oversensitivity—direct clit touch may hurt right after.",
+    "2. Choose an approach: treat the body as new, use a recovery-period method, or (if you're among the lucky ~14%) go for immediate multiples.",
+    "3. Protect the oversensitive clit—use lighter, slower, more indirect touch or hold still.",
+    "4. Rebuild from what worked for the first orgasm, modified to be gentler.",
+    "5. Keep it pressure-free; stop if it's uncomfortable or not happening."
+  ],
+  "safety_notes": [
+    "Honor post-orgasm oversensitivity—pushing painful touch is counterproductive.",
+    "Most women can't reach multiples; pressuring a partner causes hurt feelings and disappointment.",
+    "Approach as a fun, zero-pressure experiment; many discover their pathway via masturbation first.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["multiples", "multiple-orgasms", "oversensitivity", "recovery", "post-orgasm", "no-pressure"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "labia_majora"],
+  "references": [
+    {
+      "title": "OMGYES — Multiples (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Approach prevalence among women who experience multiples; ~14% (1 in 7) can have immediate multiples."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "MULTIPLES_NEW_BODY",
+      "MULTIPLES_RECOVERY_PERIOD",
+      "MULTIPLES_IMMEDIATE"
+    ],
+    "related_technique_ids": ["LAYERING_INDIRECT_STIMULATION", "STAGING_REBUILD_MULTIPLES"],
+    "second_orgasm_modifiers": [
+      "Less direct touch (see Layering)",
+      "Slower movements",
+      "Less pressure",
+      "Fewer or no touches on the exposed clit"
+    ],
+    "reality_check": "Most women just can't reach multiple orgasms; treat it as a no-pressure experiment, often explored through masturbation first."
+  }
+}

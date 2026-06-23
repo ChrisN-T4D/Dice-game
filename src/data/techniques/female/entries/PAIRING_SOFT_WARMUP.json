@@ -1,0 +1,36 @@
+{
+  "technique_id": "PAIRING_SOFT_WARMUP",
+  "name": "Pairing — Soft Warm-Up Touches",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Avoid hard, cold starts on the clit. Begin with gentle, warming touches before adding internal stimulation or ramping intensity, so arousal builds without uncomfortable jolts.",
+  "detailed_description": "A common mistake during pairing is jumping straight to peak clitoral intensity. Soft warmup builds arousal first. Angie's approach: each time approaching the clit, start with gentle, warming kinds of stimulation rather than going straight to peak intensity, which can cause discomfort.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Each time you approach the clit, start gently with warming touches.",
+    "2. Avoid hard or cold sudden contact at full intensity.",
+    "3. Build arousal before adding internal stimulation.",
+    "4. Ramp intensity smoothly rather than in jolts.",
+    "5. Re-warm whenever you return to the clit after a break."
+  ],
+  "safety_notes": [
+    "Hard, cold starts cause discomfort—always warm up first.",
+    "Match the build to her responsiveness."
+  ],
+  "tags": ["pairing", "warmup", "soft-touch", "gradual", "clitoral"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Pairing (Season Two)",
+      "url": "https://www.omgyes.com",
+      "note": "Angie: approach with gentle warming stimulation rather than peak intensity immediately."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "PAIRING_CLIT_AND_PENETRATION",
+    "related_technique_ids": ["STAGING_BUILDING_DESIRE"]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "technique_id": "WRAPPING_UNDIES",
+  "name": "Wrapping — A Buzz to the Undies",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Vibrate through underwear—lacy thongs, cotton boxer-briefs, etc. The fabric softens the buzz and lets the toy glide, while the underwear holds the clit in place. Pull the front toward the belly button for constant gentle pressure.",
+  "detailed_description": "Underwear is a built-in wrapping layer: it softens vibration, makes the vibrator glide more easily, and keeps the clit positioned. Different fabrics give different feels (delicate lace vs. soft cotton). A 'pulling forward' technique adds steady stimulation: pull the front of the underwear toward the belly button so it draws snug against the lips and clit for constant gentle pressure while you vibrate over it.",
+  "body_areas": ["clitoris", "vulva", "labia"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Keep underwear on—lacy thong, cotton boxer-briefs, or whatever feels good.",
+    "2. Run the vibrator over the fabric; it softens the buzz and glides easily.",
+    "3. Let the underwear hold the clit in place as you move.",
+    "4. Pulling forward: pull the front of the underwear up toward the belly button.",
+    "5. Hold that tension so the fabric is snug on the lips/clit for constant gentle pressure while vibrating."
+  ],
+  "safety_notes": [
+    "Choose breathable fabric; stop if friction chafes—add lube or change fabric.",
+    "Ease pressure if the snug pull becomes uncomfortable."
+  ],
+  "tags": ["wrapping", "underwear", "vibrator", "pulling-forward", "gliding", "clitoral"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "labia_majora"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC",
+    "sub_technique": {
+      "id": "pulling_forward",
+      "name": "Pulling Forward",
+      "description": "Pull the front of the underwear toward the belly button for constant gentle pressure on snug lips/clit."
+    }
+  }
+}

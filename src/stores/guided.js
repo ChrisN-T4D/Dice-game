@@ -6,11 +6,11 @@ import { defineStore } from 'pinia'
 import { useSessionStore } from '@/stores/session'
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
 import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST, getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
-import { getPromptText, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
+import { getPromptText, composeBuildupPrompt, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
+import { selectBuildupTurn, mergedExcludeKeys } from '@/utils/sessionSelection'
 import {
-  clothingTable,
   removeClothingItem,
-  getClothingRemovalComplexityMultiplier,
+  composeClothingRemoval,
   computeClothingMilestoneInterval,
 } from '@/data/clothing'
 import { buildSessionPlan, computePartialRerollTurn, createSeededRng } from '@/utils/sessionPlanBuilder'
@@ -30,8 +30,8 @@ import {
   INTRO_WITH_CLOTHING_VARIANTS,
   EASE_IN_TEXTS,
   SETTLE_INTO_POSITION_TEXT,
-  getPhaseCheckinTexts,
   formatHomeTransition,
+  formatHomeOpening,
   formatFirstTurnIntro,
   formatTurnStartDirective,
   TURN_START_DIRECTIVE_WAV_PHRASES,
@@ -39,6 +39,10 @@ import {
 import { getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
 
 const TURN_START_DIRECTIVE_TEXTS = TURN_START_DIRECTIVE_WAV_PHRASES.map((p) => p.text)
+
+// Live (non-pre-generated) build-up fallback: remember the last zone touched so
+// the selector can avoid an immediate repeat. Reset when a session starts.
+let liveLastBuildupZoneId = null
 
 // -----------------------------------------------------------------------------
 // Helpers (fixed phrase prep); timing constants in ./guided/constants.js; prompt parsing in ./guided/promptParsing.js
@@ -89,6 +93,7 @@ export const useGuidedStore = defineStore('guided', {
     clothingItemsP1: [],
     clothingItemsP2: [],
     clothingEnabled: false,
+    clothingRemovalMode: 'partner',
     clothingMilestoneInterval: 3,
     partnerNames: { 1: '', 2: '' },
     partnerAnatomy: { 1: 'penis', 2: 'vulva' },
@@ -184,8 +189,8 @@ export const useGuidedStore = defineStore('guided', {
     },
     currentActionLabel() {
       if (this.inClothingWindow) return 'Removing clothes'
-      if (this.transitionDirective) return 'Return to default'
-      if (this.breakPhase === 'before_clothing') return 'Switching'
+      if (this.transitionDirective) return 'Flowing back to neutral'
+      if (this.breakPhase === 'before_clothing') return 'Flowing back to neutral'
       if (this.breakPhase === 'settle_in') return 'Settle into position'
       if (this.breakPhase === 'turn' || this.turnTimeRemaining > 0) return 'Turn'
       if (this.inPause) return 'Pause'
@@ -216,6 +221,7 @@ export const useGuidedStore = defineStore('guided', {
         clothingItemsP1: [...this.clothingItemsP1],
         clothingItemsP2: [...this.clothingItemsP2],
         clothingEnabled: this.clothingEnabled,
+        clothingRemovalMode: this.clothingRemovalMode,
         clothingMilestoneInterval: this.clothingMilestoneInterval,
         partnerNames: { ...this.partnerNames },
         partnerAnatomy: { ...this.partnerAnatomy },
@@ -264,6 +270,7 @@ export const useGuidedStore = defineStore('guided', {
       this.clothingItemsP1 = Array.isArray(snapshot.clothingItemsP1) ? [...snapshot.clothingItemsP1] : []
       this.clothingItemsP2 = Array.isArray(snapshot.clothingItemsP2) ? [...snapshot.clothingItemsP2] : []
       this.clothingEnabled = !!snapshot.clothingEnabled
+      this.clothingRemovalMode = snapshot.clothingRemovalMode === 'self' ? 'self' : 'partner'
       this.clothingMilestoneInterval = snapshot.clothingMilestoneInterval ?? 3
       this.partnerNames = snapshot.partnerNames && typeof snapshot.partnerNames === 'object' ? { ...snapshot.partnerNames } : { 1: '', 2: '' }
       this.partnerAnatomy = snapshot.partnerAnatomy && typeof snapshot.partnerAnatomy === 'object' ? { ...snapshot.partnerAnatomy } : { 1: 'penis', 2: 'vulva' }
@@ -563,6 +570,7 @@ export const useGuidedStore = defineStore('guided', {
     },
 
     startGuidedMode(config, options = {}) {
+      liveLastBuildupZoneId = null
       if (config) {
         this.lastStartedConfig = {
           ...config,
@@ -588,6 +596,7 @@ export const useGuidedStore = defineStore('guided', {
         clothingListP1,
         clothingListP2,
         clothingEnabled,
+        clothingRemovalMode,
         distributionMode,
         partnerNames,
         partnerAnatomy,
@@ -618,6 +627,7 @@ export const useGuidedStore = defineStore('guided', {
       this.clothingItemsP1 = clothingEnabled ? [...(clothingListP1 || [])] : []
       this.clothingItemsP2 = clothingEnabled ? [...(clothingListP2 || [])] : []
       this.clothingEnabled = !!clothingEnabled
+      this.clothingRemovalMode = clothingRemovalMode === 'self' ? 'self' : 'partner'
       this.partnerNames = { 1: (partnerNames && partnerNames[1]) || '', 2: (partnerNames && partnerNames[2]) || '' }
       this.partnerAnatomy = { 1: (partnerAnatomy && partnerAnatomy[1]) || 'penis', 2: (partnerAnatomy && partnerAnatomy[2]) || 'vulva' }
       this.phaseCheckInEnabled = !!phaseCheckInEnabled
@@ -677,7 +687,8 @@ export const useGuidedStore = defineStore('guided', {
       if (options.prebuiltIntro) {
         intro = options.prebuiltIntro
       } else {
-        intro = pick(this.clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS)
+        const baseIntro = pick(this.clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS)
+        intro = `${baseIntro} ${formatHomeOpening(this.homePositionId)}`
       }
 
       // Preload intro and fixed phrases immediately so they're ready; worker won't block.
@@ -749,7 +760,7 @@ export const useGuidedStore = defineStore('guided', {
       let loc, actRoll, extendedTime = false
       let clothingRemoved = false
       let currentRemovedItems = []
-      let currentClothingMethodText = ''
+      let currentClothingComplexity = 1
 
       const usePlanTurn = this.sessionPlan && this.preGeneratedBlobs?.length > 0 && this.sessionPlan.turns[this.totalTurnsInSession - 1]
       if (usePlanTurn) {
@@ -783,6 +794,7 @@ export const useGuidedStore = defineStore('guided', {
         }
       } else {
         const rng = Math.random
+        let buildupSel = null
         if (phase === 3) {
           const receiverAnatomy = (this.partnerAnatomy[this.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
           const posIntensity =
@@ -793,15 +805,45 @@ export const useGuidedStore = defineStore('guided', {
           actRoll = mod.actRoll
           extendedTime = mod.extendedTime
         } else {
-          const r = rollPhase12WithExclusions(phase, rng, this.distributionMode, this.excludeWhenTouching, this.excludeWhenTouched)
-          loc = r.loc
-          actRoll = r.actRoll
-          extendedTime = r.extendedTime
+          const recvAnatomy = (this.partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+          const progress = phase <= 1 ? 0.3 : 0.7
+          const liveWardrobe = this.clothingEnabled ? (receiver === 1 ? this.clothingItemsP1 : this.clothingItemsP2) : null
+          const sel = selectBuildupTurn(rng, {
+            receiverAnatomy: recvAnatomy,
+            progress,
+            intensityCurve: this.lastStartedConfig?.intensityCurve || 'balanced',
+            isFirstTurn: this.totalTurnsInSession === 1,
+            lastZoneId: liveLastBuildupZoneId,
+            excludeKeys: mergedExcludeKeys(this.excludeWhenTouching, this.excludeWhenTouched),
+            wardrobe: liveWardrobe,
+          })
+          if (sel) {
+            buildupSel = sel
+            liveLastBuildupZoneId = sel.zoneId
+            loc = 0
+            actRoll = 0
+          } else {
+            const r = rollPhase12WithExclusions(phase, rng, this.distributionMode, this.excludeWhenTouching, this.excludeWhenTouched)
+            loc = r.loc
+            actRoll = r.actRoll
+            extendedTime = r.extendedTime
+          }
         }
 
         const partnerNames = { 1: this.partnerName(1), 2: this.partnerName(2) }
         const partnerAnatomy = { 1: this.partnerAnatomy[1], 2: this.partnerAnatomy[2] }
-        const prompt = getPromptText(sessionStore.phase, loc, actRoll, giver, receiver, partnerNames, partnerAnatomy)
+        const prompt = buildupSel
+          ? composeBuildupPrompt({
+              where: buildupSel.where,
+              instruction: buildupSel.instruction,
+              giverName: partnerNames[giver],
+              receiverName: partnerNames[receiver],
+              overFabric: buildupSel.overFabric,
+              garment: buildupSel.garment,
+            })
+          : getPromptText(sessionStore.phase, loc, actRoll, giver, receiver, partnerNames, partnerAnatomy, {
+              useCatalog: this.lastStartedConfig?.useActionCatalog !== false,
+            })
         if (extendedTime) {
           const ext = phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
           prompt.what += ext
@@ -823,22 +865,19 @@ export const useGuidedStore = defineStore('guided', {
           if (removed) {
             clothingRemoved = true
             currentRemovedItems = [removed]
-            let howRoll = Math.floor(Math.random() * 12) + 1
-            const entry = clothingTable[howRoll]
-            currentClothingMethodText = (entry && entry.method) || ''
-            const receiverLabel = this.partnerName(receiver)
-            const giverLabel = this.partnerName(giver)
-            const prefix = (entry?.prefix || '').replace(/\{receiver\}/g, receiverLabel)
-            const methodText = entry?.method ? ` ${entry.method}` : ''
-            let clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed}${methodText}`
-            if (howRoll === 12) {
+            if (Math.floor(Math.random() * 12) + 1 === 12) {
               const second = removeClothingItem(arr)
-              if (second) {
-                currentRemovedItems.push(second)
-                clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed} and ${second}${methodText}`
-              }
+              if (second) currentRemovedItems.push(second)
             }
-            this.currentPrompt.clothing = clothingText
+            const res = composeClothingRemoval({
+              giverName: this.partnerName(giver),
+              receiverName: this.partnerName(receiver),
+              items: currentRemovedItems,
+              mode: this.clothingRemovalMode,
+              receiverAnatomy: partnerAnatomy[receiver],
+            })
+            currentClothingComplexity = res.complexityMultiplier
+            this.currentPrompt.clothing = res.text
           }
         } else {
           this.currentPrompt.clothing = ''
@@ -847,8 +886,7 @@ export const useGuidedStore = defineStore('guided', {
 
       let effectiveClothingSeconds = 0
       if (clothingRemoved && this.clothingRemovalSeconds > 0) {
-        const mult = getClothingRemovalComplexityMultiplier(currentRemovedItems, currentClothingMethodText)
-        effectiveClothingSeconds = Math.round(this.clothingRemovalSeconds * mult)
+        effectiveClothingSeconds = Math.round(this.clothingRemovalSeconds * currentClothingComplexity)
       }
 
       let baseTurnSec = this.turnSeconds
@@ -892,13 +930,6 @@ export const useGuidedStore = defineStore('guided', {
         prep(turnBeginsPhrase)
         prepAll(prep, TURN_START_DIRECTIVE_TEXTS)
         prepAll(prep, EASE_IN_TEXTS)
-        if (this.phaseCheckInEnabled) {
-          const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
-          const nextLabel = phase < 3 ? `Continue to ${phaseNames[phase + 1]}` : 'end the session'
-          prep(`${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to ${nextLabel}.`)
-          prep(`That's the end of ${phaseNames[phase]}. Check in with each other, then tap to ${nextLabel}.`)
-          prep(`${phaseNames[phase]} is complete. Check in, then tap the button to ${nextLabel}.`)
-        }
       }
 
       const onStartTimer = () => {
@@ -970,10 +1001,11 @@ export const useGuidedStore = defineStore('guided', {
         else afterHome()
       }
 
-      const useFirstTurnPhrase = this.firstTurnOfSession || this.firstTurnOfPhase3
+      // Only the very first turn of the session gets the "first direction" intro.
+      // The first Finish turn flows like any other turn (neutral, then the position).
+      const useFirstTurnPhrase = this.firstTurnOfSession
       if (useFirstTurnPhrase) {
         this.firstTurnOfSession = false
-        if (phase === 3) this.firstTurnOfPhase3 = false
         if (this.firstTurnPhrasePlayedFromBlob) {
           this.firstTurnPhrasePlayedFromBlob = false
           runClothingThenInstruction()
@@ -1025,6 +1057,7 @@ export const useGuidedStore = defineStore('guided', {
       this.breakPhase = 'none'
       if (phase === 'before_clothing') {
         // Next turn: instruction (and clothing if any) → settle-in → 15s → start phrase
+        this.transitionDirective = ''
         this._settleInStarted = false
         this._easeInSpeakStarted = false
         const instructionToSpeak = (this.currentPrompt.shortInstruction || this.currentPrompt.instruction).trim() || this.currentPrompt.instruction
@@ -1194,19 +1227,11 @@ export const useGuidedStore = defineStore('guided', {
         if (this.speakRef) this.speakRef(phrase, { ...this._speakOpts(phrase, () => {}), staticPresetKind: 'guided' })
         return
       }
-      // Last turn of phase: insert end-of-phase then next phase (turn instruction → settle in → 15s → start phrase …)
+      // End of a phase. Build-up (phases 1 & 2) is one continuous section that
+      // flows straight into the positions via the on-ramp intro — no check-in
+      // pause at any boundary; phases always advance silently.
       if (!sensatePlan && this.phaseTimeRemaining <= 0 && bothReceived) {
-        if (this.phaseCheckInEnabled) {
-          this.paused = true
-          this.inPhaseCheckIn = true
-          this.completedPhase = phase
-          this.stopSpeakRef?.()
-          const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-          const phrase = pick(getPhaseCheckinTexts(phase))
-          if (this.speakRef) this.safeSpeak(phrase)
-        } else {
-          this.advanceGuidedPhase()
-        }
+        this.advanceGuidedPhase()
         return
       }
       if (!sensatePlan && this.totalTimeRemaining <= 0) {
@@ -1239,7 +1264,7 @@ export const useGuidedStore = defineStore('guided', {
         return
       }
 
-      // Bonus clothing removal at end of Phase 2
+      // Bonus clothing removal at the end of the build-up (entering the Finish)
       if (sessionStore.phase === 2 && this.clothingEnabled && (this.clothingItemsP1.length > 0 || this.clothingItemsP2.length > 0)) {
         while (this.clothingItemsP1.length > 0) removeClothingItem(this.clothingItemsP1)
         while (this.clothingItemsP2.length > 0) removeClothingItem(this.clothingItemsP2)

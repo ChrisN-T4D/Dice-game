@@ -1,0 +1,48 @@
+{
+  "technique_id": "ORGASM_TYPES_VARIED_EXPERIENCE",
+  "name": "Different Kinds of Orgasm — Overview",
+  "receiver_anatomy": "female",
+  "category": "orgasm",
+  "summary": "Orgasms are not a single on/off event—intensity and sensation vary by stimulation type and timing. Treating climax as a checkbox limits discovery; exploring G-region, deep cervical, and dual (simultaneous internal + external) orgasms can unlock richer, more intense experiences than one default approach every session.",
+  "detailed_description": "OMGYES highlights three distinct orgasm pathways beyond standard clitoral climax: G-region pleasure (often needing extended warmup before it shifts from odd or queasy to deeply enjoyable), cervical/deep-end or \"belly\" orgasms (requiring gentle sustained internal contact rather than pounding), and dual orgasms (synchronized clitoral and internal peaks through careful timing or double-edging). First attempts at internal types often feel wrong; patience, emotional arousal, and technique matter more than force. Preferences change session to session.",
+  "body_areas": ["clitoris", "vagina", "G-region", "cervix", "abdomen"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Set aside curiosity rather than a performance goal; orgasm type is an exploration, not a pass/fail test.",
+    "2. Build arousal with foreplay and emotional connection—not only genital touch.",
+    "3. Choose a pathway to explore: G-region mapping, deep-end sustained contact, or dual timing (often after solo or partnered practice with each type separately).",
+    "4. Use warmup and feedback; stop or switch if pain, not just unfamiliar sensation, appears.",
+    "5. Repeat across sessions; internal types often need multiple tries before technique clicks."
+  ],
+  "safety_notes": [
+    "Pain, bleeding, or sharp deep internal discomfort are stop signals—not something to push through for a new orgasm type.",
+    "Cervical contact should be gentle; thumping or piston-style pounding often causes pain.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["orgasm", "G-region", "cervical", "dual", "internal", "exploration", "warmup"],
+  "related_zone_ids": [
+    "clitoral_glans",
+    "vaginal_anterior_wall",
+    "vagina",
+    "cervix",
+    "vaginal_introitus"
+  ],
+  "references": [
+    {
+      "title": "OMGYES — Different Kinds of Orgasm (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Technique-focused summary; participant testimonials (e.g. Jessica, Angie)."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "ORGASM_G_REGION",
+      "ORGASM_CERVICAL_DEEP_END",
+      "ORGASM_DUAL_SIMULTANEOUS"
+    ],
+    "mindset": "Avoid treating orgasm as a checkbox; varied stimulation methods can produce different intensities and body-wide sensations when approached with patience."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "technique_id": "LAYERING_TRIANGLE_MASSAGE",
+  "name": "Layering — Way Up Top (Triangle Massage)",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Massage the mons triangle—the padded area under the pubic hair where nerve networks connect toward the clitoris—without touching the glans directly.",
+  "detailed_description": "OMGYES reports that 7.8% of women prefer stimulation in this upper triangle zone. Pressure and massage here reach the clitoris indirectly through connected nerve pathways beneath the surface tissue. The touch stays above the most sensitive spot while still building pleasurable sensation.",
+  "body_areas": ["mons pubis", "clitoris"],
+  "modality": "hand",
+  "stepwise_structure": [
+    "1. Locate the soft triangle of tissue above the vulva, under the pubic hairline (mons pubis).",
+    "2. Apply steady pressure or slow massage to this upper triangle—not on the clitoral glans.",
+    "3. Use kneading, circles, or broad strokes; let sensation travel indirectly through underlying nerves.",
+    "4. Adjust pressure and pace based on feedback; pair with hood or labia layering if more intensity is wanted."
+  ],
+  "safety_notes": [
+    "Avoid pressing sharply into bone; keep motion on the padded mons tissue.",
+    "Stop if pressure causes discomfort in the lower abdomen or bladder area."
+  ],
+  "tags": ["indirect", "layering", "mons", "triangle", "external", "massage"],
+  "related_zone_ids": ["mons_pubis", "clitoral_glans"],
+  "references": [
+    {
+      "title": "OMGYES — Layering (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "7.8% preference stat for upper triangle area."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "LAYERING_INDIRECT_STIMULATION",
+    "directness_rank": 2,
+    "prevalence_note": "7.8% of women prefer this area (OMGYES research)."
+  }
+}

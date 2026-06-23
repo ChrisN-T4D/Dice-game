@@ -35,7 +35,7 @@
       </div>
     </div>
     <div v-if="guided.transitionDirective" class="guided-block guided-transition-box" role="status">
-      <p class="guided-transition-label">Between directions</p>
+      <p class="guided-transition-label">Flow back to your neutral position</p>
       <p class="guided-transition-text">{{ guided.transitionDirective }}</p>
     </div>
     <div v-if="guided.currentPrompt.instruction || guided.currentPrompt.clothing" class="guided-block guided-output guided-instruction-box">
@@ -63,12 +63,7 @@
     </div>
     <GuidedDevAudioOverlay v-model:open="showDevOverlay" />
     <Teleport to="#bottom-nav-portal">
-      <div v-if="guided.inPhaseCheckIn" class="guided-controls">
-        <span class="guided-ctrl-checkin-label">Phase {{ guided.completedPhase }} complete</span>
-        <button type="button" class="primary guided-ctrl-btn" @click="guided.continueAfterPhaseCheckIn()">Continue</button>
-        <button type="button" class="secondary danger guided-ctrl-btn" @click="guided.stop()">Stop session</button>
-      </div>
-      <div v-else class="guided-controls">
+      <div class="guided-controls">
         <button v-if="guided.paused" type="button" class="primary guided-ctrl-btn" @click="guided.resume()">Resume</button>
         <button v-else type="button" class="secondary guided-ctrl-btn" @click="guided.pause()">Pause</button>
         <button type="button" class="secondary guided-ctrl-btn" @click="guided.skipToNextTurn()">Skip turn</button>

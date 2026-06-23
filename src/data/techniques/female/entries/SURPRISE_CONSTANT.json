@@ -1,0 +1,36 @@
+{
+  "technique_id": "SURPRISE_CONSTANT",
+  "name": "Surprise — Constant Surprise",
+  "receiver_anatomy": "female",
+  "category": "variety",
+  "summary": "Make each motion different from the last so the body keeps guessing what's next. Vary the shape, location, and speed of whatever already-working move you're using.",
+  "detailed_description": "Constant surprise keeps every repetition fresh. Whatever move is working, change it each time: shape (circles to flicks to side-to-side), location (from above versus from the side), or speed and rhythm between repetitions. As one OMGYES participant (Sonya) put it, when the clit gets a new kind of attention than what happened just before, there's an extra burst of pleasure.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Begin with a move the receiver enjoys.",
+    "2. On each repetition, change something: shape (circles, flicks, side-to-side).",
+    "3. Or change location—approach from above versus from the side.",
+    "4. Or change speed/rhythm between repetitions.",
+    "5. Keep variations pleasurable and related, so each feels like new attention rather than a distraction."
+  ],
+  "safety_notes": [
+    "Keep changes within pleasurable territory; avoid abrupt jarring touches.",
+    "Switch to one consistent motion once an orgasm is building."
+  ],
+  "tags": ["surprise", "constant-surprise", "variety", "shape", "location", "speed"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Surprise (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Sonya: a new kind of attention than just before gives an extra burst of pleasure."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "SURPRISE_PLEASURE_OF_UNEXPECTED",
+    "variation_axes": ["shape", "location", "speed/rhythm"]
+  }
+}

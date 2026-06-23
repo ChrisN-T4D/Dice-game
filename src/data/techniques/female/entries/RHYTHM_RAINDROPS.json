@@ -1,0 +1,35 @@
+{
+  "technique_id": "RHYTHM_RAINDROPS",
+  "name": "Rhythm — Raindrops",
+  "receiver_anatomy": "female",
+  "category": "rhythm",
+  "summary": "Vary the time between motions unpredictably—short gaps, long gaps, light taps, and lingering touches—so the clitoris cannot anticipate the next beat and stimulation stays fresh.",
+  "detailed_description": "Raindrops uses irregular timing rather than a steady beat. Intervals might be half a second or two seconds; some contacts are brief and light, others longer and deeper. The unpredictability maintains suspense and reduces habituation. If a partner needs more predictability, repeat each variation a fixed number of times before changing so the irregularity becomes a learnable phrase.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Start with a motion that already feels good.",
+    "2. Vary pause length between strokes—unpredictably, not on a fixed count.",
+    "3. Mix brief light touches with occasional longer, lingering contacts.",
+    "4. Avoid falling into an accidental steady beat; refresh the randomness if sensation plateaus.",
+    "5. If irregularity feels chaotic to the receiver, structure repeats (e.g. same gap sequence three times) before introducing a new variation."
+  ],
+  "safety_notes": [
+    "Some people strongly prefer consistent rhythm; confirm raindrops-style play is welcome.",
+    "Sudden long pauses after intense contact can feel jarring—balance with feedback."
+  ],
+  "tags": ["rhythm", "raindrops", "irregular", "unpredictable", "variety"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Rhythm (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "RHYTHM_PATTERNED_PLEASURE",
+    "pattern_character": "irregular intervals and varied touch duration"
+  }
+}

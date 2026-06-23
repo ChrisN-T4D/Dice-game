@@ -27,13 +27,17 @@ export const ZONE_PLACEMENT = {
     where: 'on the earlobe, along the outer helix rim, and behind the ear in the soft spot between ear and skull—avoid shoving into the ear canal',
     avoid: 'Stay on the lobe and outer rim, and keep fingers and tongue out of the ear canal.',
   },
+  mouth: {
+    where: 'on the lips and into the mouth—soft full-lip kisses, gentle catches of the lower lip, and slow tongue against tongue',
+    avoid: 'Keep it to lips and tongue; no teeth beyond the lightest graze.',
+  },
 
   // —— Upper body ——
   nipple: {
     where: 'directly on the nipple bud and the ring where areola meets nipple—small circles and sealed kisses on the tip itself',
   },
   areola: {
-    where: 'across the pigmented areola pad surrounding the nipple—spiral outward from the nipple without only grazing the breast far away',
+    where: 'across the pigmented areola pad surrounding the nipple—spiral outward from the nipple without straying onto the breast far away',
   },
   breast_tissue: {
     where: 'on the fuller breast mound away from the nipple—palms and fingers on the soft tissue above the ribcage, moving toward but not crushing the nipple unless intended',

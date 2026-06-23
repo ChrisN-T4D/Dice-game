@@ -1,0 +1,35 @@
+{
+  "technique_id": "RHYTHM_SKIPPING",
+  "name": "Rhythm — Skipping",
+  "receiver_anatomy": "female",
+  "category": "rhythm",
+  "summary": "Insert deliberate pauses between motions—skip beats like a metronome with missing ticks—to create anticipation, let sensation reset, and build tension-and-release.",
+  "detailed_description": "Skipping breaks continuous stimulation with complete stops after each thrust, stroke, or tap. The brief wait before resuming prevents habituation and adds surprise. Useful in early or middle phases when you want peaks without constant contact, or when alternating with back-to-back patterns later in a session.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Perform one stroke, tap, or thrust.",
+    "2. Stop completely—no lingering contact during the pause.",
+    "3. Wait briefly (adjust length to preference), then resume with the same motion.",
+    "4. Optionally skip every other beat or every third beat for a regular skip pattern.",
+    "5. Reduce or eliminate skipping near climax if the receiver wants uninterrupted build."
+  ],
+  "safety_notes": [
+    "Very long pauses can feel like withdrawal to some partners—check preferred gap length.",
+    "If frustration or loss of arousal occurs, shorten pauses or switch patterns."
+  ],
+  "tags": ["rhythm", "skipping", "pauses", "anticipation", "intermittent"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Rhythm (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "RHYTHM_PATTERNED_PLEASURE",
+    "pattern_character": "intermittent with deliberate gaps"
+  }
+}

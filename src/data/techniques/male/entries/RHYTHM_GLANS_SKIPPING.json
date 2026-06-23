@@ -1,0 +1,33 @@
+{
+  "technique_id": "RHYTHM_GLANS_SKIPPING",
+  "name": "Rhythm — Skipping on the Glans",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Rhythm (Skipping). Tap the glans in a steady beat, then occasionally skip a beat so the pattern stays repeatable but pleasantly unpredictable.",
+  "detailed_description": "Skipping keeps a recognizable underlying rhythm while dropping the occasional beat, so the receiver can't fully predict every tap—a tease layered onto repetition. On the glans, light taps land in a steady tempo and every few beats one is held back, then the pattern resumes. The familiar pulse keeps building while the skipped beats add anticipation.",
+  "body_areas": ["glans", "corona"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Tap the glans lightly in a steady, even beat.",
+    "2. Let the tempo become familiar.",
+    "3. Every few beats, skip one—pause, then resume the same beat.",
+    "4. Vary which beat you drop so it stays unpredictable.",
+    "5. Keep the underlying rhythm steady enough to still build."
+  ],
+  "safety_notes": [
+    "Keep taps light on the sensitive head.",
+    "Don't break rhythm so often that the buildup is lost."
+  ],
+  "tags": ["rhythm", "skipping", "glans", "tease", "manual", "male-variant"],
+  "related_zone_ids": ["penis_glans"],
+  "references": [
+    { "title": "OMGYES — Rhythm (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Rhythm / Skipping." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "RHYTHM_SKIPPING",
+    "homologue_mapping": "clitoral focus → penis_glans",
+    "best_for": "Repeatable beat with teasing dropped beats."
+  }
+}

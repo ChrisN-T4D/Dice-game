@@ -1,0 +1,43 @@
+{
+  "technique_id": "ADDING_FINGER_BY_FINGER",
+  "name": "Adding — Finger by Finger",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Build fullness one finger at a time. Fingers beat fixed-width penises/toys because they can expand, curl, and splay to press precise spots. 76% prefer gradual buildup. Includes Edge Press Swirl, Outside Press, V-Stroke, and Rotating & Splaying.",
+  "detailed_description": "Unlike a penis or toy with fixed width, fingers can expand, curl, and splay to press specific pressure points and adjust to what feels best. Add fingers gradually—each one deserves minutes, not seconds—waiting until fully ready for the next. Many describe the playful joy of starting small and silently begging for more as intensity builds. Four named sub-techniques shape the pressure.",
+  "body_areas": ["vagina", "vaginal walls", "vaginal entrance", "cervix"],
+  "modality": "hand",
+  "stepwise_structure": [
+    "1. Lube generously; start with one or two fingers very gently.",
+    "2. Give each finger minutes of attention before adding the next; add only when fully ready.",
+    "3. Edge Press Swirl: with finger(s) inserted, make circular movements pushing outward around the inner walls (entrance or deeper, by preference).",
+    "4. Outside Press: for stretch without deep penetration, press a closed cone-shaped hand against the entrance to feel fullness externally first.",
+    "5. V-Stroke: with 2+ fingers, make a V pressing the side walls while pulling outward so the vagina relaxes and 'balloons' for more pressure.",
+    "6. Rotating & Splaying (Kim's technique): rotate/splay fingers at different depths and angles to stimulate cervix/back walls without uncomfortable impacts."
+  ],
+  "safety_notes": [
+    "Each addition needs minutes and full readiness—never rush to more fingers.",
+    "Keep lube flowing; stop if there's any pinching or pain."
+  ],
+  "tags": ["adding", "finger-by-finger", "edge-press-swirl", "outside-press", "v-stroke", "rotating-splaying"],
+  "related_zone_ids": ["vagina", "vaginal_anterior_wall", "vaginal_posterior_wall", "cervix"],
+  "references": [
+    {
+      "title": "OMGYES — Adding (Season Two)",
+      "url": "https://www.omgyes.com",
+      "note": "76% prefer gradual pressure buildup; Kim's rotating/splaying technique."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ADDING_FULLNESS_AND_STRETCH",
+    "why_fingers": "Fingers can expand, curl, and splay to press precise points—unlike fixed-width penises or toys.",
+    "sub_techniques": [
+      { "id": "edge_press_swirl", "name": "Edge Press Swirl", "description": "Circular movements pushing outward around the inner walls, at the entrance or deeper." },
+      { "id": "outside_press", "name": "Outside Press", "description": "Press a closed cone-shaped hand against the entrance for fullness without deep penetration." },
+      { "id": "v_stroke", "name": "V-Stroke", "description": "Two-plus fingers in a V pressing the side walls while pulling outward so the vagina 'balloons' for more pressure." },
+      { "id": "rotating_splaying", "name": "Rotating & Splaying", "description": "Kim's technique—rotate/splay fingers at varying depths and angles to reach cervix/back walls without uncomfortable impacts." }
+    ]
+  }
+}

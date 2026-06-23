@@ -1,0 +1,35 @@
+{
+  "technique_id": "ORBITING_MOVING_SKIN",
+  "name": "Orbiting — Moving the Skin",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "A medium circular pressure: firm enough to move the tissue slightly, but still soft contact—not pressing down aggressively.",
+  "detailed_description": "The middle of the orbiting pressure range. Circles are firm enough to shift the skin and hood around the clitoris, engaging the tissue more than gliding without driving deep into the sensitive structures underneath. A versatile default for many during the build phase.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Circle with enough contact to move the skin and hood slightly.",
+    "2. Keep the touch soft—engage the tissue without pressing down hard.",
+    "3. Maintain a continuous circular path.",
+    "4. Adjust toward gliding (lighter) or firm massage (deeper) based on feedback."
+  ],
+  "safety_notes": [
+    "Keep contact soft; this level engages tissue without aggressive pressure.",
+    "Ease toward gliding if sensation becomes too intense."
+  ],
+  "tags": ["orbiting", "moving-skin", "medium-pressure", "circles", "hood"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Orbiting (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORBITING_CIRCLING_THE_CLIT",
+    "pressure_level": 2,
+    "pressure_label": "moving the skin (not too hard)"
+  }
+}

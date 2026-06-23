@@ -1,0 +1,29 @@
+{
+  "technique_id": "WRAPPING_SOCK_ON_IT",
+  "name": "Wrapping — Put a Sock on It",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Slip a sock over the vibrator to soften its intensity and alter the vibration—an easy, adorable cover-up that changes the feel.",
+  "detailed_description": "A simple sock is a ready-made wrapping cover. Pulled over the vibrator, it dampens raw intensity and reshapes the buzz into something softer. Sock thickness and texture change the result, and it doubles as a discreet cover-up.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Slip a clean sock over the head of the vibrator.",
+    "2. Use it over the target area to feel the softened, altered vibration.",
+    "3. Try different sock thicknesses/textures to tune the intensity."
+  ],
+  "safety_notes": [
+    "Use a clean sock; wash between uses for hygiene.",
+    "Thicker socks reduce intensity if the buzz is too strong."
+  ],
+  "tags": ["wrapping", "sock", "vibrator", "softening", "cover-up"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC"
+  }
+}

@@ -45,11 +45,19 @@
           <p v-if="sensateFirstToucherNote" class="guided-review-meta">{{ sensateFirstToucherNote }}</p>
           <p v-if="phase3PlanSummary" class="guided-review-meta">{{ phase3PlanSummary }}</p>
           <p v-if="positionIntensitySummary" class="guided-review-meta">{{ positionIntensitySummary }}</p>
+          <div v-if="isEdgingPlan" class="guided-review-edging-note" role="note">
+            <span class="guided-review-edging-title">Edging — before you start</span>
+            <p>
+              If either partner feels close to orgasm, pause and ease off <strong>before the point of no return</strong>.
+              Let the arousal settle for a few breaths, then build again. The aim is to ride the edge and draw the
+              tension out — only go over it when you both decide it's time.
+            </p>
+          </div>
         </header>
 
-        <section v-for="group in turnsByPhase" :key="'ph-' + group.phase" class="guided-review-phase">
-          <div class="guided-review-phase-bar" :class="'phase-' + group.phase">
-            <span class="guided-review-phase-label">Phase {{ group.phase }}</span>
+        <section v-for="group in turnsByPhase" :key="group.key" class="guided-review-phase">
+          <div class="guided-review-phase-bar" :class="group.cls">
+            <span class="guided-review-phase-label">{{ group.label }}</span>
             <span class="guided-review-phase-count">{{ group.turns.length }} turn{{ group.turns.length === 1 ? '' : 's' }}</span>
           </div>
           <ul class="guided-review-phase-list">
@@ -176,19 +184,41 @@ const positionIntensitySummary = computed(() => {
   return 'This session — Phase 3 positions: full variety (including more athletic suggestions when rolled).'
 })
 
+const isEdgingPlan = computed(() => {
+  const plan = guided.sessionPlan
+  if (!plan || plan.kind === 'sensate') return false
+  return plan.config?.intensityCurve === 'edging'
+})
+
 const turnsByPhase = computed(() => {
   const turns = guided.sessionPlan?.turns
   if (!Array.isArray(turns)) return []
-  const map = new Map()
+  // Sensate plans keep their scripted per-phase grouping.
+  if (isSensatePlan.value) {
+    const map = new Map()
+    for (let idx = 0; idx < turns.length; idx++) {
+      const t = turns[idx]
+      const ph = t.phase ?? 1
+      if (!map.has(ph)) map.set(ph, [])
+      map.get(ph).push({ idx, t })
+    }
+    return [1, 2, 3]
+      .filter((ph) => map.has(ph))
+      .map((phase) => ({ key: 'ph-' + phase, label: 'Phase ' + phase, cls: 'phase-' + phase, turns: map.get(phase) }))
+  }
+  // Classic guided: the build-up (former Phases 1 & 2) is one continuous
+  // section; Phase 3 is the intimacy finish.
+  const buildup = []
+  const finish = []
   for (let idx = 0; idx < turns.length; idx++) {
     const t = turns[idx]
-    const ph = t.phase ?? 1
-    if (!map.has(ph)) map.set(ph, [])
-    map.get(ph).push({ idx, t })
+    if ((t.phase ?? 1) === 3) finish.push({ idx, t })
+    else buildup.push({ idx, t })
   }
-  return [1, 2, 3]
-    .filter((ph) => map.has(ph))
-    .map((phase) => ({ phase, turns: map.get(phase) }))
+  const groups = []
+  if (buildup.length) groups.push({ key: 'buildup', label: 'Build-up', cls: 'phase-1', turns: buildup })
+  if (finish.length) groups.push({ key: 'finish', label: 'Finish', cls: 'phase-3', turns: finish })
+  return groups
 })
 
 function roleLine(t) {
@@ -269,6 +299,31 @@ function reviewWhat(t) {
   color: #a78bfa;
   margin: 0.65rem 0 0;
   line-height: 1.4;
+}
+.guided-review-edging-note {
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(236, 72, 153, 0.12);
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+.guided-review-edging-title {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: #f9a8d4;
+  margin-bottom: 0.3rem;
+}
+.guided-review-edging-note p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #fbcfe8;
+}
+.guided-review-edging-note strong {
+  color: #fff;
 }
 .guided-review-phase {
   display: flex;

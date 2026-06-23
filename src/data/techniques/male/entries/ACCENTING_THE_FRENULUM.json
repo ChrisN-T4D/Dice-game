@@ -1,0 +1,33 @@
+{
+  "technique_id": "ACCENTING_THE_FRENULUM",
+  "name": "Accenting — Extra at the Frenulum",
+  "receiver_anatomy": "male",
+  "category": "fine-tuning",
+  "summary": "Male variant of Accenting. Pleasure isn't even across the penis—the frenulum is usually the standout. Take a working stroke and add one firmer, deeper, or slower accent right at the frenulum on each pass.",
+  "detailed_description": "Accenting means giving a little extra where it matters most rather than treating everything equally. On the penis that spot is most often the frenulum on the underside of the head. Starting from a stroke both partners already enjoy, accent just one part of it—press a touch harder, linger, or sweep a little faster—each time you cross the frenulum. The rest of the motion stays the same so the accent stands out and repetition still builds.",
+  "body_areas": ["frenulum", "glans", "shaft"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Start from a stroke that already feels good (e.g., up/down the shaft).",
+    "2. Keep the base motion steady and repeatable.",
+    "3. Each time you cross the frenulum, accent it—firmer, slower, or a small extra circle.",
+    "4. Return to the base motion between accents.",
+    "5. Test other spots (corona, a particular side) for a personal standout."
+  ],
+  "safety_notes": [
+    "Don't accent so hard it becomes sharp—extra, not painful.",
+    "The standout spot can shift day to day; keep checking in."
+  ],
+  "tags": ["accenting", "frenulum", "hotspot", "fine-tuning", "manual", "male-variant"],
+  "related_zone_ids": ["frenulum", "penis_glans", "penis_shaft"],
+  "references": [
+    { "title": "OMGYES — Accenting (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Accenting; frenulum as the male 'extra where it matters most.'" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "ACCENTING_EXTRA_WHERE_IT_MATTERS",
+    "homologue_mapping": "offset clitoral hotspot → frenulum",
+    "best_for": "Adding emphasis on the male standout spot inside a familiar motion."
+  }
+}

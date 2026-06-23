@@ -1,0 +1,30 @@
+{
+  "technique_id": "WRAPPING_NIPPLES",
+  "name": "Wrapping — On the Nipples",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Vibrate through a shirt or bra on the nipples—approach slowly with occasional direct contact for subtle stimulation softened by the fabric.",
+  "detailed_description": "The fabric of a shirt or bra diffuses a vibrator's buzz over the nipple for a gentler, teasing sensation. Approach slowly rather than pressing straight on, and let occasional direct (through-fabric) contact punctuate lighter passes.",
+  "body_areas": ["nipples", "breasts"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Keep a shirt or bra on over the nipples.",
+    "2. Bring the vibrator toward the nipple slowly through the fabric.",
+    "3. Use mostly light passes with occasional more direct (through-fabric) contact.",
+    "4. Adjust speed and pressure for subtle, teasing stimulation."
+  ],
+  "safety_notes": [
+    "Approach slowly—nipples can be sensitive even through fabric.",
+    "Back off if vibration feels numbing."
+  ],
+  "tags": ["wrapping", "nipples", "vibrator", "through-clothing", "subtle"],
+  "related_zone_ids": ["nipple", "areola"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "technique_id": "HINTING_THE_PERINEUM",
+  "name": "Hinting — The Perineum",
+  "receiver_anatomy": "male",
+  "category": "tease",
+  "summary": "Male variant of Hinting. Press in along the perineum and ease off just before the deepest, most charged spot—approaching and retreating so anticipation builds toward the internal prostate zone.",
+  "detailed_description": "The perineum (the smooth stretch between scrotum and anus) sits over the prostate and rewards anticipation. Hinting here means pressing inward along the perineum toward the spot that feels deepest, then easing off before fully committing—an approach-and-retreat that teases the internal pleasure zone from the outside. Over repeated passes the pressure can creep slightly closer to the charged spot.",
+  "body_areas": ["perineum", "prostate"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Rest two fingers flat on the perineum.",
+    "2. Press gently inward toward the deepest-feeling spot.",
+    "3. Ease off just before fully committing to that spot.",
+    "4. Repeat the approach-and-retreat, varying the timing.",
+    "5. Let the pressure creep slightly closer over successive passes."
+  ],
+  "safety_notes": [
+    "Use broad, gentle pressure—no jabbing.",
+    "Check that perineal pressure is welcome before pressing firmly."
+  ],
+  "tags": ["hinting", "teasing", "perineum", "prostate", "anticipation", "manual", "male-variant"],
+  "related_zone_ids": ["perineum", "prostate"],
+  "references": [
+    { "title": "OMGYES — Hinting (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Hinting / anticipation, targeting the perineal prostate zone." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "HINTING_ANTICIPATION",
+    "homologue_mapping": "internal-zone tease → perineum over prostate",
+    "best_for": "Teasing the prostate zone externally before any internal contact."
+  }
+}

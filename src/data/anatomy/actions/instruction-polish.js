@@ -44,5 +44,10 @@ export function trimInstructionToMax(instruction, maxLen) {
       return `${trimmed} ${pausePart}`.trim()
     }
   }
-  return instruction.slice(0, maxLen - 1).replace(/\s+\S*$/, '') + '…'
+  // Prefer dropping the trailing incomplete sentence over a mid-word cut, so the
+  // prompt still reads as a complete, real instruction.
+  const window = instruction.slice(0, maxLen)
+  const lastStop = Math.max(window.lastIndexOf('. '), window.lastIndexOf('! '), window.lastIndexOf('? '))
+  if (lastStop > 40) return instruction.slice(0, lastStop + 1).trim()
+  return instruction.slice(0, maxLen - 1).replace(/\s+\S*$/, '').trim() + '.'
 }

@@ -1,0 +1,36 @@
+{
+  "technique_id": "STAGING_REBUILD_MULTIPLES",
+  "name": "Staging — Rebuild and Multiple Orgasms",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "After orgasm the clit is oversensitive. Move through this stage with light touch rather than focused pressure, then gradually reintroduce intensity bit by bit to rebuild toward additional orgasms.",
+  "detailed_description": "Immediately after orgasm, the clitoris is often too sensitive for direct focused pressure—contact there can feel like 'ouch.' To enable continued pleasure or multiple orgasms, move lightly and let sensation rebuild without overwhelming nerve endings that just fired. Then gradually reintroduce intensity step by step rather than jumping straight back to full force, which can cause discomfort and a longer recovery.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Recognize post-orgasm oversensitivity—expect 'ouch' from direct pressure.",
+    "2. Move lightly through the oversensitive stage rather than applying focused pressure.",
+    "3. Use minimal contact (or the hood/surrounding tissue) so sensation can rebuild.",
+    "4. Gradually reintroduce intensity bit by bit as tolerance returns.",
+    "5. Avoid jumping straight to full-force stimulation, which can cause pain and a longer reset."
+  ],
+  "safety_notes": [
+    "Honor the refractory/oversensitive window—pushing through pain is counterproductive.",
+    "Not everyone wants or experiences multiple orgasms; stopping here is fine."
+  ],
+  "tags": ["staging", "rebuild", "multiple-orgasms", "oversensitivity", "light-touch", "recovery"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 6,
+    "key_move": "Move lightly first, then reintroduce intensity gradually."
+  }
+}

@@ -32,6 +32,19 @@ function neighborsForZone(zoneId) {
   return []
 }
 
+/**
+ * Anatomically fragile zones where firm inward force is unwelcome/unsafe
+ * ("no squeezing"). Firm pressure here is clamped down a notch — gentle is the
+ * ceiling. See feasibility/zone-traits.js (FRAGILE_TO_FORCE) for the shared model.
+ */
+const FORCE_AVERSE_ZONES = new Set(['testicles', 'scrotum'])
+
+/** @param {string} level @param {string} zoneId */
+function clampPressureForZone(level, zoneId) {
+  if (level === 'high' && FORCE_AVERSE_ZONES.has(zoneId)) return 'medium'
+  return level
+}
+
 function s(pressure, tempo, friction = 'medium') {
   return {
     pressure: { level: pressure },
@@ -72,7 +85,7 @@ export function buildZoneActions(zoneId, profile) {
       technique: bp.technique,
       stimulator: bp.stimulator,
       modality: bp.modality,
-      stimulation: s(bp.pressure, bp.tempo, bp.friction),
+      stimulation: s(clampPressureForZone(bp.pressure, zoneId), bp.tempo, bp.friction),
       contact,
       erogenous_weight: Math.round(
         profile.stimulation?.erogenous_priority ?? profile.sensitivity_score ?? 50

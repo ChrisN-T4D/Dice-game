@@ -1,0 +1,34 @@
+{
+  "technique_id": "DEEP_END_PROSTATE_RIM",
+  "name": "Deep End — Pressing the Prostate",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Deep End (Pressing the Rim). With a controlled grip and known depth, press a slow come-hither against the prostate—firm and intentional but never jabbing—keeping awareness of exactly how deep contact reaches.",
+  "detailed_description": "The female Deep End is about deliberate, controlled deep contact rather than accidental bumping. The male analogue is the prostate, reached a few inches inside along the front (belly-side) wall. A well-lubricated finger curls in a slow 'come-hither' against it, with the hand controlling depth so pressure is intentional and steady. Like the original, the emphasis is on awareness and consent: depth is chosen, not stumbled into.",
+  "body_areas": ["prostate", "rectum (anterior wall)", "perineum"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Use generous lube and warm up the entrance first.",
+    "2. Insert a finger and locate the prostate on the front (belly-side) wall.",
+    "3. Curl in a slow come-hither, pressing firmly against it.",
+    "4. Control depth deliberately with the hand—steady, never jabbing.",
+    "5. Stay aware of how deep contact reaches and keep it within agreed comfort."
+  ],
+  "safety_notes": [
+    "Generous lube and short, smooth nails are essential for internal contact.",
+    "Firm, controlled pressure only—no sudden depth or jabbing.",
+    "Stop if there is any pain; internal contact must be welcome and consented to."
+  ],
+  "tags": ["deep-end", "prostate", "come-hither", "depth-control", "internal", "consent", "male-variant"],
+  "related_zone_ids": ["prostate", "perineum"],
+  "references": [
+    { "title": "OMGYES — Deep End (Season Two)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Deep End / pressing the rim, mapped to the prostate." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "DEEP_END_PRESSING_THE_RIM",
+    "homologue_mapping": "cervix/back-wall deep contact → prostate",
+    "best_for": "Controlled, intentional internal prostate pressure."
+  }
+}

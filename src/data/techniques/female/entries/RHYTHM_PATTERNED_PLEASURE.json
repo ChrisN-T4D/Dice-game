@@ -1,0 +1,59 @@
+{
+  "technique_id": "RHYTHM_PATTERNED_PLEASURE",
+  "name": "Rhythm — Timed, Patterned Pleasure",
+  "receiver_anatomy": "female",
+  "category": "rhythm",
+  "summary": "The same motion can feel very different depending on timing and pacing. Clitoral sensitivity shifts through arousal, so varying rhythm patterns—gaps, irregularity, continuous flow, or rapid flutter—can turn good touch into exceptional touch when matched to the right stage of play.",
+  "detailed_description": "Rhythm is about how you time strokes, taps, or pulses—not just what you do. OMGYES describes four core patterns: skipping (paused beats), raindrops (irregular intervals), back-to-back (no gaps), and constant pulsating (rapid micro-movements that feel like vibration). Preferences change day to day and within a single session; many women shift patterns from warm-up through peak arousal. Start with motions that already work, then change one rhythm variable at a time (speed, gaps, hold length) rather than random changes that confuse intent.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Establish a touch pattern that already feels good (stroke, tap, circle, or pulse).",
+    "2. Choose a rhythm mode: skipping, raindrops, back-to-back, or constant pulsating—or plan to shift between them as arousal builds.",
+    "3. Change one variable at a time: speed (~20% up or down), gap length, or hold duration before the next motion.",
+    "4. Check in; note which rhythm fits the current arousal stage.",
+    "5. Near climax, many partners prefer steady back-to-back or constant pulsating without skipped beats—confirm rather than assume."
+  ],
+  "safety_notes": [
+    "Stop or slow down if numbness, oversensitivity, or distress appears.",
+    "Rapid flutter or back-to-back intensity can overwhelm some receivers; pair with lighter pressure.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["rhythm", "pacing", "clitoral", "timing", "arousal-stages", "external"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Rhythm (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Educational resource; rhythm patterns and participant testimonials."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "RHYTHM_SKIPPING",
+      "RHYTHM_RAINDROPS",
+      "RHYTHM_BACK_TO_BACK",
+      "RHYTHM_CONSTANT_PULSATING"
+    ],
+    "session_examples": [
+      {
+        "name": "Jillian (testimonial pattern)",
+        "description": "Fast back-to-back tapping at the start, slower rhythm in the middle, irregular raindrop-style variation toward the end to avoid predictability."
+      },
+      {
+        "name": "Olivia (testimonial pattern)",
+        "description": "Constant pulsating from start to finish—unbroken contact and pressure like a sustained musical note rather than staccato beats."
+      }
+    ],
+    "practical_guidance": {
+      "experimentation": "Vary one rhythm variable at a time: speed by ~20%, a missing beat every third motion, or a longer hold before the next stroke. Systematic tweaks reveal what beats your current favorite.",
+      "slow_burn": "Deliberately keep a slow rhythm through buildup to prolong arousal and extend orgasmic waves. Resist the natural urge to speed up as excitement rises—it takes conscious discipline.",
+      "pressure_efficiency": "Rhythmic pleasure often needs only light pressure. Small micro-movements at the skin surface can exceed sensitivity thresholds faster than forceful thrusting—similar to how a vibrator's fine vibrations feel intense without deep pressure.",
+      "irregular_motions_fix": "If a partner dislikes unpredictability, repeat each irregular variation the same number of times before switching so the sequence becomes learnable—fresh but recognizable, like intentional jazz phrases rather than random errors.",
+      "near_orgasm": "To maintain rhythm approaching climax: use back-to-back or constant pulsating, avoid skipping beats, and keep an even pace so the partner is not surprised by a sudden pattern change unless that is explicitly desired."
+    }
+  }
+}

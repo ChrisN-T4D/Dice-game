@@ -45,6 +45,8 @@
     "validate:anatomy-actions": "node scripts/validate-anatomy-actions.mjs",
     "audit:anatomy-actions": "node scripts/audit-anatomy-actions.mjs",
     "audit:anatomy-sequences": "node scripts/audit-anatomy-sequences.mjs",
+    "audit:anatomy-feasibility": "node scripts/audit-anatomy-feasibility.mjs",
+    "audit:omgyes-techniques": "node scripts/audit-omgyes-techniques.mjs",
     "db:setup": "npm run db:migrate && npm run db:seed && npm run actions:seed",
     "api:dev": "node server/src/index.js",
     "api:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-port.ps1 3001",

@@ -89,8 +89,12 @@ export function makeAction(opts = {}) {
     `${humanize(technique)} (${stimulator} / ${modalityCode}) on ${humanize(zone_id)}`
 
   const metaIsObject = meta && typeof meta === 'object'
-  const isSequence = metaIsObject && meta.action_kind === 'sequence'
-  const finalInstruction = isSequence
+  // Sequences and hand-authored technique entries keep their instruction
+  // verbatim; only generated single actions get auto-enrichment (spillover
+  // notes, polish, etc.).
+  const verbatim =
+    metaIsObject && (meta.action_kind === 'sequence' || meta.action_kind === 'technique')
+  const finalInstruction = verbatim
     ? instruction.trim()
     : enrichSingleActionInstruction(instruction, {
         zone_id,

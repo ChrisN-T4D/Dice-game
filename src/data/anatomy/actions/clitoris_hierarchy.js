@@ -393,7 +393,7 @@ const majoraActions = [
   }),
   makeAction({
     zone_id: 'labia_majora',
-    instruction: zoneInstruction('labia_majora', 'Press thumbs into the plush tissue beside the opening and hold steady pressure while rocking slightly.', '', { omitWhere: true }),
+    instruction: zoneInstruction('labia_majora', 'Press thumbs into the plush tissue beside the opening and rock them in slow, kneading presses.', '', { omitWhere: true }),
     technique: 'pressure',
     stimulator: 'palm',
     modality: 'hand',

@@ -1,0 +1,33 @@
+{
+  "technique_id": "HINTING_THE_FRENULUM",
+  "name": "Hinting — The Frenulum",
+  "receiver_anatomy": "male",
+  "category": "tease",
+  "summary": "Male variant of Hinting. Trace toward the frenulum and almost settle on it—then glide away, teasing the most sensitive spot over and over before finally giving it full contact.",
+  "detailed_description": "Hinting builds anticipation by approaching a craved spot and pulling away. For the frenulum, strokes drift up the underside of the shaft toward the spot, brush near it, then veer off to the corona or shaft before returning. Only occasionally does contact land squarely on the frenulum, like a drive-by rather than a visit, so anticipation keeps climbing.",
+  "body_areas": ["frenulum", "glans", "shaft"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Stroke up the underside of the shaft toward the frenulum.",
+    "2. Brush close to the spot, then glide away before settling.",
+    "3. Circle back and approach again from a slightly different angle.",
+    "4. Only occasionally let contact land fully on the frenulum.",
+    "5. Keep it irregular and unhurried so anticipation builds."
+  ],
+  "safety_notes": [
+    "Use lube so the repeated passes stay smooth.",
+    "Read the response—deliver full contact before frustration tips over."
+  ],
+  "tags": ["hinting", "teasing", "frenulum", "anticipation", "manual", "male-variant"],
+  "related_zone_ids": ["frenulum", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Hinting (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Hinting the opening / anticipation." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "HINTING_THE_OPENING",
+    "homologue_mapping": "craved spot tease → frenulum",
+    "best_for": "Building anticipation toward the male hotspot."
+  }
+}

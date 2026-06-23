@@ -8,33 +8,34 @@
 /** @type {HomePosition[]} */
 export const HOME_POSITIONS = [
   {
-    id: 'side_by_side_neutral',
-    name: 'Side by side',
+    id: 'seated_lotus_neutral',
+    name: 'Seated lotus',
     isAppDefault: true,
-    returnLine: 'Come back to your default: lie on your sides facing each other.',
+    returnLine:
+      'Ease back into your neutral position: sit facing each other, cross-legged in a comfortable lotus, knees close and bodies upright.',
     activityLine:
-      'Kiss and use your hands for gentle, non-demanding touch. Check in with each other as you decide who gives next.',
+      'Stay connected as you flow back together—kiss and touch each other freely with both hands, and check in as you decide who gives next.',
   },
   {
     id: 'spooning_neutral',
     name: 'Spooning',
-    returnLine: 'Return to your default: lie spooned together, bodies aligned and relaxed.',
+    returnLine: 'Ease back into your neutral position: lie spooned together, bodies aligned and relaxed.',
     activityLine:
-      'Keep slow kisses and light stroking along arms, sides, and hips. Pause and check in before the next direction.',
+      'Stay connected as you flow back together—keep slow kisses and light stroking along arms, sides, and hips, and check in before the next direction.',
   },
   {
     id: 'face_to_face_seated',
     name: 'Face to face seated',
-    returnLine: 'Move back to your default: sit facing each other, close enough to touch easily.',
+    returnLine: 'Ease back into your neutral position: sit facing each other, close enough to touch easily.',
     activityLine:
-      'Hold hands, kiss softly, and pet each other with unhurried touch while you reset who leads next.',
+      'Stay connected as you flow back together—hold hands, kiss softly, and pet each other with unhurried touch while you settle who leads next.',
   },
   {
     id: 'lying_head_to_head',
     name: 'Lying head to head',
-    returnLine: 'Return to your default: lie beside each other with heads near, bodies comfortable.',
+    returnLine: 'Ease back into your neutral position: lie beside each other with heads near, bodies comfortable.',
     activityLine:
-      'Trade slow kisses and gentle caresses. Let the moment stay easy until you are ready for the next instruction.',
+      'Stay connected as you flow back together—trade slow kisses and gentle caresses, and let the moment stay easy until you are ready for the next instruction.',
   },
 ]
 
@@ -55,6 +56,22 @@ export function getDefaultHomePosition() {
 export function formatHomeTransition(homeId) {
   const home = getHomePositionById(homeId) || getDefaultHomePosition()
   return `${home.returnLine} ${home.activityLine}`.replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Opening instruction spoken once before the first turn: get into the home
+ * position to start. Reuses the position description from the return line so the
+ * two stay in sync, but phrases it as a fresh start rather than "come back".
+ * @param {string} homeId
+ */
+export function formatHomeOpening(homeId) {
+  const home = getHomePositionById(homeId) || getDefaultHomePosition()
+  const colon = home.returnLine.indexOf(':')
+  const desc = colon >= 0 ? home.returnLine.slice(colon + 1).trim() : home.returnLine.trim()
+  const descCap = desc ? desc.charAt(0).toUpperCase() + desc.slice(1) : desc
+  return `To begin, settle into your home position together. ${descCap} ${home.activityLine}`
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /** Static phrase rows for WAV generation (combined line per home). */

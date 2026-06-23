@@ -1,0 +1,48 @@
+{
+  "technique_id": "MULTIPLES_RECOVERY_PERIOD",
+  "name": "Multiples — Recovery Period Methods",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Bridge the oversensitive window with gentle touch until it passes. Two methods: rewinding (return to warmup-style touch, avoiding the clit) and the palm hug (diffuse, still pressure over the whole area). Preferred by about 53% who pursue multiples.",
+  "detailed_description": "Recovery-period methods keep contact comforting—not stimulating—until the clit can be approached again. Rewinding goes back to what felt best during warmup rather than orgasm: most popularly, gentle up/down strokes on and between the lips, spreading moisture without touching the oversensitive clit directly. The palm hug uses the whole hand (or a cupped mouth or leg) to give the area diffuse pressure like a hug—held gently, no rubbing—until recovery passes.",
+  "body_areas": ["labia", "vulva", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. After orgasm, switch to comforting rather than stimulating contact.",
+    "2. Rewinding: return to warmup touch—gentle up/down strokes on and between the lips, spreading moisture, avoiding the clit directly.",
+    "3. Palm hug: rest the whole hand over the area for diffuse pressure (a cupped mouth or leg works too); hold gently, no rubbing.",
+    "4. Maintain until oversensitivity fades.",
+    "5. Reintroduce gentler stimulation to rebuild toward a second orgasm."
+  ],
+  "safety_notes": [
+    "Keep recovery touch non-stimulating—no direct or rubbing contact on the clit.",
+    "Let the hug or rewind last as long as needed before rebuilding."
+  ],
+  "tags": ["multiples", "recovery", "rewinding", "palm-hug", "gentle", "post-orgasm"],
+  "related_zone_ids": ["labia_majora", "labia_minora", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Multiples (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Recovery-period approach preferred by ~53% who pursue multiples."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "MULTIPLES_SECOND_ORGASM",
+    "usage_stat": "Preferred by about 53% who pursue multiples.",
+    "methods": [
+      {
+        "id": "rewinding",
+        "name": "Rewinding (Half)",
+        "description": "Return to warmup touch—gentle up/down strokes on and between the lips, spreading moisture without touching the clit."
+      },
+      {
+        "id": "palm_hug",
+        "name": "Palm Hug",
+        "description": "Whole-hand (or cupped mouth/leg) diffuse pressure like a hug; hold gently, no rubbing, until recovery passes."
+      }
+    ]
+  }
+}

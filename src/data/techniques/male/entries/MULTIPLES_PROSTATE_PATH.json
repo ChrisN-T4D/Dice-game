@@ -1,0 +1,34 @@
+{
+  "technique_id": "MULTIPLES_PROSTATE_PATH",
+  "name": "Multiples — Prostate Path",
+  "receiver_anatomy": "male",
+  "category": "pacing",
+  "summary": "Male variant of Multiples. Pair slow come-hither prostate pressure with gentle glans strokes and ease off at each peak rather than rushing one finish—riding wave after wave toward layered, sometimes non-ejaculatory peaks.",
+  "detailed_description": "The female Multiples techniques chase wave-after-wave pleasure instead of a single endpoint. The male path leans on the prostate, which can support layered, non-ejaculatory peaks for many men. Slow internal come-hither pressure on the prostate is combined with light external glans or shaft contact; as each peak approaches, stimulation eases just enough to stay below the ejaculatory edge, then resumes—building a string of crests rather than one finish.",
+  "body_areas": ["prostate", "glans", "perineum"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Warm up and establish comfortable internal prostate contact.",
+    "2. Add gentle, slow glans or shaft strokes alongside it.",
+    "3. Build toward a peak with steady come-hither prostate pressure.",
+    "4. At the edge, ease the external stimulation off to stay below ejaculation.",
+    "5. Resume and repeat, riding successive waves rather than one finish."
+  ],
+  "safety_notes": [
+    "Generous lube and short, smooth nails for internal contact.",
+    "Ease off rather than forcing peaks; stop if anything hurts.",
+    "Non-ejaculatory peaks vary person to person—there's no 'should.'"
+  ],
+  "tags": ["multiples", "prostate", "waves", "non-ejaculatory", "pacing", "male-variant"],
+  "related_zone_ids": ["prostate", "penis_glans", "perineum"],
+  "references": [
+    { "title": "OMGYES — Multiples (Season Two)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Multiples, mapped to prostate-led layered peaks." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "MULTIPLES_SECOND_ORGASM",
+    "homologue_mapping": "multi-orgasm path → prostate-led layered peaks",
+    "best_for": "Layered, wave-after-wave peaks via combined prostate and glans play."
+  }
+}

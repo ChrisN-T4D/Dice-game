@@ -36,7 +36,7 @@ export default [
     anchor: 'perineum',
     path: ['perineum', 'groin'],
     name: 'Perineum to groin',
-    cues: ['hold steady palm pressure', 'stroke lightly upward into the crease'],
+    cues: ['press in and ease off with the palm', 'stroke lightly upward into the crease'],
     techniques: ['pressure', 'stroke'],
     stimulators: ['palm', 'palm'],
     modalities: ['hand', 'hand'],

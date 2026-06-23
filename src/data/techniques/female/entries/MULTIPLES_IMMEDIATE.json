@@ -1,0 +1,50 @@
+{
+  "technique_id": "MULTIPLES_IMMEDIATE",
+  "name": "Multiples — Immediate Multiples",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "For the lucky ~14% (one in seven): a second orgasm seconds after the first, with no recovery period. Either push through with the same motion, or switch to fast indirect layering through surrounding skin.",
+  "detailed_description": "A minority of women can chain orgasms immediately. Pushing through (~7%, roughly half of immediate-multiples women) means continuing with the exact same motion from the first orgasm—oversensitivity simply isn't an issue for them, and they often discover this naturally early on. Quick layering keeps going despite sensitivity by switching to much faster but indirect stimulation through surrounding skin (e.g. the clit sandwich): squeeze the outer lips to apply pressure to the clit while the outer tissue protects the sensitive organ underneath.",
+  "body_areas": ["clitoris", "clitoral hood", "labia"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Determine whether oversensitivity is an issue—some bodies don't have it post-orgasm.",
+    "2. Pushing through: if no oversensitivity, continue the exact same motion straight into a second orgasm.",
+    "3. Quick layering: if sensitive, switch to faster but indirect stimulation through surrounding skin.",
+    "4. Use the clit sandwich—squeeze outer lips to press the clit while the lips and hood buffer it.",
+    "5. Ride the immediate second peak before oversensitivity (if any) sets in."
+  ],
+  "safety_notes": [
+    "Most women cannot do immediate multiples; absence of this is completely normal.",
+    "If pushing through hurts, switch to indirect layering or a recovery method.",
+    "Zero pressure—don't chase immediate multiples if the body isn't responding."
+  ],
+  "tags": ["multiples", "immediate", "pushing-through", "quick-layering", "indirect", "clit-sandwich"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "labia_majora"],
+  "references": [
+    {
+      "title": "OMGYES — Multiples (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "~14% (1 in 7) can have immediate multiples; ~7% push through with the same motion."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "MULTIPLES_SECOND_ORGASM",
+    "related_technique_ids": ["LAYERING_CLIT_SANDWICH", "LAYERING_INDIRECT_STIMULATION"],
+    "usage_stat": "~14% (1 in 7) of women can have immediate multiples.",
+    "methods": [
+      {
+        "id": "pushing_through",
+        "name": "Pushing Through",
+        "description": "Continue the exact same motion from the first orgasm; ~7% of women, who often have no post-orgasm oversensitivity."
+      },
+      {
+        "id": "quick_layering",
+        "name": "Quick Layering",
+        "description": "Switch to fast indirect stimulation through surrounding skin (clit sandwich) so the lips/hood protect the sensitive clit."
+      }
+    ]
+  }
+}

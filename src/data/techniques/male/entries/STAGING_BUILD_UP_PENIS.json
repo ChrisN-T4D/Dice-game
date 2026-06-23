@@ -1,0 +1,33 @@
+{
+  "technique_id": "STAGING_BUILD_UP_PENIS",
+  "name": "Staging — Build-Up (Penis)",
+  "receiver_anatomy": "male",
+  "category": "pacing",
+  "summary": "Male variant of Staging (Build-Up). Move through arousal in stages—broad, slow shaft strokes first, then add the glans and frenulum as arousal climbs—letting each stage settle before escalating.",
+  "detailed_description": "Staging treats arousal as a sequence of phases rather than a single ramp. On the penis, an early stage uses broad, slow, full-hand shaft strokes that warm things up without overwhelming the head. As arousal rises, later stages introduce the glans and the frenulum and tighten the focus. Each stage is given time to settle so the next one lands on a higher baseline, building steadily instead of rushing.",
+  "body_areas": ["shaft", "glans", "frenulum"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Stage one: broad, slow strokes along the shaft to warm up.",
+    "2. Let arousal settle into that stage before changing anything.",
+    "3. Stage two: add the glans with lighter, more focused contact.",
+    "4. Stage three: bring in the frenulum and tighten the rhythm.",
+    "5. Escalate only when each stage feels established."
+  ],
+  "safety_notes": [
+    "Don't rush stages—settling time is what makes staging work.",
+    "Keep the head's contact light until arousal supports more."
+  ],
+  "tags": ["staging", "build-up", "pacing", "penis", "phases", "male-variant"],
+  "related_zone_ids": ["penis_shaft", "penis_glans", "frenulum"],
+  "references": [
+    { "title": "OMGYES — Staging (Season Two)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Staging build-up." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "STAGING_BUILD_UP",
+    "homologue_mapping": "pacing strategy (anatomy-neutral)",
+    "best_for": "Steady, staged escalation from shaft to head."
+  }
+}

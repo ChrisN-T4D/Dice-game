@@ -240,6 +240,6 @@ function defaultCue(step) {
   if (tech === 'circle') return `make slow ${stim} circles`
   if (tech === 'kiss') return stim === 'lip' ? 'kiss' : `kiss with the ${stim}`
   if (tech === 'tap') return `tap with the ${stim}`
-  if (tech === 'pressure') return `hold steady ${stim} pressure`
+  if (tech === 'pressure') return `press in and ease off with the ${stim}`
   return `stroke with the ${stim}`
 }

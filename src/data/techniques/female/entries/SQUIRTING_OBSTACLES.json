@@ -1,0 +1,42 @@
+{
+  "technique_id": "SQUIRTING_OBSTACLES",
+  "name": "Squirting — Common Obstacles and Solutions",
+  "receiver_anatomy": "female",
+  "category": "exploration",
+  "summary": "The main barriers to squirting are mental and practical: fear of peeing, uncomfortable buildup intensity, mess anxiety, and acceptance. Each has a straightforward fix that lets the experience happen.",
+  "detailed_description": "Most obstacles to squirting aren't physical. About 42% initially worry they're about to urinate (squirt and urine share an opening, and a tiny pee mix can occur early on)—emptying the bladder first and gaining familiarity resolves it. About 20% find the buildup touch feels faster/harder and less pleasurable than usual at first. About 28% feel anxious about mess—towels, a bath, or a shower help. Finally, acceptance: many describe getting over hang-ups and finding it empowering, and note the worry can resurface with a new partner, where open communication helps.",
+  "body_areas": ["G-region", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Fear it's pee (42%): empty the bladder beforehand; with familiarity, the difference becomes clear (a tiny pee mix early on is normal).",
+    "2. Uncomfortable intensity (20%): expect buildup to feel less pleasurable at first; keep pace within comfort and communicate.",
+    "3. Mess anxiety (28%): put absorbent towels underneath, or try in a bath/shower so cleanup is easy.",
+    "4. Acceptance: reframe it as embracing the body rather than rejecting a 'messy' part—many find it empowering.",
+    "5. New partners: expect to revisit the conversation; communicate openly about concerns and comfort."
+  ],
+  "safety_notes": [
+    "A small amount of urine mixing in is normal, especially early—it's not a failure.",
+    "Don't force a faster/harder pace than is comfortable to chase the result.",
+    "Approach with zero pressure and open communication, especially with a new partner."
+  ],
+  "tags": ["squirting", "obstacles", "fear-of-peeing", "mess-anxiety", "acceptance", "communication"],
+  "related_zone_ids": ["vaginal_anterior_wall", "vulva"],
+  "references": [
+    {
+      "title": "OMGYES — Squirting (Season Two)",
+      "url": "https://www.omgyes.com",
+      "note": "42% worried about urinating; 20% found intensity uncomfortable at first; 28% anxious about mess. Partner tip (Angie): keep a lot of towels around."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "SQUIRTING_WET_RELEASE",
+    "obstacles": [
+      { "id": "thought_it_was_pee", "stat": "42%", "solution": "Empty bladder beforehand; familiarity confirms the difference; small pee mix early is normal." },
+      { "id": "uncomfortable_intensity", "stat": "20%", "solution": "Expect less-pleasurable buildup at first; keep pace within comfort." },
+      { "id": "mess_anxiety", "stat": "28%", "solution": "Use towels underneath, or a bath/shower for easy cleanup." },
+      { "id": "acceptance", "solution": "Reframe as embracing the body; empowering; revisit communication with new partners." }
+    ]
+  }
+}

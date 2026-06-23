@@ -1,0 +1,38 @@
+{
+  "technique_id": "PAIRING_PARTNER_HAND",
+  "name": "Pairing — Partner's Hand on the Clit",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "The most common pairing approach: the partner frees one hand for clitoral work during penetration—e.g. leaning up during missionary. Several positions make room for hand access.",
+  "detailed_description": "Here the partner provides clitoral stimulation while penetrating. The key is a position that frees a hand. In missionary, the partner leans up enough to reach the clit (a lean-back variation). Other room-making positions include her straddling while the partner leans back, spooning on sides with legs open enough for access, and the partner standing (holding a wall) while she lies at the bed edge with legs up or around them.",
+  "body_areas": ["clitoris", "vulva", "vagina"],
+  "modality": "partnered",
+  "stepwise_structure": [
+    "1. Choose a position that frees one of the partner's hands.",
+    "2. Missionary: the partner leans up enough to free a hand for the clit (lean-back variation).",
+    "3. Or she straddles while the partner leans back, keeping fingers accessible.",
+    "4. Or spoon on sides with legs open wide enough for hand placement.",
+    "5. Or the partner stands (holding a wall) while she lies at the bed edge, legs up or around them.",
+    "6. The partner asks how much pressure feels good and matches her sensitivity."
+  ],
+  "safety_notes": [
+    "Start with soft warmup touches before increasing clit intensity.",
+    "Check in on pressure—match her current sensitivity rather than assuming."
+  ],
+  "tags": ["pairing", "partner-hand", "missionary", "spooning", "positions", "most-common"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "vagina"],
+  "references": [
+    { "title": "OMGYES — Pairing (Season Two)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "PAIRING_CLIT_AND_PENETRATION",
+    "room_making_positions": [
+      "Her straddling while partner leans back (on top, fingers accessible)",
+      "Missionary with a lean-back variation",
+      "Spooning on sides with legs open for access",
+      "Partner standing/holding a wall while she lies flat at the bed edge, legs up or around partner"
+    ]
+  }
+}

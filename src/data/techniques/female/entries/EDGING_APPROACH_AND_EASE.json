@@ -1,0 +1,52 @@
+{
+  "technique_id": "EDGING_APPROACH_AND_EASE",
+  "name": "Edging — Approaching and Easing Away",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Edging means approaching orgasm and then easing away repeatedly, which builds longer, more intense orgasms for 65.5% of women by holding off climax before it happens. Three variations—pause, distraction, and continuous—suit different bodies and minds.",
+  "detailed_description": "By walking up to the edge of orgasm and backing off, edging accumulates tension for a bigger eventual release. OMGYES describes three methods: pause edging (stop all touch), distraction edging (shift focus with sensation away from the clit), and continuous edging (move to non-clitoral touch without fully stopping). Lighter pressure near climax helps most people. It isn't for everyone—some can't rebuild after pausing and do better with the continuous variation, and a few find rebuilding to orgasm too hard to enjoy edging at all.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Build arousal until orgasm feels close.",
+    "2. Just before climax, ease away using one of the three methods (pause, distraction, or continuous).",
+    "3. Let the impending peak fade.",
+    "4. Return to stimulation and rebuild toward the edge again.",
+    "5. Repeat several times; reduce pressure near climax to make easing off easier.",
+    "6. Edge earlier in the session to avoid hitting an unstoppable point of no return."
+  ],
+  "safety_notes": [
+    "Backing off when close is frustrating but normal—it's part of the technique.",
+    "If rebuilding after a pause fails, switch to continuous edging.",
+    "Edging isn't for everyone; stop if rebuilding to orgasm feels impossible or unpleasant.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["edging", "pacing", "orgasm-control", "buildup", "delayed-gratification", "clitoral"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Edging (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "65.5% of women report longer, more intense orgasms from edging; 70% say lighter pressure near climax helps."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "EDGING_PAUSE",
+      "EDGING_DISTRACTION",
+      "EDGING_CONTINUOUS"
+    ],
+    "key_statistic": "65.5% of women report longer, more intense orgasms from edging.",
+    "practical_tips": {
+      "light_is_better": "70% say reducing pressure near climax helps significantly.",
+      "for_quick_orgasms": "Try pause or distraction methods first.",
+      "if_losing_orgasm": "Switch to the continuous variation.",
+      "point_of_no_return": "Edge earlier in the session to prevent unstoppable climbs.",
+      "patience_factor": "Giving in when close is frustrating but normal."
+    },
+    "not_for_everyone": "Some can't rebuild after pausing and should use continuous edging; for a few, rebuilding to orgasm feels impossible."
+  }
+}

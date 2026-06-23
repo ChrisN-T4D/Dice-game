@@ -1,0 +1,53 @@
+{
+  "technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC",
+  "name": "Wrapping — Vibration Through Fabric",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Putting fabric layers between a vibrator and skin changes the sensation completely—turning vibrations silky, fluffy, pillowy, or fluttery depending on the fabric's texture and thickness. 63% of women enjoy vibration through fabric.",
+  "detailed_description": "Wrapping uses clothing, bedding, or household fabric to soften and reshape a vibrator's buzz. The same toy feels different through a thin lacy thong versus a thick blanket. Techniques span body areas (nipples, underwear), grinding setups, softening covers (a sock over the toy), anticipation builds (stripping layers one by one), precision direction (a seam or knot focusing the buzz), and gliding styles (taut vs. loose fabric). Add lube with silky fabrics if there's too much friction, or hold fabric taut if a spot feels uncomfortable.",
+  "body_areas": ["clitoris", "vulva", "nipples", "whole body"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Pick a fabric layer for the feel you want—thin and lacy for subtle, thick and fluffy for diffuse.",
+    "2. Place it between the vibrator and skin over the target area.",
+    "3. Choose a style: direct-through-clothing, grinding, softened cover, layered strip-down, seam/knot direction, or gliding (taut/loose).",
+    "4. Adjust intensity by fabric thickness and toy distance—farther away gives a rippling effect.",
+    "5. Add lube with silky fabric if friction is too much, or hold fabric taut if a spot is uncomfortable."
+  ],
+  "safety_notes": [
+    "Keep toys clean; use a fresh fabric layer or wash covers between uses.",
+    "Reduce intensity or add a layer if vibration feels numbing or uncomfortable.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["wrapping", "vibrator", "fabric", "vibration", "clothing", "toy", "indirect"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "nipple", "labia_majora"],
+  "references": [
+    {
+      "title": "OMGYES — Wrapping (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "63% of women enjoy vibration through fabric."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "WRAPPING_NIPPLES",
+      "WRAPPING_UNDIES",
+      "WRAPPING_TUCK_TOY_BED",
+      "WRAPPING_SOCK_ON_IT",
+      "WRAPPING_STRIPPING_DOWN",
+      "WRAPPING_SEAM_OR_KNOT",
+      "WRAPPING_GLIDING_SLIDING"
+    ],
+    "related_technique_ids": ["LAYERING_THROUGH_FABRIC", "LAYERING_INDIRECT_STIMULATION"],
+    "key_statistic": "63% of women enjoy vibration through fabric.",
+    "bonus_tips": [
+      "Vibrate the clit from farther away for a rippling effect.",
+      "Conceal toys under clothes for everyday wear and fantasy scenarios.",
+      "Audition combinations of favorite vibrators with household items (sheets, towels, favorite underwear)."
+    ],
+    "friction_fix": "Add generous lube with silky fabrics if there's too much friction, or hold the fabric taut if a spot feels uncomfortable."
+  }
+}

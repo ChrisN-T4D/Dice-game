@@ -1,0 +1,35 @@
+{
+  "technique_id": "STAGING_WARMUP_TRANSITION",
+  "name": "Staging — Warmup Transition",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Once warmup is sufficient and the receiver is clearly ready, move from surrounding areas onto direct clit contact—very gradually, easing pressure up over time rather than full-blown stimulation on first touch.",
+  "detailed_description": "This stage bridges warmup and build-up. The shift from surrounding zones to the clitoris should be slow and gentle: introduce light contact first, then increase intensity over time. Going straight to firm direct stimulation on the glans can cause pain or overwhelm because the hood and surrounding tissue normally buffer the sensitive tip. Confirm readiness before transitioning.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Confirm warmup is sufficient and the receiver is clearly ready.",
+    "2. Move from surrounding areas onto direct clit contact.",
+    "3. Start with very light pressure rather than full intensity on first touch.",
+    "4. Increase pressure and intensity gradually over time.",
+    "5. Watch feedback; back off to surrounding areas if it's too much too soon."
+  ],
+  "safety_notes": [
+    "First direct contact should be gentle—the glans is most sensitive without its hood buffer.",
+    "Stop or soften if the touch causes pain or flinching."
+  ],
+  "tags": ["staging", "transition", "first-clit-contact", "gradual-pressure"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 2
+  }
+}

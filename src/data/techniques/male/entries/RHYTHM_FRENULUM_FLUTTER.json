@@ -1,0 +1,33 @@
+{
+  "technique_id": "RHYTHM_FRENULUM_FLUTTER",
+  "name": "Rhythm — Frenulum Flutter",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Rhythm (Constant Pulsating). A fingertip flutters in rapid micro-shakes on the frenulum—one unbroken buzz that never lifts off—delivering steady, repeatable stimulation to the most sensitive spot on the penis.",
+  "detailed_description": "OMGYES Rhythm techniques rely on steady, repeatable motion because repetition itself is what builds. The frenulum—the small band on the underside where the glans meets the shaft—is the male hotspot equivalent to the clitoral focus. A small, fast fingertip flutter keeps continuous contact, vibrating in place rather than stroking, so the sensation stays constant and predictable.",
+  "body_areas": ["frenulum", "glans"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Settle a fingertip on the frenulum on the underside of the head.",
+    "2. Shake it in tiny, rapid movements without lifting off.",
+    "3. Keep the buzz unbroken and the spot fixed.",
+    "4. Hold the same speed so the rhythm stays predictable.",
+    "5. Add lube and lighten up if the spot becomes too intense."
+  ],
+  "safety_notes": [
+    "The frenulum is delicate—keep pressure light.",
+    "Maintain steady contact; constant rhythm is the point."
+  ],
+  "tags": ["rhythm", "flutter", "frenulum", "constant", "manual", "male-variant"],
+  "related_zone_ids": ["frenulum", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Rhythm (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Rhythm / Constant Pulsating." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "RHYTHM_CONSTANT_PULSATING",
+    "homologue_mapping": "clitoral focus → frenulum",
+    "best_for": "Steady, repeatable buzz on the male hotspot."
+  }
+}

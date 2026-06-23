@@ -1,0 +1,58 @@
+{
+  "technique_id": "LAYERING_INDIRECT_STIMULATION",
+  "name": "Layering — Indirect Clitoral Stimulation",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Stimulate the clitoris indirectly by moving skin around it rather than pressing the glans directly—like nudging something through a soft blanket. The surrounding tissue cushions touch, which can feel pleasurable and build arousal with less irritation than direct contact.",
+  "detailed_description": "Layering is a family of techniques that use fabric, the mons triangle, the outer labia, or the clitoral hood as buffers between the stimulating surface (finger, tongue, toy, or penis) and the clitoral glans. Research summarized by OMGYES found that about two-thirds of women prefer indirect clitoral stimulation at least some of the time. Methods range from softest (through clothing) to more direct-but-still-buffered (moving hood skin with graded pressure). Choose a layer that matches sensitivity; combine layers (e.g. fabric plus labia sandwich) for extra cushioning.",
+  "body_areas": ["clitoris", "clitoral hood", "labia", "mons pubis", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Confirm comfort and consent; ask whether direct clitoral touch is welcome or too intense.",
+    "2. Start with the softest layer that still feels engaging (fabric, triangle, labia sandwich, or hood).",
+    "3. Use movement that shifts surrounding tissue rather than pinning the glans—slide, massage, or squeeze the buffer.",
+    "4. Check in; switch layers or adjust intensity using the fine-tuning guidance below.",
+    "5. Transition to more direct touch only if the receiver wants it."
+  ],
+  "safety_notes": [
+    "Stop or switch to a softer layer if touch feels sharp, burning, numb, or overwhelming.",
+    "Direct clitoral pressure after irritation can worsen sensitivity; layering is often a better starting point.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["indirect", "clitoral", "layering", "external", "sensitivity", "warmup"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "labia_majora", "labia_minora", "mons_pubis"],
+  "references": [
+    {
+      "title": "OMGYES — Layering (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Educational resource; technique names and prevalence stats from Herbenick-led research."
+    },
+    {
+      "title": "Herbenick et al. (2018) — Women and Touch",
+      "note": "66.5% of women endorsed stimulating the clitoris indirectly by moving surrounding skin rather than touching the glans directly."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "LAYERING_THROUGH_FABRIC",
+      "LAYERING_TRIANGLE_MASSAGE",
+      "LAYERING_CLIT_SANDWICH",
+      "LAYERING_THROUGH_HOOD"
+    ],
+    "intensity_fine_tuning": {
+      "less_intense": [
+        "Slow the pace rather than speeding up.",
+        "Use intermittent contact instead of constant pressure.",
+        "Lighten pressure and spread it over a broader area, farther from the glans."
+      ],
+      "more_intense": [
+        "Increase pace with a steady rhythmic slide or squeeze.",
+        "Keep contact continuous so stimulation does not break between strokes.",
+        "Add pressure through the layer (hood, lips, or fabric) while still avoiding bare glans contact unless invited."
+      ]
+    }
+  }
+}

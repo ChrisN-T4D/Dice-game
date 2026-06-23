@@ -1,0 +1,36 @@
+{
+  "technique_id": "STAGING_ORGASM",
+  "name": "Staging — Orgasm",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "During orgasm, many women like the same motion maintained consistently—but many also change stimulation once it begins, often intensifying pressure, speed, or rhythm. Preference varies, so follow feedback.",
+  "detailed_description": "There's no single rule for the orgasm stage. Some receivers want the exact approach motion held steady all the way through; others want a change once the orgasm starts—commonly an increase in pressure, speed, or added friction. Because this varies by person and even by session, responsiveness to verbal and nonverbal cues is what matters.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. As orgasm begins, default to maintaining the approach motion.",
+    "2. Stay alert for a signal to change—many want intensity to increase once it starts.",
+    "3. If desired, intensify pressure, speed, or rhythm during the orgasm.",
+    "4. Follow feedback rather than assuming; preference differs per person and session.",
+    "5. Ease off gradually as the orgasm subsides rather than stopping abruptly."
+  ],
+  "safety_notes": [
+    "Abrupt heavy changes can be jarring—escalate only if it's wanted.",
+    "Prepare for rapid post-orgasm oversensitivity in the next stage."
+  ],
+  "tags": ["staging", "orgasm", "consistency-or-change", "intensity", "feedback"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 5,
+    "variation_note": "Many keep the same motion; many change it once orgasm begins (often intensifying)."
+  }
+}

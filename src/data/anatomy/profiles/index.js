@@ -9,6 +9,7 @@ import upper_back from './upper_back.js'
 import thighs from './thighs.js'
 import neck from './neck.js'
 import ears from './ears.js'
+import mouth from './mouth.js'
 import arms from './arms.js'
 import calves from './calves.js'
 import feet from './feet.js'
@@ -26,6 +27,7 @@ export const zoneProfiles = {
   ...thighs,
   ...neck,
   ...ears,
+  ...mouth,
   ...arms,
   ...calves,
   ...feet,

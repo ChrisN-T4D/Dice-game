@@ -10,45 +10,22 @@
     </Teleport>
     <div class="wizard-body">
 
-    <!-- Step 1: Session timing (phase split, length, turns & pauses) -->
+    <!-- Step 1: Session timing (intensity curve, length, turns & pauses) -->
     <div v-show="step === 1" class="wizard-step active wizard-step-phase-distribution">
       <div class="wizard-step-header">
         <div class="wizard-step-title">Session timing</div>
-        <div class="wizard-step-description">How long you play, how time is split across phases, and how turns are paced.</div>
+        <div class="wizard-step-description">How long you play, how the build-up ramps, and how turns are paced.</div>
       </div>
       <div class="wizard-step-content wizard-step-timing">
-        <div class="wizard-settings-category">Phase split</div>
-        <p class="wizard-settings-category-hint">Choose an option below, or pick Custom to set your own percentages.</p>
+        <div class="wizard-settings-category">Intensity curve</div>
+        <p class="wizard-settings-category-hint">How quickly the build-up heats up, and how much of the session is build-up versus the intimacy finish.</p>
         <div class="wizard-options-card">
           <div class="row wrap">
-            <button v-for="opt in phaseOptions" :key="opt.value" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.distributionMode === opt.value }" @click="selectPhaseOption(opt)">
+            <button v-for="opt in intensityCurveOptions" :key="opt.value" type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.intensityCurve === opt.value }" @click="config.intensityCurve = opt.value">
               <span class="wizard-opt-label">{{ opt.label }}</span>
               <span class="wizard-opt-sub">{{ opt.sub }}</span>
             </button>
           </div>
-        </div>
-        <div class="wizard-collapsible">
-          <button
-            type="button"
-            class="wizard-collapsible-toggle"
-            :aria-expanded="!!wizardExplainOpen.s1"
-            @click="toggleWizardExplain('s1')"
-          >
-            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s1 ? '▼' : '▶' }}</span>
-            Explain these options
-          </button>
-          <div v-show="wizardExplainOpen.s1" class="wizard-collapsible-panel">
-            <ul class="wizard-collapsible-list">
-              <li v-for="opt in phaseOptions" :key="'ex1-' + opt.value">
-                <strong>{{ opt.label }}:</strong> {{ opt.detail }}
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div v-if="config.distributionMode === 'custom'" class="custom-sliders custom-sliders-compact">
-          <div class="row align-center"><label>Phase 1</label><span class="pct">{{ config.phasePercents[0] }}%</span><input v-model.number="config.phasePercents[0]" type="range" min="0" max="100" /></div>
-          <div class="row align-center"><label>Phase 2</label><span class="pct">{{ config.phasePercents[1] }}%</span><input v-model.number="config.phasePercents[1]" type="range" min="0" max="100" /></div>
-          <div class="row align-center"><label>Phase 3</label><span class="pct">{{ config.phasePercents[2] }}%</span><input v-model.number="config.phasePercents[2]" type="range" min="0" max="100" /></div>
         </div>
 
         <div class="wizard-settings-category">Session length</div>
@@ -72,7 +49,7 @@
               <li><strong>15 min:</strong> Short structured session, good for a quick check-in.</li>
               <li><strong>30–45 min:</strong> Common choices with room to settle in without a huge time commitment.</li>
               <li><strong>60–90 min:</strong> Longer sessions when you want more turns and slower pacing.</li>
-              <li><strong>120 min:</strong> A full two-hour arc; phases still follow the split you chose above.</li>
+              <li><strong>120 min:</strong> A full two-hour arc; the build-up and finish follow the intensity curve you chose above.</li>
             </ul>
           </div>
         </div>
@@ -434,7 +411,7 @@
               <li><strong>Every two turns:</strong> Same position for two turns so each partner leads once there, then advance.</li>
               <li>
                 <strong>Several turns per position:</strong> Stay longer in each position; rotation size is set below, and turns per
-                position are estimated from your session length and phase split.
+                position are estimated from your session length and intensity curve.
               </li>
             </ul>
           </div>
@@ -472,7 +449,7 @@
               <span class="wizard-opt-label">Several turns per position</span>
               <span class="wizard-opt-sub">
                 Stay in one suggested position for several turns before moving to the next slot in the rotation. Activity details still
-                change every turn. How long you stay in each position is estimated from your total time, phase split, turn length, and
+                change every turn. How long you stay in each position is estimated from your total time, intensity curve, turn length, and
                 how many positions you allow below.
               </span>
             </button>
@@ -518,34 +495,6 @@
           </div>
         </template>
 
-        <div class="wizard-settings-category wizard-settings-category-major">Between phases</div>
-        <p class="wizard-settings-category-hint">Pause between phases to check in with each other before continuing?</p>
-        <div class="wizard-options-card">
-          <div class="wizard-phase-checkin-actions wizard-phase-checkin-actions-inline">
-            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = true">Yes</button>
-            <button type="button" class="secondary wizard-phase-checkin-btn" :class="{ 'preset-selected': !config.phaseCheckInEnabled }" @click="config.phaseCheckInEnabled = false">No</button>
-          </div>
-        </div>
-        <div class="wizard-collapsible">
-          <button
-            type="button"
-            class="wizard-collapsible-toggle"
-            :aria-expanded="!!wizardExplainOpen.s11"
-            @click="toggleWizardExplain('s11')"
-          >
-            <span class="wizard-collapsible-chevron" aria-hidden="true">{{ wizardExplainOpen.s11 ? '▼' : '▶' }}</span>
-            Explain phase check-in
-          </button>
-          <div v-show="wizardExplainOpen.s11" class="wizard-collapsible-panel">
-            <p>
-              <strong>Yes:</strong> After each phase ends, the session pauses so you can check in before you continue. You tap when you
-              are both ready.
-            </p>
-            <p class="wizard-collapsible-panel-gap">
-              <strong>No:</strong> Phases flow into each other without that extra pause screen.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -563,6 +512,21 @@
             <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': !config.clothingEnabled }" @click="config.clothingEnabled = false">Disabled</button>
           </div>
         </div>
+        <template v-if="config.clothingEnabled">
+          <div class="wizard-settings-category">Who takes the clothes off?</div>
+          <div class="wizard-options-card">
+            <div class="row">
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.clothingRemovalMode === 'partner' }" @click="config.clothingRemovalMode = 'partner'">
+                <span class="wizard-opt-label">Each other</span>
+                <span class="wizard-opt-sub">Your partner undresses you</span>
+              </button>
+              <button type="button" class="secondary wizard-opt" :class="{ 'preset-selected': config.clothingRemovalMode === 'self' }" @click="config.clothingRemovalMode = 'self'">
+                <span class="wizard-opt-label">Themselves</span>
+                <span class="wizard-opt-sub">Strip for your partner</span>
+              </button>
+            </div>
+          </div>
+        </template>
         <div class="wizard-collapsible">
           <button
             type="button"
@@ -580,6 +544,10 @@
             </p>
             <p class="wizard-collapsible-panel-gap">
               <strong>Disabled:</strong> No removal prompts; you skip straight to partner and clothing item setup without that layer.
+            </p>
+            <p class="wizard-collapsible-panel-gap">
+              <strong>Each other:</strong> the prompt asks the partner to undress the receiver (kissing skin, easing straps with their mouth).
+              <strong>Themselves:</strong> the receiver strips for the watching partner (sway your hips, arch your back, peel to the music).
             </p>
           </div>
         </div>
@@ -854,52 +822,27 @@ function toggleWizardExplain(key) {
 
 const colors = ['#3b82f6', '#22d3ee', '#22c55e', '#a855f7', '#f59e0b', '#ef4444', '#f97316', '#ec4899', '#e5e7eb']
 
-const phaseOptions = [
-  {
-    value: 'equal',
-    label: 'Equal',
-    sub: '33/33/34%',
-    detail: 'Splits time evenly across Phase 1 (slower attentive touch), Phase 2 (warmer exploration), and Phase 3 (intimacy).',
-  },
-  {
-    value: 'phase1',
-    label: 'Slow build',
-    sub: '50/30/20%',
-    detail: 'More time in Phase 1 for a slow build with calm, present-moment touch; less in Phase 3.',
-  },
-  {
-    value: 'phase2',
-    label: 'A little spicy',
-    sub: '30/40/30%',
-    detail: 'Emphasizes Phase 2 for building heat before moving into Phase 3.',
-  },
-  {
-    value: 'phase3',
-    label: 'Intimacy-focused',
-    sub: '20/30/50%',
-    detail: 'More of the session in Phase 3 when prompts focus on partnered intimacy.',
-  },
-  {
-    value: 'quickie',
-    label: 'Quickie',
-    sub: '10/30/60%',
-    detail: 'A shorter overall session with most of the remaining time in Phase 3.',
-  },
-  {
-    value: 'custom',
-    label: 'Custom',
-    sub: 'Set your own',
-    detail: 'Set your own percentages with the sliders. Aim for about 100% across the three phases.',
-  },
+const intensityCurveOptions = [
+  { value: 'slow', label: 'Slow burn', sub: 'Gentle ramp, long build-up' },
+  { value: 'balanced', label: 'Balanced', sub: 'Steady climb, even split' },
+  { value: 'fast', label: 'Fast', sub: 'Quick ramp, longer finish' },
+  { value: 'edging', label: 'Edging', sub: 'Quick build, then ride the edge' },
 ]
 
-const phasePercentsByMode = {
-  equal: [33, 33, 34],
-  phase1: [50, 30, 20],
-  phase2: [30, 40, 30],
-  phase3: [20, 30, 50],
-  quickie: [10, 30, 60],
-  custom: [33, 33, 34],
+/**
+ * The intensity curve now also sets how time is split between the build-up
+ * (former Phases 1 & 2) and the intimacy finish (Phase 3). Values are
+ * [buildup-half, buildup-half, finish] so the existing 3-phase plumbing keeps
+ * working; only the build-up total and the finish share are meaningful.
+ */
+const phasePercentsByCurve = {
+  slow: [35, 35, 30],
+  balanced: [33, 33, 34],
+  fast: [22, 23, 55],
+  edging: [38, 37, 25],
+}
+function phasePercentsForCurve(curve) {
+  return [...(phasePercentsByCurve[curve] || phasePercentsByCurve.balanced)]
 }
 
 const pauseOptions = [
@@ -998,16 +941,15 @@ const config = reactive({
   partnerNames: { 1: '', 2: '' },
   partnerColors: { 1: '#3b82f6', 2: '#ec4899' },
   partnerAnatomy: { 1: 'penis', 2: 'vulva' },
-  distributionMode: 'equal',
-  phasePercents: [33, 33, 34],
+  intensityCurve: 'balanced',
   totalMinutes: 30,
   turnMinutes: 2,
   pauseSeconds: 15,
   clothingRemovalSeconds: 30,
   clothingEnabled: false,
+  clothingRemovalMode: 'partner',
   clothingListP1: [...clothingPresets.undergarmentsMale],
   clothingListP2: [...clothingPresets.undergarmentsFemale],
-  phaseCheckInEnabled: false,
   kokoroVoiceId: 'af_nicole',
   phase3PositionMode: 'each_turn',
   phase3MaxPositions: 4,
@@ -1015,15 +957,6 @@ const config = reactive({
   positionIntensity: 'more_physical',
   homePositionId: getDefaultHomePosition().id,
 })
-
-function selectPhaseOption(opt) {
-  config.distributionMode = opt.value
-  config.phasePercents = [...phasePercentsByMode[opt.value]]
-  if (opt.value === 'quickie') {
-    config.totalMinutes = 15
-    config.turnMinutes = 1
-  }
-}
 
 function setPreset(partner, presetKey) {
   const list = clothingPresets[presetKey]
@@ -1078,12 +1011,11 @@ onMounted(() => {
     config.turnMinutes = c.turnMinutes ?? 2
     config.pauseSeconds = c.pauseSeconds ?? 15
     config.clothingRemovalSeconds = c.clothingRemovalSeconds ?? 30
-    config.phasePercents = Array.isArray(c.phasePercents) ? [...c.phasePercents] : [33, 33, 34]
-    config.distributionMode = c.distributionMode ?? 'equal'
+    config.intensityCurve = c.intensityCurve ?? 'balanced'
     config.clothingEnabled = !!c.clothingEnabled
+    config.clothingRemovalMode = c.clothingRemovalMode === 'self' ? 'self' : 'partner'
     config.clothingListP1 = Array.isArray(c.clothingListP1) ? [...c.clothingListP1] : [...clothingPresets.undergarmentsMale]
     config.clothingListP2 = Array.isArray(c.clothingListP2) ? [...c.clothingListP2] : [...clothingPresets.undergarmentsFemale]
-    config.phaseCheckInEnabled = !!c.phaseCheckInEnabled
     if (c.partnerNames) {
       config.partnerNames[1] = c.partnerNames[1] ?? ''
       config.partnerNames[2] = c.partnerNames[2] ?? ''
@@ -1126,11 +1058,8 @@ onMounted(() => {
 })
 
 function onStart() {
-  const phasePercents = config.distributionMode === 'custom' ? [...config.phasePercents] : phasePercentsByMode[config.distributionMode]
-  if (config.distributionMode === 'quickie') {
-    config.totalMinutes = 15
-    config.turnMinutes = 1
-  }
+  // The intensity curve now drives the build-up vs finish time split.
+  const phasePercents = phasePercentsForCurve(config.intensityCurve)
   const positionIntensity = config.positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical'
   prefs.setPositionIntensity(positionIntensity)
   emit('start', {
@@ -1142,10 +1071,10 @@ function onStart() {
     clothingListP1: config.clothingEnabled ? config.clothingListP1 : [],
     clothingListP2: config.clothingEnabled ? config.clothingListP2 : [],
     clothingEnabled: config.clothingEnabled,
-    distributionMode: config.distributionMode,
+    clothingRemovalMode: config.clothingRemovalMode,
+    intensityCurve: config.intensityCurve,
     partnerNames: { 1: config.partnerNames[1], 2: config.partnerNames[2] },
     partnerAnatomy: { 1: config.partnerAnatomy[1], 2: config.partnerAnatomy[2] },
-    phaseCheckInEnabled: config.phaseCheckInEnabled,
     kokoroVoiceId: (config.kokoroVoiceId && String(config.kokoroVoiceId).trim()) || 'af_nicole',
     excludeWhenTouching: mergeExcludePrefs(prefs.excludeWhenTouching),
     excludeWhenTouched: mergeExcludePrefs(prefs.excludeWhenTouched),

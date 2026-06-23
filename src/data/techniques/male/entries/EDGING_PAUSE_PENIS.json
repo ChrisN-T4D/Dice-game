@@ -1,0 +1,33 @@
+{
+  "technique_id": "EDGING_PAUSE_PENIS",
+  "name": "Edging — Pause Edging (Penis)",
+  "receiver_anatomy": "male",
+  "category": "pacing",
+  "summary": "Male variant of Pause Edging. Stroke to just before climax, then stop all touch completely until the urge fades, and restart from a slow warmup—the slowest approach, associated with the most intense release.",
+  "detailed_description": "Pause edging is the most complete way to back off: all stimulation stops right before the point of no return. On the penis this is especially clear because the approach to climax is steep—stopping fully, then waiting for the urge to subside, then rebuilding from gentle warmup, draws the whole experience out and tends to make the eventual release more intense. If rebuilding from a full stop is hard, the continuous 'approach and ease' variation is gentler.",
+  "body_areas": ["penis", "shaft", "glans"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Stroke and build until climax is just about to hit.",
+    "2. Stop all touch completely.",
+    "3. Wait until the impending-climax feeling fully fades.",
+    "4. Restart from a slow, gentle warmup and build again.",
+    "5. Repeat as desired before finally allowing release."
+  ],
+  "safety_notes": [
+    "Stopping right at the edge is frustrating but expected.",
+    "If you can't rebuild after a full stop, switch to continuous approach-and-ease."
+  ],
+  "tags": ["edging", "pause", "pacing", "penis", "intense", "male-variant"],
+  "related_zone_ids": ["penis_shaft", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Edging (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted directly from pause edging." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "EDGING_PAUSE",
+    "homologue_mapping": "pacing strategy (anatomy-neutral)",
+    "best_for": "Drawing out arousal for a more intense release."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "technique_id": "ORBITING_GLANS_FIRM_MASSAGE",
+  "name": "Orbiting — Firm Massage of the Corona",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Orbiting (Firm Massage). Once the head is warmed up, press in and circle the corona ridge with firm, skin-moving pressure in slow, even loops.",
+  "detailed_description": "Where the light Gliding variant skates the surface, the firm massage moves the skin itself over the glans and corona. The corona ridge—the raised rim at the base of the head—is densely nerved and tolerates firmer, kneading circles once arousal is established. Pressure is firm but never crushing, and the loop stays slow and even so the buildup is steady.",
+  "body_areas": ["glans", "corona", "shaft"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Warm up first with lighter contact until the head is responsive.",
+    "2. Press a finger or thumb into the corona ridge.",
+    "3. Circle slowly so the skin moves over the firm tissue beneath.",
+    "4. Keep the loops even and the pressure firm but comfortable.",
+    "5. Ease the pressure if it ever reads as sharp rather than full."
+  ],
+  "safety_notes": [
+    "Firm, not crushing—stop if pressure feels sharp.",
+    "Save the firmest pressure for when arousal is already built."
+  ],
+  "tags": ["orbiting", "firm", "massage", "corona", "glans", "manual", "male-variant"],
+  "related_zone_ids": ["penis_glans", "penis_shaft"],
+  "references": [
+    { "title": "OMGYES — Orbiting (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from the clitoral firm-massage Orbiting technique." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "ORBITING_FIRM_MASSAGE",
+    "homologue_mapping": "clitoral_glans → penis_glans / corona",
+    "best_for": "Building intensity with firm, skin-moving circles once warmed up."
+  }
+}

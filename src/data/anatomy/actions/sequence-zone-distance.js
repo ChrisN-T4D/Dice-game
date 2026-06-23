@@ -185,6 +185,16 @@ for (const [key, fu] of Object.entries(EDGE_DISTANCE_FU_RAW)) {
   EDGE_DISTANCE_FU[edgeKey(a, b)] = fu
 }
 
+/** Curated, hand-tuned undirected FU edges (read-only). Now a *secondary* source,
+ * used to calibrate the map's pixel scale and as a fallback where the calibrated
+ * geometry has no coordinates for a pair. @see ../feasibility/geometry-distance.js */
+export const CURATED_EDGE_FU = EDGE_DISTANCE_FU
+
+/** True when a curated edge exists for this pair (vs. the generic estimate). */
+export function hasCuratedEdge(a, b) {
+  return EDGE_DISTANCE_FU[edgeKey(a, b)] != null
+}
+
 /** Long body paths that use round-trip pattern when FU ≥ medium. */
 const ROUND_TRIP_EDGES = new Set([
   edgeKey('throat', 'base_of_neck'),

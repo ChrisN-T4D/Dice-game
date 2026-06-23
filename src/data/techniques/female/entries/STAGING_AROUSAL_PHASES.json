@@ -1,0 +1,54 @@
+{
+  "technique_id": "STAGING_AROUSAL_PHASES",
+  "name": "Staging — Building Pleasure Through Phases",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Sex isn't a linear path—what feels good changes minute by minute within a single session. Jumping straight to the clitoris tends to create small, quick orgasms; building gradually through defined stages produces more intense ones. What feels comfortable one moment can feel painful the next as the body changes.",
+  "detailed_description": "OMGYES frames arousal as a series of blended stages rather than sharp steps: building desire/warmup, warmup transition, build-up, approach, orgasm, and rebuild/multiple orgasm. Transitions usually aren't clean boundaries—they blend, so feedback matters to know when to change pressure, pace, or focus. A key physical insight: before arousal, direct clitoral touch can hurt; once fully aroused, the clit enlarges and emerges and now wants pressure rather than avoidance. Matching touch to the current stage is what drives intensity.",
+  "body_areas": ["whole body", "vulva", "clitoris", "inner thighs", "mons pubis"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Start slow and away from the clit; build desire before direct genital touch.",
+    "2. Transition gradually onto the clit, easing pressure up rather than full force at first contact.",
+    "3. In build-up, experiment with subtle detail changes to find what escalates pleasure.",
+    "4. On approach, lock onto one working motion and hold it consistently.",
+    "5. Through orgasm, keep the motion or adjust intensity to preference.",
+    "6. After orgasm, move lightly through the oversensitive phase before rebuilding."
+  ],
+  "safety_notes": [
+    "Pre-arousal direct clitoral touch can hurt—warm up first.",
+    "Post-orgasm oversensitivity needs gentle, light contact, not immediate pressure.",
+    "Read verbal and nonverbal feedback; the same motion can feel good then wrong as the body changes.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["staging", "pacing", "arousal-phases", "warmup", "build-up", "timing"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "mons_pubis", "labia_majora", "inner_thighs"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Educational resource; stage model and prevalence stats from Herbenick-led research."
+    },
+    {
+      "title": "OMGYES — orgasm intensity statistic",
+      "note": "77.2% of women who experience variable orgasm intensity say intense orgasms result from building arousal gradually rather than rushing to finish."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "STAGING_BUILDING_DESIRE",
+      "STAGING_WARMUP_TRANSITION",
+      "STAGING_BUILD_UP",
+      "STAGING_APPROACH",
+      "STAGING_ORGASM",
+      "STAGING_REBUILD_MULTIPLES"
+    ],
+    "key_statistic": "77.2% of women with variable orgasm intensity attribute intense orgasms to gradual buildup over rushing.",
+    "physical_changes_note": "During arousal the vulva becomes red and puffy and the clit enlarges and emerges; touch that hurts when unaroused is often wanted (with pressure) when fully aroused.",
+    "what_partners_often_miss": "Vulvas are not an on/off switch like a penis; sensitivity changes constantly, so timing matters as much as technique.",
+    "transitions_note": "Stages blend into one another rather than switching sharply; ask for feedback to track changes."
+  }
+}

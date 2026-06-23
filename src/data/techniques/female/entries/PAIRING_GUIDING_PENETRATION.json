@@ -1,0 +1,35 @@
+{
+  "technique_id": "PAIRING_GUIDING_PENETRATION",
+  "name": "Pairing — Guiding Penetration Style",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "With a hand free, give nonverbal signals to adjust penetration depth, speed, or rhythm so it stays matched to current clitoral pleasure—keeping both sensations synced.",
+  "detailed_description": "Having an extra hand free lets the receiver (or partner) guide penetration to match the clitoral stimulation. Leslie notes that matching the penetration keeps everything synced so neither sensation feels disconnected. Nonverbal cues adjust depth, speed, and rhythm to the current intensity.",
+  "body_areas": ["vagina", "clitoris"],
+  "modality": "partnered",
+  "stepwise_structure": [
+    "1. Keep one hand free during paired stimulation.",
+    "2. Use nonverbal signals (hand on hip, guiding the body) to adjust depth, speed, or rhythm.",
+    "3. Match penetration intensity to the current clitoral pleasure level.",
+    "4. Keep both sensations in harmony so neither feels disconnected.",
+    "5. Re-sync as arousal shifts through the session."
+  ],
+  "safety_notes": [
+    "Agree on signals beforehand so cues are clear, not confusing.",
+    "Adjust rather than push through if a depth or speed feels off."
+  ],
+  "tags": ["pairing", "guiding", "penetration", "sync", "rhythm", "nonverbal"],
+  "related_zone_ids": ["vagina", "clitoral_glans"],
+  "references": [
+    {
+      "title": "OMGYES — Pairing (Season Two)",
+      "url": "https://www.omgyes.com",
+      "note": "Leslie: matching the penetration keeps both sensations synced."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "PAIRING_CLIT_AND_PENETRATION"
+  }
+}

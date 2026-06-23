@@ -1,0 +1,31 @@
+{
+  "technique_id": "WRAPPING_SEAM_OR_KNOT",
+  "name": "Wrapping — Directing Vibrations with Seam or Knot",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Use a fabric seam or a tied knot to focus vibration on a precise spot—e.g. the crotch seam of jeans where the seams meet, or a necktie/cotton-rope knot pressed against the desired spot.",
+  "detailed_description": "Fabric features can concentrate a vibrator's buzz. The crotch seam of jeans (where the seams cross) targets pressure and vibration onto specific points. Alternatively, tie a knot in a necktie, cotton rope, or any fabric and position the knot against the spot you want stimulated, then vibrate through it for focused sensation.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Find a fabric feature that concentrates pressure—a jeans crotch seam where the seams meet.",
+    "2. Position that seam over the spot you want targeted and vibrate against it.",
+    "3. Alternatively, tie a knot in a necktie, cotton rope, or any fabric.",
+    "4. Place the knot against the desired spot.",
+    "5. Vibrate through the knot for focused, directed stimulation."
+  ],
+  "safety_notes": [
+    "Keep pressure comfortable; a focused point can be intense.",
+    "Use soft fabric for knots to avoid harsh edges."
+  ],
+  "tags": ["wrapping", "seam", "knot", "precision", "directed-vibration", "jeans"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC"
+  }
+}

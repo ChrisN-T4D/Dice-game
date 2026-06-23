@@ -1,0 +1,33 @@
+{
+  "technique_id": "ORBITING_GLANS_GLIDING",
+  "name": "Orbiting — Gliding Around the Glans",
+  "receiver_anatomy": "male",
+  "category": "manual",
+  "summary": "Male variant of Orbiting (Gliding). A slick fingertip circles the glans and corona rim so lightly the skin barely drags, looping continuously rather than pressing in.",
+  "detailed_description": "The glans is the male homologue of the clitoral glans, and like Orbiting on the clit, light gliding loops let the most sensitive surface be stimulated without the directness that can tip into too-much. Plenty of lubricant lets the fingertip skate over the glans and around the corona ridge in an unbroken circle, keeping contact even and the pressure barely there.",
+  "body_areas": ["glans", "corona", "frenulum"],
+  "modality": "manual",
+  "stepwise_structure": [
+    "1. Add plenty of lube so the fingertip glides without dragging.",
+    "2. Rest a single fingertip on the glans.",
+    "3. Circle continuously around the head and corona rim, letting the skin barely move.",
+    "4. Keep the loop even and the pressure feather-light.",
+    "5. Slow down or widen the loop if the glans gets oversensitive."
+  ],
+  "safety_notes": [
+    "The glans is very sensitive—keep pressure light and use lube.",
+    "Back off if direct contact becomes too intense rather than pushing through."
+  ],
+  "tags": ["orbiting", "gliding", "glans", "corona", "light", "manual", "male-variant"],
+  "related_zone_ids": ["penis_glans", "frenulum"],
+  "references": [
+    { "title": "OMGYES — Orbiting (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from the clitoral Orbiting / Gliding technique." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "ORBITING_GLIDING",
+    "homologue_mapping": "clitoral_glans → penis_glans",
+    "best_for": "Light, continuous stimulation of the sensitive head without too-direct pressure."
+  }
+}

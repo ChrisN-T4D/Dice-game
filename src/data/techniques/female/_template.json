@@ -1,0 +1,32 @@
+{
+  "technique_id": "EXAMPLE_TECHNIQUE_ID",
+  "name": "Example technique name",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "One to three sentences describing what this technique is and its intent.",
+  "detailed_description": "Optional longer description: context, pacing, what the giver and receiver focus on, and how it differs from similar techniques.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "hand",
+  "session_parameters": {
+    "duration": "5–15 minutes per segment",
+    "environment": "Private, comfortable temperature, minimal distractions",
+    "materials": "Optional: water-based lubricant"
+  },
+  "stepwise_structure": [
+    "1. First step — setup or consent check.",
+    "2. Second step — primary action.",
+    "3. Third step — pacing, feedback, or transition.",
+    "4. Fourth step — closure or switch roles if applicable."
+  ],
+  "safety_notes": [
+    "Stop if pain, numbness, or distress occurs.",
+    "Adults in consensual relationships only; not a substitute for professional care."
+  ],
+  "tags": ["external", "slow", "non-demand"],
+  "related_zone_ids": [],
+  "references": [],
+  "meta": {
+    "status": "draft",
+    "version": 1
+  }
+}

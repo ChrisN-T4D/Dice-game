@@ -1,0 +1,52 @@
+{
+  "technique_id": "LAYERING_THROUGH_HOOD",
+  "name": "Layering — Through the Hood",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Treat the clitoral hood as a movable sleeve over the glans: slide across it, shift the hood skin around the clitoris, or apply firmer pressure through the hood—all without bare glans contact unless desired.",
+  "detailed_description": "The hood acts like a sweater over sensitive tissue underneath. Three graded approaches: (1) Gliding over—feather-light slides across the hood without dragging underlying skin, for ultra-gentle contact. (2) Moving the skin—massage the hood so tissue shifts around the clitoris, like working a knuckle through its covering; the cushion protects from harsh direct pressure. (3) Pushing harder—stronger steady pressure with a sliding push so you feel slight give through the hood; intensity rises while the hood still buffers the nerve ending. Finger, tongue, toy, or penis can all use hood layering with appropriate lubrication.",
+  "body_areas": ["clitoral hood", "clitoris"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Start with gliding over: slide finger, tongue, or toy across the hood with pressure so light you are not moving skin beneath—only skimming the surface.",
+    "2. For moderate intensity, move the hood skin itself—steady sliding strokes that shift tissue around the clitoris without pressing straight down on the glans.",
+    "3. For stronger sensation, increase pressure while keeping a sliding motion; use a steady push until you feel slight give, then release tension before repeating.",
+    "4. Match pace and continuity to preference: slower and lighter to soften; faster rhythm and sustained contact to intensify.",
+    "5. Only move to direct glans touch if the receiver explicitly wants it."
+  ],
+  "safety_notes": [
+    "Pulling the hood back and holding it can expose the glans to too much intensity—keep the hood as the default buffer unless invited otherwise.",
+    "Stop if sensation becomes sharp, numb, or painful despite the hood layer."
+  ],
+  "tags": ["indirect", "layering", "hood", "clitoral", "external", "graded-intensity"],
+  "related_zone_ids": ["clitoral_hood", "clitoral_glans"],
+  "references": [
+    {
+      "title": "OMGYES — Layering (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "LAYERING_INDIRECT_STIMULATION",
+    "directness_rank": 4,
+    "variants": [
+      {
+        "id": "gliding_over",
+        "name": "Gliding Over",
+        "intensity": "ultra-gentle"
+      },
+      {
+        "id": "moving_skin",
+        "name": "Moving the Skin",
+        "intensity": "moderate"
+      },
+      {
+        "id": "pushing_harder",
+        "name": "Pushing Harder",
+        "intensity": "stronger (still buffered)"
+      }
+    ]
+  }
+}

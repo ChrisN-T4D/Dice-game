@@ -1,0 +1,33 @@
+{
+  "technique_id": "SURPRISE_SET_PENIS",
+  "name": "Surprise — Set (Penis)",
+  "receiver_anatomy": "male",
+  "category": "pacing",
+  "summary": "Male variant of Surprise (Set). Hold a steady, predictable stroke, then drop in one planned surprise—a change of grip, a quicker pace, or a flick at the frenulum—before returning to the rhythm.",
+  "detailed_description": "Surprise works against a backdrop of predictability: the receiver settles into a steady pattern, and a single deliberate break lands with extra impact. On the penis, that means establishing a repeatable stroke and then inserting one prepared change—a twist of grip, a burst of speed, a sudden frenulum flick—then returning to the familiar rhythm. The contrast, not constant novelty, is what makes the surprise register.",
+  "body_areas": ["shaft", "glans", "frenulum"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Establish a steady, predictable stroke.",
+    "2. Let the receiver settle into the rhythm.",
+    "3. Drop in one planned surprise (grip change, speed burst, frenulum flick).",
+    "4. Return immediately to the established rhythm.",
+    "5. Space surprises out so the baseline stays predictable."
+  ],
+  "safety_notes": [
+    "Keep surprises pleasurable, not startling or rough.",
+    "Don't surprise so often that there's no predictable baseline left."
+  ],
+  "tags": ["surprise", "set", "pacing", "penis", "contrast", "male-variant"],
+  "related_zone_ids": ["penis_shaft", "frenulum", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Surprise (Season Two)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Surprise / set." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "SURPRISE_SET",
+    "homologue_mapping": "pacing strategy (anatomy-neutral)",
+    "best_for": "One impactful planned break against a steady rhythm."
+  }
+}

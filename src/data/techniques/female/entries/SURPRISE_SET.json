@@ -1,0 +1,36 @@
+{
+  "technique_id": "SURPRISE_SET",
+  "name": "Surprise — Set Surprise",
+  "receiver_anatomy": "female",
+  "category": "variety",
+  "summary": "Repeat one motion several times to build arousal, then switch to an entirely different type just before it becomes predictable—combining buildup time with anti-predictability.",
+  "detailed_description": "Set surprise balances buildup and variety. Use one consistent motion for a few repetitions so arousal can build, then—right before boredom or predictability sets in, and before the orgasm itself starts—switch to a different type of stimulation. As Sonya describes it, what feels best is a mix of different moves but each one happening a few times. This gives the build time that constant surprise can lack while still avoiding routine.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Pick a motion that's working and repeat it a few times to build arousal.",
+    "2. Let the building phase develop—don't switch too early.",
+    "3. Just before it becomes predictable (and before orgasm begins), switch to an entirely different type of stimulation.",
+    "4. Repeat the new motion a few times, then switch again—avoid a fixed, predictable switching pattern.",
+    "5. Once orgasm is building, stop switching and stay consistent with one motion."
+  ],
+  "safety_notes": [
+    "Don't switch so often that arousal never builds; give each set a few repetitions.",
+    "Hold consistency once the orgasm is building rather than introducing new sets."
+  ],
+  "tags": ["surprise", "set-surprise", "variety", "buildup", "switch", "anti-predictability"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Surprise (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Sonya: a mix of different moves, but each one happening a few times."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "SURPRISE_PLEASURE_OF_UNEXPECTED",
+    "balances": ["buildup time", "prevents predictability"]
+  }
+}

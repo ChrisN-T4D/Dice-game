@@ -75,7 +75,7 @@ export default [
     anchor: 'sacrum',
     path: ['sacrum', 'buttock_crease'],
     name: 'Sacrum to crease',
-    cues: ['hold steady palm pressure', 'stroke lightly along the crease'],
+    cues: ['press in and ease off with the palm', 'stroke lightly along the crease'],
     techniques: ['pressure', 'stroke'],
     stimulators: ['palm', 'palm'],
     modalities: ['hand', 'hand'],

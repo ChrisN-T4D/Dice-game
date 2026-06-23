@@ -11,6 +11,7 @@ export { formatFirstTurnIntro } from './first-turn-intros.js'
 export {
   HOME_POSITIONS,
   formatHomeTransition,
+  formatHomeOpening,
   getHomePositionById,
   getDefaultHomePosition,
   HOME_TRANSITION_PHRASES,
@@ -40,27 +41,27 @@ export const STATIC_PHRASES = [
 ]
 
 export const INTRO_NO_CLOTHING_VARIANTS = [
-  'Welcome to guided mode. You will hear one direction at a time. If something does not fit, choose another action you both enjoy. Between directions you will return to your home default, then hear what to do next. Let us begin.',
-  'This is guided mode. One prompt per direction. Substitute anything that feels better for both of you. You will return to your default between directions, settle in, then continue. Let us begin.',
-  'Guided mode is on. Each direction has a single prompt. You can choose another action together any time. Between directions, return to your default home, then hear the next instruction. Let us begin.',
-  "You're in guided mode. We'll give one direction at a time. If a suggestion does not work, swap in something you both like. After each block, return to your default, then move to the next direction. Let us begin.",
-  'This session uses guided mode. Clear directions each step. You can always substitute another action you both prefer. Between steps, return to your default home and settle before the next instruction. Let us begin.',
-  "Welcome to this guided session. You'll hear one direction for every step. Return to your default between steps, then continue when you hear the next prompt. Let us begin.",
-  'Guided mode walks you through one direction at a time. Return to your default home between steps, settle in, then follow the next line. Let us begin.',
-  "This is a guided session with one direction at a time. Between steps you'll return to your default, settle, then hear what comes next. Let us begin.",
-  'You are in guided mode. We offer one direction at a time. Between steps, listen for returning to your default home, then the next instruction. Let us begin.',
+  'Welcome to guided mode. You will hear one direction at a time. If something does not fit, choose another action you both enjoy. Between directions you will flow back into your neutral position, then hear what to do next. Let us begin.',
+  'This is guided mode. One prompt per direction. Substitute anything that feels better for both of you. Between directions you will flow back into your neutral position, stay connected, then continue. Let us begin.',
+  'Guided mode is on. Each direction has a single prompt. You can choose another action together any time. Between directions, flow back into your neutral position, then hear the next instruction. Let us begin.',
+  "You're in guided mode. We'll give one direction at a time. If a suggestion does not work, swap in something you both like. After each block, flow back into your neutral position, then move to the next direction. Let us begin.",
+  'This session uses guided mode. Clear directions each step. You can always substitute another action you both prefer. Between steps, flow back into your neutral position and stay connected before the next instruction. Let us begin.',
+  "Welcome to this guided session. You'll hear one direction for every step. Flow back into your neutral position between steps, then continue when you hear the next prompt. Let us begin.",
+  'Guided mode walks you through one direction at a time. Flow back into your neutral position between steps, stay connected, then follow the next line. Let us begin.',
+  "This is a guided session with one direction at a time. Between steps you'll flow back into your neutral position, stay connected, then hear what comes next. Let us begin.",
+  'You are in guided mode. We offer one direction at a time. Between steps, flow back into your neutral position, then hear the next instruction. Let us begin.',
 ]
 
 export const INTRO_WITH_CLOTHING_VARIANTS = [
-  'Welcome to guided mode. You will hear one direction at a time. Clothing removal is included when needed. Between directions, return to your default home, settle in, then hear the next instruction. Let us begin.',
-  'This is guided mode with clothing guidance when it applies. Return to your default between directions, then continue. Let us begin.',
-  'Guided mode is on. You will hear when and how to remove clothing. Between directions, return to your default home, then the next prompt. Let us begin.',
-  "You're in guided mode. Return to your default between directions. Clothing steps are announced clearly. Let us begin.",
-  'This session uses guided mode. Return to your default home between directions. Clothing removal is cued at the right times. Let us begin.',
-  "Welcome to this guided session. We'll guide clothing removal when needed, then return to your default between directions. Let us begin.",
-  'Guided mode walks you through each direction. Return home between steps; clothing cues appear when relevant. Let us begin.',
-  "This guided session returns you to your default between directions. Clothing guidance is included as needed. Let us begin.",
-  'You are in guided mode. Return to your default between directions. Listen for clothing removal and the next instruction. Let us begin.',
+  'Welcome to guided mode. You will hear one direction at a time. Clothing removal is included when needed. Between directions, flow back into your neutral position, stay connected, then hear the next instruction. Let us begin.',
+  'This is guided mode with clothing guidance when it applies. Flow back into your neutral position between directions, then continue. Let us begin.',
+  'Guided mode is on. You will hear when and how to remove clothing. Between directions, flow back into your neutral position, then the next prompt. Let us begin.',
+  "You're in guided mode. Flow back into your neutral position between directions. Clothing steps are announced clearly. Let us begin.",
+  'This session uses guided mode. Flow back into your neutral position between directions. Clothing removal is cued at the right times. Let us begin.',
+  "Welcome to this guided session. We'll guide clothing removal when needed, then flow back into your neutral position between directions. Let us begin.",
+  'Guided mode walks you through each direction. Flow back into your neutral position between steps; clothing cues appear when relevant. Let us begin.',
+  "This guided session flows you back into your neutral position between directions. Clothing guidance is included as needed. Let us begin.",
+  'You are in guided mode. Flow back into your neutral position between directions. Listen for clothing removal and the next instruction. Let us begin.',
 ]
 
 const INTRO_NO_CLOTHING_PHRASES = INTRO_NO_CLOTHING_VARIANTS.map((text, i) => ({
@@ -106,17 +107,20 @@ export const SETTLE_INTO_POSITION_TEXTS = SETTLE_INTO_POSITION_PHRASES.map((p) =
 export const SETTLE_INTO_POSITION_TEXT = SETTLE_INTO_POSITION_PHRASES[0].text
 
 const PHASE_CHECKIN_PHRASES = (() => {
-  const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
-  const variants = (phaseNum, nextLabel) => [
-    `${phaseNames[phaseNum]} is complete. Take a moment to check in together, then tap the button to ${nextLabel} when you're ready.`,
-    `${phaseNames[phaseNum]} has ended. Pause and check in with each other. When you're both ready, tap the button to ${nextLabel}.`,
-    `${phaseNames[phaseNum]} is done. Check in together, and tap the button when you're ready to ${nextLabel}.`,
+  // Build-up (former phases 1 & 2) is one continuous section; the only check-in
+  // is the hand-off into the positions. Keep the wording as a natural escalation
+  // ("keep going / ready for more") rather than announcing a new "Finish" phase.
+  const fromLabel = (p) => (p >= 3 ? 'That' : 'Build-up')
+  const nextLabel = (p) => (p < 3 ? 'keep going' : 'end the session')
+  const variants = (p) => [
+    `${fromLabel(p)} is complete. Take a moment to check in together, then tap the button to ${nextLabel(p)} when you're both ready for more.`,
+    `${fromLabel(p)} has ended. Pause and check in with each other. When you're both ready for more, tap the button to ${nextLabel(p)}.`,
+    `${fromLabel(p)} is done. Check in together, and tap the button when you're both ready to ${nextLabel(p)}.`,
   ]
   const out = []
   let i = 0
   for (const p of [1, 2, 3]) {
-    const nextLabel = p < 3 ? `continue to ${phaseNames[p + 1]}` : 'end the session'
-    for (const text of variants(p, nextLabel)) {
+    for (const text of variants(p)) {
       out.push({ id: `phase_checkin_${++i}`, text })
     }
   }

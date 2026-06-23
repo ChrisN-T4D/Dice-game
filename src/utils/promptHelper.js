@@ -6,6 +6,7 @@
 import { phase1And2Tables, phase3Modifiers } from '@/data/tables'
 import { PHASE3_POSITIONS_LIST, getPhase3PositionName } from 'phase3-data'
 import { mergePhase3Entry, mergePhase12Table } from '@/utils/adminEdits'
+import { selectCatalogTechnique } from '@/utils/sessionCatalog'
 
 // -----------------------------------------------------------------------------
 // Text helpers (partner names, anatomy substitution)
@@ -63,7 +64,7 @@ function phase3PositionNameForTts(entry, pos) {
   return stripParenthesesForTts(phase3PositionLabel(entry, pos))
 }
 
-const PHASE3_GET_INTO_LEAD_IN = 'To get into this position.'
+const PHASE3_GET_INTO_LEAD_IN = 'To get into this position:'
 
 /** For phase 3 review: remove references to position numbers, images, or file names so review text is name/instruction only. */
 function stripPhase3ReviewNoise(text) {
@@ -114,6 +115,35 @@ export function normalizeParenthesesForTts(text) {
 }
 
 /**
+ * Compose the 4-field prompt contract for an intensity-selected build-up turn.
+ * `instruction` here is the raw zone technique text (2nd-person, no names).
+ * When `overFabric` is set, the touch is framed over the covering garment (a
+ * tease/barrier) and softened, unless the technique already describes fabric.
+ * @param {{ where:string, instruction:string, giverName:string, receiverName:string, overFabric?:boolean, garment?:string|null }} args
+ * @returns {{ where: string, what: string, instruction: string, shortInstruction: string }}
+ */
+export function composeBuildupPrompt({ where, instruction, giverName, receiverName, overFabric = false, garment = null }) {
+  const techniqueText = withPartnerNames(instruction, giverName, receiverName)
+  const techniqueMentionsFabric = /\bfabric\b|through it\b|through the layer\b/i.test(techniqueText)
+  let what
+  let inst
+  let shortInstruction
+  if (overFabric && garment && !techniqueMentionsFabric) {
+    const g = String(garment).toLowerCase()
+    what = `Over the ${g}: ${techniqueText}`
+    inst = `${giverName}, tease ${receiverName}'s ${where} through the ${g}. Keep it light over the fabric. ${techniqueText}`
+    shortInstruction = `${giverName}, tease ${receiverName}'s ${where} through the ${g}. ${techniqueText}`
+  } else {
+    what = techniqueText
+    inst = `${giverName}, focus on ${receiverName}'s ${where}. ${techniqueText}`
+    shortInstruction = `${giverName}, touch ${receiverName}'s ${where}. ${techniqueText}`
+  }
+  inst = normalizeParenthesesForTts(slashToAndForTts(inst))
+  shortInstruction = normalizeParenthesesForTts(slashToAndForTts(shortInstruction))
+  return { where, what, instruction: inst, shortInstruction }
+}
+
+/**
  * @param {number} phase - 1, 2, or 3
  * @param {number} locationRoll - for phase 1/2: location table index; for phase 3: position number (1–155)
  * @param {number} actionRoll - for phase 1/2: action table index; for phase 3: modifier table index (1–20)
@@ -121,9 +151,10 @@ export function normalizeParenthesesForTts(text) {
  * @param {number} receiver - 1 or 2
  * @param {{ 1?: string, 2?: string }} partnerNames - optional names for "Partner 1" / "Partner 2"
  * @param {{ 1?: string, 2?: string }} partnerAnatomy - optional 'penis' | 'vulva' per partner
+ * @param {{ useCatalog?: boolean }} [options] - when useCatalog, Phase 1/2 turns draw a precise sub-zone + technique from the action catalog (with fallback to the phase tables)
  * @returns {{ where: string, what: string, instruction: string, shortInstruction: string }}
  */
-export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, partnerNames = {}, partnerAnatomy = {}) {
+export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, partnerNames = {}, partnerAnatomy = {}, options = {}) {
   const name = (p) => (partnerNames[p] && partnerNames[p].trim()) || `Partner ${p}`
   const giverName = name(giver)
   const receiverName = name(receiver)
@@ -131,6 +162,28 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
   const receiverAnatomy = partnerAnatomy[receiver] === 'vulva' ? 'vulva' : 'penis'
 
   if (phase === 1 || phase === 2) {
+    // Catalog path: narrow the rolled region to a precise sub-zone + technique.
+    if (options.useCatalog) {
+      const loc = Math.max(1, Math.min(20, locationRoll || 1))
+      const act = Math.max(1, Math.min(20, actionRoll || 1))
+      const hit = selectCatalogTechnique({
+        phase,
+        locationRoll: loc,
+        actionRoll: act,
+        receiverAnatomy,
+      })
+      if (hit) {
+        const where = hit.where
+        const techniqueText = withPartnerNames(hit.instruction, giverName, receiverName)
+        const what = techniqueText
+        let instruction = `${giverName}, focus on ${receiverName}'s ${where}. ${techniqueText}`
+        let shortInstruction = `${giverName}, touch ${receiverName}'s ${where}. ${techniqueText}`
+        instruction = normalizeParenthesesForTts(slashToAndForTts(instruction))
+        shortInstruction = normalizeParenthesesForTts(slashToAndForTts(shortInstruction))
+        return { where, what, instruction, shortInstruction }
+      }
+    }
+
     const base = phase1And2Tables[phase]
     const t = base ? mergePhase12Table(base, phase) : null
     if (!t) return { where: '', what: '', instruction: '', shortInstruction: '' }
@@ -177,10 +230,13 @@ export function getPromptText(phase, locationRoll, actionRoll, giver, receiver, 
     const helpWithNames = withPartnerNames(helpWithAnatomy, giverName, receiverName)
     const helpForReview = stripPhase3ReviewNoise(helpWithNames)
     const whatForReview = stripPhase3ReviewNoise(whatWithNames)
-    const parts = [helpForReview, whatForReview].filter(Boolean)
-    let instruction = parts.length
-      ? `${giverName} leads. ${positionNameForTts}. ${PHASE3_GET_INTO_LEAD_IN} ${parts.join('. ')}`
-      : `${giverName} leads. ${positionNameForTts}. ${PHASE3_GET_INTO_LEAD_IN}`
+    // Trim trailing whitespace/periods so joined fragments don't produce doubled periods.
+    const cleanSentence = (s) => (s || '').trim().replace(/[.\s]+$/, '')
+    const helpClean = cleanSentence(helpForReview)
+    const whatClean = cleanSentence(whatForReview)
+    let instruction = `${giverName} leads. ${positionNameForTts}.`
+    if (helpClean) instruction += ` ${PHASE3_GET_INTO_LEAD_IN} ${helpClean}.`
+    if (whatClean) instruction += ` ${whatClean}.`
     instruction = slashToAndForTts(instruction)
     instruction = normalizeParenthesesForTts(instruction)
     let shortInstruction = slashToAndForTts(`${giverName} leads. ${positionNameForTts}.`)

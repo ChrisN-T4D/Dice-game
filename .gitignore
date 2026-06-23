@@ -51,3 +51,10 @@ tokenize-path-output.wav
 
 # Packed audio for Docker (upload to release/S3; do not commit)
 audio-assets.tar.gz
+
+# Generated session recordings + preview/debug dumps (reproducible via scripts/)
+/session-*.wav
+/session-*.ssml
+/*-sessions.txt
+/scripts/*-sessions.txt
+/_bra.txt

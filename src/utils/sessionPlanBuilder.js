@@ -3,11 +3,12 @@
  * Produces SessionPlan { config, turns, script } for review and pre-generate audio.
  */
 import { getPhase3PositionNumbersForReceiverAnatomy } from 'phase3-data'
-import { getPromptText, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
+import { getPromptText, composeBuildupPrompt, normalizeParenthesesForTts, slashToAndForTts } from '@/utils/promptHelper'
+import { selectBuildupTurn, mergedExcludeKeys, getBuildupTarget, COVERED_CEILING } from '@/utils/sessionSelection'
 import {
-  clothingTable,
   removeClothingItem,
-  getClothingRemovalComplexityMultiplier,
+  removeSpecificItem,
+  composeClothingRemoval,
   computeClothingMilestoneInterval,
 } from '@/data/clothing'
 import {
@@ -16,11 +17,13 @@ import {
   INTRO_WITH_CLOTHING_VARIANTS,
   EASE_IN_TEXTS,
   formatHomeTransition,
+  formatHomeOpening,
   formatFirstTurnIntro,
   formatTurnStartDirective,
 } from '@/data/staticPhrases'
 import { getDefaultHomePosition } from '@/data/prompts/transitions/home-positions'
 import { rollPhase12WithExclusions, rollPhase3ModifierWithVibratorRule, mergeExcludePrefs } from '@/utils/bodyPartRollExclusions'
+import { refineSessionScript } from '@/utils/sessionScriptRefine'
 
 // -----------------------------------------------------------------------------
 // Seeded RNG (LCG) for deterministic plans
@@ -84,10 +87,10 @@ export function buildSessionPlan(config, seed) {
     clothingListP1 = [],
     clothingListP2 = [],
     clothingEnabled = false,
+    clothingRemovalMode = 'partner',
     distributionMode = 'equal',
     partnerNames = { 1: '', 2: '' },
     partnerAnatomy = { 1: 'penis', 2: 'vulva' },
-    phaseCheckInEnabled = false,
     excludeWhenTouching: _exTouch,
     excludeWhenTouched: _exTouched,
     vibratorsPresent = true,
@@ -95,10 +98,15 @@ export function buildSessionPlan(config, seed) {
     phase3MaxPositions = 4,
     positionIntensity = 'more_physical',
     homePositionId = getDefaultHomePosition().id,
+    useActionCatalog = true,
+    intensityCurve = 'balanced',
   } = config
+
+  const promptOptions = { useCatalog: useActionCatalog !== false }
 
   const excludeWhenTouching = mergeExcludePrefs(_exTouch)
   const excludeWhenTouched = mergeExcludePrefs(_exTouched)
+  const buildupExcludeKeys = mergedExcludeKeys(excludeWhenTouching, excludeWhenTouched)
 
   const totalSeconds = totalMinutes * 60
   const turnSeconds = turnMinutes * 60
@@ -138,10 +146,13 @@ export function buildSessionPlan(config, seed) {
   let totalTimeRemaining = totalSeconds
   let turnsSinceLastRemoval = 0
   let firstTurnOfSession = true
-  let firstTurnOfPhase3 = phase === 3
   let receiverOnceP1 = false
   let receiverOnceP2 = false
   let turnIndex = 0
+  const buildupTotalSec = Math.max(1, phaseSeconds[0] + phaseSeconds[1])
+  let buildupElapsedSec = 0
+  let buildupTurnCount = 0
+  let lastBuildupZoneId = null
   let phase3ReusePlan = null
   let phase3ReuseSlot = 0
   let phase3TurnInSlot = 0
@@ -175,9 +186,9 @@ export function buildSessionPlan(config, seed) {
     phase3TurnsPerSlot = Math.max(3, per)
   }
 
-  // Intro (from staticPhrases)
+  // Intro (from staticPhrases) + opening instruction to settle into the home position.
   const intro = pick(clothingEnabled ? INTRO_WITH_CLOTHING_VARIANTS : INTRO_NO_CLOTHING_VARIANTS, rng)
-  script.push(intro)
+  script.push(`${intro} ${formatHomeOpening(homePositionId)}`)
 
   while (totalTimeRemaining > 0 && phase <= 3) {
     turnIndex++
@@ -186,6 +197,11 @@ export function buildSessionPlan(config, seed) {
     if (receiver === 2) receiverOnceP2 = true
 
     let loc, actRoll, extendedTime = false
+    let buildupSelection = null
+    turnsSinceLastRemoval++
+    let clothingText = ''
+    let effectiveClothingSeconds = 0
+    let motivatedRemoval = false
     if (phase === 3) {
       if (usePhase3Reuse) {
         if (phase3ReusePlan === null) {
@@ -205,42 +221,147 @@ export function buildSessionPlan(config, seed) {
       actRoll = mod.actRoll
       extendedTime = mod.extendedTime
     } else {
-      const r = rollPhase12WithExclusions(phase, rng, distributionMode, excludeWhenTouching, excludeWhenTouched)
-      loc = r.loc
-      actRoll = r.actRoll
-      extendedTime = r.extendedTime
+      // Build-up turn: clothing-aware, intensity-curve-driven zone + action selection.
+      buildupTurnCount++
+      const recvAnatomy = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+      const progress = Math.min(1, buildupElapsedSec / buildupTotalSec)
+      const targetT = getBuildupTarget(intensityCurve, progress)
+      const receiverArr = receiver === 1 ? clothingItemsP1 : clothingItemsP2
+      const wardrobe = clothingEnabled ? receiverArr : null
+
+      let sel = selectBuildupTurn(rng, {
+        receiverAnatomy: recvAnatomy,
+        progress,
+        intensityCurve,
+        isFirstTurn: buildupTurnCount === 1,
+        lastZoneId: lastBuildupZoneId,
+        excludeKeys: buildupExcludeKeys,
+        wardrobe,
+      })
+
+      // Motivated removal: when the curve wants to push a covered region past the
+      // over-fabric ceiling, take that garment off this turn so the touch is direct.
+      if (
+        sel &&
+        sel.overFabric &&
+        sel.garment &&
+        clothingEnabled &&
+        targetT > COVERED_CEILING &&
+        turnsSinceLastRemoval >= 1
+      ) {
+        const removed = removeSpecificItem(receiverArr, sel.garment)
+        if (removed) {
+          turnsSinceLastRemoval = 0
+          motivatedRemoval = true
+          const res = composeClothingRemoval({
+            giverName: partnerName(currentPartner),
+            receiverName: partnerName(receiver),
+            items: [removed],
+            rng,
+            mode: clothingRemovalMode,
+            receiverAnatomy: recvAnatomy,
+          })
+          clothingText = res.text
+          effectiveClothingSeconds = Math.round(clothingRemovalSeconds * res.complexityMultiplier)
+          const sel2 = selectBuildupTurn(rng, {
+            receiverAnatomy: recvAnatomy,
+            progress,
+            intensityCurve,
+            excludeKeys: buildupExcludeKeys,
+            forceZoneId: sel.zoneId,
+            wardrobe: clothingEnabled ? receiverArr : null,
+          })
+          if (sel2) sel = sel2
+        }
+      }
+
+      if (sel) {
+        buildupSelection = sel
+        lastBuildupZoneId = sel.zoneId
+        loc = 0
+        actRoll = 0
+      } else {
+        const r = rollPhase12WithExclusions(phase, rng, distributionMode, excludeWhenTouching, excludeWhenTouched)
+        loc = r.loc
+        actRoll = r.actRoll
+        extendedTime = r.extendedTime
+      }
     }
 
     const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
     const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
-    const prompt = getPromptText(phase, loc, actRoll, currentPartner, receiver, partnerNamesMap, partnerAnatomyMap)
+    let prompt = buildupSelection
+      ? composeBuildupPrompt({
+          where: buildupSelection.where,
+          instruction: buildupSelection.instruction,
+          giverName: partnerNamesMap[currentPartner],
+          receiverName: partnerNamesMap[receiver],
+          overFabric: buildupSelection.overFabric,
+          garment: buildupSelection.garment,
+        })
+      : getPromptText(phase, loc, actRoll, currentPartner, receiver, partnerNamesMap, partnerAnatomyMap, promptOptions)
     if (extendedTime) {
       const ext = phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
       prompt.what += ext
       prompt.instruction += ext
     }
 
-    turnsSinceLastRemoval++
-    let clothingText = ''
-    let effectiveClothingSeconds = 0
     const receiverItems = receiver === 1 ? clothingItemsP1 : clothingItemsP2
-    if (clothingEnabled && phase < 3 && turnsSinceLastRemoval >= clothingMilestoneInterval && receiverItems.length > 0) {
+    if (!motivatedRemoval && clothingEnabled && phase < 3 && turnsSinceLastRemoval >= clothingMilestoneInterval && receiverItems.length > 0) {
       const arr = receiver === 1 ? clothingItemsP1 : clothingItemsP2
-      const removed = removeClothingItem(arr)
+      const removed = removeClothingItem(arr, rng)
       turnsSinceLastRemoval = 0
       if (removed) {
-        const howRoll = Math.floor(rng() * 12) + 1
-        const entry = clothingTable[howRoll]
-        const receiverLabel = partnerName(receiver)
-        const giverLabel = partnerName(currentPartner)
-        const prefix = (entry?.prefix || '').replace(/\{receiver\}/g, receiverLabel)
-        const methodText = entry?.method ? ` ${entry.method}` : ''
-        clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed}${methodText}`
-        if (howRoll === 12) {
-          const second = removeClothingItem(arr)
-          if (second) clothingText = `${giverLabel} ${prefix} ${receiverLabel}'s ${removed} and ${second}${methodText}`
+        const removedItems = [removed]
+        if (Math.floor(rng() * 12) + 1 === 12) {
+          const second = removeClothingItem(arr, rng)
+          if (second) removedItems.push(second)
         }
-        effectiveClothingSeconds = Math.round(clothingRemovalSeconds * getClothingRemovalComplexityMultiplier([removed], entry?.method || ''))
+        const res = composeClothingRemoval({
+          giverName: partnerName(currentPartner),
+          receiverName: partnerName(receiver),
+          items: removedItems,
+          rng,
+          mode: clothingRemovalMode,
+          receiverAnatomy: (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis',
+        })
+        clothingText = res.text
+        effectiveClothingSeconds = Math.round(clothingRemovalSeconds * res.complexityMultiplier)
+
+        // If this removal stripped the very garment the touch was teasing through,
+        // recompute the instruction as direct so we don't say "through the X" in the
+        // same turn we take X off.
+        if (
+          buildupSelection &&
+          buildupSelection.overFabric &&
+          buildupSelection.garment &&
+          removedItems.includes(buildupSelection.garment)
+        ) {
+          const recvAnatomyDirect = (partnerAnatomy[receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+          const directSel = selectBuildupTurn(rng, {
+            receiverAnatomy: recvAnatomyDirect,
+            progress: Math.min(1, buildupElapsedSec / buildupTotalSec),
+            intensityCurve,
+            excludeKeys: buildupExcludeKeys,
+            forceZoneId: buildupSelection.zoneId,
+            wardrobe: clothingEnabled ? arr : null,
+          })
+          if (directSel) {
+            buildupSelection = directSel
+            prompt = composeBuildupPrompt({
+              where: directSel.where,
+              instruction: directSel.instruction,
+              giverName: partnerNamesMap[currentPartner],
+              receiverName: partnerNamesMap[receiver],
+              overFabric: directSel.overFabric,
+              garment: directSel.garment,
+            })
+            if (extendedTime) {
+              prompt.what += ' Spend about twice as long on this location.'
+              prompt.instruction += ' Spend about twice as long on this location.'
+            }
+          }
+        }
       }
     }
 
@@ -255,6 +376,10 @@ export function buildSessionPlan(config, seed) {
       receiver,
       locationRoll: loc,
       actionRoll: actRoll,
+      zoneId: buildupSelection ? buildupSelection.zoneId : null,
+      intensity: buildupSelection ? buildupSelection.intensity : null,
+      overFabric: buildupSelection ? !!buildupSelection.overFabric : false,
+      garment: buildupSelection ? buildupSelection.garment || null : null,
       where: prompt.where,
       what: prompt.what,
       instruction: prompt.instruction,
@@ -273,7 +398,7 @@ export function buildSessionPlan(config, seed) {
       actionRoll: actRoll,
       extendedTime,
       clothingText: clothingText || undefined,
-      firstTurn: firstTurnOfSession || firstTurnOfPhase3,
+      firstTurn: firstTurnOfSession,
       precomputedPrompt: prompt,
       homePositionId,
     })
@@ -290,27 +415,16 @@ export function buildSessionPlan(config, seed) {
     }
 
     firstTurnOfSession = false
-    if (phase === 3) firstTurnOfPhase3 = false
 
     phaseTimeRemaining -= turnTime + breakOverhead
     totalTimeRemaining -= turnTime + breakOverhead
+    if (phase < 3) buildupElapsedSec += turnTime + breakOverhead
 
     const bothReceived = receiverOnceP1 && receiverOnceP2
     if (phaseTimeRemaining <= 0 && bothReceived) {
-      if (phaseCheckInEnabled) {
-        const phaseNames = { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3' }
-        const nextLabel = phase < 3 ? `Continue to ${phaseNames[phase + 1]}` : 'end the session'
-        script.push(
-          pick(
-            [
-              `${phaseNames[phase]} has ended. Check in with each other. When you're both ready, tap the button to ${nextLabel}.`,
-              `That's the end of ${phaseNames[phase]}. Check in with each other, then tap to ${nextLabel}.`,
-              `${phaseNames[phase]} is complete. Check in, then tap the button to ${nextLabel}.`,
-            ],
-            rng
-          )
-        )
-      }
+      // Build-up (phases 1+2) is one continuous section. The first Finish turn is
+      // treated like any other turn (flows back to neutral, then the position) —
+      // no special intro and no check-in pause at any boundary.
       if (phase >= 3) {
         script.push(pick(SESSION_COMPLETE_PHRASES, rng))
         break
@@ -319,7 +433,6 @@ export function buildSessionPlan(config, seed) {
       phaseTimeRemaining = phaseSeconds[phase - 1]
       receiverOnceP1 = false
       receiverOnceP2 = false
-      if (phase === 3) firstTurnOfPhase3 = true
       currentPartner = currentPartner === 1 ? 2 : 1
       continue
     }
@@ -345,11 +458,18 @@ export function buildSessionPlan(config, seed) {
     delete outConfig.phase3RotationCapResolved
   }
 
-  return {
+  const plan = {
     config: outConfig,
     turns,
     script,
   }
+
+  // Refinement passes: (1) make instructions read sensibly turn-to-turn, then
+  // (2) edit each instruction for spoken fluency. Both preserve phraseStrings
+  // line counts and rebuild plan.script so audio/reroll indexing stays aligned.
+  refineSessionScript(plan, { partnerName })
+
+  return plan
 }
 
 /**
@@ -378,7 +498,9 @@ export function buildTurnPhraseStringsOnly(rng, config, params) {
   if (!prompt) {
     const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
     const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
-    prompt = getPromptText(p, loc, actionRoll, giver, receiver, partnerNamesMap, partnerAnatomyMap)
+    prompt = getPromptText(p, loc, actionRoll, giver, receiver, partnerNamesMap, partnerAnatomyMap, {
+      useCatalog: config.useActionCatalog !== false,
+    })
     if (extendedTime) {
       const ext = p === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'
       prompt = { ...prompt, what: prompt.what + ext, instruction: prompt.instruction + ext }
@@ -419,6 +541,64 @@ export function computePartialRerollTurn(turn, config, mode, rng) {
   let actRoll = turn.actionRoll
   let extendedTime = !!turn.extendedTime
 
+  const partnerName = (num) => (config.partnerNames?.[num]?.trim() || `Partner ${num}`)
+  const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
+  const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
+
+  // Build-up turn: re-roll via the intensity selector at the same target intensity.
+  if (turn.phase !== 3 && turn.intensity != null) {
+    const recvAnatomy = (partnerAnatomy[turn.receiver] || 'vulva').toLowerCase() === 'vulva' ? 'vulva' : 'penis'
+    const sel = selectBuildupTurn(rng, {
+      receiverAnatomy: recvAnatomy,
+      targetIntensity: turn.intensity,
+      excludeKeys: mergedExcludeKeys(excludeWhenTouching, excludeWhenTouched),
+      forceZoneId: mode === 'action' ? turn.zoneId : null,
+      lastZoneId: mode === 'location' ? turn.zoneId : null,
+      // Preserve coverage context: if the original turn was over-fabric, keep the
+      // re-rolled action over that same garment.
+      wardrobe: turn.overFabric && turn.garment ? [turn.garment] : null,
+    })
+    if (sel) {
+      const prompt = composeBuildupPrompt({
+        where: sel.where,
+        instruction: sel.instruction,
+        giverName: partnerNamesMap[turn.currentPartner],
+        receiverName: partnerNamesMap[turn.receiver],
+        overFabric: sel.overFabric,
+        garment: sel.garment,
+      })
+      const firstTurnBu = turn.turnIndex === 1
+      const clothingTextBu = turn.clothing || ''
+      const { phraseStrings } = buildTurnPhraseStringsOnly(rng, config, {
+        phase: turn.phase,
+        giver: turn.currentPartner,
+        receiver: turn.receiver,
+        locationRoll: 0,
+        actionRoll: 0,
+        extendedTime: false,
+        clothingText: clothingTextBu || undefined,
+        firstTurn: firstTurnBu,
+        precomputedPrompt: prompt,
+        homePositionId: config.homePositionId || getDefaultHomePosition().id,
+      })
+      return {
+        locationRoll: 0,
+        actionRoll: 0,
+        zoneId: sel.zoneId,
+        intensity: sel.intensity,
+        overFabric: !!sel.overFabric,
+        garment: sel.garment || null,
+        extendedTime: false,
+        where: prompt.where,
+        what: prompt.what,
+        instruction: prompt.instruction,
+        shortInstruction: prompt.shortInstruction || prompt.instruction,
+        clothing: clothingTextBu || prompt.clothing || '',
+        phraseStrings,
+      }
+    }
+  }
+
   if (mode === 'location') {
     if (turn.phase === 3 && config.phase3PositionMode !== 'each_turn') return null
     if (turn.phase === 3) {
@@ -442,10 +622,9 @@ export function computePartialRerollTurn(turn, config, mode, rng) {
     }
   }
 
-  const partnerName = (num) => (config.partnerNames?.[num]?.trim() || `Partner ${num}`)
-  const partnerNamesMap = { 1: partnerName(1), 2: partnerName(2) }
-  const partnerAnatomyMap = { 1: partnerAnatomy[1] || 'penis', 2: partnerAnatomy[2] || 'vulva' }
-  const prompt = getPromptText(turn.phase, loc, actRoll, turn.currentPartner, turn.receiver, partnerNamesMap, partnerAnatomyMap)
+  const prompt = getPromptText(turn.phase, loc, actRoll, turn.currentPartner, turn.receiver, partnerNamesMap, partnerAnatomyMap, {
+    useCatalog: config.useActionCatalog !== false,
+  })
   if (extendedTime) {
     const ext =
       turn.phase === 3 ? ' Spend about twice as long on this position.' : ' Spend about twice as long on this location.'

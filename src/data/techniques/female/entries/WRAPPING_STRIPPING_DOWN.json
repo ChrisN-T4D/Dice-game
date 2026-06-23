@@ -1,0 +1,32 @@
+{
+  "technique_id": "WRAPPING_STRIPPING_DOWN",
+  "name": "Wrapping — Stripping Down Softness",
+  "receiver_anatomy": "female",
+  "category": "toy",
+  "summary": "Build anticipation by starting with multiple fabric layers (underwear, sheet, blanket) between the toy and skin, then removing them one by one as arousal builds—each layer increasing intensity.",
+  "detailed_description": "This is a graded-intensity build using wrapping. Start with several layers stacked between vibrator and skin for the softest, most diffuse buzz, then peel away one layer at a time as arousal rises. Each removed layer brings the vibration closer and stronger, creating anticipation toward the most direct contact.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Stack multiple layers between toy and skin (e.g. underwear, sheet, blanket).",
+    "2. Begin vibrating through all the layers for the softest sensation.",
+    "3. As arousal builds, remove one layer to step up intensity.",
+    "4. Continue removing layers one at a time toward more direct contact.",
+    "5. Stop at the layer/intensity that feels best."
+  ],
+  "safety_notes": [
+    "Step intensity up gradually; don't jump to bare contact before ready.",
+    "Add a layer back if it becomes too intense."
+  ],
+  "tags": ["wrapping", "stripping-down", "layers", "anticipation", "graded-intensity"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "WRAPPING_VIBRATION_THROUGH_FABRIC",
+    "related_technique_ids": ["LAYERING_INDIRECT_STIMULATION"]
+  }
+}

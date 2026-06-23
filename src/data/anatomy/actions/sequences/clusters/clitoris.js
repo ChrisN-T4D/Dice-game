@@ -8,7 +8,7 @@ export default [
     flow: 'progression',
     cues: [
       'make slow circles with a fingertip on the hood fold only',
-      'flutter very lightly on the exposed bead, then hold still',
+      'flutter very lightly on the exposed bead, then ease into slow, light circles',
     ],
     techniques: ['circle', 'tap'],
     stimulators: ['fingertip', 'fingertip'],

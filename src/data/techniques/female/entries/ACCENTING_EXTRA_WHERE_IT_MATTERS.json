@@ -1,0 +1,55 @@
+{
+  "technique_id": "ACCENTING_EXTRA_WHERE_IT_MATTERS",
+  "name": "Accenting — A Little Extra Where It Matters Most",
+  "receiver_anatomy": "female",
+  "category": "fine-tuning",
+  "summary": "Pleasure isn't symmetrical. Giving extra attention to specific spots—rather than treating everything equally—intensifies sensation, like pressing harder on a knot during a back massage. Accent one part of any motion to hit the receiver's offset hotspot.",
+  "detailed_description": "The visible clitoris is the tip of an iceberg of surrounding tissue, and the most intense spot is often offset rather than dead center—top-right, top-left, left side, and so on. OMGYES reports about 1 in 8 women prefer extra attention on one specific side. Accenting means taking any working motion and making one part of it more intense: harder pressure, deeper push, or a faster sweep in one direction as you cross the preferred spot. Clock-face language ('I'm a 3 o'clock person') or directional terms help communicate the location.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Wait until the warmup stage—accent when the clit is awake and responsive.",
+    "2. Start from a motion both partners already enjoy.",
+    "3. Accent just one part of the motion: e.g. press harder on the downstroke only when crossing the hotspot side, push deeper at a preferred corner on a side-to-side, or sweep faster toward one direction and gentler on the return.",
+    "4. Repeat the accented motion consistently—buildup needs repetition.",
+    "5. To find the hotspot, test locations systematically (top-right, top-left, left side, etc.), at least 10 repetitions each before dismissing one.",
+    "6. Use clock-face or directional language to name the spot."
+  ],
+  "safety_notes": [
+    "Don't accent motions that hurt, especially when moving upward onto unprotected tissue.",
+    "Favorite spots change day to day—keep experimenting rather than assuming.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["accenting", "hotspot", "asymmetry", "fine-tuning", "clitoral", "pressure", "communication"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Accenting (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "~1 in 8 women prefer extra attention on one specific side; clitoris as 'tip of the iceberg.'"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "key_statistic": "About 1 in 8 women prefer extra attention on one specific side.",
+    "accent_examples": [
+      { "base_movement": "up/down stroke", "accent": "press harder on the downstroke only when crossing the hotspot side" },
+      { "base_movement": "side-to-side", "accent": "push deeper into the skin each time you're over the preferred corner" },
+      { "base_movement": "speed variation", "accent": "faster/firmer toward one direction, slower/gentler on the return" }
+    ],
+    "communication_tip": "Use clock-face language ('a 3 o'clock person') or directional terms to name the spot.",
+    "dos_and_donts": {
+      "do": [
+        "Let one accented motion repeat consistently—buildup requires repetition.",
+        "Wait for the warmup stage when the clit is awake and responsive.",
+        "Test a new accent spot for at least 10 repetitions before dismissing it."
+      ],
+      "dont": [
+        "Accent motions that hurt when moving upward onto unprotected tissue.",
+        "Assume the spot is fixed—favorites change day to day."
+      ]
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "technique_id": "LAYERING_CLIT_SANDWICH",
+  "name": "Layering — The Clit Sandwich (Through Lips)",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Squeeze the outer labia together around the clitoris so stimulation travels through thin hood skin and thicker lip tissue—indirect pressure without bare glans contact.",
+  "detailed_description": "Also called the sandwich method. OMGYES notes that about one in five women prefer this approach. The outer labia act as padded sides; movement slides the inner skin back and forth around the clitoris rather than rubbing the glans directly. Can be stacked with fabric (panties) or hood layering for additional cushioning.",
+  "body_areas": ["labia majora", "labia minora", "clitoral hood", "clitoris"],
+  "modality": "hand",
+  "stepwise_structure": [
+    "1. Gently bring the outer labia together on either side of the clitoral hood, like closing a soft sandwich.",
+    "2. Move the sandwich up and down, or push and pull so inner skin slides around the clitoris.",
+    "3. Keep pressure moderate; the lips and hood should buffer the glans.",
+    "4. For softer touch, add a fabric layer or lighter squeeze; for more intensity, increase slide speed while keeping the labia closed.",
+    "5. Release and check in before increasing directness."
+  ],
+  "safety_notes": [
+    "Do not pinch painfully; the squeeze should feel enveloping, not trapping.",
+    "Stop if pulling on hair or skin causes irritation."
+  ],
+  "tags": ["indirect", "layering", "labia", "sandwich", "external"],
+  "related_zone_ids": ["labia_majora", "labia_minora", "clitoral_hood", "clitoral_glans"],
+  "references": [
+    {
+      "title": "OMGYES — Layering (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Approximately 1 in 5 women prefer the sandwich method."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "LAYERING_INDIRECT_STIMULATION",
+    "directness_rank": 3,
+    "prevalence_note": "~20% of women prefer this method (OMGYES research)."
+  }
+}

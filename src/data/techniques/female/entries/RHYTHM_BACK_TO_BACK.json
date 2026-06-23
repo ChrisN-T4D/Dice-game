@@ -1,0 +1,35 @@
+{
+  "technique_id": "RHYTHM_BACK_TO_BACK",
+  "name": "Rhythm — Back-to-Back",
+  "receiver_anatomy": "female",
+  "category": "rhythm",
+  "summary": "Chain motions with no pause between them—continuous thrusts, strokes, or taps so pleasure does not fade in the gaps and intensity builds quickly.",
+  "detailed_description": "Back-to-back rhythm means the next motion begins immediately when the last one ends, with contact unbroken through the sequence. OMGYES participant testimonials describe this pattern intensifying arousal rapidly when paired with sustained pressure. Often preferred near climax or when the receiver wants a steady climb without reset periods. Contrast with skipping or raindrops for middle-phase variation.",
+  "body_areas": ["clitoris", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Begin a stroke, tap, or thrust pattern that feels good.",
+    "2. Repeat immediately with zero downtime—thrust-thrust-thrust or tap-tap-tap without breaking contact.",
+    "3. Maintain steady pressure appropriate to sensitivity; speed can increase but avoid accidental pauses.",
+    "4. Continue until a natural limit or until the receiver signals to adjust intensity.",
+    "5. Use especially near orgasm when the receiver wants an even, uninterrupted build."
+  ],
+  "safety_notes": [
+    "Continuous intensity can overwhelm quickly; start at a manageable speed and pressure.",
+    "Numbness or irritation may mean contact has been too relentless—brief skip or slower pace."
+  ],
+  "tags": ["rhythm", "back-to-back", "continuous", "build", "climax"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Rhythm (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "RHYTHM_PATTERNED_PLEASURE",
+    "pattern_character": "zero-gap continuous sequence"
+  }
+}

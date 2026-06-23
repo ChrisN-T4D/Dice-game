@@ -1,0 +1,38 @@
+{
+  "technique_id": "PAIRING_DOUBLE_ORGASM",
+  "name": "Pairing — Double Orgasms at Once (Double-Edging)",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "A rare 'unicorn' goal (about 30% have achieved it): a simultaneous clitoral and internal orgasm via double-edging—alternately approaching each climax and backing off until both peak together.",
+  "detailed_description": "Double-edging aims to make a clitoral and an internal/G-region/deep-end orgasm crest at the same time. It's hard because the clit wants constant stimulation while the internal builds on a different pace, so it demands coordinated timing honed through practice. Even when it doesn't perfectly synchronize, it's a fun, unique experience.",
+  "body_areas": ["clitoris", "vagina", "G-region", "deep vagina"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Build toward a clitoral orgasm but back away just before erupting.",
+    "2. Right off that edge, shift focus to build an internal/G-region/deep-end orgasm.",
+    "3. Repeat the cycle several times, timing each approach a little closer.",
+    "4. Aim for both peaks to reach climax simultaneously rather than one dominating.",
+    "5. Treat partial success as a win—perfect synchronization is rare."
+  ],
+  "safety_notes": [
+    "It's a rare, advanced goal—keep it pressure-free and fun.",
+    "Backing off when close is frustrating but part of the technique."
+  ],
+  "tags": ["pairing", "double-orgasm", "double-edging", "simultaneous", "advanced", "clitoral", "internal"],
+  "related_zone_ids": ["clitoral_glans", "vaginal_anterior_wall", "vagina"],
+  "references": [
+    {
+      "title": "OMGYES — Pairing (Season Two)",
+      "url": "https://www.omgyes.com",
+      "note": "~30% have achieved a simultaneous double orgasm."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "PAIRING_CLIT_AND_PENETRATION",
+    "related_technique_ids": ["ORGASM_DUAL_SIMULTANEOUS", "EDGING_APPROACH_AND_EASE"],
+    "usage_stat": "~30% have achieved a simultaneous double orgasm.",
+    "why_hard": "The clit wants constant stimulation while the internal builds on a different pace, requiring coordinated timing."
+  }
+}

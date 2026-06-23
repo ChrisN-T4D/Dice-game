@@ -260,6 +260,27 @@ function getPhase3PositionImagePath(positionNumber) {
 /** Position numbers that have no reference image (duplicate or Roller's choice). */
 const PHASE3_NO_IMAGE_POSITION_NUMBERS = [24, 49, 64, 127, 129];
 
+/**
+ * Position numbers that are unusable placeholders — "Position N (no reference image)"
+ * stubs with no real position described. Detected from the data so the list stays in
+ * sync. These are erased from every selectable pool so they are never chosen.
+ */
+const PHASE3_PLACEHOLDER_POSITION_NUMBERS = (() => {
+  const out = [];
+  PHASE3_POSITIONS_LIST.forEach((e, i) => {
+    if (i === 0 || !e) return;
+    const hay = ((e.name || '') + ' ' + (e.help || '') + ' ' + (e.description || '')).toLowerCase();
+    if (hay.indexOf('no reference image') !== -1 || hay.indexOf('no image for this position') !== -1) out.push(i);
+  });
+  return out;
+})();
+
+/** True if this position number is an unusable placeholder (excluded from selection). */
+function isPhase3PlaceholderPosition(positionNumber) {
+  const n = parseInt(positionNumber, 10);
+  return PHASE3_PLACEHOLDER_POSITION_NUMBERS.indexOf(n) !== -1;
+}
+
 /** Returns other position numbers in the same group that have reference images (for "other view" in modal). */
 function getPhase3AlternateViewPositionNumbers(positionNumber) {
   const n = parseInt(positionNumber, 10);
@@ -387,12 +408,17 @@ function filterPhase3PoolForBedOnlyPreference(pool) {
 function getPhase3PositionNumbersForReceiverAnatomy(anatomy, positionIntensity) {
   const target = (anatomy || '').toLowerCase();
   const intensity = positionIntensity === 'bed_only' ? 'bed_only' : 'more_physical';
-  const full = () => Array.from({ length: PHASE3_POSITION_COUNT }, (_, i) => i + 1);
+  const full = () => {
+    const arr = [];
+    for (let i = 1; i <= PHASE3_POSITION_COUNT; i++) if (!isPhase3PlaceholderPosition(i)) arr.push(i);
+    return arr;
+  };
   if (target !== 'vulva' && target !== 'penis') {
     return intensity === 'bed_only' ? filterPhase3PoolForBedOnlyPreference(full()) : full();
   }
   const out = [];
   for (let n = 1; n <= PHASE3_POSITION_COUNT; n++) {
+    if (isPhase3PlaceholderPosition(n)) continue;
     const focus = getPhase3PositionFocusAnatomy(n);
     if (focus === target || focus === 'neutral') out.push(n);
   }
@@ -408,6 +434,8 @@ export {
   PHASE3_POSITIONS_BY_GROUP,
   PHASE3_ANAL_POSITION_NUMBERS,
   PHASE3_NO_IMAGE_POSITION_NUMBERS,
+  PHASE3_PLACEHOLDER_POSITION_NUMBERS,
+  isPhase3PlaceholderPosition,
   buildPhase3PositionsByGroup,
   getPhase3AnalOrientedPositionNumbers,
   getPhase3PositionName,

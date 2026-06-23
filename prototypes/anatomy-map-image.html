@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Anatomy Map — Vulva (image base + zone overlay)</title>
+<style>
+  :root {
+    --bg: #efe6db;
+    --panel: #f7f0e8;
+    --stroke: #e2d6c8;
+    --text: #3b3138;
+    --text-dim: #7c7068;
+    --text-faint: #ab9f93;
+    --accent: #d07ab0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 2px; font-weight: 600; }
+  .sub { color: var(--text-dim); margin: 0 0 18px; font-size: 13px; max-width: 820px; }
+  .sub code { background: #00000018; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .stage { background: var(--panel); border: 1px solid var(--stroke); border-radius: 12px; padding: 16px; }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .metric-btn {
+    background: transparent; color: var(--text-dim); border: 1px solid var(--stroke);
+    padding: 5px 11px; border-radius: 999px; cursor: pointer; font-size: 12px; transition: .15s;
+  }
+  .metric-btn:hover { color: var(--text); border-color: #b9a994; }
+  .metric-btn.active { background: var(--accent); color: #1a1014; border-color: var(--accent); font-weight: 600; }
+  .spacer { flex: 1; }
+  .toggle { display: inline-flex; gap: 6px; align-items: center; color: var(--text-dim); font-size: 12px; cursor: pointer; }
+  .map-wrap { position: relative; width: 520px; height: 520px; border-radius: 10px; overflow: hidden; touch-action: none; }
+  svg.overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .zoom-ctl { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 5; }
+  .zoom-ctl button {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--stroke);
+    background: rgba(255,255,255,.88); color: var(--text); cursor: pointer; font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .zoom-ctl button:hover { border-color: #b9a994; }
+  .heat { mix-blend-mode: multiply; pointer-events: none; }
+  .edge { pointer-events: none; }
+  .zone-edge {
+    fill: none; stroke-width: 2px; vector-effect: non-scaling-stroke;
+    stroke-linecap: round; stroke-opacity: .95;
+    filter: drop-shadow(0 0 1px rgba(255,255,255,.85)) drop-shadow(0 0 2px rgba(0,0,0,.25));
+    transition: stroke-opacity .12s;
+  }
+  .zone-edge.selected { stroke-width: 3.2px; stroke-opacity: 1; }
+  .zone-edge.dim { stroke-opacity: .35; }
+  .zone-hit { fill: transparent; stroke: rgba(94,51,38,0); stroke-width: 4px; vector-effect: non-scaling-stroke; cursor: pointer; transition: stroke .12s; }
+  .zone-hit:hover { stroke: rgba(94,51,38,.85); }
+  .zone-hit.selected { stroke: #7c2f52; stroke-width: 5px; }
+  .zone-hit.dim { opacity: .25; }
+  .zone-label { fill: var(--text); font-size: calc(15px / var(--z,1)); paint-order: stroke; stroke: #fff; stroke-width: calc(3px / var(--z,1)); pointer-events: none; user-select: none; }
+  .leader { stroke: #8a7c70; stroke-width: 1.4; pointer-events: none; }
+  .handle { fill: #2c84d8; stroke: #fff; stroke-width: 2px; vector-effect: non-scaling-stroke; cursor: grab; }
+  .handle.r { fill: #e0892c; }
+  .handle.rot { fill: #3ca35a; }
+  .legend { margin-top: 14px; }
+  .legend-bar { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#f0e2d6,#f0a878,#e87aa8,#b86ad0,#8a3ec8); }
+  .legend-row { display: flex; justify-content: space-between; color: var(--text-faint); font-size: 11px; margin-top: 4px; }
+  .panel { background: var(--panel); border: 1px solid var(--stroke); border-radius: 12px; padding: 18px; width: 330px; min-height: 220px; }
+  .panel h2 { margin: 0 0 2px; font-size: 17px; }
+  .panel .desc { color: var(--text-dim); font-size: 13px; margin: 8px 0 16px; }
+  .scoregrid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+  .scoregrid .k { color: var(--text-dim); font-size: 12px; }
+  .scoregrid .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bar { height: 6px; background: #00000020; border-radius: 3px; overflow: hidden; grid-column: 1 / -1; margin-top: -2px; margin-bottom: 4px; }
+  .bar > span { display: block; height: 100%; border-radius: 3px; }
+  .channels { margin-top: 16px; }
+  .channels .ch { display: grid; grid-template-columns: 70px 1fr 34px; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .channels .ch .lbl { color: var(--text-dim); font-size: 12px; }
+  .channels .ch .track { height: 6px; background: #00000020; border-radius: 3px; overflow: hidden; }
+  .channels .ch .track > span { display: block; height: 100%; }
+  .channels .ch .num { text-align: right; font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .tag { background: #00000012; border: 1px solid var(--stroke); color: var(--text-dim); padding: 3px 9px; border-radius: 999px; font-size: 11px; }
+  .recs { margin-top: 14px; }
+  .recs .rt { color: var(--text-dim); font-size: 12px; margin-bottom: 6px; }
+  .rec-chip { background: #d07ab018; border: 1px solid #d07ab055; color: var(--text); padding: 3px 9px; border-radius: 999px; font-size: 11px; }
+  .rec-chip small { color: var(--text-faint); }
+  .empty { color: var(--text-faint); font-size: 13px; }
+  .calib { margin-top: 14px; display: none; }
+  .calib.on { display: block; }
+  .calib textarea { width: 100%; height: 150px; font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; border-radius: 8px; border: 1px solid var(--stroke); padding: 8px; background: #fff; color: var(--text); }
+  .calib .row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .btn { background: var(--accent); color: #1a1014; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .btn.sec { background: transparent; border: 1px solid var(--stroke); color: var(--text-dim); font-weight: 500; }
+  .foot { color: var(--text-faint); font-size: 11px; margin-top: 18px; max-width: 820px; }
+</style>
+</head>
+<body>
+  <h1>Anatomy map — illustration base + interactive zones</h1>
+  <p class="sub">
+    The AI illustration is the base layer; clickable zones are overlaid in normalized coordinates and tinted live from
+    the real zone profiles. Click a zone for detail, switch the metric to re-tint. <b>Scroll</b> or <b>double-click</b> to
+    zoom into tight clusters (glans/frenulum, clitoris/hood); drag to pan, and use the corner buttons to reset. Turn on <b>Calibrate</b> to drag zones
+    onto the art (orange handle = resize, green handle = rotate/tilt) and <b>Export</b> the coordinates.
+  </p>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="controls" id="sexControls">
+        <button class="metric-btn active" data-sex="female">Female</button>
+        <button class="metric-btn" data-sex="male">Male</button>
+        <span style="width:10px"></span>
+        <span id="scopeControls">
+          <button class="metric-btn active" data-scope="full">Full body</button>
+          <button class="metric-btn" data-scope="closeup">Close-up</button>
+        </span>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="map-wrap" id="mapWrap">
+        <svg class="overlay" id="map" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14" /></filter>
+          </defs>
+          <image id="baseImg" href="../public/Images/female.png" x="0" y="0" width="1000" height="1000" preserveAspectRatio="xMidYMid slice" />
+          <g id="heatLayer" class="heat"></g>
+          <g id="edgeLayer" class="edge"></g>
+          <g id="hitLayer"></g>
+          <g id="labelLayer"></g>
+          <g id="handleLayer"></g>
+        </svg>
+        <div class="zoom-ctl">
+          <button id="zout" title="Zoom out">&minus;</button>
+          <button id="zreset" title="Reset zoom">&#8634;</button>
+          <button id="zin" title="Zoom in">+</button>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-bar"></div>
+        <div class="legend-row"><span>0</span><span id="legendName">Sensitivity score</span><span>100</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panelWrap">
+      <div id="panel"><div class="empty">Click a zone to see its profile.</div></div>
+      <div class="calib" id="calib">
+        <div class="row">
+          <button class="btn" id="exportBtn">Export coords</button>
+          <button class="btn sec" id="labelsBtn">Toggle labels</button>
+        </div>
+        <textarea id="exportOut" readonly placeholder="Drag zones, then Export to copy normalized coordinates here."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">
+    POC of the image-base approach. Geometry below is normalized to a 0–1000 viewBox so it scales to any display size and
+    can move into <code>src/data/anatomy/maps/</code> keyed by <code>zone_id</code>. The same heat function can drive the
+    male map and a full-body view.
+  </p>
+
+<script>
+const LVL = { low: 30, medium: 60, high: 90 };
+
+// Actor parts (givers) — mirrors src/data/anatomy/actor-parts.js (fu = finger units).
+const ACTOR_PARTS = [
+  { id:'fingertip', label:'Fingertip', channel:'hand', fu:0.5, pmax:8, tech:['circle','tap','stroke','vibrate'] },
+  { id:'finger', label:'Finger', channel:'hand', fu:1, pmax:9, tech:['circle','stroke','tap','pressure','penetrate','vibrate'] },
+  { id:'two_fingers', label:'Two fingers', channel:'hand', fu:2, pmax:9, tech:['circle','stroke','pressure','penetrate'] },
+  { id:'thumb', label:'Thumb', channel:'hand', fu:1.2, pmax:10, tech:['pressure','circle','stroke'] },
+  { id:'knuckle', label:'Knuckle', channel:'hand', fu:1, pmax:10, tech:['pressure','circle'] },
+  { id:'palm', label:'Palm', channel:'hand', fu:4.5, pmax:10, tech:['pressure','stroke','circle'] },
+  { id:'whole_hand', label:'Whole hand', channel:'hand', fu:6, pmax:10, tech:['pressure','stroke','circle','grip'] },
+  { id:'tongue', label:'Tongue tip', channel:'mouth', fu:0.6, pmax:3, tech:['circle','stroke','tap','kiss','lick'] },
+  { id:'tongue_flat', label:'Flat tongue', channel:'mouth', fu:2.5, pmax:3, tech:['stroke','circle','kiss','lick'] },
+  { id:'lips', label:'Lips', channel:'mouth', fu:1.75, pmax:5, tech:['kiss','stroke','pressure','suck'] },
+  { id:'mouth', label:'Mouth', channel:'mouth', fu:3, pmax:6, tech:['kiss','stroke','circle','suck'] },
+  { id:'teeth', label:'Teeth', channel:'mouth', fu:0.35, pmax:6, tech:['tap','pressure','kiss','nibble'] },
+  { id:'breath', label:'Breath', channel:'breath', fu:1.5, pmax:0, tech:['tease'] },
+  { id:'penis', label:'Penis', channel:'genital', fu:5, pmax:8, tech:['stroke','pressure','penetrate','circle'] },
+];
+function zoneFu(z){ const div = currentScope==='closeup' ? 22 : 9; return Math.sqrt(z.rx*z.ry)/div; }
+function recommendParts(z){
+  const zfu=zoneFu(z);
+  return ACTOR_PARTS.map(p=>{
+    let size = p.fu<=zfu ? 1-Math.min(1,(zfu-p.fu)/(zfu*2+0.5))*0.35 : Math.max(0,1-(p.fu-zfu)/2.4);
+    size=Math.max(0,Math.min(1,size));
+    const tov = z.techniques.length ? z.techniques.filter(t=>p.tech.includes(t)).length/z.techniques.length : 0.5;
+    const mN=LVL[z.ch.mouth]/90, hN=LVL[z.ch.hand]/90;
+    const chPref=(p.channel==='mouth'||p.channel==='breath')?mN:(p.channel==='hand'?hN:0.5*(mN+hN));
+    const presN=LVL[z.ch.pressure]/9, presOk=p.pmax>=presN?1:0.55;
+    const score=size*0.42+tov*0.24+chPref*0.22+presOk*0.12;
+    let reason;
+    if(p.fu>zfu+0.6) reason='broad contact';
+    else if(z.ch.pressure==='high'&&p.pmax>=8) reason='firm pressure';
+    else if(p.channel==='mouth'&&z.ch.mouth==='high') reason='soft & wet';
+    else if(p.fu<=zfu) reason='precise fit';
+    else reason='good fit';
+    return {label:p.label,score,reason};
+  }).sort((a,b)=>b.score-a.score).slice(0,3);
+}
+
+// Zone data (profiles) + geometry estimated over the illustration (0–1000 viewBox).
+// Calibrate mode lets you drag these onto the art and export corrected values.
+const FEMALE_ZONES = [
+  { id:'inner_thigh_l', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg sweeping from the groin; highly erogenous — feather strokes, kisses, and warm breath teasing inward toward the genitals.',
+    sensitivity:80, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:230, cy:531, rx:165, ry:250, glowScale:.4 },
+  { id:'inner_thigh_r', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg sweeping from the groin; highly erogenous — feather strokes, kisses, and warm breath teasing inward toward the genitals.',
+    sensitivity:80, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:803, cy:545, rx:165, ry:250, glowScale:.4 },
+
+  { id:'groin_l', name:'Groin crease', group:'groin',
+    desc:'Heated crease where thigh meets pelvis; nerve-rich transition savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity:82, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:409, cy:503, rx:20, ry:150, rot:-10, glowScale:.6 },
+  { id:'groin_r', name:'Groin crease', group:'groin',
+    desc:'Heated crease where thigh meets pelvis; nerve-rich transition savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity:82, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:627, cy:504, rx:20, ry:150, rot:13, glowScale:.6 },
+
+  { id:'mons_pubis', name:'Mons pubis',
+    desc:'Soft padded mound above the vulva. Pleasurable when kneaded, rubbed in slow circles, or kissed through hair or skin.',
+    sensitivity:65, arousal:62, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','circle','stroke'], cx:522, cy:321, rx:120, ry:96, glowScale:.9 },
+
+  { id:'labia_majora_l', name:'Labia majora (outer lips)', group:'labia_majora',
+    desc:'Outer cushioned lips; warm and plush for kneading, palm rubs, and slow sucking along the full length.',
+    sensitivity:65, arousal:66, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','circle','stroke','kiss'], cx:463, cy:590, rx:32, ry:116, rot:-8, glowScale:.6 },
+  { id:'labia_majora_r', name:'Labia majora (outer lips)', group:'labia_majora',
+    desc:'Outer cushioned lips; warm and plush for kneading, palm rubs, and slow sucking along the full length.',
+    sensitivity:65, arousal:66, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','circle','stroke','kiss'], cx:577, cy:588, rx:24, ry:122, rot:14, glowScale:.6 },
+
+  { id:'labia_minora_l', name:'Labia minora (inner lips)', group:'labia_minora',
+    desc:'Thin inner folds framing the opening; velvety and responsive to soft strokes, parting, and wet kisses along each edge.',
+    sensitivity:88, arousal:88, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:499, cy:598, rx:14, ry:97, rot:-7, glowScale:.9 },
+  { id:'labia_minora_r', name:'Labia minora (inner lips)', group:'labia_minora',
+    desc:'Thin inner folds framing the opening; velvety and responsive to soft strokes, parting, and wet kisses along each edge.',
+    sensitivity:88, arousal:88, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:533, cy:599, rx:16, ry:98, rot:9, glowScale:.9 },
+
+  { id:'clitoral_hood', name:'Clitoral hood',
+    desc:'Soft fold over the glans; pliable skin that loves feather strokes, wet kisses along the edge, and gentle circles without direct pressure on the tip.',
+    sensitivity:68, arousal:70, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:520, cy:458, rx:24, ry:27, glowScale:.7 },
+
+  { id:'clitoral_glans', name:'Clitoral glans',
+    desc:'Small rounded tip; the primary focus for many partners. Responds exquisitely to light circles, warm breath, and soft oral attention — avoid teeth and harsh pressure.',
+    sensitivity:96, arousal:96, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:519, cy:497, rx:12, ry:17, glowScale:.85 },
+
+  { id:'vaginal_introitus', name:'Vaginal introitus',
+    desc:'Entrance to the vagina; rim where inner and outer tissues meet. Sensitive to circling touch, wet kisses, and careful finger pressure.',
+    sensitivity:86, arousal:88, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','kiss','stroke'], cx:515, cy:656, rx:13, ry:29, glowScale:.7 },
+
+  { id:'perineum', name:'Perineum',
+    desc:'Bridge of skin between genitals and anus. Often arousing with firm palm pressure, slow strokes, and warm breath along the midline.',
+    sensitivity:70, arousal:72, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','circle'], cx:516, cy:715, rx:29, ry:12, glowScale:.6 },
+
+  { id:'anus', name:'Anus',
+    desc:'Highly nerve-rich ring; for some a pleasurable zone with gentle external circling, light pressure, and slow warmth — always with consent and care.',
+    sensitivity:74, arousal:70, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['circle','pressure','stroke'], cx:514, cy:760, rx:27, ry:33, glowScale:.6 },
+];
+
+const MALE_ZONES = [
+  { id:'inner_thigh_l', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg sweeping up toward the groin; sensitive to feather strokes, kisses, and warm breath teasing inward toward the genitals.',
+    sensitivity:78, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:425, cy:686, rx:67, ry:78, rot:-12, glowScale:.4 },
+  { id:'inner_thigh_r', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg sweeping up toward the groin; sensitive to feather strokes, kisses, and warm breath teasing inward toward the genitals.',
+    sensitivity:78, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:611, cy:695, rx:57, ry:70, glowScale:.4 },
+
+  { id:'groin_l', name:'Groin crease', group:'groin',
+    desc:'Heated crease where thigh meets pelvis; nerve-rich transition savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity:80, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:458, cy:625, rx:7, ry:57, rot:-26, glowScale:.6 },
+  { id:'groin_r', name:'Groin crease', group:'groin',
+    desc:'Heated crease where thigh meets pelvis; nerve-rich transition savoured with slow strokes, circling fingers, and lingering kisses just before the genitals.',
+    sensitivity:80, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:568, cy:641, rx:6, ry:59, rot:29, glowScale:.6 },
+
+  { id:'pubic_mound', name:'Pubic mound / base',
+    desc:'Padded base where the shaft meets the body. Pleasurable with firm pressure, slow rubs, and kisses through hair or skin.',
+    sensitivity:62, arousal:64, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'low',hand:'high'},
+    techniques:['pressure','circle','stroke'], cx:543, cy:610, rx:22, ry:29, rot:-11, glowScale:.8 },
+
+  { id:'shaft', name:'Penile shaft',
+    desc:'Length of the penis; responsive to firm gripping strokes, gliding friction, and wet sliding contact up and down.',
+    sensitivity:78, arousal:84, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','pressure','circle'], cx:497, cy:620, rx:26, ry:82, rot:-16, glowScale:.7 },
+
+  { id:'corona', name:'Coronal ridge',
+    desc:'Raised rim around the base of the head; one of the most nerve-rich edges. Loves circling tongue, light flicks, and wet sliding pressure.',
+    sensitivity:92, arousal:92, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:472, cy:540, rx:36, ry:6, rot:1, glowScale:.85 },
+
+  { id:'glans_l', name:'Glans (head)', group:'glans',
+    desc:'Smooth head of the penis; extremely sensitive. Responds to soft suction, swirling tongue, and slick gliding — avoid teeth and harsh dry friction.',
+    sensitivity:95, arousal:95, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:453, cy:519, rx:20, ry:8, rot:-57, glowScale:.9 },
+  { id:'glans_r', name:'Glans (head)', group:'glans',
+    desc:'Smooth head of the penis; extremely sensitive. Responds to soft suction, swirling tongue, and slick gliding — avoid teeth and harsh dry friction.',
+    sensitivity:95, arousal:95, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:480, cy:521, rx:26, ry:14, rot:43, glowScale:.9 },
+
+  { id:'frenulum', name:'Frenulum',
+    desc:'Small band on the underside just below the head; often the single most sensitive spot. Light flicks, gentle pressure, and wet circling are intense here.',
+    sensitivity:97, arousal:96, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:460, cy:530, rx:6, ry:6, rot:-2, glowScale:.95 },
+
+  { id:'scrotum_l', name:'Scrotum / testicles', group:'scrotum',
+    desc:'Delicate sac holding the testicles; sensitive and needs gentle care — soft cupping, light rolling, warm breath, and careful licking. No squeezing.',
+    sensitivity:80, arousal:80, ch:{pressure:'low',friction:'low',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:487, cy:713, rx:25, ry:34, glowScale:.7 },
+  { id:'scrotum_r', name:'Scrotum / testicles', group:'scrotum',
+    desc:'Delicate sac holding the testicles; sensitive and needs gentle care — soft cupping, light rolling, warm breath, and careful licking. No squeezing.',
+    sensitivity:80, arousal:80, ch:{pressure:'low',friction:'low',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:522, cy:713, rx:27, ry:35, rot:16, glowScale:.7 },
+
+  { id:'perineum', name:'Perineum',
+    desc:'Bridge of skin between scrotum and anus; over the internal prostate. Firm palm pressure, slow strokes, and warm breath along the midline are highly arousing.',
+    sensitivity:84, arousal:84, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','circle'], cx:508, cy:751, rx:14, ry:6, glowScale:.7 },
+
+  { id:'anus', name:'Anus',
+    desc:'Highly nerve-rich ring with access to the prostate. For some a powerful zone with gentle external circling, light pressure, and slow warmth — always with consent and care.',
+    sensitivity:82, arousal:78, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['circle','pressure','stroke'], cx:520, cy:762, rx:16, ry:6, glowScale:.6 },
+];
+
+const FEMALE_BODY_ZONES = [
+  { id:'mouth_lips', name:'Mouth & lips',
+    desc:'Soft, mobile lips and mouth; central to kissing. Loves slow kisses, light sucking, warm breath, and the brush of a fingertip or tongue.',
+    sensitivity:86, arousal:80, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:500, cy:153, rx:11, ry:6, glowScale:.9 },
+  { id:'ear_l', name:'Ear', group:'ears',
+    desc:'Outer ear and lobe; richly nerve-supplied. Gentle nibbling, warm breath, and soft licking along the rim and lobe are intensely arousing.',
+    sensitivity:80, arousal:78, ch:{pressure:'low',friction:'medium',teeth:'medium',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:458, cy:118, rx:7, ry:13, rot:-17, glowScale:.8 },
+  { id:'ear_r', name:'Ear', group:'ears',
+    desc:'Outer ear and lobe; richly nerve-supplied. Gentle nibbling, warm breath, and soft licking along the rim and lobe are intensely arousing.',
+    sensitivity:80, arousal:78, ch:{pressure:'low',friction:'medium',teeth:'medium',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:541, cy:120, rx:6, ry:11, rot:18, glowScale:.8 },
+  { id:'neck', name:'Neck & throat',
+    desc:'Highly erogenous; the sides and nape respond to soft kisses, light sucking, warm breath, and slow fingertip trails.',
+    sensitivity:84, arousal:82, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['kiss','stroke','circle'], cx:499, cy:193, rx:24, ry:35, glowScale:.85 },
+  { id:'collarbone', name:'Collarbone',
+    desc:'Delicate ridge across the upper chest; sensitive to light kisses, tracing fingertips, and warm breath.',
+    sensitivity:62, arousal:60, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['kiss','stroke','circle'], cx:501, cy:216, rx:70, ry:12, glowScale:.6 },
+  { id:'shoulder_l', name:'Shoulder', group:'shoulders',
+    desc:'Broad, muscular surface; enjoys firm kneading, slow strokes, and warm kisses as part of relaxing, sensual contact.',
+    sensitivity:48, arousal:46, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:441, cy:241, rx:38, ry:26, glowScale:.4 },
+  { id:'shoulder_r', name:'Shoulder', group:'shoulders',
+    desc:'Broad, muscular surface; enjoys firm kneading, slow strokes, and warm kisses as part of relaxing, sensual contact.',
+    sensitivity:48, arousal:46, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:557, cy:241, rx:38, ry:26, glowScale:.4 },
+  { id:'breast_l', name:'Breast', group:'breasts',
+    desc:'Soft, full tissue; responsive to cupping, kneading, circling palms, slow strokes, and warm kisses spiralling inward.',
+    sensitivity:74, arousal:76, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','pressure','stroke','kiss'], cx:460, cy:292, rx:29, ry:35, rot:12, glowScale:.7 },
+  { id:'breast_r', name:'Breast', group:'breasts',
+    desc:'Soft, full tissue; responsive to cupping, kneading, circling palms, slow strokes, and warm kisses spiralling inward.',
+    sensitivity:74, arousal:76, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','pressure','stroke','kiss'], cx:539, cy:291, rx:28, ry:38, rot:-18, glowScale:.7 },
+  { id:'nipple_l', name:'Nipple & areola', group:'nipples',
+    desc:'Dense nerve endings; very sensitive. Loves light flicks, circling, gentle pinching, warm breath, sucking, and the brush of a tongue.',
+    sensitivity:90, arousal:90, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:448, cy:299, rx:6, ry:6, glowScale:.95 },
+  { id:'nipple_r', name:'Nipple & areola', group:'nipples',
+    desc:'Dense nerve endings; very sensitive. Loves light flicks, circling, gentle pinching, warm breath, sucking, and the brush of a tongue.',
+    sensitivity:90, arousal:90, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:554, cy:299, rx:8, ry:7, glowScale:.95 },
+  { id:'navel', name:'Navel & lower belly',
+    desc:'Soft belly and navel; ticklish and sensitive. Slow strokes, warm kisses, and fingertip trails downward build anticipation.',
+    sensitivity:60, arousal:64, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:502, cy:427, rx:64, ry:73, glowScale:.55 },
+  { id:'hip_l', name:'Hip', group:'hips',
+    desc:'Curve of the hip and pelvic crest; sensual with firm holding, slow strokes, kneading, and kisses gliding toward the groin.',
+    sensitivity:58, arousal:62, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:449, cy:520, rx:40, ry:52, rot:-20, glowScale:.5 },
+  { id:'hip_r', name:'Hip', group:'hips',
+    desc:'Curve of the hip and pelvic crest; sensual with firm holding, slow strokes, kneading, and kisses gliding toward the groin.',
+    sensitivity:58, arousal:62, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:554, cy:533, rx:44, ry:52, rot:18, glowScale:.5 },
+  { id:'vulva', name:'Vulva (see close-up)', link:'closeup',
+    desc:'External genitals — the focus of the close-up map. Switch to Close-up for the detailed clitoris, labia, and opening zones.',
+    sensitivity:94, arousal:95, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:499, cy:523, rx:19, ry:12, glowScale:.85 },
+  { id:'inner_thigh_l', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg; highly erogenous. Feather strokes, kisses, and warm breath teasing upward toward the genitals.',
+    sensitivity:80, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:460, cy:621, rx:32, ry:90, glowScale:.5 },
+  { id:'inner_thigh_r', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg; highly erogenous. Feather strokes, kisses, and warm breath teasing upward toward the genitals.',
+    sensitivity:80, arousal:82, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:542, cy:627, rx:32, ry:90, glowScale:.5 },
+  { id:'knee_l', name:'Knee & back of knee', group:'knees',
+    desc:'The hollow behind the knee is surprisingly sensitive; soft strokes, light kisses, and warm breath tickle and arouse.',
+    sensitivity:54, arousal:52, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:468, cy:698, rx:22, ry:27, glowScale:.4 },
+  { id:'knee_r', name:'Knee & back of knee', group:'knees',
+    desc:'The hollow behind the knee is surprisingly sensitive; soft strokes, light kisses, and warm breath tickle and arouse.',
+    sensitivity:54, arousal:52, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:533, cy:699, rx:24, ry:25, glowScale:.4 },
+  { id:'calf_l', name:'Calf & shin', group:'calves',
+    desc:'Lower leg; mostly relaxing rather than erogenous. Firm strokes and kneading feel good as part of full-body touch.',
+    sensitivity:36, arousal:34, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'low',hand:'high'},
+    techniques:['pressure','stroke'], cx:463, cy:815, rx:28, ry:70, glowScale:.3 },
+  { id:'calf_r', name:'Calf & shin', group:'calves',
+    desc:'Lower leg; mostly relaxing rather than erogenous. Firm strokes and kneading feel good as part of full-body touch.',
+    sensitivity:36, arousal:34, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'low',hand:'high'},
+    techniques:['pressure','stroke'], cx:534, cy:816, rx:28, ry:70, glowScale:.3 },
+  { id:'foot_l', name:'Foot & sole', group:'feet',
+    desc:'Soles and toes are nerve-dense — ticklish for some, arousing for others. Firm pressure, slow strokes, and gentle sucking of toes.',
+    sensitivity:62, arousal:58, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:475, cy:935, rx:19, ry:33, glowScale:.45 },
+  { id:'foot_r', name:'Foot & sole', group:'feet',
+    desc:'Soles and toes are nerve-dense — ticklish for some, arousing for others. Firm pressure, slow strokes, and gentle sucking of toes.',
+    sensitivity:62, arousal:58, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:527, cy:931, rx:20, ry:32, glowScale:.45 },
+  { id:'arm_l', name:'Inner arm & forearm', group:'arms',
+    desc:'Inner arm and wrist; thin, sensitive skin. Light fingertip trails, soft kisses, and warm breath raise goosebumps.',
+    sensitivity:54, arousal:54, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:404, cy:433, rx:19, ry:72, rot:11, glowScale:.4 },
+  { id:'arm_r', name:'Inner arm & forearm', group:'arms',
+    desc:'Inner arm and wrist; thin, sensitive skin. Light fingertip trails, soft kisses, and warm breath raise goosebumps.',
+    sensitivity:54, arousal:54, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:596, cy:435, rx:15, ry:77, rot:-12, glowScale:.4 },
+  { id:'hand_l', name:'Hand & fingers', group:'hands',
+    desc:'Palms and fingertips are richly innervated; sensual with interlacing fingers, palm strokes, and slow kisses or sucking of fingertips.',
+    sensitivity:66, arousal:60, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:388, cy:541, rx:16, ry:29, glowScale:.45 },
+  { id:'hand_r', name:'Hand & fingers', group:'hands',
+    desc:'Palms and fingertips are richly innervated; sensual with interlacing fingers, palm strokes, and slow kisses or sucking of fingertips.',
+    sensitivity:66, arousal:60, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:609, cy:542, rx:15, ry:23, glowScale:.45 },
+];
+
+const MALE_BODY_ZONES = [
+  { id:'mouth_lips', name:'Mouth & lips',
+    desc:'Soft, mobile lips and mouth; central to kissing. Loves slow kisses, light sucking, warm breath, and the brush of a fingertip or tongue.',
+    sensitivity:84, arousal:78, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:523, cy:124, rx:13, ry:6, glowScale:.9 },
+  { id:'ear_l', name:'Ear', group:'ears',
+    desc:'Outer ear and lobe; richly nerve-supplied. Gentle nibbling, warm breath, and soft licking along the rim and lobe are intensely arousing.',
+    sensitivity:78, arousal:76, ch:{pressure:'low',friction:'medium',teeth:'medium',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:481, cy:98, rx:6, ry:15, rot:-13, glowScale:.8 },
+  { id:'ear_r', name:'Ear', group:'ears',
+    desc:'Outer ear and lobe; richly nerve-supplied. Gentle nibbling, warm breath, and soft licking along the rim and lobe are intensely arousing.',
+    sensitivity:78, arousal:76, ch:{pressure:'low',friction:'medium',teeth:'medium',mouth:'high',hand:'medium'},
+    techniques:['kiss','stroke','circle'], cx:567, cy:98, rx:6, ry:16, rot:7, glowScale:.8 },
+  { id:'neck', name:'Neck & throat',
+    desc:'Highly erogenous; the sides and nape respond to soft kisses, light sucking, warm breath, and slow fingertip trails.',
+    sensitivity:82, arousal:80, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['kiss','stroke','circle'], cx:523, cy:169, rx:36, ry:51, glowScale:.85 },
+  { id:'collarbone', name:'Collarbone',
+    desc:'Delicate ridge across the upper chest; sensitive to light kisses, tracing fingertips, and warm breath.',
+    sensitivity:58, arousal:56, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['kiss','stroke','circle'], cx:521, cy:203, rx:85, ry:14, glowScale:.55 },
+  { id:'shoulder_l', name:'Shoulder', group:'shoulders',
+    desc:'Broad, muscular surface; enjoys firm kneading, slow strokes, and warm kisses as part of relaxing, sensual contact.',
+    sensitivity:44, arousal:44, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:433, cy:234, rx:46, ry:32, glowScale:.4 },
+  { id:'shoulder_r', name:'Shoulder', group:'shoulders',
+    desc:'Broad, muscular surface; enjoys firm kneading, slow strokes, and warm kisses as part of relaxing, sensual contact.',
+    sensitivity:44, arousal:44, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:610, cy:232, rx:46, ry:32, glowScale:.4 },
+  { id:'pec_l', name:'Chest / pec', group:'chest',
+    desc:'Firm chest muscle; enjoys broad palm strokes, kneading, scratching, and kisses across the surface.',
+    sensitivity:50, arousal:52, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:473, cy:271, rx:52, ry:42, glowScale:.5 },
+  { id:'pec_r', name:'Chest / pec', group:'chest',
+    desc:'Firm chest muscle; enjoys broad palm strokes, kneading, scratching, and kisses across the surface.',
+    sensitivity:50, arousal:52, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:572, cy:273, rx:52, ry:42, glowScale:.5 },
+  { id:'nipple_l', name:'Nipple', group:'nipples',
+    desc:'Often overlooked but nerve-rich for many men; light flicks, circling, gentle pinching, and the brush of a tongue can be intense.',
+    sensitivity:80, arousal:80, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:459, cy:296, rx:9, ry:6, glowScale:.9 },
+  { id:'nipple_r', name:'Nipple', group:'nipples',
+    desc:'Often overlooked but nerve-rich for many men; light flicks, circling, gentle pinching, and the brush of a tongue can be intense.',
+    sensitivity:80, arousal:80, ch:{pressure:'low',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['circle','stroke','kiss'], cx:590, cy:296, rx:9, ry:8, glowScale:.9 },
+  { id:'abdomen', name:'Abdomen & navel',
+    desc:'Firm belly and the trail below the navel; slow strokes, warm kisses, and fingertip trails downward build anticipation.',
+    sensitivity:58, arousal:64, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:524, cy:415, rx:76, ry:88, glowScale:.55 },
+  { id:'hip_l', name:'Hip & V-line', group:'hips',
+    desc:'The oblique crease toward the groin (the "V"); sensual with firm holding, slow strokes, and kisses gliding toward the genitals.',
+    sensitivity:60, arousal:66, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:472, cy:495, rx:28, ry:51, rot:-24, glowScale:.5 },
+  { id:'hip_r', name:'Hip & V-line', group:'hips',
+    desc:'The oblique crease toward the groin (the "V"); sensual with firm holding, slow strokes, and kisses gliding toward the genitals.',
+    sensitivity:60, arousal:66, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:573, cy:494, rx:28, ry:56, rot:22, glowScale:.5 },
+  { id:'genitals', name:'Penis & scrotum (see close-up)', link:'closeup',
+    desc:'External genitals — the focus of the close-up map. Switch to Close-up for the detailed glans, shaft, frenulum, and scrotum zones.',
+    sensitivity:94, arousal:95, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','circle','kiss'], cx:522, cy:547, rx:28, ry:36, glowScale:.85 },
+  { id:'inner_thigh_l', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg; highly erogenous. Feather strokes, kisses, and warm breath teasing upward toward the genitals.',
+    sensitivity:78, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:458, cy:626, rx:43, ry:108, rot:4, glowScale:.5 },
+  { id:'inner_thigh_r', name:'Inner thigh', group:'inner_thighs',
+    desc:'Soft inner leg; highly erogenous. Feather strokes, kisses, and warm breath teasing upward toward the genitals.',
+    sensitivity:78, arousal:80, ch:{pressure:'medium',friction:'high',teeth:'low',mouth:'high',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:574, cy:609, rx:37, ry:96, rot:-12, glowScale:.5 },
+  { id:'knee_l', name:'Knee & back of knee', group:'knees',
+    desc:'The hollow behind the knee is surprisingly sensitive; soft strokes, light kisses, and warm breath tickle and arouse.',
+    sensitivity:50, arousal:48, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:446, cy:733, rx:29, ry:24, glowScale:.4 },
+  { id:'knee_r', name:'Knee & back of knee', group:'knees',
+    desc:'The hollow behind the knee is surprisingly sensitive; soft strokes, light kisses, and warm breath tickle and arouse.',
+    sensitivity:50, arousal:48, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:594, cy:728, rx:26, ry:24, glowScale:.4 },
+  { id:'calf_l', name:'Calf & shin', group:'calves',
+    desc:'Lower leg; mostly relaxing rather than erogenous. Firm strokes and kneading feel good as part of full-body touch.',
+    sensitivity:34, arousal:32, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'low',hand:'high'},
+    techniques:['pressure','stroke'], cx:438, cy:844, rx:32, ry:76, glowScale:.3 },
+  { id:'calf_r', name:'Calf & shin', group:'calves',
+    desc:'Lower leg; mostly relaxing rather than erogenous. Firm strokes and kneading feel good as part of full-body touch.',
+    sensitivity:34, arousal:32, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'low',hand:'high'},
+    techniques:['pressure','stroke'], cx:597, cy:838, rx:32, ry:76, glowScale:.3 },
+  { id:'foot_l', name:'Foot & sole', group:'feet',
+    desc:'Soles and toes are nerve-dense — ticklish for some, arousing for others. Firm pressure, slow strokes, and gentle sucking of toes.',
+    sensitivity:58, arousal:54, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:423, cy:956, rx:26, ry:38, rot:39, glowScale:.45 },
+  { id:'foot_r', name:'Foot & sole', group:'feet',
+    desc:'Soles and toes are nerve-dense — ticklish for some, arousing for others. Firm pressure, slow strokes, and gentle sucking of toes.',
+    sensitivity:58, arousal:54, ch:{pressure:'high',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['pressure','stroke','kiss'], cx:614, cy:956, rx:26, ry:34, rot:-37, glowScale:.45 },
+  { id:'arm_l', name:'Inner arm & forearm', group:'arms',
+    desc:'Inner arm and wrist; thin, sensitive skin. Light fingertip trails, soft kisses, and warm breath raise goosebumps.',
+    sensitivity:50, arousal:50, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:379, cy:409, rx:26, ry:100, rot:1, glowScale:.4 },
+  { id:'arm_r', name:'Inner arm & forearm', group:'arms',
+    desc:'Inner arm and wrist; thin, sensitive skin. Light fingertip trails, soft kisses, and warm breath raise goosebumps.',
+    sensitivity:50, arousal:50, ch:{pressure:'low',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:663, cy:414, rx:26, ry:100, glowScale:.4 },
+  { id:'hand_l', name:'Hand & fingers', group:'hands',
+    desc:'Palms and fingertips are richly innervated; sensual with interlacing fingers, palm strokes, and slow kisses or sucking of fingertips.',
+    sensitivity:62, arousal:56, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:390, cy:544, rx:26, ry:40, rot:-13, glowScale:.45 },
+  { id:'hand_r', name:'Hand & fingers', group:'hands',
+    desc:'Palms and fingertips are richly innervated; sensual with interlacing fingers, palm strokes, and slow kisses or sucking of fingertips.',
+    sensitivity:62, arousal:56, ch:{pressure:'medium',friction:'medium',teeth:'low',mouth:'medium',hand:'high'},
+    techniques:['stroke','kiss','circle'], cx:649, cy:540, rx:26, ry:40, rot:14, glowScale:.45 },
+];
+
+const VIEWS = {
+  female: {
+    full:    { img:'../public/Images/female.png',             zones: FEMALE_BODY_ZONES },
+    closeup: { img:'../public/Images/female between legs.png', zones: FEMALE_ZONES },
+  },
+  male: {
+    full:    { img:'../public/Images/male.png',                zones: MALE_BODY_ZONES },
+    closeup: { img:'../public/Images/male between legs.png',   zones: MALE_ZONES },
+  },
+};
+let currentSex='female', currentScope='full';
+let ZONES = VIEWS[currentSex][currentScope].zones;
+
+const METRICS = [
+  { id:'sensitivity', label:'Sensitivity', get:z=>z.sensitivity },
+  { id:'arousal', label:'Arousal priority', get:z=>z.arousal },
+  { id:'pressure', label:'Pressure', get:z=>LVL[z.ch.pressure] },
+  { id:'friction', label:'Friction', get:z=>LVL[z.ch.friction] },
+  { id:'mouth', label:'Mouth', get:z=>LVL[z.ch.mouth] },
+  { id:'hand', label:'Hand', get:z=>LVL[z.ch.hand] },
+];
+
+let currentMetric = METRICS[0];
+let selectedId = null;
+let calibrate = false;
+let showLabels = true;
+
+const STOPS = [
+  { t:0.00, c:[240,226,214] }, { t:0.40, c:[240,168,120] }, { t:0.65, c:[232,122,168] },
+  { t:0.85, c:[184,106,208] }, { t:1.00, c:[138,62,200] },
+];
+function heatColor(v) {
+  const t = Math.max(0, Math.min(1, v/100));
+  for (let i=1;i<STOPS.length;i++) {
+    if (t<=STOPS[i].t) {
+      const a=STOPS[i-1], b=STOPS[i], k=(t-a.t)/(b.t-a.t);
+      const c=a.c.map((ac,j)=>Math.round(ac+(b.c[j]-ac)*k));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+  }
+  const c=STOPS[STOPS.length-1].c; return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+const SVGNS='http://www.w3.org/2000/svg';
+const heatLayer=document.getElementById('heatLayer');
+const edgeLayer=document.getElementById('edgeLayer');
+const hitLayer=document.getElementById('hitLayer');
+const labelLayer=document.getElementById('labelLayer');
+const handleLayer=document.getElementById('handleLayer');
+const svg=document.getElementById('map');
+
+function ell(cx,cy,rx,ry){const e=document.createElementNS(SVGNS,'ellipse');e.setAttribute('cx',cx);e.setAttribute('cy',cy);e.setAttribute('rx',rx);e.setAttribute('ry',ry);return e;}
+function setT(el,z){ if(z.rot){ el.setAttribute('transform',`rotate(${z.rot} ${z.cx} ${z.cy})`); } else { el.removeAttribute('transform'); } }
+
+function build() {
+  heatLayer.innerHTML=edgeLayer.innerHTML=hitLayer.innerHTML=labelLayer.innerHTML=handleLayer.innerHTML='';
+  ZONES.forEach(z=>{
+    const g=ell(z.cx,z.cy,z.rx,z.ry); g.setAttribute('id','heat-'+z.id); g.setAttribute('filter','url(#soft)'); setT(g,z); heatLayer.appendChild(g);
+
+    const eg=ell(z.cx,z.cy,z.rx,z.ry); eg.setAttribute('class','zone-edge'); eg.setAttribute('id','edge-'+z.id); setT(eg,z); edgeLayer.appendChild(eg);
+
+    const h=ell(z.cx,z.cy,z.rx,z.ry); h.setAttribute('class','zone-hit'); h.setAttribute('id','hit-'+z.id); h.setAttribute('pointer-events','all'); setT(h,z);
+    h.addEventListener('click',()=>{ if(suppressClick) return; if(z.link){ setScope(z.link); return; } select(z.id); });
+    h.addEventListener('mouseenter',()=>{ if(!selectedId) renderPanel(z); });
+    if(calibrate) enableDrag(h,z);
+    hitLayer.appendChild(h);
+
+    if(showLabels){
+      const t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','zone-label');
+      t.setAttribute('x',z.cx); t.setAttribute('y',z.cy); t.setAttribute('text-anchor','middle');
+      t.textContent=z.name.replace(/ \(.*\)/,''); labelLayer.appendChild(t);
+    }
+    if(calibrate){
+      const th=(z.rot||0)*Math.PI/180, cos=Math.cos(th), sin=Math.sin(th);
+      const hs=9/(scale||1), d=z.ry+24/(scale||1);
+      const hm=ell(z.cx,z.cy,hs,hs); hm.setAttribute('class','handle'); enableDrag(hm,z,'move'); handleLayer.appendChild(hm);
+      const hr=ell(z.cx+z.rx*cos, z.cy+z.rx*sin, hs,hs); hr.setAttribute('class','handle r'); hr.setAttribute('id','rh-'+z.id); enableDrag(hr,z,'resize'); handleLayer.appendChild(hr);
+      const ho=ell(z.cx+d*sin, z.cy-d*cos, hs,hs); ho.setAttribute('class','handle rot'); enableDrag(ho,z,'rotate'); handleLayer.appendChild(ho);
+    }
+  });
+  paint();
+}
+
+function toView(evt){
+  const pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY;
+  const m=svg.getScreenCTM().inverse(); const p=pt.matrixTransform(m); return p;
+}
+function enableDrag(elm,z,mode){
+  elm.style.cursor='grab';
+  elm.addEventListener('pointerdown',e=>{
+    if(!calibrate) return; e.stopPropagation(); elm.setPointerCapture(e.pointerId);
+    const move=ev=>{
+      const p=toView(ev);
+      if(mode==='resize'){
+        const th=(z.rot||0)*Math.PI/180, dx=p.x-z.cx, dy=p.y-z.cy;
+        z.rx=Math.max(6,Math.round(Math.abs(dx*Math.cos(th)+dy*Math.sin(th))));
+        z.ry=Math.max(6,Math.round(Math.abs(-dx*Math.sin(th)+dy*Math.cos(th))));
+      }
+      else if(mode==='rotate'){ z.rot=Math.round(Math.atan2(p.x-z.cx, -(p.y-z.cy))*180/Math.PI); }
+      else { z.cx=Math.round(p.x); z.cy=Math.round(p.y); }
+      updateZone(z);
+    };
+    const up=ev=>{ elm.releasePointerCapture(e.pointerId); svg.removeEventListener('pointermove',move); svg.removeEventListener('pointerup',up); };
+    svg.addEventListener('pointermove',move); svg.addEventListener('pointerup',up);
+  });
+}
+function updateZone(z){
+  for(const pre of ['heat-','edge-','hit-']){ const el=document.getElementById(pre+z.id); if(el){el.setAttribute('cx',z.cx);el.setAttribute('cy',z.cy);el.setAttribute('rx',z.rx);el.setAttribute('ry',z.ry); setT(el,z);} }
+  build(); // simplest: rebuild handles/labels to follow
+}
+
+function paint(){
+  ZONES.forEach(z=>{
+    const v=currentMetric.get(z);
+    const el=document.getElementById('heat-'+z.id);
+    el.setAttribute('fill',heatColor(v));
+    el.setAttribute('opacity',((0.30+0.30*(v/100))*(z.glowScale||1)).toFixed(3));
+    const eg=document.getElementById('edge-'+z.id);
+    if(eg) eg.setAttribute('stroke',heatColor(v));
+  });
+  document.getElementById('legendName').textContent=currentMetric.label+' (0–100)';
+}
+
+const controls=document.getElementById('controls');
+METRICS.forEach(m=>{
+  const b=document.createElement('button'); b.className='metric-btn'+(m.id===currentMetric.id?' active':''); b.textContent=m.label;
+  b.addEventListener('click',()=>{ currentMetric=m; [...controls.querySelectorAll('.metric-btn')].forEach(c=>c.classList.remove('active')); b.classList.add('active'); paint(); if(selectedId) renderPanel(ZONES.find(z=>z.id===selectedId)); });
+  controls.appendChild(b);
+});
+const sp=document.createElement('span'); sp.className='spacer'; controls.appendChild(sp);
+const calibToggle=document.createElement('label'); calibToggle.className='toggle';
+calibToggle.innerHTML='<input type="checkbox" id="calibChk"/> Calibrate';
+controls.appendChild(calibToggle);
+document.getElementById('calibChk').addEventListener('change',e=>{ calibrate=e.target.checked; document.getElementById('calib').classList.toggle('on',calibrate); build(); });
+
+function applySel(){
+  const v=VIEWS[currentSex][currentScope];
+  ZONES=v.zones; selectedId=null;
+  document.getElementById('baseImg').setAttribute('href',v.img);
+  document.querySelectorAll('#sexControls [data-sex]').forEach(b=>b.classList.toggle('active',b.dataset.sex===currentSex));
+  document.querySelectorAll('#scopeControls [data-scope]').forEach(b=>b.classList.toggle('active',b.dataset.scope===currentScope));
+  document.getElementById('panel').innerHTML='<div class="empty">Click a zone to see its profile.</div>';
+  document.getElementById('exportOut').value='';
+  resetZoom();
+  build();
+}
+function setSex(sex){ if(sex===currentSex) return; currentSex=sex; applySel(); }
+function setScope(scope){ if(scope===currentScope) return; currentScope=scope; applySel(); }
+document.querySelectorAll('#sexControls [data-sex]').forEach(b=>b.addEventListener('click',()=>setSex(b.dataset.sex)));
+document.querySelectorAll('#scopeControls [data-scope]').forEach(b=>b.addEventListener('click',()=>setScope(b.dataset.scope)));
+
+function select(id){
+  selectedId=id; const target=ZONES.find(z=>z.id===id); const grp=target.group;
+  ZONES.forEach(z=>{ const on=z.id===id||(grp&&z.group===grp);
+    const el=document.getElementById('hit-'+z.id); el.classList.toggle('selected',on); el.classList.toggle('dim',!on);
+    const eg=document.getElementById('edge-'+z.id); if(eg){ eg.classList.toggle('selected',on); eg.classList.toggle('dim',!on); } });
+  renderPanel(target);
+}
+function bar(v){ return `<div class="bar"><span style="width:${v}%;background:${heatColor(v)}"></span></div>`; }
+function renderPanel(z){
+  const v=currentMetric.get(z);
+  const channels=[['pressure','Pressure'],['friction','Friction'],['mouth','Mouth'],['hand','Hand'],['teeth','Teeth']];
+  document.getElementById('panel').innerHTML=`
+    <h2>${z.name}</h2>
+    <div class="desc">${z.desc}</div>
+    <div class="scoregrid">
+      <span class="k">${currentMetric.label}</span><span class="v">${v}</span>
+      ${bar(v)}
+      <span class="k">Sensitivity score</span><span class="v">${z.sensitivity}</span>
+      <span class="k">Arousal priority</span><span class="v">${z.arousal}</span>
+    </div>
+    <div class="channels">
+      ${channels.map(([k,l])=>{ const cv=LVL[z.ch[k]]; return `<div class="ch"><span class="lbl">${l}</span><span class="track"><span style="width:${cv}%;background:${heatColor(cv)}"></span></span><span class="num">${z.ch[k]}</span></div>`; }).join('')}
+    </div>
+    <div class="tags">${z.techniques.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div class="recs">
+      <div class="rt">Best touch (size + ability)</div>
+      <div class="tags">${recommendParts(z).map(r=>`<span class="rec-chip" title="match ${Math.round(r.score*100)}%"><b>${r.label}</b> <small>${r.reason}</small></span>`).join('')}</div>
+    </div>`;
+}
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const out=ZONES.map(z=>{ const o={id:z.id,cx:Math.round(z.cx),cy:Math.round(z.cy),rx:Math.round(z.rx),ry:Math.round(z.ry)}; if(z.rot) o.rot=Math.round(z.rot); return o; });
+  const txt=JSON.stringify(out,null,2);
+  document.getElementById('exportOut').value=txt;
+  navigator.clipboard && navigator.clipboard.writeText(txt);
+});
+document.getElementById('labelsBtn').addEventListener('click',()=>{ showLabels=!showLabels; build(); });
+
+// click empty area to deselect
+svg.addEventListener('click',e=>{ if(suppressClick) return; if(e.target===svg){ selectedId=null; ZONES.forEach(z=>{const el=document.getElementById('hit-'+z.id); el.classList.remove('selected','dim'); const eg=document.getElementById('edge-'+z.id); if(eg) eg.classList.remove('selected','dim');}); document.getElementById('panel').innerHTML='<div class="empty">Click a zone to see its profile.</div>'; } });
+
+// ---- zoom & pan (via SVG viewBox so filters/strokes stay crisp) ----
+const wrap=document.getElementById('mapWrap');
+const VB=1000;
+let scale=1, vx=0, vy=0, suppressClick=false;
+function vw(){ return VB/scale; }
+function applyView(){ svg.setAttribute('viewBox',`${vx} ${vy} ${vw()} ${vw()}`); wrap.style.setProperty('--z',scale); wrap.style.cursor=scale>1?'grab':'default'; if(calibrate) build(); }
+function clampView(){ const w=vw(); if(scale<=1){vx=0;vy=0;return;} vx=Math.min(VB-w,Math.max(0,vx)); vy=Math.min(VB-w,Math.max(0,vy)); }
+function zoomAt(mx,my,ns){ ns=Math.min(8,Math.max(1,ns)); if(ns===scale) return; const r=wrap.getBoundingClientRect(), w=vw(); const ux=vx+(mx/r.width)*w, uy=vy+(my/r.height)*w; const nw=VB/ns; vx=ux-(mx/r.width)*nw; vy=uy-(my/r.height)*nw; scale=ns; clampView(); applyView(); }
+function resetZoom(){ scale=1; vx=0; vy=0; applyView(); }
+wrap.addEventListener('wheel',e=>{ e.preventDefault(); const r=wrap.getBoundingClientRect(); zoomAt(e.clientX-r.left,e.clientY-r.top,scale*Math.exp(-e.deltaY*0.0015)); },{passive:false});
+wrap.addEventListener('dblclick',e=>{ if(scale>1.05){ resetZoom(); } else { const r=wrap.getBoundingClientRect(); zoomAt(e.clientX-r.left,e.clientY-r.top,3.2); } });
+let panning=false,moved=false,sx,sy,svx,svy;
+wrap.addEventListener('pointerdown',e=>{ if(calibrate||scale<=1) return; panning=true;moved=false;sx=e.clientX;sy=e.clientY;svx=vx;svy=vy; wrap.style.cursor='grabbing'; });
+window.addEventListener('pointermove',e=>{ if(!panning) return; const r=wrap.getBoundingClientRect(), w=vw(); const dx=e.clientX-sx,dy=e.clientY-sy; if(Math.abs(dx)+Math.abs(dy)>4) moved=true; vx=svx-(dx/r.width)*w; vy=svy-(dy/r.height)*w; clampView(); applyView(); });
+window.addEventListener('pointerup',()=>{ if(!panning) return; panning=false; wrap.style.cursor=scale>1?'grab':'default'; if(moved){ suppressClick=true; setTimeout(()=>{suppressClick=false;},0); } });
+document.getElementById('zin').addEventListener('click',()=>{ const r=wrap.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,scale*1.6); });
+document.getElementById('zout').addEventListener('click',()=>{ const r=wrap.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,scale/1.6); });
+document.getElementById('zreset').addEventListener('click',resetZoom);
+
+applySel();
+</script>
+</body>
+</html>

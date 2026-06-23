@@ -1,0 +1,35 @@
+{
+  "technique_id": "ORBITING_GLIDING",
+  "name": "Orbiting — Gliding",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "The lightest circular touch: barely moving the skin, floating gently across the surface (often the wet hood) without friction resistance.",
+  "detailed_description": "Gliding is the softest end of the orbiting pressure range. Fingers or tongue tip skim across the surface—usually the lubricated hood—so lightly that the skin underneath barely moves. Ideal for sensitive clits, early arousal, or as a contrast point when alternating with firmer pressure.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Ensure the surface is lubricated (natural wetness or added lube).",
+    "2. Make feather-light contact, circling so gently the skin barely moves.",
+    "3. Float across the surface without friction or dragging the tissue.",
+    "4. Keep it continuous; use as a gentle build or as contrast before firmer pressure."
+  ],
+  "safety_notes": [
+    "If contact drags or catches, add lubrication.",
+    "Lightest pressure suits very sensitive clits and early arousal."
+  ],
+  "tags": ["orbiting", "gliding", "light-touch", "circles", "hood"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Orbiting (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORBITING_CIRCLING_THE_CLIT",
+    "pressure_level": 1,
+    "pressure_label": "lightest"
+  }
+}

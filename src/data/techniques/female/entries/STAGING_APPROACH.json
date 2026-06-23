@@ -1,0 +1,36 @@
+{
+  "technique_id": "STAGING_APPROACH",
+  "name": "Staging — Approach",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Once the orgasm is clearly building, stick with one motion from build-up done consistently—no variation or interruption. As the point of no return nears, waves build and muscles below the opening contract rhythmically.",
+  "detailed_description": "In the approach stage, consistency is everything: maintain the exact motion established during build-up—same pressure, rhythm, timing, and pace—without deviation. As arousal crests, the receiver may feel waves building, with involuntary contractions of the muscles below the opening and tightening of the glutes. Changing the motion now can break the climb; hold steady through the point of no return.",
+  "body_areas": ["clitoris", "vulva", "pelvic floor"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Identify the one motion that's working from build-up.",
+    "2. Repeat it consistently—same pressure, rhythm, timing, and pace.",
+    "3. Do not vary, pause, or move away once the orgasm is clearly building.",
+    "4. Expect involuntary signs—rhythmic contractions below the opening, glutes tightening.",
+    "5. Hold steady through the point of no return."
+  ],
+  "safety_notes": [
+    "Resist the urge to 'improve' the motion now—consistency matters more than novelty.",
+    "If the receiver signals to stop, stop regardless of how close the climax is."
+  ],
+  "tags": ["staging", "approach", "consistency", "point-of-no-return", "single-motion"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 4,
+    "body_signs": ["rhythmic contraction of muscles below the opening", "involuntary glute tightening"]
+  }
+}

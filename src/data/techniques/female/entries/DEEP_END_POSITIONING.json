@@ -1,0 +1,35 @@
+{
+  "technique_id": "DEEP_END_POSITIONING",
+  "name": "Deep End — Positioning for Depth",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Body position changes how reachable the deep end is. Knees-to-chest shortens the distance and brings the cervical area closer for safer contact; legs extended creates a deeper angle that's harder to reach comfortably.",
+  "detailed_description": "Positioning sets up safe, comfortable deep-end access. Raising the knees all the way to the chest effectively shortens the distance to the deep end, making the cervical area naturally closer and easier to contact. By contrast, keeping the legs straight/extended creates a deeper angle that makes the back wall harder to reach and stimulate comfortably.",
+  "body_areas": ["cervix", "back wall", "deep vagina"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. For easier access, raise the knees all the way to the chest.",
+    "2. Notice the deep end is now closer and easier to contact safely.",
+    "3. To reduce depth/contact, extend the legs straight instead (deeper angle, harder to reach).",
+    "4. Pick the position that makes gentle, controlled contact comfortable.",
+    "5. Combine with thorough warmup and lube before deep contact."
+  ],
+  "safety_notes": [
+    "Use positioning to keep contact controlled, not forceful.",
+    "Adjust if any position causes pinching or pain."
+  ],
+  "tags": ["deep-end", "positioning", "knees-to-chest", "legs-extended", "depth"],
+  "related_zone_ids": ["cervix", "vaginal_posterior_wall"],
+  "references": [
+    { "title": "OMGYES — Deep End (Season Two)", "url": "https://www.omgyes.com" }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "DEEP_END_EXPLORATION",
+    "positions": [
+      { "id": "knees_to_chest", "name": "Knees-to-Chest", "effect": "Shortens distance to the deep end; cervical area closer and easier to contact." },
+      { "id": "legs_extended", "name": "Legs Extended", "effect": "Deeper angle; harder to reach or comfortably stimulate the back wall." }
+    ]
+  }
+}

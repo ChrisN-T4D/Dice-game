@@ -1,0 +1,36 @@
+{
+  "technique_id": "STAGING_BUILD_UP",
+  "name": "Staging — Build-Up",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "The stage where an orgasm first appears on the horizon—and the most fragile. Experiment with subtle details (small pressure, rhythm, and pace changes) to find what escalates, while keeping continuity so the build isn't lost.",
+  "detailed_description": "Build-up is described as the hardest stage and the easiest to lose. Subtle differences make all the difference here: small adjustments in pressure level, rhythm, and pace can find the path that escalates pleasure. But stopping, getting distracted, or abruptly breaking the established rhythm can break momentum and force a restart from an earlier phase. The goal is responsive experimentation without losing flow.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Once an orgasm starts to feel possible, treat continuity as priority.",
+    "2. Experiment with subtle details—small changes in pressure, rhythm, and pace.",
+    "3. Notice which adjustments escalate sensation and lean into them.",
+    "4. Avoid stopping, distraction, or abruptly breaking the established rhythm.",
+    "5. If momentum breaks, ease back to an earlier stage and rebuild rather than forcing it."
+  ],
+  "safety_notes": [
+    "Don't sacrifice the receiver's comfort for momentum—check in if something feels off.",
+    "Losing the build is normal; rebuild patiently instead of pushing harder."
+  ],
+  "tags": ["staging", "build-up", "fragile-stage", "subtle-adjustments", "continuity"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Staging (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "STAGING_AROUSAL_PHASES",
+    "stage_order": 3,
+    "warning": "Most fragile stage—the orgasm can be lost if the pattern changes, the partner gets distracted, or the rhythm breaks."
+  }
+}

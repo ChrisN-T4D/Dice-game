@@ -1,0 +1,44 @@
+{
+  "technique_id": "ORGASM_DUAL_SIMULTANEOUS",
+  "name": "Dual Orgasm — Simultaneous Clitoral and Internal",
+  "receiver_anatomy": "female",
+  "category": "orgasm",
+  "summary": "Clitoral and internal orgasms timed to peak together rather than one after the other—stronger for many than sequential climaxes. Requires coordination, double-edging, and often practice solo or with a partner.",
+  "detailed_description": "Dual orgasms combine external (clitoral) and internal (e.g. G-region) release in the same wave. Technique called double-edging: approach one orgasm type, back off the brink, then advance the other, repeating until both systems are near peak and can erupt together. Sequential orgasms feel good but often lack the compounded intensity of simultaneous release. OMGYES demo (Angie): solo setup uses a pillow to hold position while a dildo contacts the G-region, freeing both hands for clitoral stimulation—when internal peak nears, clitoral intensity ramps faster so both crest align. Partnered dual orgasms need the same precision: communication about which edge is closer and when to intensify the other channel.",
+  "body_areas": ["clitoris", "G-region", "vagina"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Practice clitoral and internal orgasms separately first so each pathway is familiar.",
+    "2. Begin stimulation on both channels at moderate intensity—internal (fingers, toy, or partner) plus clitoral touch.",
+    "3. Double-edge: when close to one orgasm type, ease off slightly without stopping entirely; build the other channel.",
+    "4. Alternate edges gradually, increasing proximity to climax on each pass.",
+    "5. As both approach peak, increase clitoral (or internal) intensity faster in the final moments to synchronize the waves.",
+    "6. Solo option: prop hips with a pillow, use internal toy for G-region contact, both hands free for clitoral stimulation."
+  ],
+  "safety_notes": [
+    "Over-stimulation from chasing dual climax can cause numbness or frustration—rest and retry another session.",
+    "Ensure toys and hands are lubricated; avoid sharp angle changes during high arousal.",
+    "Partnered timing requires clear verbal or nonverbal signals near the edge."
+  ],
+  "tags": ["orgasm", "dual", "simultaneous", "double-edging", "clitoral", "internal", "coordination"],
+  "related_zone_ids": ["clitoral_glans", "vaginal_anterior_wall", "vagina"],
+  "references": [
+    {
+      "title": "OMGYES — Different Kinds of Orgasm (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Angie hands-free solo demo with pillow prop and synchronized peak timing."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORGASM_TYPES_VARIED_EXPERIENCE",
+    "technique_alias": "double-edging",
+    "difficulty": "high — requires coordination or advanced solo setup",
+    "solo_setup_example": {
+      "name": "Angie (OMGYES demo)",
+      "description": "Pillow supports position; dildo on G-region; both hands on clitoris; ramp clitoral speed as internal peak approaches for simultaneous release."
+    },
+    "versus_sequential": "Sequential internal then clitoral (or reverse) feels good but simultaneous dual peak is described as more intense when timing succeeds."
+  }
+}

@@ -40,10 +40,29 @@ function modalityOk(profile, mod) {
   return true
 }
 
+/**
+ * Internal-deep zones (canal walls, cervix, prostate) admit only a slim finger —
+ * a palm/thumb/tongue/lip/breath physically cannot reach them. Keeps generated
+ * prose ("a loose palm on the anterior wall") honest and feasible.
+ */
+const INTERNAL_DEEP_ZONES = new Set([
+  'vagina',
+  'vaginal_anterior_wall',
+  'vaginal_posterior_wall',
+  'vaginal_lateral_wall',
+  'cervix',
+  'cervical_os',
+  'prostate',
+])
+const INTERNAL_REACH_STIMULATORS = new Set(['finger', 'fingertip'])
+
 /** @param {Blueprint} bp @param {object} profile @param {string} [zoneId] */
 export function blueprintAllowed(bp, profile, zoneId = '') {
   if (!techniques(profile).has(bp.technique)) return false
   if (!modalityOk(profile, bp.modality)) return false
+  if (INTERNAL_DEEP_ZONES.has(zoneId) && !INTERNAL_REACH_STIMULATORS.has(bp.stimulator)) {
+    return false
+  }
   if (bp.when && !bp.when(profile, zoneId)) return false
   return true
 }
@@ -179,20 +198,6 @@ export const ACTION_BLUEPRINTS = [
     instruction: blueprintInstruction('tap_thumb_pulse'),
   },
   {
-    id: 'pressure_palm_hold',
-    technique: 'pressure',
-    modality: 'hand',
-    stimulator: 'palm',
-    pressure: 'medium',
-    tempo: 'low',
-    friction: 'low',
-    contact: (z, p) =>
-      deepZone(p)
-        ? { footprint: 'patch', coverage: 'partial' }
-        : { footprint: 'patch', coverage: 'full' },
-    instruction: blueprintInstruction('pressure_palm_hold'),
-  },
-  {
     id: 'pressure_thumb_point',
     technique: 'pressure',
     modality: 'hand',
@@ -296,6 +301,17 @@ export const ACTION_BLUEPRINTS = [
     instruction: blueprintInstruction('mouth_lip_nibble_kiss'),
   },
   {
+    id: 'stroke_lip_glide',
+    technique: 'stroke',
+    modality: 'mouth',
+    stimulator: 'lip',
+    pressure: 'low',
+    tempo: 'low',
+    friction: 'medium',
+    contact: { footprint: 'patch', coverage: 'partial' },
+    instruction: blueprintInstruction('stroke_lip_glide'),
+  },
+  {
     id: 'mouth_lip_suction',
     technique: 'kiss',
     modality: 'mouth',
@@ -305,17 +321,6 @@ export const ACTION_BLUEPRINTS = [
     friction: 'low',
     contact: { footprint: 'patch', coverage: 'partial' },
     instruction: blueprintInstruction('mouth_lip_suction'),
-  },
-  {
-    id: 'mouth_lip_press_hold',
-    technique: 'pressure',
-    modality: 'mouth',
-    stimulator: 'lip',
-    pressure: 'medium',
-    tempo: 'low',
-    friction: 'low',
-    contact: { footprint: 'patch', coverage: 'partial' },
-    instruction: blueprintInstruction('mouth_lip_press_hold'),
   },
   {
     id: 'mouth_tongue_vibrate',
@@ -391,6 +396,18 @@ export const ACTION_BLUEPRINTS = [
     when: (p) => deepZone(p) || !smallZone(p),
   },
   {
+    id: 'pressure_finger_curl',
+    technique: 'pressure',
+    modality: 'hand',
+    stimulator: 'finger',
+    pressure: 'medium',
+    tempo: 'low',
+    friction: 'medium',
+    contact: { footprint: 'patch', coverage: 'partial' },
+    instruction: blueprintInstruction('pressure_finger_curl'),
+    when: (p, zoneId) => INTERNAL_DEEP_ZONES.has(zoneId),
+  },
+  {
     id: 'circle_palm_roll',
     technique: 'circle',
     modality: 'hand',
@@ -447,6 +464,17 @@ export const ACTION_BLUEPRINTS = [
     instruction: blueprintInstruction('pressure_finger_spread'),
   },
   {
+    id: 'pressure_finger_walk',
+    technique: 'pressure',
+    modality: 'hand',
+    stimulator: 'finger',
+    pressure: 'medium',
+    tempo: 'low',
+    friction: 'medium',
+    contact: { footprint: 'point', coverage: 'partial' },
+    instruction: blueprintInstruction('pressure_finger_walk'),
+  },
+  {
     id: 'circle_tongue_slow_loop',
     technique: 'circle',
     modality: 'mouth',
@@ -468,17 +496,6 @@ export const ACTION_BLUEPRINTS = [
     contact: { footprint: 'patch', coverage: 'partial' },
     instruction: blueprintInstruction('stroke_palm_vibrate'),
     when: (p) => !smallZone(p),
-  },
-  {
-    id: 'mouth_tongue_still_heat',
-    technique: 'stroke',
-    modality: 'mouth',
-    stimulator: 'tongue',
-    pressure: 'very_low',
-    tempo: 'very_low',
-    friction: 'low',
-    contact: { footprint: 'point', coverage: 'partial' },
-    instruction: blueprintInstruction('mouth_tongue_still_heat'),
   },
   {
     id: 'mouth_tongue_angled_streak',

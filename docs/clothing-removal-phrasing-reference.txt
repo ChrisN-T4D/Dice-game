@@ -1,0 +1,231 @@
+================================================================================
+CLOTHING-REMOVAL PHRASING REFERENCE
+Striptease / burlesque wording for guided-mode clothing removal prompts.
+For both male and female removal, self-strip and partner-removal framings.
+Compiled from web research (see SOURCES) + phrases currently implemented in
+src/data/clothing.js. Use this as the idea bank when tuning removalVerb /
+removalManners.
+================================================================================
+
+--------------------------------------------------------------------------------
+0. CORE PRINCIPLES (apply to all garments, both genders)
+--------------------------------------------------------------------------------
+- The key word is TEASE. Build anticipation; do not rush to be naked.
+- Pace with PAUSES: after each reveal, hold a beat and let it land. The pause is
+  "breath time" the partner fills with anticipation.
+- Use MICRO-MOVEMENTS: small hip shifts, a tilt of the waist, a lingering gaze.
+- EYE CONTACT throughout; the partner's eyes follow your hands, so let your hands
+  guide attention (trace your body / their body as fabric comes off).
+- Show off each newly bared part as you reveal it (reveal -> cover -> reveal).
+- CONFIDENCE and a little HUMOR read sexier than perfect technique.
+- Two tempos: slow & sensual for the tease, OR a quick "rip it off" for surprise.
+- Concrete tempo beats > vague pacing: "to the rhythm of the music", a slow
+  ten-count, one slow beat at a time, a full slow ten seconds.
+
+--------------------------------------------------------------------------------
+1. PACING / TEMPO CUES (any garment, either person)
+--------------------------------------------------------------------------------
+- slowly
+- to the rhythm of the music
+- over a slow ten-count
+- taking a full, slow ten seconds
+- one slow beat at a time
+- pausing after the reveal to let it land
+- revealing a little, then a little more
+
+--------------------------------------------------------------------------------
+2. PRESENCE / EYE CONTACT / SHOWMANSHIP (any garment)
+--------------------------------------------------------------------------------
+- holding their gaze the whole time
+- with a slow smoulder, never breaking their gaze
+- with a teasing smile
+- watching their reaction            (partner-removal)
+- turning to show the front, then the back
+- tossing it aside once it clears
+- tossing it at them                 (playful / surprise)
+
+--------------------------------------------------------------------------------
+3. PEEK-A-BOO / TEASE (skin-revealing garments)
+--------------------------------------------------------------------------------
+- tugging at it first as if you might not
+- leaving it half-on a moment to make them ache for it
+- making them wait for the full reveal
+- tracing the edge before you let it go
+
+================================================================================
+FEMALE-LEANING / BURLESQUE TECHNIQUES
+================================================================================
+
+--------------------------------------------------------------------------------
+4. THE GLOVE PEEL  (opera gloves — NOT yet a wardrobe item; candidate to add)
+--------------------------------------------------------------------------------
+- peeling it off finger by finger
+- using your teeth to tease each finger loose, starting with the pinky
+- arching your back and tossing the glove aside on the last tug
+- one hand, then the other, flirting between each
+
+--------------------------------------------------------------------------------
+5. THE STOCKING PEEL  (Stockings / thigh-highs)
+--------------------------------------------------------------------------------
+- sliding a hand down the leg first, then peeling it off
+- propping a foot up to peel it down the leg
+- foot up, back arched, peeling it down slow
+- peeling it down the leg with the toe pointed
+- catching the edge in your teeth and peeling it off   (self)
+- lifting their foot to roll it down the leg            (partner)
+- sliding a hand down their leg before you roll it off  (partner)
+- placing a foot on the bed and arching the back
+
+--------------------------------------------------------------------------------
+6. BRA / STRAPS / SHOULDERS  (Bra, Bralette, dresses, tops)
+--------------------------------------------------------------------------------
+- one strap at a time
+- one clasp at a time                       (bra)
+- baring one shoulder, then the other
+- turning around to show off your back first (self)
+- shimmying it off your shoulders before it drops (self)
+- easing the straps down with your mouth     (partner)
+
+  -- The bra reveal (cover the breasts until the last moment) --
+- unclasping it but holding the cups in place, covering the breasts a moment longer
+- turning your back, unclasping it, then turning around holding it to your chest
+- letting it fall away only once you turn back to face them
+- crossing an arm over your chest as it comes loose, then slowly lowering it
+- holding the cups, then peeling them away one at a time to bare the nipples
+- letting the straps slip first, teasing, before you finally let the cups drop
+
+--------------------------------------------------------------------------------
+7. THE SLOW REVEAL / HIP WORK  (skirts, dresses, panties, bottoms)
+--------------------------------------------------------------------------------
+- swaying your hips as it slides down
+- dipping low as it slides past your hips
+- wiggling it down over your hips
+- swaying side to side to work it past your hips
+- turning your back as you let it drop
+- snapping the waistband once before easing it down
+- then letting it fall to step out of it
+
+--------------------------------------------------------------------------------
+8. SKIN REVEALS (general, self-strip)
+--------------------------------------------------------------------------------
+- pausing to show off every newly bared inch
+- arching your back as you ease it off
+- running a slow hand down the skin you just bared
+- biting your lip as more skin shows
+- flashing a teasing look as it comes free
+- rolling your shoulders back to show it off
+- tracing a hand down your body as it comes off
+
+--------------------------------------------------------------------------------
+8b. SKIN REVEALS (general, partner-removal)
+--------------------------------------------------------------------------------
+- pausing to admire every newly bared inch
+- kissing each patch of skin as you uncover it
+- letting your fingertips trail the skin you bare
+- grazing the freshly bared skin with your lips
+- tracing a hand down their body as it comes off
+- turning them away to ease it off from behind
+
+================================================================================
+MALE-LEANING / "MAGIC MIKE" TECHNIQUES
+================================================================================
+
+--------------------------------------------------------------------------------
+9. THE BUTTON-UP SHIRT  (Shirt, Cardigan)
+--------------------------------------------------------------------------------
+- one button at a time, each its own little reveal
+- undoing it slowly, button by button
+- flashing a glimpse of skin with each button undone
+- once it's open, slipping it off the shoulders and turning your back to let it fall
+- parting it to kiss the skin you reveal      (partner)
+
+--------------------------------------------------------------------------------
+10. THE T-SHIRT / PULLOVER  (T-shirt, Undershirt, Tank top, Top)
+--------------------------------------------------------------------------------
+- crossing your arms to grip the hem, then peeling it up slow   (self)
+- gathering the hem in both hands first                         (partner)
+- pulling it over your head and tossing it at them              (quick surprise)
+- gripping the lower hem instead of the collar to peel it up
+
+--------------------------------------------------------------------------------
+11. THE BELT PULL  (Belt — a signature male move)
+--------------------------------------------------------------------------------
+- drawing it slowly out of the loops
+- drawing it free in one slow pull            (partner)
+- whipping it free from behind in one slow pull (self)
+- grabbing both ends, unbuckling, and pulling it free in one motion
+
+--------------------------------------------------------------------------------
+12. PANTS / TROUSERS  (Pants, Sweatpants, Shorts, Bottom)
+--------------------------------------------------------------------------------
+- stepping out one leg at a time (slowly, so a foot doesn't catch)
+- swaying your hips as you shimmy out of it
+- pushing them down to the knees while kneeling, then sliding them off
+- unzipping slow to tease a peek before easing them down
+
+--------------------------------------------------------------------------------
+12b. MEN'S UNDERWEAR REVEAL  (Underwear / Boxers / Briefs)
+--------------------------------------------------------------------------------
+- easing the waistband down slowly, tucking the penis behind it until the last moment
+- holding the band down low, keeping the penis tucked behind it, then letting it
+  spring free for the reveal
+- peeling the band down and letting the penis bounce free
+- snapping the waistband once, then easing it down until the penis springs free
+- turning sideways so they catch the reveal from the side
+
+--------------------------------------------------------------------------------
+13. FOOT-BETWEEN-THE-LEGS FINISH (classic close)
+--------------------------------------------------------------------------------
+- placing one foot on their lap or beside them, then peeling down the leg
+- ending on a provocative pose or a "look, don't touch" beat
+
+================================================================================
+GARMENT GAPS / CANDIDATES TO ADD TO THE WARDROBE
+================================================================================
+- Men's underwear is generic ("Underwear"); consider Boxers / Briefs /
+  Boxer-briefs as distinct items with their own verbs.
+- No Opera Gloves item (section 4 unused) — strong burlesque staple.
+- No Tie / Bowtie (a natural male tease: loosening / pulling slowly free).
+
+================================================================================
+NOTES ON CURRENT CODE MODEL (src/data/clothing.js)
+================================================================================
+- removalVerb[item]: the mechanical action template, e.g.
+    Bra      -> "unclasp {item} and slide the straps down"
+    Shirt    -> "unbutton {item} and slide it off the shoulders"
+    Belt     -> "unbuckle {item}"
+    Pants    -> "slide {item} down over the hips"
+    Stockings-> "roll {item} down the legs"
+  {item} renders as "your X" (self) or "Sam's X" (partner).
+- removalManners[]: flourish appended after the verb. Each manner has:
+    lead       : adverb before the verb ('' or 'slowly')
+    trail      : clause appended after a comma (the phrase)
+    allow      : category gate (null = any), categories from garmentCategory()
+    allowItems : exact item-name gate (e.g. ['Belt'], ['Shirt','Cardigan'])
+    mode       : 'both' | 'partner' | 'self'
+- Keep verbs mechanical and manners as presence/pacing so they don't repeat the
+  same action (avoid "lift ... up and off" + "lift it up and off").
+
+================================================================================
+SOURCES
+================================================================================
+- Howcast: Reveal & Peel Techniques in Burlesque Dance
+    howcast.com/videos/507574-reveal-peel-techniques-burlesque-dance/
+- Howcast: How to Do a Glove Peel Burlesque Move
+    howcast.com/videos/507576-how-to-do-a-glove-peel-burlesque-dance/
+- Howcast: How to Do a Stocking Peel Burlesque Move
+    howcast.com/videos/507575-how-to-do-a-stocking-peel-burlesque-dance/
+- Burlesque With Paris: Top Five Striptease Techniques in Burlesque
+    burlesquewithparis.co.uk/blog/2025/1/2/the-alluring-dance
+- Filthy Adult: The Art of the Reveal: Pacing
+    filthyadult.com/onlyfans/best/striptease/the-art-of-the-reveal-pacing/
+- Men's Health: How to Perform a Sexy Striptease Like Magic Mike
+    menshealth.com/sex-women/a29609400/striptease-magic-mike/
+- wikiHow: How to Take Off Clothes in a Sexy Way
+    wikihow.com/Take-off-Clothes-in-a-Sexy-Way
+- wikiHow: How to Perform a Striptease
+    wikihow.com/Perform-a-Striptease
+- YourTango: The Man's Guide To How To Perform A Strip Tease For A Woman
+    yourtango.com/2017302141/mans-guide-how-perform-strip-tease-woman
+- Grindr: Sexy Strip Tease: How to Strip Tease to Turn Him On
+    grindr.com/blog/how-to-striptease

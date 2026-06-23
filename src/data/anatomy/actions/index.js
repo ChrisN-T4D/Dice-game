@@ -7,6 +7,12 @@ import allZones from './all_zones.js'
 import clitoris_hierarchy from './clitoris_hierarchy.js'
 import { sequenceCatalog } from './sequences/index.js'
 import { parseSequenceMeta } from './_makeSequenceAction.js'
+import {
+  omgyesTechniqueActions,
+  omgyesByZone,
+  omgyesByReceiver,
+  omgyesByFamily,
+} from './omgyes-techniques.js'
 
 /** @type {Record<string, import('./_makeAction.js').Action[]>} */
 function mergeSequences(base) {
@@ -25,5 +31,26 @@ export const zoneActions = mergeSequences({
   ...clitoris_hierarchy,
 })
 
-export { sequenceCatalog }
+/**
+ * zoneActions plus the OMGYES technique layer merged per zone. Use this when
+ * you want the named research techniques available alongside the baseline set;
+ * the strict per-zone count audit runs against `zoneActions` only.
+ */
+export const zoneActionsWithTechniques = (() => {
+  const merged = {}
+  for (const [zone, list] of Object.entries(zoneActions)) merged[zone] = [...list]
+  for (const [zone, list] of Object.entries(omgyesByZone)) {
+    if (!merged[zone]) merged[zone] = []
+    merged[zone] = [...merged[zone], ...list]
+  }
+  return merged
+})()
+
+export {
+  sequenceCatalog,
+  omgyesTechniqueActions,
+  omgyesByZone,
+  omgyesByReceiver,
+  omgyesByFamily,
+}
 export default zoneActions

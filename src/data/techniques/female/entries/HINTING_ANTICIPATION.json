@@ -1,0 +1,51 @@
+{
+  "technique_id": "HINTING_ANTICIPATION",
+  "name": "Hinting — The Sweet Ache of Anticipation",
+  "receiver_anatomy": "female",
+  "category": "tease",
+  "summary": "Hinting builds pleasure through sustained, irregular teasing: repeatedly approaching sensitive areas without fully indulging them—like driving past a house without knocking yet. Playful fake-outs keep anticipation high across the session instead of rushing to climax, so the eventual release is bigger.",
+  "detailed_description": "The core principle is less direct contact plus many near-touches, which builds a larger eventual release than immediate gratification. Hinting works best as a warmup and throughout play, not just at the start. OMGYES describes three targets—the whole area, the opening, and the clitoris—plus fine-tuning rules: keep touch light, stay irregular and unpredictable, repeat enough sets to build, give it several minutes, and don't over-tease with constant near-misses. Slow each near-miss stroke so the 'almost' lingers.",
+  "body_areas": ["vulva", "clitoris", "vaginal opening", "inner thighs", "mons pubis", "labia"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Begin during warmup, before direct clitoral contact or penetration.",
+    "2. Approach a sensitive target, then veer away at the last moment—repeat as playful fake-outs.",
+    "3. Keep pressure light; hinting depends on teasing, not force.",
+    "4. Stay irregular—avoid predictable patterns like grazing on every third pass.",
+    "5. Repeat over many sets across several minutes; a few hints alone won't build much.",
+    "6. Space out the near-misses; too many 'almost' touches cause habituation.",
+    "7. Slow each near-miss stroke so the anticipation lingers."
+  ],
+  "safety_notes": [
+    "Excessive teasing can tip into frustration—read feedback and indulge when it's wanted.",
+    "Light touch only; heavy pressing defeats the purpose and can desensitize.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["hinting", "teasing", "anticipation", "edging-adjacent", "warmup", "external", "light-touch"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "vaginal_introitus", "labia_majora", "mons_pubis"],
+  "references": [
+    {
+      "title": "OMGYES — Hinting (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Educational resource; technique names and prevalence stats from Herbenick-led research."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "HINTING_ENTIRE_AREA",
+      "HINTING_THE_OPENING",
+      "HINTING_THE_CLIT"
+    ],
+    "fine_tuning": {
+      "repetition": "Repeat hinting many times; a few sets rarely build noticeable anticipation.",
+      "light_touch": "Less pressure is better—heavy pressing defeats the teasing effect.",
+      "get_irregular": "Avoid predictable patterns (e.g. grazing on every third pass); unpredictability keeps it fresh.",
+      "not_too_brief": "Allow several minutes for anticipation to build.",
+      "not_too_often": "Use fewer 'almost' touches; space out near-misses to avoid habituation.",
+      "elongate_the_almost": "Slow the stroke so each near-miss lingers rather than being a quick dismissal."
+    }
+  }
+}

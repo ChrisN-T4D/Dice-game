@@ -1,0 +1,46 @@
+{
+  "technique_id": "ORBITING_CIRCLING_THE_CLIT",
+  "name": "Orbiting — The Many Ways of Circling the Clit",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Circular motion is one of the most pleasurable techniques, but there's huge variety in circles. One woman's favorite circle can mean nothing to another because hotspots differ and even change daily. Two variables define how a circle feels: location (through the hood vs. more direct) and pressure level.",
+  "detailed_description": "OMGYES reports about 8 out of 10 women love some form of continuous circular motion. Continuous circles feel good because they stimulate a wide area as sensitivity shifts and new hotspots emerge during arousal. The same circle changes dramatically based on where contact lands (lightly over the wet hood vs. more directly on sensitive tissue underneath) and how much pressure is applied. Pressure ranges across three levels—gliding, moving the skin, and firm massage—and some women love alternating between gliding and firm massage within the same sequence. The most intense sensation comes from more direct contact; each millimeter and each degree of pressure changes the experience, so adjust both variables to what's working in the moment.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Start a continuous circular motion over the clitoral area.",
+    "2. Set location: lightly over the hood, or more directly toward the sensitive tissue underneath.",
+    "3. Set pressure: gliding, moving the skin, or firm massage.",
+    "4. Adjust location and pressure together based on what's working right now.",
+    "5. Optionally alternate gliding and firm massage within the same sequence to build intensity.",
+    "6. Re-check as arousal shifts—hotspots emerge and move during a session and day to day."
+  ],
+  "safety_notes": [
+    "More direct contact is more intense—approach it gradually, especially before full arousal.",
+    "Keep the hood as a buffer if the glans is too sensitive for direct circles.",
+    "Adults in consensual contexts only; not a substitute for professional care."
+  ],
+  "tags": ["orbiting", "circles", "circular", "clitoral", "pressure", "location", "continuous"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Orbiting (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "8 out of 10 women love some form of continuous circular motion."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "source": "OMGYES article summary",
+    "child_technique_ids": [
+      "ORBITING_GLIDING",
+      "ORBITING_MOVING_SKIN",
+      "ORBITING_FIRM_MASSAGE"
+    ],
+    "key_statistic": "8 out of 10 women love some form of continuous circular motion.",
+    "key_variables": ["location (through hood vs. more direct)", "pressure level"],
+    "combo_note": "Some women love alternating circular gliding and firm massage within the same movement sequence to build intensity.",
+    "intensity_note": "Most intense sensation comes from more direct contact; each millimeter of position and degree of pressure changes how it feels."
+  }
+}

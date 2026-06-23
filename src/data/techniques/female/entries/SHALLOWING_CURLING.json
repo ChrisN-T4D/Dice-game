@@ -1,0 +1,32 @@
+{
+  "technique_id": "SHALLOWING_CURLING",
+  "name": "Shallowing — Curling",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "Corrine's 'little flick': start above the opening and curl downward so the tip drags against the bottom wall on entry, then lightly curl upward to touch the top wall on exit—cycling pressure points around the entrance zone.",
+  "detailed_description": "Curling works the walls of the entrance zone with a small flicking motion. From a position above the opening, curl downward so the fingertip, toy head, or penis tip drags along the bottom vaginal wall as it enters, then curl gently upward to brush the top wall as it exits. Repeating this cycles stimulation across the entrance's wall surfaces.",
+  "body_areas": ["vaginal opening", "vaginal walls"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Position the tip just above the opening.",
+    "2. Curl downward on entry so the tip drags against the bottom wall.",
+    "3. Lightly curl upward on exit to touch the top wall.",
+    "4. Repeat the down-up cycle, staying shallow.",
+    "5. Keep it slow and well-lubricated."
+  ],
+  "safety_notes": [
+    "Keep depth shallow; this is an entrance-zone technique.",
+    "Use lube to keep wall contact smooth."
+  ],
+  "tags": ["shallowing", "curling", "little-flick", "walls", "entrance"],
+  "related_zone_ids": ["vaginal_introitus", "vaginal_anterior_wall", "vaginal_posterior_wall"],
+  "references": [
+    { "title": "OMGYES — Shallowing (Season Two)", "url": "https://www.omgyes.com", "note": "Corrine's 'little flick'." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "SHALLOWING_ENTRANCE_PLEASURE",
+    "best_for": "Repeated stimulation of the entrance walls."
+  }
+}

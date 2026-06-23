@@ -1,0 +1,37 @@
+{
+  "technique_id": "EDGING_PAUSE",
+  "name": "Edging — Pause Edging",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Stop all touch completely just before orgasm, wait until the impending feeling is gone, then start over from warmup. Most time-consuming but leads to the most intense pleasure. Used by about 35% of edgers.",
+  "detailed_description": "Pause edging is the most complete form of backing off: all stimulation stops just before climax. The break can range from a minute to several hours, depending on what works. After the urge subsides, stimulation restarts from initial warmup. It's the slowest method but is associated with the most intense release. Some people struggle to rebuild after a full stop—if so, the continuous variation is a better fit.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Build until orgasm is just about to hit.",
+    "2. Stop all touch completely.",
+    "3. Wait until the impending-orgasm feeling fully fades (a minute up to several hours).",
+    "4. Restart from initial warmup and build again.",
+    "5. Repeat as desired before finally allowing climax."
+  ],
+  "safety_notes": [
+    "If you can't rebuild after stopping, switch to continuous edging.",
+    "Stopping when close is frustrating but expected."
+  ],
+  "tags": ["edging", "pause", "full-stop", "intense", "slow"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Edging (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Used by ~35% of edgers; most time-consuming, most intense."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "EDGING_APPROACH_AND_EASE",
+    "usage_stat": "Used by about 35% of edgers.",
+    "tradeoff": "Most time-consuming but most intense."
+  }
+}

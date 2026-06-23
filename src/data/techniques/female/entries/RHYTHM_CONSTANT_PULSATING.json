@@ -1,0 +1,37 @@
+{
+  "technique_id": "RHYTHM_CONSTANT_PULSATING",
+  "name": "Rhythm — Constant Pulsating (Flutter Mode)",
+  "receiver_anatomy": "female",
+  "category": "rhythm",
+  "summary": "Move so fast that individual strokes blur into a flutter—maintaining unbroken contact and steady pressure while micro-movements create a vibrator-like pulsation at the skin surface.",
+  "detailed_description": "Also called flutter mode. The hand, tongue, or toy vibrates back and forth with each stroke barely completing before the next begins. Physical contact never breaks; pressure stays relatively constant while rapid oscillation sends ripple-like sensation through the contact point. OMGYES testimonials describe using this from start to finish for partners who want one sustained wave of stimulation rather than separated beats.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Establish comfortable contact on the chosen area (often hood or glans, depending on sensitivity).",
+    "2. Flutter rapidly back and forth—small amplitude, high frequency—without lifting off between cycles.",
+    "3. Keep pressure steady; let speed and micro-motion do the work rather than pressing harder.",
+    "4. Sustain the flutter through a phase or the full session if that matches the receiver's preference.",
+    "5. Ease off gradually rather than stopping abruptly if sensitivity spikes."
+  ],
+  "safety_notes": [
+    "Flutter on bare glans can be too intense for some—consider hood layering or lighter pressure.",
+    "Fatigue in hand or jaw (if oral) limits duration; switch hands or rhythm if needed.",
+    "Stop if burning, numbness, or oversensitivity occurs."
+  ],
+  "tags": ["rhythm", "flutter", "pulsating", "vibration-like", "continuous", "micro-movement"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Rhythm (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "RHYTHM_PATTERNED_PLEASURE",
+    "pattern_character": "rapid micro-oscillation with unbroken contact",
+    "aliases": ["flutter mode"]
+  }
+}

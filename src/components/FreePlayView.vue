@@ -111,7 +111,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useSpeech } from '@/composables/useSpeech'
 import { phase1And2Tables, phase3Modifiers, randomRollsForPhase } from '@/data/tables'
 import { getPhase3PositionName, getPhase3PositionHelp, PHASE3_POSITIONS_LIST } from 'phase3-data'
-import { clothingTable, getClothingItemsByBody } from '@/data/clothing'
+import { composeClothingRemoval, getClothingItemsByBody } from '@/data/clothing'
 
 const session = useSessionStore()
 const prefs = usePreferencesStore()
@@ -229,19 +229,13 @@ function pickRandomItem() {
 
 function buildClothingText(howNum) {
   const num = Math.max(1, Math.min(12, howNum || 1))
-  const entry = clothingTable[num]
-  if (!entry) return ''
-  const prefix = (entry.prefix || '').replace(/\{receiver\}/g, 'your partner')
-  const method = (entry.method || '').trim()
+  const items = [pickRandomItem()]
   if (num === 12) {
-    const item1 = pickRandomItem()
     let item2 = pickRandomItem()
-    while (item2 === item1) item2 = pickRandomItem()
-    return `${prefix}: ${item1} and ${item2}: ${method}`
+    while (item2 === items[0]) item2 = pickRandomItem()
+    items.push(item2)
   }
-  const item = pickRandomItem()
-  if (method) return `${prefix} ${item} ${method}`
-  return `${prefix} ${item}`
+  return composeClothingRemoval({ receiverName: 'your partner', items }).text
 }
 
 function rollClothing() {

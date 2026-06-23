@@ -1,0 +1,39 @@
+{
+  "technique_id": "ORGASM_G_REGION",
+  "name": "G-Region Orgasm (Warmup Required)",
+  "receiver_anatomy": "female",
+  "category": "orgasm",
+  "summary": "Internal pleasure from the G-region (anterior vaginal wall and related structures) that often feels neutral or queasy at first but can become warm, shivery, and full-body after adequate arousal and systematic exploration—not sharp, localized clitoral intensity.",
+  "detailed_description": "Early G-region touch is frequently misread as unpleasant because sensitivity has not caught up to stimulation. Users describe successful G-region orgasms as a warm, spreading sensation through the pelvis and torso rather than a single external hot spot. Emotional arousal and extended foreplay matter: OMGYES participant Jessica tried many times without success until a partner combined thorough wall massage with sufficient turn-on time—then the same touch felt completely different and built naturally to orgasm. First attempts failing is normal; warmup and variety prevent zoning out from repetitive motion.",
+  "body_areas": ["G-region", "vaginal anterior wall", "vagina", "pelvis"],
+  "modality": "hand",
+  "stepwise_structure": [
+    "1. Build arousal first—foreplay, emotional connection, and external touch before focusing internally.",
+    "2. Partner inserts two fingers gently; massage vaginal wall surfaces systematically without lingering on one spot too long at the start.",
+    "3. Play a \"warmer/colder\" search: move toward spots that feel electric or intensifying, note the location and pressure, then explore adjacent areas to expand the pleasure map.",
+    "4. Introduce variety periodically so stimulation stays unpredictable and engaging.",
+    "5. If sensation is queasy, reduce pressure, add more external arousal, or pause and retry after more warmup—do not rush to climax.",
+    "6. When a hotspot is found, sustain gentle pressure there with rhythm appropriate to the receiver's feedback."
+  ],
+  "safety_notes": [
+    "Sharp pain or sustained discomfort differs from early \"weird\" G-region sensation—stop or soften if unsure.",
+    "Nails should be trimmed; use ample lubrication.",
+    "Urge to pee can be common with anterior wall stimulation; communicate whether to pause or continue."
+  ],
+  "tags": ["orgasm", "G-region", "G-spot", "internal", "warmup", "vaginal", "exploration"],
+  "related_zone_ids": ["vaginal_anterior_wall", "vagina", "vaginal_introitus"],
+  "references": [
+    {
+      "title": "OMGYES — Different Kinds of Orgasm (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Jessica testimonial: success after extended massage plus emotional arousal."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORGASM_TYPES_VARIED_EXPERIENCE",
+    "sensation_profile": "Warm, shivery, less localized than clitoral; spreads through pelvis and torso.",
+    "common_pitfall": "Giving up after early attempts that feel wrong without sufficient warmup and arousal."
+  }
+}

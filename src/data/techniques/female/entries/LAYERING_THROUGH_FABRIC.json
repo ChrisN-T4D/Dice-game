@@ -1,0 +1,35 @@
+{
+  "technique_id": "LAYERING_THROUGH_FABRIC",
+  "name": "Layering — Through Fabric",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "The softest layering option: stimulate through underwear, sheets, or other fabric so pressure on the clitoral area is cushioned and diffuse.",
+  "detailed_description": "Fabric adds an extra buffer on top of skin layers. Panties, soft clothing, or a sheet can soften impact and spread force over a wider area. This is useful when even hood or labia contact feels too sharp. Fabric layering can be combined with other methods (e.g. gentle pressure through panties while outer labia are squeezed together) for multi-layer cushioning.",
+  "body_areas": ["clitoris", "vulva", "mons pubis"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Leave a soft fabric layer in place (underwear, sheet, or clothing) over the vulva.",
+    "2. Make gentle contact from above through the fabric—avoid digging or sudden jabs.",
+    "3. Use slow slides or light circular pressure over the clitoral region; let the fabric diffuse sensation.",
+    "4. Optionally combine with labia sandwich or hood techniques once comfort is established.",
+    "5. Remove fabric only when the receiver wants more intensity."
+  ],
+  "safety_notes": [
+    "Rough or wet fabric can chafe; switch material or add lubricant on skin if needed.",
+    "Stop if friction causes burning or rawness."
+  ],
+  "tags": ["indirect", "layering", "fabric", "softest", "external", "warmup"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood", "labia_majora"],
+  "references": [
+    {
+      "title": "OMGYES — Layering (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "LAYERING_INDIRECT_STIMULATION",
+    "directness_rank": 1
+  }
+}

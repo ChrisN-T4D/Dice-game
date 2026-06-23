@@ -6,7 +6,10 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { openDatabase, runTransaction } from '../server/src/sqlite-open.js'
-import { zoneActions } from '../src/data/anatomy/actions/index.js'
+// Augmented map = generated baseline (740 across 69 zones) + the curated OMGYES
+// technique layer merged per zone. The strict actions audit still runs against
+// the un-augmented `zoneActions`; this is the seed source of truth.
+import { zoneActionsWithTechniques as zoneActions } from '../src/data/anatomy/actions/index.js'
 import zoneProfiles from '../src/data/anatomy/profiles/index.js'
 import { isSequenceAction } from '../src/data/anatomy/actions/_makeSequenceAction.js'
 import {

@@ -1,0 +1,33 @@
+{
+  "technique_id": "WRAPPING_SHAFT_THROUGH_FABRIC",
+  "name": "Wrapping — Shaft Through Fabric",
+  "receiver_anatomy": "male",
+  "category": "toy",
+  "summary": "Male variant of Wrapping. A layer of fabric between hand or vibrator and the shaft reshapes the sensation—softening strokes or turning a buzz silky, fluffy, or rippling depending on the fabric.",
+  "detailed_description": "Wrapping puts clothing, bedding, or household fabric between the stimulator and the skin to soften and transform it. On the penis, the shaft and glans can be wrapped in a soft cloth and stroked through it, or a vibrator pressed against the layered shaft so the buzz arrives diffuse rather than sharp. Thin, smooth fabric gives subtle texture; thick, fluffy fabric spreads sensation out. Holding the fabric taut or loose, or moving the toy farther away, changes the feel.",
+  "body_areas": ["shaft", "glans", "whole genital area"],
+  "modality": "toy",
+  "stepwise_structure": [
+    "1. Choose a fabric for the feel you want—thin/smooth for subtle, thick/fluffy for diffuse.",
+    "2. Wrap or drape it over the shaft and glans.",
+    "3. Stroke through the fabric, or press a vibrator against the layer.",
+    "4. Hold the fabric taut or loose to reshape the sensation.",
+    "5. Add lube under smooth fabric if friction is too much; add a layer if a buzz feels numbing."
+  ],
+  "safety_notes": [
+    "Keep toys clean; use a fresh layer or wash covers between uses.",
+    "Add a layer or back the toy off if vibration feels numbing or uncomfortable."
+  ],
+  "tags": ["wrapping", "fabric", "shaft", "vibration", "toy", "indirect", "male-variant"],
+  "related_zone_ids": ["penis_shaft", "penis_glans"],
+  "references": [
+    { "title": "OMGYES — Wrapping (Season One)", "url": "https://www.omgyes.com", "note": "Male variant adapted from Wrapping / vibration through fabric." }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "derived_from": "WRAPPING_VIBRATION_THROUGH_FABRIC",
+    "homologue_mapping": "clitoral fabric play → shaft/glans fabric play",
+    "best_for": "Softening and reshaping strokes or vibration through a fabric layer."
+  }
+}

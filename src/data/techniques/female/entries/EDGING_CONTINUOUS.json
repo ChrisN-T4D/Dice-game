@@ -1,0 +1,37 @@
+{
+  "technique_id": "EDGING_CONTINUOUS",
+  "name": "Edging — Continuous Edging",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Walk right up to orgasm, then shift to pleasurable but non-clitoral touch just before climax; once the peak fades, return to stimulation or let it happen. The most fluid and flexible method—and the most popular, used by about 48% of edgers.",
+  "detailed_description": "Continuous edging never fully stops—it swaps direct clitoral stimulation for other pleasurable touch right before climax, then returns. This keeps arousal flowing and allows several smaller approaches to the edge without going all the way. It's the most forgiving variation, ideal for anyone who can't rebuild after a full pause.",
+  "body_areas": ["clitoris", "clitoral hood", "vulva", "whole body"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Build right up to the edge of orgasm.",
+    "2. Just before climax, shift to pleasurable but non-clitoral touch.",
+    "3. Let the approaching peak fade while staying engaged.",
+    "4. Return to clitoral stimulation—or let orgasm happen naturally.",
+    "5. Repeat for several smaller approaches without going all the way."
+  ],
+  "safety_notes": [
+    "Best choice if pausing makes rebuilding to orgasm too hard.",
+    "Reduce pressure near climax to make the shift smoother."
+  ],
+  "tags": ["edging", "continuous", "fluid", "flexible", "most-popular", "non-clitoral-shift"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Edging (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Used by ~48% of edgers (most popular); most fluid and flexible."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "EDGING_APPROACH_AND_EASE",
+    "usage_stat": "Used by about 48% of edgers (most popular).",
+    "best_for": "Anyone who struggles to rebuild after a full pause."
+  }
+}

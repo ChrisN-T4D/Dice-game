@@ -109,7 +109,7 @@ export default [
     path: ['vaginal_anterior_wall', 'vaginal_introitus'],
     name: 'Front wall hold, then withdraw',
     cues: [
-      'hold still with two fingers curled on the belly-side wall inside',
+      'pulse two curled fingers in slow come-hither presses on the belly-side wall inside',
       'ease back and make shallow circles with a fingertip at the entrance',
     ],
     techniques: ['pressure', 'pressure'],

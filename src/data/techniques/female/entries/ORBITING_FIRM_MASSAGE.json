@@ -1,0 +1,35 @@
+{
+  "technique_id": "ORBITING_FIRM_MASSAGE",
+  "name": "Orbiting — Firm Massage",
+  "receiver_anatomy": "female",
+  "category": "manual",
+  "summary": "The deepest circular pressure: firm enough to work through the hood layers and reach directly into the sensitive underlying tissue.",
+  "detailed_description": "The firmest end of the orbiting pressure range. Circles press through the hood to engage the sensitive structures beneath, producing the most intense sensation of the three levels. Best once the clit is fully awake; some women love alternating this with gliding in the same sequence for intensity buildup.",
+  "body_areas": ["clitoris", "clitoral hood"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Use once the receiver is well aroused and wants more intensity.",
+    "2. Circle with deeper pressure through the hood layers into the tissue underneath.",
+    "3. Keep the circular motion continuous and controlled.",
+    "4. Optionally alternate with gliding for a contrast that builds intensity over time."
+  ],
+  "safety_notes": [
+    "Most intense level—use after warmup, not on an unaroused clit.",
+    "Back off to a lighter level if it becomes too much or causes discomfort."
+  ],
+  "tags": ["orbiting", "firm-massage", "deep-pressure", "circles", "direct"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Orbiting (Season One)",
+      "url": "https://www.omgyes.com"
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "ORBITING_CIRCLING_THE_CLIT",
+    "pressure_level": 3,
+    "pressure_label": "firm massage"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "technique_id": "EDGING_DISTRACTION",
+  "name": "Edging — Distraction Edging",
+  "receiver_anatomy": "female",
+  "category": "pacing",
+  "summary": "Just before climax, create a sudden or intense sensation away from the clit to shift focus and prevent orgasm. More subtle than pausing—uses mental redirection rather than complete stillness. Used by about 36% of edgers.",
+  "detailed_description": "Distraction edging holds off orgasm by redirecting attention instead of stopping. A sudden or intense sensation elsewhere on the body pulls focus from the clit at the critical moment, letting the peak recede without fully halting play. It's a middle-ground method between the full stop of pausing and the fluidity of continuous edging.",
+  "body_areas": ["clitoris", "whole body"],
+  "modality": "mixed",
+  "stepwise_structure": [
+    "1. Build until orgasm is approaching.",
+    "2. Just before climax, introduce a sudden or intense sensation away from the clit.",
+    "3. Let attention shift to that sensation so the orgasm recedes.",
+    "4. Return focus to clitoral stimulation and rebuild.",
+    "5. Repeat the redirect each time the edge approaches."
+  ],
+  "safety_notes": [
+    "Keep the distracting sensation pleasurable or neutral, not painful.",
+    "If redirection consistently kills arousal entirely, try continuous edging instead."
+  ],
+  "tags": ["edging", "distraction", "redirection", "mental", "subtle"],
+  "related_zone_ids": ["clitoral_glans", "clitoral_hood"],
+  "references": [
+    {
+      "title": "OMGYES — Edging (Season One)",
+      "url": "https://www.omgyes.com",
+      "note": "Used by ~36% of edgers; uses mental redirection rather than stillness."
+    }
+  ],
+  "meta": {
+    "status": "published",
+    "version": 1,
+    "parent_technique_id": "EDGING_APPROACH_AND_EASE",
+    "usage_stat": "Used by about 36% of edgers."
+  }
+}
